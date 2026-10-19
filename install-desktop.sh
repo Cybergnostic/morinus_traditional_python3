@@ -1,6 +1,7 @@
 #!/bin/sh
 # Adds Morinus to the desktop application menu for the current user,
-# running it from this folder. Remove with: install-desktop.sh --uninstall
+# running it from this folder (with the environment set up by install.sh).
+# Remove with: install-desktop.sh --uninstall
 set -e
 
 DIR=$(cd "$(dirname "$0")" && pwd)
@@ -19,7 +20,7 @@ cat > "$FILE" <<EOF
 Type=Application
 Name=Morinus Traditional
 Comment=Traditional astrology (Morinus 6.2 with added traditional tools)
-Exec=python3 "$DIR/morinus.py"
+Exec="$DIR/morinus"
 Path=$DIR
 Icon=$DIR/Res/morinus-icon.png
 Terminal=false
