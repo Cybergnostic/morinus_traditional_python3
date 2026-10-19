@@ -5,6 +5,7 @@ build/
 *.egg-info/
 # personal data stays out of git
 /Opts/*
+!/Opts/.gitkeep
 /Hors/*
 !/Hors/Morinus.hor
 # your own place database (the shipped list is Res/placedb-default.dat)
