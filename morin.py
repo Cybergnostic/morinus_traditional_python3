@@ -449,6 +449,8 @@ class MFrame(wx.Frame):
         self.pdrangedlg = None
         os.environ['SE_EPHE_PATH'] = ''
         astrology.swe_set_ephe_path(common.common.ephepath)
+        # returns stepped or listed outside Charts > Revolutions use the same sidereal correction
+        returnslistframe.returnslist.sidereal_solar_correction = self.calcPrecNutCorrectedSolar
         self.drawSplash()
         self.clickedPlId = None
         self.Bind(EVT_PDREADY, self.OnPDReady)

@@ -14,6 +14,8 @@ import primdirsrevlistframe
 import wx.lib.newevent
 import _thread
 import mtexts
+import electionstepperdlg
+import returnstepperdlg
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
 pdlock = _thread.allocate_lock()
 
@@ -57,6 +59,12 @@ class TransitFrame(wx.Frame):
             self.pdtoradix = self.pdselmenu.Append(self.ID_PDRadix, mtexts.txtspopupmenu['PDRadix'], '', wx.ITEM_CHECK)
             self.pmenu.Append(wx.MenuItem(self.pmenu, self.ID_PrimaryDirections, mtexts.txtspopupmenu['PrimaryDirs'], subMenu=self.pdselmenu))
             self.pdtoradix.Enable(False)
+        # stepping: previous/next return for solar and lunar returns, time steps otherwise
+        self.ID_Step = wx.NewIdRef()
+        steptxt = {chart.Chart.SOLAR: 'Step solar returns...', chart.Chart.LUNAR: 'Step lunar returns...', chart.Chart.TRANSIT: 'Step time...'}.get(self.chart.htype)
+        if steptxt is not None:
+            self.pmenu.Append(self.ID_Step, steptxt, 'Move the chart forward or backward in time')
+            self.Bind(wx.EVT_MENU, self.onStep, id=self.ID_Step)
         self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveChart'])
         self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['ChartBW'], wx.ITEM_CHECK)
         self.SetMinSize((200, 200))
@@ -112,6 +120,22 @@ class TransitFrame(wx.Frame):
             self.selection = TransitFrame.SQUARE
             self.w.Destroy()
             self.w = squarechartwnd.SquareChartWnd(self, self.chart, self.options, self.parent, -1, self.GetClientSize())
+
+    def onStep(self, event):
+        if self.chart.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR):
+            dlg = returnstepperdlg.ReturnStepperDlg(self, self.radix)
+        else:
+            dlg = electionstepperdlg.ElectionStepperDlg(self, self.chart, self.options, self.title)
+        dlg.CenterOnParent()
+        dlg.Show(True)
+
+    def change(self, chrt, title=None):
+        """Shows another chart (used by the steppers), keeping the current view."""
+        self.chart = chrt
+        view = self.selection
+        self.selection = -1
+        {TransitFrame.CHART: self.onChart, TransitFrame.COMPOUND: self.onComparison,
+         TransitFrame.POSITIONS: self.onPositions, TransitFrame.SQUARE: self.onSquare}[view](None)
 
     def onPDDirect(self, event):
         self.onPD(primdirs.PrimDirs.DIRECT)

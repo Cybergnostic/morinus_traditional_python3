@@ -32,9 +32,15 @@ def gmt_time(t, radix):
     return chart.Time(t[0], t[1], t[2], t[3], t[4], t[5], False, radix.time.cal, chart.Time.GREENWICH, True, 0, 0, False, radix.place, False)
 
 
-def return_chart(t, radix, htype):
-    time = chart.Time(t[0], t[1], t[2], t[3], t[4], t[5], False, radix.time.cal, chart.Time.GREENWICH, True, 0, 0, False, radix.place)
-    return chart.Chart(radix.name, radix.male, time, radix.place, htype, '', radix.options, False)
+def return_chart(t, radix, htype, place=None):
+    place = place or radix.place
+    time = chart.Time(t[0], t[1], t[2], t[3], t[4], t[5], False, radix.time.cal, chart.Time.GREENWICH, True, 0, 0, False, place)
+    return chart.Chart(radix.name, radix.male, time, place, htype, '', radix.options, False)
+
+
+# Set by the main window to its sidereal correction of solar returns
+# (MFrame.calcPrecNutCorrectedSolar), so these returns match Charts > Revolutions.
+sidereal_solar_correction = None
 
 
 def solar_return(radix, year):
@@ -42,7 +48,32 @@ def solar_return(radix, year):
     revs = revolutions.Revolutions()
     if not revs.compute(revolutions.Revolutions.SUN, year, radix.time.month, radix.time.day, radix):
         return None
+    if radix.options.ayanamsha != 0 and sidereal_solar_correction is not None:
+        return tuple(sidereal_solar_correction(revs))
     return tuple(revs.t)
+
+
+def step_return(radix, current, forward):
+    """The next (or previous) return of the same kind as the chart `current`,
+    cast for the same place; None if it cannot be found."""
+    if current.htype == chart.Chart.SOLAR:
+        year = current.time.year+(1 if forward else -1)
+        t = solar_return(radix, year)
+        return return_chart(t, radix, chart.Chart.SOLAR, current.place) if t else None
+    jd = current.time.jd
+    y, m = current.time.year, current.time.month
+    found = []
+    for i in range(3):
+        found += _month_returns(y, m, radix, planets.Planets.MOON)
+        y, m = util.incrMonth(y, m) if forward else util.decrMonth(y, m)
+    found.sort()
+    if forward:
+        later = [f for f in found if f[0] > jd+1.0]
+        hit = later[0] if later else None
+    else:
+        earlier = [f for f in found if f[0] < jd-1.0]
+        hit = earlier[-1] if earlier else None
+    return return_chart(hit[1], radix, chart.Chart.LUNAR, current.place) if hit else None
 
 
 def _month_returns(year, month, radix, planet, pos=None):
