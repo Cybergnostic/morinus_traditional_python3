@@ -5,6 +5,7 @@ import wx
 import limchecklistctrlmixin
 import intvalidator
 import chart
+import planets
 import lots
 import options
 import mtexts
@@ -17,15 +18,18 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
     NAME = 1
     FORMULA = 2
     DIURNAL = 3
+    SHOWN = 4
     LORDTXT = '!'
     DIURNALTXT = '*'
-    MAX_LOTS_NUM = 40
+    # no practical limit on the number of lots (was 40)
+    MAX_LOTS_NUM = 100000
 
     def __init__(self, parent, ID, lots, pos=wx.DefaultPosition, size=wx.DefaultSize, style=0):
         wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
         limchecklistctrlmixin.LimCheckListCtrlMixin.__init__(self, LotsListCtrl.MAX_LOTS_NUM)
         self.parent = parent
         self.lotsdata = {}
+        self.night = False
         self.load(lots)
         self.Populate()
         self.Id = ID
@@ -37,6 +41,7 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
         self.InsertColumn(LotsListCtrl.NAME, mtexts.txtslotsdlg['Name'])
         self.InsertColumn(LotsListCtrl.FORMULA, mtexts.txtslotsdlg['Formula'], format=wx.LIST_FORMAT_CENTER)
         self.InsertColumn(LotsListCtrl.DIURNAL, mtexts.txtslotsdlg['Diurnal'], format=wx.LIST_FORMAT_CENTER)
+        self.InsertColumn(LotsListCtrl.SHOWN, mtexts.txtslotsdlg['Formula'], format=wx.LIST_FORMAT_CENTER)
         items = list(self.lotsdata.items())
         cnt = 0
         for key, data in items:
@@ -50,12 +55,36 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
 
         self.SetColumnWidth(LotsListCtrl.NUM, 60)
         self.SetColumnWidth(LotsListCtrl.NAME, 160)
-        self.SetColumnWidth(LotsListCtrl.FORMULA, 140)
+        self.SetColumnWidth(LotsListCtrl.FORMULA, 0)
         self.SetColumnWidth(LotsListCtrl.DIURNAL, 65)
+        self.SetColumnWidth(LotsListCtrl.SHOWN, 160)
         self.currentItem = 0
         self.SetItemState(self.currentItem, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
         self.Bind(wx.EVT_LIST_COL_CLICK, self.OnColClick)
+
+    def SetItem(self, *args, **kw):
+        # keeps the shown formula in step with the stored formula and the night-reversal flag
+        res = wx.ListCtrl.SetItem(self, *args, **kw)
+        if len(args) >= 3 and args[1] in (LotsListCtrl.FORMULA, LotsListCtrl.DIURNAL):
+            self.updateShown(args[0])
+        return res
+
+    def shownFormula(self, form, diurnal):
+        """The formula as it applies to a night chart when night is selected (reversing lots swap the 2nd and 3rd terms)"""
+        if not (self.night and diurnal) or '+' not in form or '-' not in form:
+            return form
+        return '%s + %s - %s' % (self.getFormula(form, 1), self.getFormula(form, 3), self.getFormula(form, 2))
+
+    def updateShown(self, index):
+        form = self.getColumnText(index, LotsListCtrl.FORMULA)
+        diurnal = self.getColumnText(index, LotsListCtrl.DIURNAL) != ''
+        wx.ListCtrl.SetItem(self, index, LotsListCtrl.SHOWN, self.shownFormula(form, diurnal))
+
+    def setNight(self, night):
+        self.night = night
+        for i in range(self.GetItemCount()):
+            self.updateShown(i)
 
     def setVisibility(self, opts):
         for i in range(self.GetItemCount()):
@@ -215,12 +244,6 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
 
     def OnAdd(self, item):
         num = self.GetItemCount()
-        if num >= LotsListCtrl.MAX_LOTS_NUM:
-            txt = mtexts.txtslotsdlg['MaxLotsNum'] + str(LotsListCtrl.MAX_LOTS_NUM) + LotsListCtrl.LORDTXT
-            dlgm = wx.MessageDialog(self, txt, '', wx.OK | wx.ICON_INFORMATION)
-            dlgm.ShowModal()
-            dlgm.Destroy()
-            return False
         it = (num, item[0], item[1], item[2])
         if self.checkName(it[LotsListCtrl.NAME]):
             dlgm = wx.MessageDialog(self, mtexts.txtslotsdlg['LotAlreadyExists'], '', wx.OK | wx.ICON_INFORMATION)
@@ -460,6 +483,13 @@ class LotsDlg(wx.Dialog):
         self.refcb = wx.ComboBox(self, -1, mtexts.lotsreftxts[0], size=(COMBOSIZE, -1), choices=mtexts.lotsreftxts, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.refcb.SetStringSelection(mtexts.lotsreftxts[0])
         refsizer.Add(self.refcb, 0, wx.ALL, DIFF)
+        # which sect's formulas the list shows; calculation always follows the chart
+        label = wx.StaticText(self, -1, 'Formulas:')
+        refsizer.Add(label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, DIFF)
+        self.sectcb = wx.ComboBox(self, -1, 'Day', size=(COMBOSIZE+30, -1), choices=['Day', 'Night'], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.sectcb.SetSelection(1 if LotsDlg.isNightChart(parent) else 0)
+        refsizer.Add(self.sectcb, 0, wx.ALL, DIFF)
+        self.Bind(wx.EVT_COMBOBOX, self.onSect, id=self.sectcb.GetId())
         vsubsizer = wx.BoxSizer(wx.VERTICAL)
         vsubsizer.Add(refsizer, 1, wx.GROW | wx.ALIGN_LEFT | wx.RIGHT, 5)
         self.seditor = wx.StaticBox(self, label='')
@@ -467,7 +497,7 @@ class LotsDlg(wx.Dialog):
         label = wx.StaticText(self, -1, mtexts.txtslotsdlg['Name'] + ':')
         editorsizer.Add(label, 0, wx.LEFT, DIFF)
         self.name = wx.TextCtrl(self, -1, '', size=(200, -1))
-        self.name.SetMaxLength(20)
+        self.name.SetMaxLength(40)
         editorsizer.Add(self.name, 0, wx.ALL, DIFF)
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.acb = wx.ComboBox(self, -1, mtexts.lotstxts[0], size=(COMBOSIZE, -1), choices=mtexts.lotstxts, style=wx.CB_DROPDOWN | wx.CB_READONLY)
@@ -582,6 +612,7 @@ class LotsDlg(wx.Dialog):
         lotssizer = wx.StaticBoxSizer(slots, wx.VERTICAL)
         ID_Lots = wx.NewId()
         self.li = LotsListCtrl(self, ID_Lots, self.options.lots, size=(430, -1), style=wx.LC_VRULES | wx.LC_REPORT | wx.LC_SINGLE_SEL)
+        self.li.setNight(self.sectcb.GetSelection() == 1)
         lotssizer.Add(self.li, 1, wx.GROW | wx.ALL, 5)
         self.li.setVisibility(opts)
         mhsizer.Add(lotssizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.ALL, 0)
@@ -614,6 +645,19 @@ class LotsDlg(wx.Dialog):
         self.Bind(wx.EVT_COMBOBOX, self.onFormulaC, id=self.ccb.GetId())
         self.li.initFill()
         btnOk.SetFocus()
+
+    @staticmethod
+    def isNightChart(parent):
+        """True if the chart open in the main window is a night chart, by the same test the lots use"""
+        chrt = getattr(parent, 'horoscope', None)
+        if chrt is None or getattr(parent, 'splash', True):
+            return False
+        if chrt.options.usedaynightorb:
+            return not chrt.abovehorizonwithorb
+        return not chrt.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
+
+    def onSect(self, event):
+        self.li.setNight(self.sectcb.GetSelection() == 1)
 
     def onFormulaA(self, event):
         valref = self.acb.GetCurrentSelection() == lots.Lots.REF or self.acb.GetCurrentSelection() == lots.Lots.REFLORD
