@@ -3,6 +3,7 @@
 import wx
 import wx.adv
 import traditionalwnd
+import returnslistframe
 import os
 import pickle
 import datetime
@@ -283,6 +284,11 @@ class MFrame(wx.Frame):
             if self.options.menusels[MFrame.MCHARTS][(self.ID_HelioChart - self.chartsbase)]:
                 self.mcharts.Append(self.ID_HelioChart, mtexts.menutxts['PMHelioChart'], mtexts.menutxts['PMHelioChartDoc'])
                 self.Bind(wx.EVT_MENU, self.onHelioChart, id=self.ID_HelioChart)
+            # lists of returns (always shown, not part of the menu selection settings)
+            self.ID_ReturnsList = 160
+            self.mcharts.AppendSeparator()
+            self.mcharts.Append(self.ID_ReturnsList, 'Returns of the year...', 'Lunar returns or monthly solar returns of a solar year')
+            self.Bind(wx.EVT_MENU, self.onReturnsList, id=self.ID_ReturnsList)
             menubar.Append(self.mcharts, mtexts.menutxts['MCharts'])
         self.ID_Appearance1, self.ID_Appearance2, self.ID_Dignities, self.ID_MinorDignities, self.ID_Triplicities, self.ID_Terms, self.ID_Decans, self.ID_Almutens, self.ID_ChartAlmuten, self.ID_Topical, self.ID_Ayanamsha, self.ID_Colors, self.ID_HouseSystem, self.ID_Nodes, self.ID_Orbs, self.ID_PrimaryDirsOpt, self.ID_PrimaryKeys, self.ID_PDsInChartOpt, self.ID_LotsOpt, self.ID_Syzygy, self.ID_FixedStarsOpt, self.ID_ProfectionsOpt, self.ID_FirdariaOpt, self.ID_DefLocationOpt, self.ID_MenuSel, self.ID_MenuSelFirst, self.ID_MenuSelSecond, self.ID_Languages, self.ID_AutoSaveOpts, self.ID_SaveOpts, self.ID_Reload = list(range(170, 201))
         self.optsbase = 170
@@ -872,6 +878,17 @@ class MFrame(wx.Frame):
             self.pdrangedlg.Destroy()
             self.pdrangedlg = None
         return
+
+    def onReturnsList(self, event):
+        if self.splash:
+            return
+        if self.horoscope.time.bc:
+            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm.ShowModal()
+            dlgm.Destroy()
+            return
+        frame = returnslistframe.ReturnsListFrame(self, self.title, self.horoscope, self.options)
+        frame.Show(True)
 
     def onTraditional(self, kind):
         if not self.splash:
@@ -2150,6 +2167,11 @@ class MFrame(wx.Frame):
             self.mcharts.Enable(self.ID_ProfectionsChart, bEnable)
         if self.options.menusels[MFrame.MCHARTS][(self.ID_HelioChart - self.chartsbase)]:
             self.mcharts.Enable(self.ID_HelioChart, bEnable)
+        if hasattr(self, 'ID_TradConditions'):
+            for i in (self.ID_TradConditions, self.ID_TradRelationships, self.ID_TradTemperament):
+                self.mtables.Enable(i, bEnable)
+        if hasattr(self, 'ID_ReturnsList'):
+            self.mcharts.Enable(self.ID_ReturnsList, bEnable)
 
     def enableOptMenus(self, bEnable):
         self.moptions.Enable(self.ID_SaveOpts, bEnable)
