@@ -116,7 +116,7 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
         self.parent.fillEditor(item)
 
     def OnItemSelected(self, event):
-        self.currentItem = event.m_itemIndex
+        self.currentItem = event.GetIndex()
         item = []
         name = self.getColumnText(self.currentItem, LotsListCtrl.NAME)
         form = self.getColumnText(self.currentItem, LotsListCtrl.FORMULA)
