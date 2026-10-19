@@ -1,6 +1,13 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import sys, os, wx, limchecklistctrlmixin, chart, mtexts, astrology, util
+import sys
+import os
+import wx
+import limchecklistctrlmixin
+import chart
+import mtexts
+import astrology
+import util
 
 class FixedStars:
     signtxts = (
@@ -42,7 +49,7 @@ class FixedStars:
             for i in range(1, cnt + 1):
                 ret, name, dat, serr = astrology.swe_fixstar_ut(str(i), self.jd, 0)
                 d, m, s = util.decToDeg(dat[0])
-                sign = d / chart.Chart.SIGN_DEG
+                sign = d // chart.Chart.SIGN_DEG
                 lon = d % chart.Chart.SIGN_DEG
                 lontxt = str(lon) + FixedStars.signtxts[sign] + ' ' + str(m).zfill(2) + "' " + str(s).zfill(2) + '"'
                 d, m, s = util.decToDeg(dat[1])
@@ -68,7 +75,7 @@ class FixedStars:
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
-class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
+class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
     NUM = 0
     NAME = 1
     NOMNAME = 2
@@ -117,11 +124,11 @@ class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin
         for key, data in items:
             cnt += 1
             index = self.InsertStringItem(sys.maxsize, data[0])
-            self.SetStringItem(index, FixedStarListCtrl.NUM, str(cnt) + '.')
-            self.SetStringItem(index, FixedStarListCtrl.NAME, data[0])
-            self.SetStringItem(index, FixedStarListCtrl.NOMNAME, data[1])
-            self.SetStringItem(index, FixedStarListCtrl.LON, data[2])
-            self.SetStringItem(index, FixedStarListCtrl.LAT, data[3])
+            self.SetItem(index, FixedStarListCtrl.NUM, str(cnt) + '.')
+            self.SetItem(index, FixedStarListCtrl.NAME, data[0])
+            self.SetItem(index, FixedStarListCtrl.NOMNAME, data[1])
+            self.SetItem(index, FixedStarListCtrl.LON, data[2])
+            self.SetItem(index, FixedStarListCtrl.LAT, data[3])
             self.SetItemData(index, key)
 
         self.SetColumnWidth(FixedStarListCtrl.NUM, 60)
@@ -165,10 +172,9 @@ class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin
 class FixedStarsDlg(wx.Dialog):
 
     def __init__(self, parent, names, ephepath):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsfixedstarsdlg['FixedStars'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsfixedstarsdlg['FixedStars'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         self.sstars = wx.StaticBox(self, label='')
         starssizer = wx.StaticBoxSizer(self.sstars, wx.VERTICAL)
@@ -178,7 +184,7 @@ class FixedStarsDlg(wx.Dialog):
         self.li = FixedStarListCtrl(self, ephepath, ID_FixedStars, size=(470, 340))
         starssizer.Add(self.li, 0, wx.ALIGN_CENTER | wx.ALL, 5)
         self.li.fill(names)
-        fgsizer = wx.FlexGridSizer(1, 2)
+        fgsizer = wx.FlexGridSizer(0, 2, 0, 0)
         ID_DeselectAll = wx.NewId()
         btnDeselectAll = wx.Button(self, ID_DeselectAll, mtexts.txtsfixedstarsdlg['DeselectAll'])
         fgsizer.Add(btnDeselectAll, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -195,7 +201,7 @@ class FixedStarsDlg(wx.Dialog):
         mvsizer.Add(starssizer, 0, wx.LEFT | wx.RIGHT, 5)
         self.search = wx.StaticBox(self, label=mtexts.txtsfixedstarsdlg['Search'])
         searchsizer = wx.StaticBoxSizer(self.search, wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(1, 2)
+        fgsizer = wx.FlexGridSizer(0, 2, 0, 0)
         hsubsizer = wx.BoxSizer(wx.HORIZONTAL)
         label = wx.StaticText(self, -1, mtexts.txtsfixedstarsdlg['Name'] + ':')
         hsubsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)

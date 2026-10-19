@@ -1,6 +1,14 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import sys, wx, intvalidator, chart, almutens, lots, options, mtexts, copy
+import sys
+import wx
+import intvalidator
+import chart
+import almutens
+import lots
+import options
+import mtexts
+import copy
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
@@ -24,10 +32,10 @@ class RowsListCtrl(wx.ListCtrl):
             self.InsertColumn(RowsListCtrl.RULERSHIP, mtexts.txtsalmutentopicalsdlg['Rulership'])
         items = list(self.rowsdata.items())
         for key, data in items:
-            index = self.InsertStringItem(sys.maxsize, data[0])
-            self.SetStringItem(index, RowsListCtrl.TYPE, data[0])
-            self.SetStringItem(index, RowsListCtrl.VALUE, data[1])
-            self.SetStringItem(index, RowsListCtrl.RULERSHIP, data[2])
+            index = self.InsertItem(sys.maxsize, data[0])
+            self.SetItem(index, RowsListCtrl.TYPE, data[0])
+            self.SetItem(index, RowsListCtrl.VALUE, data[1])
+            self.SetItem(index, RowsListCtrl.RULERSHIP, data[2])
             self.SetItemData(index, key)
 
         self.SetColumnWidth(RowsListCtrl.TYPE, 160)
@@ -63,9 +71,9 @@ class RowsListCtrl(wx.ListCtrl):
             dlgm.ShowModal()
             dlgm.Destroy()
             return
-        self.InsertStringItem(num, item[RowsListCtrl.TYPE])
+        self.InsertItem(num, item[RowsListCtrl.TYPE])
         for i in range(1, len(item)):
-            self.SetStringItem(num, i, item[i])
+            self.SetItem(num, i, item[i])
 
         self.currentItem = num
         self.EnsureVisible(self.currentItem)
@@ -183,10 +191,9 @@ class AlmutenTopicalsDlg(wx.Dialog):
     MAX_TOPICAL_NUM = 20
 
     def __init__(self, parent, opts):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsalmutentopicalsdlg['TopicalAlmutens'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsalmutentopicalsdlg['TopicalAlmutens'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         self.tpcls = None
         if opts.topicals != None:
             self.tpcls = copy.deepcopy(opts.topicals)
@@ -201,7 +208,7 @@ class AlmutenTopicalsDlg(wx.Dialog):
             for i in range(num):
                 self.namestxt.append(self.tpcls[i][0])
 
-        self.namescb = wx.ComboBox(self, -1, '', size=(230, -1), choices='', style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.namescb = wx.ComboBox(self, -1, '', size=(230, -1), choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY)
         hsizer.Add(self.namescb, 0, wx.ALL, 5)
         hsubsizer = wx.BoxSizer(wx.HORIZONTAL)
         ID_Add = wx.NewId()

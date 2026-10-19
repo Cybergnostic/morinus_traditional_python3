@@ -1,6 +1,17 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, houses, planets, fortune, common, commonwnd, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import chart
+import houses
+import planets
+import fortune
+import common
+import commonwnd
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class StripWnd(commonwnd.CommonWnd):
 
@@ -13,22 +24,22 @@ class StripWnd(commonwnd.CommonWnd):
         self.bw = self.options.bw
         BOR = commonwnd.CommonWnd.BORDER
         self.FONT_SIZE = int(21 * self.options.tablesize)
-        self.BSPACE = self.FONT_SIZE / 5
-        self.YPLANETS_OFFS = self.FONT_SIZE / 2 - self.FONT_SIZE / 10
-        self.LINE_LENGTH = self.FONT_SIZE / 2 + self.FONT_SIZE / 5
-        self.LONGTIC = 2 * self.FONT_SIZE / 3
-        self.TIC5 = self.FONT_SIZE / 2 + self.FONT_SIZE / 5
-        self.TIC = self.FONT_SIZE / 2 - self.FONT_SIZE / 10
-        self.TICSTEP = 4 * self.FONT_SIZE / 3
-        self.DEG_OFFS = self.FONT_SIZE / 5
+        self.BSPACE = self.FONT_SIZE // 5
+        self.YPLANETS_OFFS = self.FONT_SIZE // 2 - self.FONT_SIZE // 10
+        self.LINE_LENGTH = self.FONT_SIZE // 2 + self.FONT_SIZE // 5
+        self.LONGTIC = 2 * self.FONT_SIZE // 3
+        self.TIC5 = self.FONT_SIZE // 2 + self.FONT_SIZE // 5
+        self.TIC = self.FONT_SIZE // 2 - self.FONT_SIZE // 10
+        self.TICSTEP = 4 * self.FONT_SIZE // 3
+        self.DEG_OFFS = self.FONT_SIZE // 5
         self.YOFFS = self.FONT_SIZE + self.YPLANETS_OFFS + self.LINE_LENGTH
         self.TABLE_HEIGHT = self.LONGTIC + self.DEG_OFFS + self.FONT_SIZE + self.YOFFS
         self.TABLE_WIDTH = chart.Chart.SIGN_DEG * self.TICSTEP
         self.WIDTH = BOR + self.TABLE_WIDTH + BOR
         self.HEIGHT = BOR + self.TABLE_HEIGHT + BOR
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
         self.deg_symbol = '\xb0'
         self.drawBkg()
 
@@ -72,8 +83,8 @@ class StripWnd(commonwnd.CommonWnd):
         for i in range(chart.Chart.SIGN_DEG + 1):
             if i == 0 or i % 5 == 0:
                 txt = str(i)
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((x + offs - w / 2, y), txt, fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((x + offs - w // 2, y), txt, fill=txtclr, font=self.fntText)
             offs += self.TICSTEP
 
         self.ascmctxt = (mtexts.txtsstrip['StripAsc'], mtexts.txtsstrip['StripMC'])
@@ -112,13 +123,13 @@ class StripWnd(commonwnd.CommonWnd):
                 lon = util.normalize(lon)
             lon %= float(chart.Chart.SIGN_DEG)
             pos = lon * self.TICSTEP
-            w, h = draw.textsize(txt, fnt)
-            draw.text((x + pos - w / 2 + bshift[i], y), txt, fill=clr, font=fnt)
+            w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+            draw.text((x + pos - w // 2 + bshift[i], y), txt, fill=clr, font=fnt)
             draw.line((x + pos, y + self.YOFFS, x + pos + bshift[i], y + self.FONT_SIZE + self.YPLANETS_OFFS), fill=clr)
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
 
     def arrange(self):
         """Arranges bodies so they won't overlap each other"""
@@ -169,7 +180,7 @@ class StripWnd(commonwnd.CommonWnd):
         for i in range(length + 1):
             self.doArrange(length, bshift, order, mixed)
 
-        BOR = commonwnd.CommonWnd.BORDER / 2
+        BOR = commonwnd.CommonWnd.BORDER // 2
         if order[0] + bshift[0] < BOR:
             diff = BOR - (order[0] + bshift[0])
             bshift[0] += diff
@@ -177,22 +188,22 @@ class StripWnd(commonwnd.CommonWnd):
                 w1, h1 = (0.0, 0.0)
                 tidx = planets.Planets.BODIES_NUM - 1
                 if i < tidx:
-                    w1, h1 = self.fntMorinus.getsize(common.common.planets[i])
+                    w1, h1 = self.fntMorinus.getbbox(common.common.planets[i])[2:]
                 elif i == tidx:
-                    w1, h1 = self.fntMorinus.getsize(common.common.fortune)
+                    w1, h1 = self.fntMorinus.getbbox(common.common.fortune)[2:]
                 elif i == tidx + 1:
-                    w1, h1 = self.fntText.getsize(self.ascmctxt[0])
+                    w1, h1 = self.fntText.getbbox(self.ascmctxt[0])[2:]
                 elif i == tidx + 2:
-                    w1, h1 = self.fntText.getsize(self.ascmctxt[1])
+                    w1, h1 = self.fntText.getbbox(self.ascmctxt[1])[2:]
                 w2, h2 = (0.0, 0.0)
                 if i < tidx:
-                    w2, h2 = self.fntMorinus.getsize(common.common.planets[i])
+                    w2, h2 = self.fntMorinus.getbbox(common.common.planets[i])[2:]
                 elif i == tidx:
-                    w2, h2 = self.fntMorinus.getsize(common.common.fortune)
+                    w2, h2 = self.fntMorinus.getbbox(common.common.fortune)[2:]
                 elif i == tidx + 1:
-                    w2, h2 = self.fntText.getsize(self.ascmctxt[0])
+                    w2, h2 = self.fntText.getbbox(self.ascmctxt[0])[2:]
                 elif i == tidx + 2:
-                    w2, h2 = self.fntText.getsize(self.ascmctxt[1])
+                    w2, h2 = self.fntText.getbbox(self.ascmctxt[1])[2:]
                 x1 = order[i] + bshift[i]
                 x2 = order[(i + 1)] + bshift[(i + 1)]
                 if order[i] + bshift[i] > order[(i + 1)] + bshift[(i + 1)] or self.overlap(x1, w1, x2, w2):
@@ -210,22 +221,22 @@ class StripWnd(commonwnd.CommonWnd):
                 w1, h1 = (0.0, 0.0)
                 tidx = planets.Planets.BODIES_NUM - 1
                 if i < tidx:
-                    w1, h1 = self.fntMorinus.getsize(common.common.planets[i])
+                    w1, h1 = self.fntMorinus.getbbox(common.common.planets[i])[2:]
                 elif i == tidx:
-                    w1, h1 = self.fntMorinus.getsize(common.common.fortune)
+                    w1, h1 = self.fntMorinus.getbbox(common.common.fortune)[2:]
                 elif i == tidx + 1:
-                    w1, h1 = self.fntText.getsize(self.ascmctxt[0])
+                    w1, h1 = self.fntText.getbbox(self.ascmctxt[0])[2:]
                 elif i == tidx + 2:
-                    w1, h1 = self.fntText.getsize(self.ascmctxt[1])
+                    w1, h1 = self.fntText.getbbox(self.ascmctxt[1])[2:]
                 w2, h2 = (0.0, 0.0)
                 if i < tidx:
-                    w2, h2 = self.fntMorinus.getsize(common.common.planets[i])
+                    w2, h2 = self.fntMorinus.getbbox(common.common.planets[i])[2:]
                 elif i == tidx:
-                    w2, h2 = self.fntMorinus.getsize(common.common.fortune)
+                    w2, h2 = self.fntMorinus.getbbox(common.common.fortune)[2:]
                 elif i == tidx + 1:
-                    w2, h2 = self.fntText.getsize(self.ascmctxt[0])
+                    w2, h2 = self.fntText.getbbox(self.ascmctxt[0])[2:]
                 elif i == tidx + 2:
-                    w2, h2 = self.fntText.getsize(self.ascmctxt[1])
+                    w2, h2 = self.fntText.getbbox(self.ascmctxt[1])[2:]
                 x1 = order[(i - 1)] + bshift[(i - 1)]
                 x2 = order[i] + bshift[i]
                 if order[(i - 1)] + bshift[(i - 1)] > order[i] + bshift[i] or self.overlap(x1, w1, x2, w2):
@@ -252,24 +263,24 @@ class StripWnd(commonwnd.CommonWnd):
         tidx = planets.Planets.BODIES_NUM - 1
         mb1 = mixed[b1]
         if mb1 < tidx:
-            w1, h1 = self.fntMorinus.getsize(common.common.planets[mb1])
+            w1, h1 = self.fntMorinus.getbbox(common.common.planets[mb1])[2:]
         else:
             if mb1 == tidx:
-                w1, h1 = self.fntMorinus.getsize(common.common.fortune)
+                w1, h1 = self.fntMorinus.getbbox(common.common.fortune)[2:]
             elif mb1 == tidx + 1:
-                w1, h1 = self.fntText.getsize(self.ascmctxt[0])
+                w1, h1 = self.fntText.getbbox(self.ascmctxt[0])[2:]
             elif mb1 == tidx + 2:
-                w1, h1 = self.fntText.getsize(self.ascmctxt[1])
+                w1, h1 = self.fntText.getbbox(self.ascmctxt[1])[2:]
         w2, h2 = (0.0, 0.0)
         mb2 = mixed[b2]
         if mb2 < tidx:
-            w2, h2 = self.fntMorinus.getsize(common.common.planets[mb2])
+            w2, h2 = self.fntMorinus.getbbox(common.common.planets[mb2])[2:]
         elif mb2 == tidx:
-            w2, h2 = self.fntMorinus.getsize(common.common.fortune)
+            w2, h2 = self.fntMorinus.getbbox(common.common.fortune)[2:]
         elif mb2 == tidx + 1:
-            w2, h2 = self.fntText.getsize(self.ascmctxt[0])
+            w2, h2 = self.fntText.getbbox(self.ascmctxt[0])[2:]
         elif mb2 == tidx + 2:
-            w2, h2 = self.fntText.getsize(self.ascmctxt[1])
+            w2, h2 = self.fntText.getbbox(self.ascmctxt[1])[2:]
         while self.overlap(x1, w1, x2, w2):
             if not forward:
                 bshift[b1] -= 1.0

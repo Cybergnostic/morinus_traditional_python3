@@ -1,7 +1,15 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 from datetime import datetime, timedelta
-import wx, planets, common, commonwnd, Image, ImageDraw, ImageFont, mtexts
+import wx
+import planets
+import common
+import commonwnd
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import mtexts
+import util
 
 class FirdariaWnd(commonwnd.CommonWnd):
 
@@ -14,7 +22,7 @@ class FirdariaWnd(commonwnd.CommonWnd):
         self.bw = self.options.bw
         self.FONT_SIZE = int(21 * self.options.tablesize)
         self.COLUMN_NUM = 1
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.SMALL_CELL_WIDTH = 3 * self.FONT_SIZE
         self.CELL_WIDTH = 12 * self.FONT_SIZE
@@ -29,9 +37,9 @@ class FirdariaWnd(commonwnd.CommonWnd):
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntSymbol = ImageFont.truetype(common.common.symbols, 3 * self.FONT_SIZE / 2)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntSymbol = util.truetype(common.common.symbols, 3 * self.FONT_SIZE // 2)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
         self.drawBkg()
 
     def getExt(self):
@@ -61,8 +69,8 @@ class FirdariaWnd(commonwnd.CommonWnd):
                 txt += ' (' + mtexts.txtsfirdaria['Nocturnal'] + ': ' + mtexts.txtsfirdaria['Bonatus'] + ')'
             else:
                 txt += ' (' + mtexts.txtsfirdaria['Nocturnal'] + ': ' + mtexts.txtsfirdaria['AlBiruni'] + ')'
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((BOR + (self.BIG_CELL_WIDTH - w) / 2, BOR + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((BOR + (self.BIG_CELL_WIDTH - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         plstxts = (
          common.common.planets[0], common.common.planets[1], common.common.planets[2], common.common.planets[3], common.common.planets[4], common.common.planets[5], common.common.planets[6], common.common.planets[7], common.common.planets[8])
         if self.fird.isdaily:
@@ -78,7 +86,7 @@ class FirdariaWnd(commonwnd.CommonWnd):
             planet, years = planetaryyears[aindex]
             ending = datetime(starting.year + years, starting.month, starting.day)
             txt = plstxts[planet]
-            w, h = draw.textsize(txt, self.fntMorinus)
+            w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
             clr = (0, 0, 0)
             if not self.bw:
                 objidx = planet
@@ -87,18 +95,18 @@ class FirdariaWnd(commonwnd.CommonWnd):
                 clr = self.options.clrplanets[objidx]
             draw.rectangle(((BOR, BOR + (ln + 1) * self.LINE_HEIGHT), (BOR + self.SMALL_CELL_WIDTH + self.BIG_CELL_WIDTH, BOR + (ln + 2) * self.LINE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
             draw.line((BOR + self.SMALL_CELL_WIDTH, BOR + (ln + 1) * self.LINE_HEIGHT, BOR + self.SMALL_CELL_WIDTH, BOR + (ln + 2) * self.LINE_HEIGHT), fill=tableclr)
-            draw.text((BOR + (self.SMALL_CELL_WIDTH - w) / 2, BOR + (self.LINE_HEIGHT - h) / 2 + (ln + 1) * self.LINE_HEIGHT), txt, fill=clr, font=self.fntMorinus)
+            draw.text((BOR + (self.SMALL_CELL_WIDTH - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2 + (ln + 1) * self.LINE_HEIGHT), txt, fill=clr, font=self.fntMorinus)
             ending2 = ending + timedelta(days=-1)
             txt = str(starting.year) + '.' + str(starting.month).zfill(2) + '.' + str(starting.day).zfill(2) + ' - ' + str(ending2.year) + '.' + str(ending2.month).zfill(2) + '.' + str(ending2.day).zfill(2) + ' (' + str(years) + ' ' + mtexts.txtsfirdaria['Years'] + ')'
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((BOR + self.SMALL_CELL_WIDTH + (self.BIG_CELL_WIDTH - w) / 2, BOR + (self.LINE_HEIGHT - h) / 2 + (ln + 1) * self.LINE_HEIGHT), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((BOR + self.SMALL_CELL_WIDTH + (self.BIG_CELL_WIDTH - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2 + (ln + 1) * self.LINE_HEIGHT), txt, fill=txtclr, font=self.fntText)
             ln += 1
             ln = self.displaySubPeriods(draw, planetaryyears, aindex, starting, ending, plstxts, ln, BOR, txtclr, tableclr)
             starting = ending
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
 
     def displaySubPeriods(self, draw, planetaryyears, index, starting, ending, plstxts, ln, BOR, txtclr, tableclr):
         if self.fird.isNode(index):
@@ -109,7 +117,7 @@ class FirdariaWnd(commonwnd.CommonWnd):
             planet, years = planetaryyears[index]
             subperiodends = subperiodstart + timedelta(seconds=secs / 7)
             txt = plstxts[planet]
-            w, h = draw.textsize(txt, self.fntMorinus)
+            w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
             clr = (0, 0, 0)
             if not self.bw:
                 objidx = planet
@@ -118,10 +126,10 @@ class FirdariaWnd(commonwnd.CommonWnd):
                 clr = self.options.clrplanets[objidx]
             draw.rectangle(((BOR + self.SMALL_CELL_WIDTH, BOR + (ln + i + 1) * self.LINE_HEIGHT), (BOR + 2 * self.SMALL_CELL_WIDTH + self.CELL_WIDTH, BOR + (ln + i + 2) * self.LINE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
             draw.line((BOR + 2 * self.SMALL_CELL_WIDTH, BOR + (ln + i + 1) * self.LINE_HEIGHT, BOR + 2 * self.SMALL_CELL_WIDTH, BOR + (ln + i + 2) * self.LINE_HEIGHT), fill=tableclr)
-            draw.text((BOR + self.SMALL_CELL_WIDTH + (self.SMALL_CELL_WIDTH - w) / 2, BOR + (self.LINE_HEIGHT - h) / 2 + (ln + i + 1) * self.LINE_HEIGHT), txt, fill=clr, font=self.fntMorinus)
+            draw.text((BOR + self.SMALL_CELL_WIDTH + (self.SMALL_CELL_WIDTH - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2 + (ln + i + 1) * self.LINE_HEIGHT), txt, fill=clr, font=self.fntMorinus)
             txt = str(subperiodstart.year) + '.' + str(subperiodstart.month).zfill(2) + '.' + str(subperiodstart.day).zfill(2)
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((BOR + 2 * self.SMALL_CELL_WIDTH + (self.CELL_WIDTH - w) / 2, BOR + (self.LINE_HEIGHT - h) / 2 + (ln + i + 1) * self.LINE_HEIGHT), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((BOR + 2 * self.SMALL_CELL_WIDTH + (self.CELL_WIDTH - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2 + (ln + i + 1) * self.LINE_HEIGHT), txt, fill=txtclr, font=self.fntText)
             subperiodstart = subperiodends
             index = self.fird.nextIndex(index)
 

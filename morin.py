@@ -1,6 +1,104 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, os, pickle, datetime, Image, astrology, houses, planets, chart, common, datadlg, findtimedlg, graphephemdlg, graphephemframe, ephemcalc, userpd, primdirs, mtexts, util, placidiansapd, placidianutppd, regiomontanpd, campanianpd, positionsframe, almutenchartframe, almutentopicalsframe, almutenzodsframe, miscframe, munposframe, antisciaframe, aspectsframe, midpointsframe, risesetframe, speedsframe, zodparsframe, fixedstarsframe, fixedstarsaspectsframe, lotsframe, stripframe, hoursframe, transitmframe, profstableframe, userframe, firdariaframe, primdirslistframe, primdirsrangedlg, graphchart, squarechartframe, transits, revolutions, revolutionsdlg, transitframe, suntransits, suntransitsdlg, timespacedlg, secdir, secdirframe, secdirdlg, stepperdlg, electionstepperdlg, electionsframe, profdlg, profections, munprofections, profectionsframe, profectionstepperdlg, profectiontablestepperdlg, proftabledlg, heliochartframe, appearance1dlg, appearance2dlg, dignitiesdlg, triplicitiesdlg, termsdlg, decansdlg, almutenchartdlg, almutentopicalsdlg, colorsdlg, primarydirsdlg, primarydirsdlgsmall, primarykeysdlg, pdsinchartdlgopts, syzygydlg, lotsdlg, fixedstarsdlg, profdlgopts, firdariadlg, defaultlocdlg, ayanamshadlg, transitmdlg, orbsdlg, menuseldlg, menuseldlg2, langsdlg, htmlhelpframe, math, _thread, wx.lib.newevent
+import wx
+import wx.adv
+import os
+import pickle
+import datetime
+from PIL import Image
+import astrology
+import houses
+import planets
+import chart
+import common
+import datadlg
+import findtimedlg
+import graphephemdlg
+import graphephemframe
+import ephemcalc
+import userpd
+import primdirs
+import mtexts
+import util
+import placidiansapd
+import placidianutppd
+import regiomontanpd
+import campanianpd
+import positionsframe
+import almutenchartframe
+import almutentopicalsframe
+import almutenzodsframe
+import miscframe
+import munposframe
+import antisciaframe
+import aspectsframe
+import midpointsframe
+import risesetframe
+import speedsframe
+import zodparsframe
+import fixedstarsframe
+import fixedstarsaspectsframe
+import lotsframe
+import stripframe
+import hoursframe
+import transitmframe
+import profstableframe
+import userframe
+import firdariaframe
+import primdirslistframe
+import primdirsrangedlg
+import graphchart
+import squarechartframe
+import transits
+import revolutions
+import revolutionsdlg
+import transitframe
+import suntransits
+import suntransitsdlg
+import timespacedlg
+import secdir
+import secdirframe
+import secdirdlg
+import stepperdlg
+import electionstepperdlg
+import electionsframe
+import profdlg
+import profections
+import munprofections
+import profectionsframe
+import profectionstepperdlg
+import profectiontablestepperdlg
+import proftabledlg
+import heliochartframe
+import appearance1dlg
+import appearance2dlg
+import dignitiesdlg
+import triplicitiesdlg
+import termsdlg
+import decansdlg
+import almutenchartdlg
+import almutentopicalsdlg
+import colorsdlg
+import primarydirsdlg
+import primarydirsdlgsmall
+import primarykeysdlg
+import pdsinchartdlgopts
+import syzygydlg
+import lotsdlg
+import fixedstarsdlg
+import profdlgopts
+import firdariadlg
+import defaultlocdlg
+import ayanamshadlg
+import transitmdlg
+import orbsdlg
+import menuseldlg
+import menuseldlg2
+import langsdlg
+import htmlhelpframe
+import math
+import _thread
+import wx.lib.newevent
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
 pdlock = _thread.allocate_lock()
 
@@ -76,7 +174,7 @@ class MFrame(wx.Frame):
                 self.Bind(wx.EVT_MENU, self.onPositions, id=self.ID_Positions)
             if self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenZodiacal - self.tabbase - 1)] or self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenChart - self.tabbase - 1)] or self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenTopical - self.tabbase - 1)]:
                 self.talmutens = wx.Menu()
-                self.mtables.AppendMenu(self.ID_TAlmutens, mtexts.menutxts['TMAlmutens'], self.talmutens)
+                self.mtables.Append(wx.MenuItem(self.mtables, self.ID_TAlmutens, mtexts.menutxts['TMAlmutens'], subMenu=self.talmutens))
             if self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenZodiacal - self.tabbase - 1)]:
                 self.talmutens.Append(self.ID_AlmutenZodiacal, mtexts.menutxts['TMAlmutenZodiacal'], mtexts.menutxts['TMAlmutenZodiacalDoc'])
                 self.Bind(wx.EVT_MENU, self.onAlmutenZodiacal, id=self.ID_AlmutenZodiacal)
@@ -196,7 +294,7 @@ class MFrame(wx.Frame):
                 self.Bind(wx.EVT_MENU, self.onDignities, id=self.ID_Dignities)
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_Triplicities - self.optsbase - 1)] or self.options.menusels[MFrame.MOPTIONS][(self.ID_Terms - self.optsbase - 1)] or self.options.menusels[MFrame.MOPTIONS][(self.ID_Decans - self.optsbase - 1)]:
                 self.mdignities = wx.Menu()
-                self.moptions.AppendMenu(self.ID_MinorDignities, mtexts.menutxts['OMMinorDignities'], self.mdignities)
+                self.moptions.Append(wx.MenuItem(self.moptions, self.ID_MinorDignities, mtexts.menutxts['OMMinorDignities'], subMenu=self.mdignities))
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_Triplicities - self.optsbase - 1)]:
                 self.mdignities.Append(self.ID_Triplicities, mtexts.menutxts['OMTriplicities'], mtexts.menutxts['OMTriplicitiesDoc'])
                 self.Bind(wx.EVT_MENU, self.onTriplicities, id=self.ID_Triplicities)
@@ -208,7 +306,7 @@ class MFrame(wx.Frame):
                 self.Bind(wx.EVT_MENU, self.onDecans, id=self.ID_Decans)
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_ChartAlmuten - self.optsbase - 2)] or self.options.menusels[MFrame.MOPTIONS][(self.ID_Topical - self.optsbase - 2)]:
                 self.malmutens = wx.Menu()
-                self.moptions.AppendMenu(self.ID_Almutens, mtexts.menutxts['OMAlmutens'], self.malmutens)
+                self.moptions.Append(wx.MenuItem(self.moptions, self.ID_Almutens, mtexts.menutxts['OMAlmutens'], subMenu=self.malmutens))
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_ChartAlmuten - self.optsbase - 2)]:
                 self.malmutens.Append(self.ID_ChartAlmuten, mtexts.menutxts['OMChartAlmuten'], mtexts.menutxts['OMChartAlmutenDoc'])
                 self.Bind(wx.EVT_MENU, self.onChartAlmuten, id=self.ID_ChartAlmuten)
@@ -235,14 +333,14 @@ class MFrame(wx.Frame):
             self.italcab = self.mhousesystem.Append(self.ID_Housesystem11, mtexts.menutxts['OMHSAlcabitus'], '', wx.ITEM_RADIO)
             self.itporph = self.mhousesystem.Append(self.ID_Housesystem12, mtexts.menutxts['OMHSPorphyrius'], '', wx.ITEM_RADIO)
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_HouseSystem - self.optsbase - 2)]:
-                self.moptions.AppendMenu(self.ID_HouseSystem, mtexts.menutxts['OMHouseSystem'], self.mhousesystem)
+                self.moptions.Append(wx.MenuItem(self.moptions, self.ID_HouseSystem, mtexts.menutxts['OMHouseSystem'], subMenu=self.mhousesystem))
                 self.setHouse()
                 self.Bind(wx.EVT_MENU_RANGE, self.onHouseSystem, id=self.ID_Housesystem1, id2=self.ID_Housesystem12)
             self.mnodes = wx.Menu()
             self.meanitem = self.mnodes.Append(self.ID_NodeMean, mtexts.menutxts['OMNMean'], '', wx.ITEM_RADIO)
             self.trueitem = self.mnodes.Append(self.ID_NodeTrue, mtexts.menutxts['OMNTrue'], '', wx.ITEM_RADIO)
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_Nodes - self.optsbase - 2)]:
-                self.moptions.AppendMenu(self.ID_Nodes, mtexts.menutxts['OMNodes'], self.mnodes)
+                self.moptions.Append(wx.MenuItem(self.moptions, self.ID_Nodes, mtexts.menutxts['OMNodes'], subMenu=self.mnodes))
                 self.setNode()
                 self.Bind(wx.EVT_MENU_RANGE, self.onNodes, id=self.ID_NodeMean, id2=self.ID_NodeTrue)
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_Orbs - self.optsbase - 2)]:
@@ -277,7 +375,7 @@ class MFrame(wx.Frame):
                 self.Bind(wx.EVT_MENU, self.onDefLocationOpt, id=self.ID_DefLocationOpt)
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_MenuSelFirst - self.optsbase - 3)] or self.options.menusels[MFrame.MOPTIONS][(self.ID_MenuSelSecond - self.optsbase - 3)]:
                 self.mmenusel = wx.Menu()
-                self.moptions.AppendMenu(self.ID_MenuSel, mtexts.menutxts['OMMenuSel'], self.mmenusel)
+                self.moptions.Append(wx.MenuItem(self.moptions, self.ID_MenuSel, mtexts.menutxts['OMMenuSel'], subMenu=self.mmenusel))
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_MenuSelFirst - self.optsbase - 3)]:
                 self.mmenusel.Append(self.ID_MenuSelFirst, mtexts.menutxts['OMMenuSelFirst'], mtexts.menutxts['OMMenuSelFirstDoc'])
                 self.Bind(wx.EVT_MENU, self.onMenuSelFirst, id=self.ID_MenuSelFirst)
@@ -1913,7 +2011,7 @@ class MFrame(wx.Frame):
             hframe.Show(True)
 
     def onAbout(self, event):
-        info = wx.AboutDialogInfo()
+        info = wx.adv.AboutDialogInfo()
         info.Name = mtexts.txtscommon['ProgramTitle']
         info.Version = '6.2'
         info.Copyright = mtexts.txtscommon['FreeSoft']
@@ -1921,7 +2019,7 @@ class MFrame(wx.Frame):
         info.WebSite = ('http://sites.google.com/site/pymorinus/', 'http://sites.google.com/site/pymorinus/')
         info.Developers = ['Robert Nagy (Hungary); robert.pluto@gmail.com (programming and astrology)\nPhilippe Epaud(France); philipeau@free.fr (french translation)\nMargherita Fiorello (Italy); margherita.fiorello@gmail.com (astrology)\nMartin Gansten (Sweden); http://www.martingansten.com/ (astrology)\nRoberto Luporini (Italy); roberto.luporini@tiscali.it (Astrological astronomy)\nPetr Radek (Czech Rep.); petr_radek@raz-dva.cz (astrology)\nEndre Csaba Simon (Finland); secsaba@gmail.com (programming and astrology)\nDenis Steinhoff (Israel); denis@steindan.com (astrology, russian translation)\nV\xc3\xa1clav Jan \xc5\xa0pirhanzl (Czech Rep.); vjs.morinus@gmail.com (MacOS version)']
         info.License = mtexts.licensetxt
-        wx.AboutBox(info)
+        wx.adv.AboutBox(info)
 
     def setHouse(self):
         sysh = (
@@ -2064,9 +2162,9 @@ class MFrame(wx.Frame):
         dc = wx.ClientDC(self)
         x = y = 0
         if self.splash:
-            wx.size = self.GetClientSize()
-            x = wx.size.x / 2 - self.buffer.GetWidth() / 2
-            y = wx.size.y / 2 - self.buffer.GetHeight() / 2
+            size = self.GetClientSize()
+            x = size.x // 2 - self.buffer.GetWidth() // 2
+            y = size.y // 2 - self.buffer.GetHeight() // 2
             bkgclr = self.options.clrbackground
             if self.options.bw:
                 bkgclr = (255, 255, 255)
@@ -2075,17 +2173,18 @@ class MFrame(wx.Frame):
         dc.DrawBitmap(self.buffer, x, y)
 
     def onPaint(self, event):
-        dc = wx.ClientDC(self)
+        # GTK3 only allows drawing from a PaintDC in the paint handler
+        dc = wx.PaintDC(self)
         x = y = 0
         if self.splash:
-            wx.size = self.GetClientSize()
-            x = wx.size.x / 2 - self.buffer.GetWidth() / 2
-            y = wx.size.y / 2 - self.buffer.GetHeight() / 2
+            size = self.GetClientSize()
+            x = size.x // 2 - self.buffer.GetWidth() // 2
+            y = size.y // 2 - self.buffer.GetHeight() // 2
             bkgclr = self.options.clrbackground
             if self.options.bw:
                 bkgclr = (255, 255, 255)
-            self.SetBackgroundColour(bkgclr)
-            self.ClearBackground()
+            dc.SetBackground(wx.Brush(bkgclr))
+            dc.Clear()
         dc.DrawBitmap(self.buffer, x, y)
 
     def onLeftUp(self, event):

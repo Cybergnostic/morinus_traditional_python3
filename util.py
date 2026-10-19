@@ -1,6 +1,9 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import math, datetime, calendar
+import math
+import datetime
+import calendar
+from PIL import ImageFont
 
 def decToDeg(num):
     """Converts a float number to deg min sec"""
@@ -356,3 +359,18 @@ def mapModernToChaldean(p):
     ar = [
      3, 6, 5, 4, 2, 1, 0]
     return ar[p]
+
+
+def truetype(path, size):
+    """ImageFont.truetype() that accepts the zero sizes old PIL tolerated (windows not yet shown have a tiny client size)"""
+    return ImageFont.truetype(path, max(int(size), 1))
+
+
+def floatstr(x):
+    """str() as Python 2 printed floats (12 significant digits), so tables look as before"""
+    if not isinstance(x, float):
+        return str(x)
+    s = '%.12g' % x
+    if s.lstrip('-').isdigit():
+        s += '.0'
+    return s

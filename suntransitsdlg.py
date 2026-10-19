@@ -1,16 +1,19 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, intvalidator, util, rangechecker, mtexts
+import wx
+import intvalidator
+import util
+import rangechecker
+import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class SunTransitsDlg(wx.Dialog):
 
     def __init__(self, parent):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtssuntransitsdlg['SunTransits'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtssuntransitsdlg['SunTransits'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.starget = wx.StaticBox(self, label='')
@@ -43,7 +46,7 @@ class SunTransitsDlg(wx.Dialog):
         label = wx.StaticText(self, -1, mtexts.txtssuntransitsdlg['StartingDate'])
         vsubsizer = wx.BoxSizer(wx.VERTICAL)
         vsubsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
-        fgsizer = wx.FlexGridSizer(2, 3)
+        fgsizer = wx.FlexGridSizer(0, 3, 0, 0)
         label = wx.StaticText(self, -1, mtexts.txtssuntransitsdlg['Year'] + ':')
         vsizer = wx.BoxSizer(wx.VERTICAL)
         vsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
@@ -75,7 +78,7 @@ class SunTransitsDlg(wx.Dialog):
         vsizer.Add(self.day, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         vsubsizer.Add(fgsizer, 0, wx.ALIGN_CENTER_HORIZONTAL)
-        timesizer.Add(vsubsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        timesizer.Add(vsubsizer, 0, wx.ALL, 5)
         mhsizer.Add(timesizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.LEFT, 5)
         mvsizer.Add(mhsizer, 0, wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, 5)
         btnsizer = wx.StdDialogButtonSizer()

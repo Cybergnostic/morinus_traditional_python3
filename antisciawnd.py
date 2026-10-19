@@ -1,6 +1,15 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, planets, common, commonwnd, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import chart
+import planets
+import common
+import commonwnd
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class AntisciaWnd(commonwnd.CommonWnd):
 
@@ -13,7 +22,7 @@ class AntisciaWnd(commonwnd.CommonWnd):
         self.bw = self.options.bw
         self.FONT_SIZE = int(21 * self.options.tablesize)
         self.COLUMN_NUM = 4
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.SMALL_CELL_WIDTH = 3 * self.FONT_SIZE
         self.CELL_WIDTH = 8 * self.FONT_SIZE
@@ -26,9 +35,9 @@ class AntisciaWnd(commonwnd.CommonWnd):
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntSymbol = ImageFont.truetype(common.common.symbols, 3 * self.FONT_SIZE / 2)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntSymbol = util.truetype(common.common.symbols, 3 * self.FONT_SIZE // 2)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.drawBkg()
@@ -58,16 +67,16 @@ class AntisciaWnd(commonwnd.CommonWnd):
         txt = (
          mtexts.txtsantiscia['Antiscion'], mtexts.txtsantiscia['Contraantiscion'])
         for i in range(len(txt)):
-            w, h = draw.textsize(txt[i], self.fntText)
+            w, h = draw.textbbox((0, 0), txt[i], self.fntText)[2:]
             offs = 0
             if i == 1:
                 offs = self.CELL_WIDTH
-            draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH / 2 + offs + self.CELL_WIDTH * i + (self.CELL_WIDTH - w) / 2, BOR + (self.LINE_HEIGHT - h) / 2), txt[i], fill=txtclr, font=self.fntText)
+            draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH // 2 + offs + self.CELL_WIDTH * i + (self.CELL_WIDTH - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2), txt[i], fill=txtclr, font=self.fntText)
 
         txt = (mtexts.txtsantiscia['Longitude'], mtexts.txtsantiscia['Latitude'], mtexts.txtsantiscia['Longitude'], mtexts.txtsantiscia['Latitude'])
         for i in range(len(txt)):
-            w, h = draw.textsize(txt[i], self.fntText)
-            draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH * i + (self.CELL_WIDTH - w) / 2, BOR + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt[i], fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt[i], self.fntText)[2:]
+            draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH * i + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt[i], fill=txtclr, font=self.fntText)
 
         x = BOR
         y = BOR + self.TITLE_HEIGHT + self.SPACE_TITLEY
@@ -83,9 +92,9 @@ class AntisciaWnd(commonwnd.CommonWnd):
             self.drawline(draw, x, y + i * self.LINE_HEIGHT, txts[j], tableclr, data[j], j, ascmc)
             i += 1
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
 
     def drawline(self, draw, x, y, txt, clr, data, idx, AscMC):
         draw.line((x, y + self.LINE_HEIGHT, x + self.TABLE_WIDTH, y + self.LINE_HEIGHT), fill=clr)
@@ -111,9 +120,9 @@ class AntisciaWnd(commonwnd.CommonWnd):
         fnt = self.fntMorinus
         if AscMC:
             fnt = self.fntSymbol
-        w, h = draw.textsize(txt, fnt)
-        offset = (self.SMALL_CELL_WIDTH - w) / 2
-        draw.text((x + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=fnt)
+        w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+        offset = (self.SMALL_CELL_WIDTH - w) // 2
+        draw.text((x + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=fnt)
         offs = (
          self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH)
         summa = 0
@@ -124,21 +133,21 @@ class AntisciaWnd(commonwnd.CommonWnd):
                     lona = data[i] - self.chart.ayanamsha
                     lona = util.normalize(lona)
                     d, m, s = util.decToDeg(lona)
-                sign = d / chart.Chart.SIGN_DEG
+                sign = d // chart.Chart.SIGN_DEG
                 pos = d % chart.Chart.SIGN_DEG
-                wsp, hsp = draw.textsize(' ', self.fntText)
-                wsg, hsg = draw.textsize(self.signs[sign], self.fntMorinus)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                wsg, hsg = draw.textbbox((0, 0), self.signs[sign], self.fntMorinus)[2:]
                 txt = str(pos).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - (w + wsp + wsg)) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntText)
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) / 2), self.signs[sign], fill=clr, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - (w + wsp + wsg)) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntText)
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) // 2), self.signs[sign], fill=clr, font=self.fntMorinus)
             else:
                 sign = ''
                 if data[i] < 0.0:
                     sign = '-'
                 txt = sign + str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - w) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - w) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntText)
             summa += offs[i]

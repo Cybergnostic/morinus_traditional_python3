@@ -1,6 +1,19 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import math, astrology, primdirs, placidiancommonpd, planets, houses, chart, fortune, syzygy, fixedstars, secmotion, userpd, placspec, util
+import math
+import astrology
+import primdirs
+import placidiancommonpd
+import planets
+import houses
+import chart
+import fortune
+import syzygy
+import fixedstars
+import secmotion
+import userpd
+import placspec
+import util
 
 class PlacidianUTPPD(placidiancommonpd.PlacidianCommonPD):
     """Implements Placidian(UnderThePole) Primary Directions"""

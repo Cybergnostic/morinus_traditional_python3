@@ -1,6 +1,18 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, userpd, placspec, regiospec, commonwnd, primdirs, common, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import chart
+import userpd
+import placspec
+import regiospec
+import commonwnd
+import primdirs
+import common
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class UserWnd(commonwnd.CommonWnd):
 
@@ -23,7 +35,7 @@ class UserWnd(commonwnd.CommonWnd):
         BOR = UserWnd.BORDER
         self.FONT_SIZE = int(21 * self.options.tablesize)
         self.COLUMN_NUM = 1
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.CELL_WIDTH = 8 * self.FONT_SIZE
         self.LINE_NUM = line_num
@@ -33,9 +45,9 @@ class UserWnd(commonwnd.CommonWnd):
         self.HEIGHT = BOR + self.TABLE_HEIGHT + BOR
         self.SetBackgroundColour(self.options.clrbackground)
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntSymbol = ImageFont.truetype(common.common.symbols, 3 * self.FONT_SIZE / 2)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntSymbol = util.truetype(common.common.symbols, 3 * self.FONT_SIZE // 2)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.drawBkg()
@@ -61,9 +73,9 @@ class UserWnd(commonwnd.CommonWnd):
             self.drawplacidian(draw, x, y, tableclr)
         else:
             self.drawregiomontan(draw, x, y, tableclr)
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
 
     def drawplacidian(self, draw, x, y, clr):
         clrtxt = (0, 0, 0)
@@ -75,9 +87,9 @@ class UserWnd(commonwnd.CommonWnd):
         for i in range(len(self.options.speculums[self.speculum])):
             if not self.options.speculums[self.speculum][i]:
                 continue
-            wsp, hsp = draw.textsize(' ', self.fntText)
-            w, h = draw.textsize(txts[i], self.fntText)
-            draw.text((x + 2 * wsp, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) / 2), txts[i], fill=clrtxt, font=self.fntText)
+            wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+            w, h = draw.textbbox((0, 0), txts[i], self.fntText)[2:]
+            draw.text((x + 2 * wsp, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) // 2), txts[i], fill=clrtxt, font=self.fntText)
             data = self.usr.speculums[self.speculum].speculum[i]
             d, m, s = util.decToDeg(data)
             if i == placspec.PlacidianSpeculum.LON:
@@ -86,23 +98,23 @@ class UserWnd(commonwnd.CommonWnd):
                     lon -= self.chart.ayanamsha
                     lon = util.normalize(lon)
                 d, m, s = util.decToDeg(lon)
-                sign = d / chart.Chart.SIGN_DEG
+                sign = d // chart.Chart.SIGN_DEG
                 pos = d % chart.Chart.SIGN_DEG
-                wsp, hsp = draw.textsize(' ', self.fntText)
-                wsg, hsg = draw.textsize(self.signs[sign], self.fntMorinus)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                wsg, hsg = draw.textbbox((0, 0), self.signs[sign], self.fntMorinus)[2:]
                 txt = str(pos).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offs = (self.CELL_WIDTH - w - wsp - wsg) / 2
-                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) / 2), txt, fill=clrtxt, font=self.fntText)
-                draw.text((x + self.CELL_WIDTH + offs + w + wsp, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - hsg) / 2), self.signs[sign], fill=clrtxt, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offs = (self.CELL_WIDTH - w - wsp - wsg) // 2
+                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) // 2), txt, fill=clrtxt, font=self.fntText)
+                draw.text((x + self.CELL_WIDTH + offs + w + wsp, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - hsg) // 2), self.signs[sign], fill=clrtxt, font=self.fntMorinus)
             elif i == placspec.PlacidianSpeculum.LAT or i == placspec.PlacidianSpeculum.DECL or i == placspec.PlacidianSpeculum.ADLAT:
                 sign = ''
                 if data < 0.0:
                     sign = '-'
                 txt = sign + str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offs = (self.CELL_WIDTH - w) / 2
-                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) / 2), txt, fill=clrtxt, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offs = (self.CELL_WIDTH - w) // 2
+                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) // 2), txt, fill=clrtxt, font=self.fntText)
             elif i == placspec.PlacidianSpeculum.RA or i == placspec.PlacidianSpeculum.PMP or i == placspec.PlacidianSpeculum.ADPH or i == placspec.PlacidianSpeculum.POH:
                 txt = str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
                 if i == placspec.PlacidianSpeculum.RA:
@@ -111,9 +123,9 @@ class UserWnd(commonwnd.CommonWnd):
                         txt = str(d).rjust(2) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
                     else:
                         txt = str(d).rjust(3) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offs = (self.CELL_WIDTH - w) / 2
-                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) / 2), txt, fill=clrtxt, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offs = (self.CELL_WIDTH - w) // 2
+                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) // 2), txt, fill=clrtxt, font=self.fntText)
             elif i == placspec.PlacidianSpeculum.SA or i == placspec.PlacidianSpeculum.MD or i == placspec.PlacidianSpeculum.HD or i == placspec.PlacidianSpeculum.TH or i == placspec.PlacidianSpeculum.HOD or i == placspec.PlacidianSpeculum.AODO:
                 sign = ''
                 if i == placspec.PlacidianSpeculum.SA or i == placspec.PlacidianSpeculum.TH or i == placspec.PlacidianSpeculum.HOD:
@@ -133,9 +145,9 @@ class UserWnd(commonwnd.CommonWnd):
                     if data < 0.0:
                         sign = 'D'
                 txt = sign + str(d).rjust(3) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offs = (self.CELL_WIDTH - w) / 2
-                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) / 2), txt, fill=clrtxt, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offs = (self.CELL_WIDTH - w) // 2
+                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) // 2), txt, fill=clrtxt, font=self.fntText)
             draw.line((x, y + (j + 1) * self.LINE_HEIGHT, x + self.TABLE_WIDTH, y + (j + 1) * self.LINE_HEIGHT), fill=clr)
             j += 1
 
@@ -153,9 +165,9 @@ class UserWnd(commonwnd.CommonWnd):
         for i in range(len(self.options.speculums[self.speculum])):
             if not self.options.speculums[self.speculum][i]:
                 continue
-            wsp, hsp = draw.textsize(' ', self.fntText)
-            w, h = draw.textsize(txts[i], self.fntText)
-            draw.text((x + 2 * wsp, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) / 2), txts[i], fill=clrtxt, font=self.fntText)
+            wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+            w, h = draw.textbbox((0, 0), txts[i], self.fntText)[2:]
+            draw.text((x + 2 * wsp, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) // 2), txts[i], fill=clrtxt, font=self.fntText)
             data = self.usr.speculums[self.speculum].speculum[i]
             d, m, s = util.decToDeg(data)
             if i == regiospec.RegiomontanianSpeculum.LON:
@@ -164,23 +176,23 @@ class UserWnd(commonwnd.CommonWnd):
                     lon -= self.chart.ayanamsha
                     lon = util.normalize(lon)
                 d, m, s = util.decToDeg(lon)
-                sign = d / chart.Chart.SIGN_DEG
+                sign = d // chart.Chart.SIGN_DEG
                 pos = d % chart.Chart.SIGN_DEG
-                wsp, hsp = draw.textsize(' ', self.fntText)
-                wsg, hsg = draw.textsize(self.signs[sign], self.fntMorinus)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                wsg, hsg = draw.textbbox((0, 0), self.signs[sign], self.fntMorinus)[2:]
                 txt = str(pos).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offs = (self.CELL_WIDTH - w - wsp - wsg) / 2
-                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) / 2), txt, fill=clrtxt, font=self.fntText)
-                draw.text((x + self.CELL_WIDTH + offs + w + wsp, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - hsg) / 2), self.signs[sign], fill=clrtxt, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offs = (self.CELL_WIDTH - w - wsp - wsg) // 2
+                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) // 2), txt, fill=clrtxt, font=self.fntText)
+                draw.text((x + self.CELL_WIDTH + offs + w + wsp, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - hsg) // 2), self.signs[sign], fill=clrtxt, font=self.fntMorinus)
             elif i == regiospec.RegiomontanianSpeculum.LAT or i == regiospec.RegiomontanianSpeculum.DECL or i == regiospec.RegiomontanianSpeculum.Q:
                 sign = ''
                 if data < 0.0:
                     sign = '-'
                 txt = sign + str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offs = (self.CELL_WIDTH - w) / 2
-                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) / 2), txt, fill=clrtxt, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offs = (self.CELL_WIDTH - w) // 2
+                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) // 2), txt, fill=clrtxt, font=self.fntText)
             elif i == regiospec.RegiomontanianSpeculum.RA or i == regiospec.RegiomontanianSpeculum.ZD or i == regiospec.RegiomontanianSpeculum.POLE or i == regiospec.RegiomontanianSpeculum.W or i == regiospec.RegiomontanianSpeculum.CMP:
                 sign = ''
                 if i == regiospec.RegiomontanianSpeculum.ZD:
@@ -194,9 +206,9 @@ class UserWnd(commonwnd.CommonWnd):
                         txt = str(d).rjust(2) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
                     else:
                         txt = str(d).rjust(3) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offs = (self.CELL_WIDTH - w) / 2
-                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) / 2), txt, fill=clrtxt, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offs = (self.CELL_WIDTH - w) // 2
+                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) // 2), txt, fill=clrtxt, font=self.fntText)
             elif i == regiospec.RegiomontanianSpeculum.RMD or i == regiospec.RegiomontanianSpeculum.RHD:
                 sign = ''
                 if i == regiospec.RegiomontanianSpeculum.RMD:
@@ -208,9 +220,9 @@ class UserWnd(commonwnd.CommonWnd):
                     if data < 0.0:
                         sign = 'D'
                 txt = sign + str(d).rjust(3) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offs = (self.CELL_WIDTH - w) / 2
-                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) / 2), txt, fill=clrtxt, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offs = (self.CELL_WIDTH - w) // 2
+                draw.text((x + self.CELL_WIDTH + offs, y + self.LINE_HEIGHT * j + (self.LINE_HEIGHT - h) // 2), txt, fill=clrtxt, font=self.fntText)
             draw.line((x, y + (j + 1) * self.LINE_HEIGHT, x + self.TABLE_WIDTH, y + (j + 1) * self.LINE_HEIGHT), fill=clr)
             j += 1
 

@@ -1,6 +1,11 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, profections, munprofections, mtexts, util
+import wx
+import chart
+import profections
+import munprofections
+import mtexts
+import util
 
 class ProfectionTableStepperDlg(wx.Dialog):
 

@@ -1,6 +1,19 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, os, chart, houses, planets, primdirs, placspec, regiospec, common, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import os
+import chart
+import houses
+import planets
+import primdirs
+import placspec
+import regiospec
+import common
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class PositionsWnd2(wx.Window):
     BORDER = 20
@@ -24,7 +37,7 @@ class PositionsWnd2(wx.Window):
         BOR = PositionsWnd2.BORDER
         self.FONT_SIZE = int(21 * self.options.tablesize)
         self.COLUMN_NUM = column_num
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.SMALL_CELL_WIDTH = 3 * self.FONT_SIZE
         self.CELL_WIDTH = 8 * self.FONT_SIZE
@@ -36,16 +49,16 @@ class PositionsWnd2(wx.Window):
         self.LINE_NUM = 16
         self.TABLE_HEIGHT = self.TITLE_HEIGHT + self.LINE_NUM * self.LINE_HEIGHT + self.SPACE_TITLEY + self.SPACE_ASCPLANETSY + self.SPACE_PLANETSHCSY
         self.TABLE_WIDTH = self.SMALL_CELL_WIDTH + self.COLUMN_NUM * self.CELL_WIDTH
-        self.RETRYOFFS = 3 * self.FONT_SIZE / 5
+        self.RETRYOFFS = 3 * self.FONT_SIZE // 5
         self.WIDTH = BOR + self.TABLE_WIDTH + BOR
         self.HEIGHT = BOR + self.TABLE_HEIGHT + BOR
         self.SetBackgroundColour(self.options.clrbackground)
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntMorinusRetr = ImageFont.truetype(common.common.symbols, self.FONT_SIZE * 3 / 4)
-        self.fntSymbol = ImageFont.truetype(common.common.symbols, 3 * self.FONT_SIZE / 2)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
-        self.fntRText = ImageFont.truetype(common.common.abc, self.FONT_SIZE * 3 / 4)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntMorinusRetr = util.truetype(common.common.symbols, self.FONT_SIZE * 3 // 4)
+        self.fntSymbol = util.truetype(common.common.symbols, 3 * self.FONT_SIZE // 2)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntRText = util.truetype(common.common.abc, self.FONT_SIZE * 3 // 4)
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.drawBkg()
@@ -110,8 +123,8 @@ class PositionsWnd2(wx.Window):
         j = 0
         for i in range(len(txt[self.speculum])):
             if self.options.speculums[self.speculum][i]:
-                w, h = draw.textsize(txt[self.speculum][i], self.fntText)
-                draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH * j + (self.CELL_WIDTH - w) / 2, BOR + (self.LINE_HEIGHT - h) / 2), txt[self.speculum][i], fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt[self.speculum][i], self.fntText)[2:]
+                draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH * j + (self.CELL_WIDTH - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2), txt[self.speculum][i], fill=txtclr, font=self.fntText)
                 j += 1
 
         x = BOR
@@ -176,9 +189,9 @@ class PositionsWnd2(wx.Window):
         for i in range(len(hidx)):
             self.drawanglesline(draw, x, y + i * self.LINE_HEIGHT, tableclr, common.common.housenames2[(hidx[i] - 1)], data[i])
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
 
     def drawanglesline(self, draw, x, y, clr, txt, data, AscMC=False):
         draw.line((x, y + self.LINE_HEIGHT, x + self.TABLE_WIDTH, y + self.LINE_HEIGHT), fill=clr)
@@ -200,9 +213,9 @@ class PositionsWnd2(wx.Window):
         fnt = self.fntSymbol
         if not AscMC:
             fnt = self.fntText
-        w, h = draw.textsize(txt, fnt)
-        offset = (self.SMALL_CELL_WIDTH - w) / 2
-        draw.text((x + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=fnt)
+        w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+        offset = (self.SMALL_CELL_WIDTH - w) // 2
+        draw.text((x + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=fnt)
         offs = (
          self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH)
         j = 0
@@ -212,23 +225,23 @@ class PositionsWnd2(wx.Window):
                 continue
             d, m, s = util.decToDeg(data[i])
             if i == placspec.PlacidianSpeculum.LON:
-                sign = d / chart.Chart.SIGN_DEG
+                sign = d // chart.Chart.SIGN_DEG
                 pos = d % chart.Chart.SIGN_DEG
-                wsp, hsp = draw.textsize(' ', self.fntText)
-                wsg, hsg = draw.textsize(self.signs[sign], self.fntMorinus)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                wsg, hsg = draw.textbbox((0, 0), self.signs[sign], self.fntMorinus)[2:]
                 txt = str(pos).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - (w + wsp + wsg)) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) / 2), self.signs[sign], fill=txtclr, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - (w + wsp + wsg)) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) // 2), self.signs[sign], fill=txtclr, font=self.fntMorinus)
             elif i == placspec.PlacidianSpeculum.LAT or i == placspec.PlacidianSpeculum.DECL:
                 sign = ''
                 if data[i] < 0.0:
                     sign = '-'
                 txt = sign + str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - w) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - w) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             elif i == placspec.PlacidianSpeculum.RA:
                 txt = str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
                 if self.options.intime:
@@ -236,9 +249,9 @@ class PositionsWnd2(wx.Window):
                     txt = str(d).rjust(2) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
                 else:
                     txt = str(d).rjust(3) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - w) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - w) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             j += 1
             summa += offs[i]
 
@@ -260,16 +273,16 @@ class PositionsWnd2(wx.Window):
         if not self.bw:
             clrpl = self.options.clrplanets[idxpl]
         fnt = self.fntMorinus
-        w, h = draw.textsize(txt, fnt)
-        offset = (self.SMALL_CELL_WIDTH - w) / 2
-        draw.text((x + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clrpl, font=fnt)
+        w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+        offset = (self.SMALL_CELL_WIDTH - w) // 2
+        draw.text((x + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=fnt)
         if speed <= 0.0:
             t = common.common.retr
             fnt = self.fntMorinusRetr
             if speed == 0.0:
                 t = 'S'
                 fnt = self.fntRText
-            draw.text((x + offset + w, y + (self.LINE_HEIGHT - h) / 2 + self.RETRYOFFS), t, fill=clrpl, font=fnt)
+            draw.text((x + offset + w, y + (self.LINE_HEIGHT - h) // 2 + self.RETRYOFFS), t, fill=clrpl, font=fnt)
         offs = (
          self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH)
         j = 0
@@ -281,15 +294,15 @@ class PositionsWnd2(wx.Window):
             if i == placspec.PlacidianSpeculum.LON:
                 if self.options.ayanamsha != 0:
                     d, m, s = util.decToDeg(ayanlon)
-                sign = d / chart.Chart.SIGN_DEG
+                sign = d // chart.Chart.SIGN_DEG
                 pos = d % chart.Chart.SIGN_DEG
-                wsp, hsp = draw.textsize(' ', self.fntText)
-                wsg, hsg = draw.textsize(self.signs[sign], self.fntMorinus)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                wsg, hsg = draw.textbbox((0, 0), self.signs[sign], self.fntMorinus)[2:]
                 txt = str(pos).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - (w + wsp + wsg)) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clrpl, font=self.fntText)
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) / 2), self.signs[sign], fill=clrpl, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - (w + wsp + wsg)) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) // 2), self.signs[sign], fill=clrpl, font=self.fntMorinus)
             elif i == placspec.PlacidianSpeculum.LAT or i == placspec.PlacidianSpeculum.DECL or i == placspec.PlacidianSpeculum.ADLAT:
                 sign = ''
                 if data[i] < 0.0:
@@ -298,9 +311,9 @@ class PositionsWnd2(wx.Window):
                     d, m, s = (0, 0, 0)
                     sign = ''
                 txt = sign + str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - w) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clrpl, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - w) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
             elif i == placspec.PlacidianSpeculum.RA or i == placspec.PlacidianSpeculum.PMP or i == placspec.PlacidianSpeculum.ADPH or i == placspec.PlacidianSpeculum.POH:
                 txt = str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
                 if i == placspec.PlacidianSpeculum.RA:
@@ -309,9 +322,9 @@ class PositionsWnd2(wx.Window):
                         txt = str(d).rjust(2) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
                     else:
                         txt = str(d).rjust(3) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - w) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clrpl, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - w) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
             elif i == placspec.PlacidianSpeculum.SA or i == placspec.PlacidianSpeculum.MD or i == placspec.PlacidianSpeculum.HD or i == placspec.PlacidianSpeculum.TH or i == placspec.PlacidianSpeculum.HOD or i == placspec.PlacidianSpeculum.AODO:
                 sign = ''
                 if i == placspec.PlacidianSpeculum.SA or i == placspec.PlacidianSpeculum.TH or i == placspec.PlacidianSpeculum.HOD:
@@ -331,9 +344,9 @@ class PositionsWnd2(wx.Window):
                     if data[i] < 0.0:
                         sign = 'D'
                 txt = sign + str(d).rjust(3) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - w) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clrpl, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - w) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
             j += 1
             summa += offs[i]
 
@@ -355,14 +368,14 @@ class PositionsWnd2(wx.Window):
         if not self.bw:
             clrpl = self.options.clrplanets[idxpl]
         fnt = self.fntMorinus
-        w, h = draw.textsize(txt, fnt)
-        offset = (self.SMALL_CELL_WIDTH - w) / 2
-        draw.text((x + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clrpl, font=fnt)
+        w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+        offset = (self.SMALL_CELL_WIDTH - w) // 2
+        draw.text((x + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=fnt)
         if speed <= 0.0:
             t = 'R'
             if speed == 0.0:
                 t = 'S'
-            draw.text((x + offset + w, y + (self.LINE_HEIGHT - h) / 2 + self.RETRYOFFS), t, fill=clrpl, font=self.fntRText)
+            draw.text((x + offset + w, y + (self.LINE_HEIGHT - h) // 2 + self.RETRYOFFS), t, fill=clrpl, font=self.fntRText)
         offs = (
          self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH)
         j = 0
@@ -372,15 +385,15 @@ class PositionsWnd2(wx.Window):
                 continue
             d, m, s = util.decToDeg(data[i])
             if i == regiospec.RegiomontanianSpeculum.LON:
-                sign = d / chart.Chart.SIGN_DEG
+                sign = d // chart.Chart.SIGN_DEG
                 pos = d % chart.Chart.SIGN_DEG
-                wsp, hsp = draw.textsize(' ', self.fntText)
-                wsg, hsg = draw.textsize(self.signs[sign], self.fntMorinus)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                wsg, hsg = draw.textbbox((0, 0), self.signs[sign], self.fntMorinus)[2:]
                 txt = str(pos).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - (w + wsp + wsg)) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clrpl, font=self.fntText)
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) / 2), self.signs[sign], fill=clrpl, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - (w + wsp + wsg)) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) // 2), self.signs[sign], fill=clrpl, font=self.fntMorinus)
             elif i == regiospec.RegiomontanianSpeculum.LAT or i == regiospec.RegiomontanianSpeculum.DECL or i == regiospec.RegiomontanianSpeculum.Q:
                 sign = ''
                 if data[i] < 0.0:
@@ -389,9 +402,9 @@ class PositionsWnd2(wx.Window):
                     d, m, s = (0, 0, 0)
                     sign = ''
                 txt = sign + str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - w) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clrpl, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - w) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
             elif i == regiospec.RegiomontanianSpeculum.RA or i == regiospec.RegiomontanianSpeculum.ZD or i == regiospec.RegiomontanianSpeculum.POLE or i == regiospec.RegiomontanianSpeculum.W or i == regiospec.RegiomontanianSpeculum.CMP:
                 sign = ''
                 if i == regiospec.RegiomontanianSpeculum.ZD:
@@ -405,9 +418,9 @@ class PositionsWnd2(wx.Window):
                         txt = str(d).rjust(2) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
                     else:
                         txt = str(d).rjust(3) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - w) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clrpl, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - w) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
             elif i == regiospec.RegiomontanianSpeculum.RMD or i == regiospec.RegiomontanianSpeculum.RHD:
                 sign = ''
                 if i == regiospec.RegiomontanianSpeculum.RMD:
@@ -419,8 +432,8 @@ class PositionsWnd2(wx.Window):
                     if data[i] < 0.0:
                         sign = 'D'
                 txt = sign + str(d).rjust(3) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - w) / 2
-                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clrpl, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - w) // 2
+                draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
             j += 1
             summa += offs[i]

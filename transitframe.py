@@ -1,6 +1,19 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, positionswnd, positionswnd2, transitwnd, squarechartwnd, primdirs, placidiansapd, placidianutppd, regiomontanpd, primdirsrevlistframe, wx.lib.newevent, _thread, mtexts
+import wx
+import chart
+import positionswnd
+import positionswnd2
+import transitwnd
+import squarechartwnd
+import primdirs
+import placidiansapd
+import placidianutppd
+import regiomontanpd
+import primdirsrevlistframe
+import wx.lib.newevent
+import _thread
+import mtexts
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
 pdlock = _thread.allocate_lock()
 
@@ -36,13 +49,13 @@ class TransitFrame(wx.Frame):
         self.compoundmenu = self.selmenu.Append(self.ID_Comparison, mtexts.txtspopupmenu['Comparison'], '', wx.ITEM_RADIO)
         self.positionsmenu = self.selmenu.Append(self.ID_Positions, mtexts.txtspopupmenu['Positions'], '', wx.ITEM_RADIO)
         self.squaremenu = self.selmenu.Append(self.ID_Square, mtexts.txtspopupmenu['Square'], '', wx.ITEM_RADIO)
-        self.pmenu.AppendMenu(self.ID_Selection, mtexts.txtspopupmenu['Windows'], self.selmenu)
+        self.pmenu.Append(wx.MenuItem(self.pmenu, self.ID_Selection, mtexts.txtspopupmenu['Windows'], subMenu=self.selmenu))
         if self.chart.htype == chart.Chart.SOLAR or self.chart.htype == chart.Chart.LUNAR:
             self.pdselmenu = wx.Menu()
             self.pddirectmenu = self.pdselmenu.Append(self.ID_PDDirect, mtexts.txtspopupmenu['Direct'], '')
             self.pdconversemenu = self.pdselmenu.Append(self.ID_PDConverse, mtexts.txtspopupmenu['Converse'], '')
             self.pdtoradix = self.pdselmenu.Append(self.ID_PDRadix, mtexts.txtspopupmenu['PDRadix'], '', wx.ITEM_CHECK)
-            self.pmenu.AppendMenu(self.ID_PrimaryDirections, mtexts.txtspopupmenu['PrimaryDirs'], self.pdselmenu)
+            self.pmenu.Append(wx.MenuItem(self.pmenu, self.ID_PrimaryDirections, mtexts.txtspopupmenu['PrimaryDirs'], subMenu=self.pdselmenu))
             self.pdtoradix.Enable(False)
         self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveChart'])
         self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['ChartBW'], wx.ITEM_CHECK)
@@ -138,7 +151,7 @@ class TransitFrame(wx.Frame):
         if self.options.primarydir == primdirs.PrimDirs.PLACIDIANSEMIARC:
             self.pds = placidiansapd.PlacidianSAPD(self.chart, self.options, pdrange, direction, self.abort)
         elif self.options.primarydir == primdirs.PrimDirs.PLACIDIANUNDERTHEPOLE:
-            self.pds = placidianutppd.PlacidianUTPPD(self.chat, self.options, pdrange, direction, self.abort)
+            self.pds = placidianutppd.PlacidianUTPPD(self.chart, self.options, pdrange, direction, self.abort)
         else:
             self.pds = regiomontanpd.RegiomontanPD(self.chart, self.options, pdrange, direction, self.abort)
         pdlock.acquire()

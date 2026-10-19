@@ -1,6 +1,8 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import os, wx, mtexts
+import os
+import wx
+import mtexts
 
 class CommonWnd(wx.ScrolledWindow):
     SCROLL_RATE = 20

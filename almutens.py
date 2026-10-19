@@ -1,6 +1,11 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import copy, chart, houses, lots, planets, util
+import copy
+import chart
+import houses
+import lots
+import planets
+import util
 
 class Essentials:
     """Calculates essential almuten-scores"""

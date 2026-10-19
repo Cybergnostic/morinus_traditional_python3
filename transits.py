@@ -1,6 +1,10 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import astrology, chart, fortune, planets, util
+import astrology
+import chart
+import fortune
+import planets
+import util
 
 class Transit:
     NONE = -1

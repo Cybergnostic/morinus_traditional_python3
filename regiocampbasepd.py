@@ -1,6 +1,18 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import math, astrology, primdirs, planets, regiospec, chart, fixedstars, fortune, syzygy, houses, secmotion, userpd, util
+import math
+import astrology
+import primdirs
+import planets
+import regiospec
+import chart
+import fixedstars
+import fortune
+import syzygy
+import houses
+import secmotion
+import userpd
+import util
 
 class RegioCampBasePD(primdirs.PrimDirs):
     """Implements Regiomontanian/Campanian(common) Primary Directions"""

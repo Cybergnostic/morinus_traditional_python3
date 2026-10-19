@@ -1,6 +1,18 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, os, lots, planets, chart, houses, common, commonwnd, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import os
+import lots
+import planets
+import chart
+import houses
+import common
+import commonwnd
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class AlmutenChartWnd(commonwnd.CommonWnd):
 
@@ -8,7 +20,7 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
         commonwnd.CommonWnd.__init__(self, parent, chrt, options, id, size)
         self.mainfr = mainfr
         self.FONT_SIZE = int(21 * self.options.tablesize)
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.ELINE_NUM = 5
         self.ELINE_HEIGHT = 2 * self.LINE_HEIGHT
@@ -24,7 +36,7 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
         if self.options.useaccidental:
             self.ALINE_HEIGHT = 2 * self.LINE_HEIGHT
             self.ATABLE_OFFSET = self.LINE_HEIGHT
-            self.ACCIDENTAL_Y_OFFSET = self.LINE_HEIGHT / 2
+            self.ACCIDENTAL_Y_OFFSET = self.LINE_HEIGHT // 2
             self.ACCIDENTAL_X_OFFSET = self.FONT_SIZE
             self.ATITLE_HEIGHT = self.LINE_HEIGHT
             self.ATITLE_WIDTH = 10 * self.FONT_SIZE
@@ -45,10 +57,10 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
             self.HEIGHT = commonwnd.CommonWnd.BORDER + self.ETABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.ETABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
-        self.fntLargeText = ImageFont.truetype(common.common.abc, 5 * self.FONT_SIZE / 4)
-        self.fntBigText = ImageFont.truetype(common.common.abc, 3 * self.FONT_SIZE / 2)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntLargeText = util.truetype(common.common.abc, 5 * self.FONT_SIZE // 4)
+        self.fntBigText = util.truetype(common.common.abc, 3 * self.FONT_SIZE // 2)
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.drawBkg()
@@ -78,8 +90,8 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
         draw.line((x + self.ETITLE_WIDTH, y, x + self.ETITLE_WIDTH, y + self.ETITLE_HEIGHT), fill=tableclr)
         draw.rectangle(((x, y + self.ETITLE_HEIGHT), (x + self.ETABLE_WIDTH, y + self.ETABLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
         txt = mtexts.txtsalmutencharttable['Essential']
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((x + (self.ETITLE_WIDTH - w) / 2, y + (self.ETITLE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((x + (self.ETITLE_WIDTH - w) // 2, y + (self.ETITLE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         x = BOR
         y = BOR + self.ETITLE_HEIGHT + self.LINE_HEIGHT
         for i in range(self.ELINE_NUM + 1):
@@ -97,34 +109,34 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
             if not self.bw:
                 clr = self.options.clrplanets[i]
             txt = common.common.planets[i]
-            w, h = draw.textsize(txt, self.fntMorinus)
-            draw.text((x + self.ELONGITUDE_CELL_WIDTH + i * self.ECELL_WIDTH + (self.ECELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntMorinus)
+            w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
+            draw.text((x + self.ELONGITUDE_CELL_WIDTH + i * self.ECELL_WIDTH + (self.ECELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntMorinus)
 
         txt = mtexts.txtsalmutencharttable['DegreeWins']
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((x + self.ELONGITUDE_CELL_WIDTH + 7 * self.ECELL_WIDTH + (self.DEGREEWINS_CELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((x + self.ELONGITUDE_CELL_WIDTH + 7 * self.ECELL_WIDTH + (self.DEGREEWINS_CELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         x = BOR
         y = BOR + 2 * self.ETITLE_HEIGHT
         clr = (0, 0, 0)
         if not self.bw:
             clr = self.options.clrplanets[planets.Planets.SUN]
         txt = common.common.planets[planets.Planets.SUN]
-        w, h = draw.textsize(txt, self.fntMorinus)
-        draw.text((x + (self.ESMALL_CELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntMorinus)
+        w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
+        draw.text((x + (self.ESMALL_CELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntMorinus)
         plon = self.chart.planets.planets[planets.Planets.SUN].data[planets.Planet.LON]
         self.drawLong(draw, x + self.ESMALL_CELL_WIDTH, y, plon, clr)
         clr = (0, 0, 0)
         if not self.bw:
             clr = self.options.clrplanets[planets.Planets.MOON]
         txt = common.common.planets[planets.Planets.MOON]
-        w, h = draw.textsize(txt, self.fntMorinus)
-        draw.text((x + (self.ESMALL_CELL_WIDTH - w) / 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntMorinus)
+        w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
+        draw.text((x + (self.ESMALL_CELL_WIDTH - w) // 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntMorinus)
         plon = self.chart.planets.planets[planets.Planets.MOON].data[planets.Planet.LON]
         self.drawLong(draw, x + self.ESMALL_CELL_WIDTH, y + self.LINE_HEIGHT, plon, clr)
         y += 2 * self.LINE_HEIGHT
         txt = mtexts.txtsalmutencharttable['Asc']
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((x + (self.ESMALL_CELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((x + (self.ESMALL_CELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         alon = self.chart.houses.ascmc[houses.Houses.ASC]
         self.drawLong(draw, x + self.ESMALL_CELL_WIDTH, y, alon, txtclr)
         clr = (0, 0, 0)
@@ -132,38 +144,38 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
             clr = self.options.clrLoF
         y += self.LINE_HEIGHT
         txt = common.common.fortune
-        w, h = draw.textsize(txt, self.fntMorinus)
-        draw.text((x + (self.ESMALL_CELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntMorinus)
+        w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
+        draw.text((x + (self.ESMALL_CELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntMorinus)
         flon = self.chart.lots.lots[0][lots.Lots.LON]
         self.drawLong(draw, x + self.ESMALL_CELL_WIDTH, y, flon, clr)
         y += self.LINE_HEIGHT
         txt = mtexts.txtsalmutencharttable['Syzygy']
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((x + (self.ESMALL_CELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((x + (self.ESMALL_CELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         slon = self.chart.syzygy.lon
         self.drawLong(draw, x + self.ESMALL_CELL_WIDTH, y, slon, txtclr)
         y += self.LINE_HEIGHT
         txt = mtexts.txtsalmutencharttable['TotalShares1']
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((x + (self.ESMALL_CELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((x + (self.ESMALL_CELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         txt = mtexts.txtsalmutencharttable['TotalShares2']
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((x + (self.ESMALL_CELL_WIDTH - w) / 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((x + (self.ESMALL_CELL_WIDTH - w) // 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         y += self.ELINE_HEIGHT
         txt = mtexts.txtsalmutencharttable['TotalScores1']
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((x + (self.ESMALL_CELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((x + (self.ESMALL_CELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         txt = mtexts.txtsalmutencharttable['TotalScores2']
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((x + (self.ESMALL_CELL_WIDTH - w) / 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((x + (self.ESMALL_CELL_WIDTH - w) // 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         x = BOR + self.ESMALL_CELL_WIDTH + self.ELONGITUDE_CELL_WIDTH
         y = BOR + 2 * self.ETITLE_HEIGHT
         subnum = len(self.chart.almutens.essentials.essentials[0])
         for i in range(planets.Planets.PLANETS_NUM):
             for j in range(subnum):
                 txt = self.chart.almutens.essentials.essentials[i][j][0]
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((x + i * self.ECELL_WIDTH + (self.ECELL_WIDTH - w) / 2, y + j * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((x + i * self.ECELL_WIDTH + (self.ECELL_WIDTH - w) // 2, y + j * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
 
         y = BOR + 2 * self.ETITLE_HEIGHT + 5 * self.LINE_HEIGHT
         for i in range(planets.Planets.PLANETS_NUM):
@@ -171,8 +183,8 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
             if self.chart.almutens.essentials.maxshare[0] != -1 and self.chart.almutens.essentials.maxshare[0] == i and not self.chart.almutens.essentials.maxshare[2]:
                 fnt = self.fntBigText
             txt = str(self.chart.almutens.essentials.shares[i])
-            w, h = draw.textsize(txt, fnt)
-            draw.text((x + i * self.ECELL_WIDTH + (self.ECELL_WIDTH - w) / 2, y + (self.ELINE_HEIGHT - h) / 2), txt, fill=txtclr, font=fnt)
+            w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+            draw.text((x + i * self.ECELL_WIDTH + (self.ECELL_WIDTH - w) // 2, y + (self.ELINE_HEIGHT - h) // 2), txt, fill=txtclr, font=fnt)
 
         y += self.ELINE_HEIGHT
         for i in range(planets.Planets.PLANETS_NUM):
@@ -180,8 +192,8 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
             if self.chart.almutens.essentials.maxscore[0] != -1 and self.chart.almutens.essentials.maxscore[0] == i and not self.chart.almutens.essentials.maxscore[2]:
                 fnt = self.fntBigText
             txt = str(self.chart.almutens.essentials.scores[i])
-            w, h = draw.textsize(txt, fnt)
-            draw.text((x + i * self.ECELL_WIDTH + (self.ECELL_WIDTH - w) / 2, y + (self.ELINE_HEIGHT - h) / 2), txt, fill=txtclr, font=fnt)
+            w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+            draw.text((x + i * self.ECELL_WIDTH + (self.ECELL_WIDTH - w) // 2, y + (self.ELINE_HEIGHT - h) // 2), txt, fill=txtclr, font=fnt)
 
         x = BOR + self.ESMALL_CELL_WIDTH + self.ELONGITUDE_CELL_WIDTH + 7 * self.ECELL_WIDTH
         y = BOR + 2 * self.ETITLE_HEIGHT
@@ -196,11 +208,11 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
                 pid = self.chart.almutens.essentials.degwinner[i][j][0]
                 if pid != -1:
                     ptxt = common.common.planets[pid]
-                    wpl, hpl = draw.textsize(ptxt, self.fntMorinus)
+                    wpl, hpl = draw.textbbox((0, 0), ptxt, self.fntMorinus)[2:]
                     sco = self.chart.almutens.essentials.degwinner[i][0][1]
                     txt = '(' + str(sco) + ')'
-                    w, h = draw.textsize(txt, self.fntText)
-                    wsp, hsp = draw.textsize(' ', self.fntText)
+                    w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                    wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
                     aux[j][0] = pid
                     aux[j][1] = sco
                     aux[j][2] = wpl + wsp + w
@@ -216,16 +228,16 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
                     if not self.bw:
                         clr = self.options.clrplanets[aux[j][0]]
                     pltxt = common.common.planets[aux[j][0]]
-                    wpl, hpl = draw.textsize(pltxt, self.fntMorinus)
+                    wpl, hpl = draw.textbbox((0, 0), pltxt, self.fntMorinus)[2:]
                     txt = '(' + str(aux[j][1]) + ')'
-                    wsp, hsp = draw.textsize(' ', self.fntText)
-                    w, h = draw.textsize(txt, self.fntText)
+                    wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                    w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
                     prev = 0
                     for p in range(j):
                         prev += aux[j][2] + wsp
 
-                    draw.text((x + (self.DEGREEWINS_CELL_WIDTH - mwidth) / 2 + prev, y + i * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), pltxt, fill=clr, font=self.fntMorinus)
-                    draw.text((x + (self.DEGREEWINS_CELL_WIDTH - mwidth) / 2 + prev + wpl + wsp, y + i * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                    draw.text((x + (self.DEGREEWINS_CELL_WIDTH - mwidth) // 2 + prev, y + i * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), pltxt, fill=clr, font=self.fntMorinus)
+                    draw.text((x + (self.DEGREEWINS_CELL_WIDTH - mwidth) // 2 + prev + wpl + wsp, y + i * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
 
         if self.options.useaccidental:
             x = BOR
@@ -235,8 +247,8 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
             draw.line((x + self.ATITLE_WIDTH, y, x + self.ATITLE_WIDTH, y + self.ETITLE_HEIGHT), fill=tableclr)
             draw.rectangle(((x, y + self.ATITLE_HEIGHT), (x + self.ATABLE_WIDTH, y + self.ATABLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
             txt = mtexts.txtsalmutencharttable['Accidental']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ATITLE_WIDTH - w) / 2, y + (self.ATITLE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ATITLE_WIDTH - w) // 2, y + (self.ATITLE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             x += self.ACCIDENTAL_X_OFFSET
             y += self.ATITLE_HEIGHT + self.ACCIDENTAL_Y_OFFSET
             width = 7 * self.ACELL_WIDTH
@@ -252,19 +264,19 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
                 if not self.bw:
                     clr = self.options.clrplanets[i]
                 txt = common.common.planets[i]
-                w, h = draw.textsize(txt, self.fntMorinus)
-                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
+                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntMorinus)
                 txt = str(self.chart.almutens.accidentals.inhouses[i])
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) / 2, y + self.LINE_HEIGHT + (self.ALINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) // 2, y + self.LINE_HEIGHT + (self.ALINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
 
             y += self.LINE_HEIGHT
             txt = mtexts.txtsalmutencharttable['HouseScores1']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             txt = mtexts.txtsalmutencharttable['HouseScores2']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             yday = y - self.LINE_HEIGHT
             xday = x + self.ACCIDENTAL_X_OFFSET + self.ASMALL_CELL_WIDTH + self.A1COLUMN_NUM * self.ACELL_WIDTH
             y += self.ALINE_HEIGHT + self.ACCIDENTAL_Y_OFFSET
@@ -281,11 +293,11 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
                 if not self.bw:
                     clr = self.options.clrplanets[i]
                 txt = common.common.planets[i]
-                w, h = draw.textsize(txt, self.fntMorinus)
-                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
+                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntMorinus)
                 txt = str(self.chart.almutens.accidentals.inphases[i])
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) / 2, y + self.LINE_HEIGHT + (self.ALINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) // 2, y + self.LINE_HEIGHT + (self.ALINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
 
             width = self.ACELL_WIDTH
             draw.line((xday + self.ASMALL_CELL_WIDTH, yday, xday + self.ASMALL_CELL_WIDTH + width, yday), fill=tableclr)
@@ -294,11 +306,11 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
             draw.rectangle(((xday, yday + self.LINE_HEIGHT), (xday + self.ASMALL_CELL_WIDTH + width, yday + 3 * self.LINE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
             draw.line((xday + self.ASMALL_CELL_WIDTH, yday + self.LINE_HEIGHT, xday + self.ASMALL_CELL_WIDTH, yday + 3 * self.LINE_HEIGHT), fill=tableclr)
             txt = mtexts.txtsalmutencharttable['DayRulerScores1']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((xday + (self.ASMALL_CELL_WIDTH - w) / 2, yday + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((xday + (self.ASMALL_CELL_WIDTH - w) // 2, yday + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             txt = mtexts.txtsalmutencharttable['DayRulerScores2']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((xday + (self.ASMALL_CELL_WIDTH - w) / 2, yday + 2 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((xday + (self.ASMALL_CELL_WIDTH - w) // 2, yday + 2 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             for i in range(planets.Planets.PLANETS_NUM):
                 if self.chart.almutens.accidentals.dayruler[i] != 0:
                     break
@@ -307,11 +319,11 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
             if not self.bw:
                 clr = self.options.clrplanets[i]
             txt = common.common.planets[i]
-            w, h = draw.textsize(txt, self.fntMorinus)
-            draw.text((xday + self.ASMALL_CELL_WIDTH + (self.ACELL_WIDTH - w) / 2, yday + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntMorinus)
+            w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
+            draw.text((xday + self.ASMALL_CELL_WIDTH + (self.ACELL_WIDTH - w) // 2, yday + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntMorinus)
             txt = str(self.chart.almutens.accidentals.dayruler[i])
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((xday + self.ASMALL_CELL_WIDTH + (self.ACELL_WIDTH - w) / 2, yday + self.LINE_HEIGHT + (self.ALINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((xday + self.ASMALL_CELL_WIDTH + (self.ACELL_WIDTH - w) // 2, yday + self.LINE_HEIGHT + (self.ALINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             yhour = yday + 3 * self.LINE_HEIGHT + self.ACCIDENTAL_Y_OFFSET
             xhour = xday
             width = self.ACELL_WIDTH
@@ -321,11 +333,11 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
             draw.rectangle(((xhour, yhour + self.LINE_HEIGHT), (xhour + self.ASMALL_CELL_WIDTH + width, yhour + 3 * self.LINE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
             draw.line((xhour + self.ASMALL_CELL_WIDTH, yhour + self.LINE_HEIGHT, xhour + self.ASMALL_CELL_WIDTH, yhour + 3 * self.LINE_HEIGHT), fill=tableclr)
             txt = mtexts.txtsalmutencharttable['HourRulerScores1']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((xhour + (self.ASMALL_CELL_WIDTH - w) / 2, yhour + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((xhour + (self.ASMALL_CELL_WIDTH - w) // 2, yhour + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             txt = mtexts.txtsalmutencharttable['HourRulerScores2']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((xhour + (self.ASMALL_CELL_WIDTH - w) / 2, yhour + 2 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((xhour + (self.ASMALL_CELL_WIDTH - w) // 2, yhour + 2 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             for i in range(planets.Planets.PLANETS_NUM):
                 if self.chart.almutens.accidentals.hourruler[i] != 0:
                     break
@@ -334,18 +346,18 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
             if not self.bw:
                 clr = self.options.clrplanets[i]
             txt = common.common.planets[i]
-            w, h = draw.textsize(txt, self.fntMorinus)
-            draw.text((xhour + self.ASMALL_CELL_WIDTH + (self.ACELL_WIDTH - w) / 2, yhour + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntMorinus)
+            w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
+            draw.text((xhour + self.ASMALL_CELL_WIDTH + (self.ACELL_WIDTH - w) // 2, yhour + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntMorinus)
             txt = str(self.chart.almutens.accidentals.hourruler[i])
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((xhour + self.ASMALL_CELL_WIDTH + (self.ACELL_WIDTH - w) / 2, yhour + self.LINE_HEIGHT + (self.ALINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((xhour + self.ASMALL_CELL_WIDTH + (self.ACELL_WIDTH - w) // 2, yhour + self.LINE_HEIGHT + (self.ALINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             y += self.LINE_HEIGHT
             txt = mtexts.txtsalmutencharttable['PhaseScores1']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             txt = mtexts.txtsalmutencharttable['PhaseScores2']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             x = BOR
             y = BOR + self.ETABLE_HEIGHT + self.ATABLE_OFFSET + self.ATABLE_HEIGHT + self.TTABLE_OFFSET
             width = 7 * self.ACELL_WIDTH
@@ -359,61 +371,61 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
                 draw.line((x, y - self.LINE_HEIGHT + i * self.ELINE_HEIGHT, x + self.TTABLE_WIDTH, y - self.LINE_HEIGHT + i * self.ELINE_HEIGHT), fill=tableclr)
 
             txt = mtexts.txtsalmutencharttable['Total']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             txt = mtexts.txtsalmutencharttable['EssentialScores1']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             txt = mtexts.txtsalmutencharttable['EssentialScores2']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + 2 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + 2 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             txt = mtexts.txtsalmutencharttable['AccidentalScores1']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + 3 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + 3 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             txt = mtexts.txtsalmutencharttable['AccidentalScores2']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + 4 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + 4 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             txt = mtexts.txtsalmutencharttable['GrandScores1']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + 5 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + 5 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             txt = mtexts.txtsalmutencharttable['GrandScores2']
-            w, h = draw.textsize(txt, self.fntText)
-            draw.text((x + (self.ASMALL_CELL_WIDTH - w) / 2, y + 6 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x + (self.ASMALL_CELL_WIDTH - w) // 2, y + 6 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             for i in range(planets.Planets.PLANETS_NUM):
                 clr = (0, 0, 0)
                 if not self.bw:
                     clr = self.options.clrplanets[i]
                 txt = common.common.planets[i]
-                w, h = draw.textsize(txt, self.fntMorinus)
-                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
+                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntMorinus)
                 fnt = self.fntLargeText
                 txt = str(self.chart.almutens.essentials.scores[i])
-                w, h = draw.textsize(txt, fnt)
-                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) / 2, y + self.LINE_HEIGHT + (self.ELINE_HEIGHT - h) / 2), txt, fill=txtclr, font=fnt)
+                w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) // 2, y + self.LINE_HEIGHT + (self.ELINE_HEIGHT - h) // 2), txt, fill=txtclr, font=fnt)
                 txt = str(self.chart.almutens.accidentals.scores[i])
-                w, h = draw.textsize(txt, fnt)
-                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) / 2, y + 3 * self.LINE_HEIGHT + (self.ELINE_HEIGHT - h) / 2), txt, fill=txtclr, font=fnt)
+                w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) // 2, y + 3 * self.LINE_HEIGHT + (self.ELINE_HEIGHT - h) // 2), txt, fill=txtclr, font=fnt)
                 if i == self.chart.almutens.maxscore[0] and not self.chart.almutens.maxscore[2]:
                     fnt = self.fntBigText
                 txt = str(self.chart.almutens.scores[i])
-                w, h = draw.textsize(txt, fnt)
-                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) / 2, y + 5 * self.LINE_HEIGHT + (self.ELINE_HEIGHT - h) / 2), txt, fill=txtclr, font=fnt)
+                w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+                draw.text((x + self.ASMALL_CELL_WIDTH + i * self.ACELL_WIDTH + (self.ACELL_WIDTH - w) // 2, y + 5 * self.LINE_HEIGHT + (self.ELINE_HEIGHT - h) // 2), txt, fill=txtclr, font=fnt)
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
 
     def drawLong(self, draw, x, y, lon, clr):
         if self.options.ayanamsha != 0:
             lon -= self.chart.ayanamsha
             lon = util.normalize(lon)
         d, m, s = util.decToDeg(lon)
-        sign = d / chart.Chart.SIGN_DEG
+        sign = d // chart.Chart.SIGN_DEG
         pos = d % chart.Chart.SIGN_DEG
-        wsp, hsp = draw.textsize(' ', self.fntText)
-        wsg, hsg = draw.textsize(self.signs[sign], self.fntMorinus)
+        wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+        wsg, hsg = draw.textbbox((0, 0), self.signs[sign], self.fntMorinus)[2:]
         txt = str(pos).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-        w, h = draw.textsize(txt, self.fntText)
-        offset = (self.ELONGITUDE_CELL_WIDTH - (w + wsp + wsg)) / 2
-        draw.text((x + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=clr, font=self.fntText)
-        draw.text((x + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) / 2), self.signs[sign], fill=clr, font=self.fntMorinus)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        offset = (self.ELONGITUDE_CELL_WIDTH - (w + wsp + wsg)) // 2
+        draw.text((x + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntText)
+        draw.text((x + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) // 2), self.signs[sign], fill=clr, font=self.fntMorinus)

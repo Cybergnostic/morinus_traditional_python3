@@ -1,6 +1,19 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, Image, ImageDraw, ImageFont, math, astrology, chart, houses, planets, fortune, options, common, util, mtexts
+import wx
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import math
+import astrology
+import chart
+import houses
+import planets
+import fortune
+import options
+import common
+import util
+import mtexts
 
 class GraphChartPDs:
     DEG1 = math.pi / 180
@@ -17,14 +30,14 @@ class GraphChartPDs:
         self.w, self.h = size
         self.options = opts
         self.bw = bw
-        self.buffer = wx.EmptyBitmap(self.w, self.h)
+        self.buffer = wx.Bitmap(self.w, self.h)
         self.bdc = wx.BufferedDC(None, self.buffer)
         self.chartsize = min(self.w, self.h)
-        self.maxradius = self.chartsize / 2
-        self.center = wx.Point(self.w / 2, self.h / 2)
+        self.maxradius = self.chartsize // 2
+        self.center = wx.Point(self.w // 2, self.h // 2)
         self.arrowlen = 0.04
-        self.symbolSize = self.maxradius / 16
-        self.signSize = self.maxradius / 20
+        self.symbolSize = self.maxradius // 16
+        self.signSize = self.maxradius // 20
         self.rEarth = 0.1 * self.maxradius
         self.rHouses = 0.16 * self.maxradius
         self.rHouseName = self.rEarth + (self.rHouses - self.rEarth) / 2.0
@@ -58,16 +71,16 @@ class GraphChartPDs:
         self.rPosMinIng = self.rRetrIng + 0.04 * self.maxradius
         self.rPosDegIng = self.rPosMinIng + 0.04 * self.maxradius
         self.rLineIng = self.rPDsline0 + 0.02 * self.maxradius
-        self.smallsymbolSize = 2 * self.symbolSize / 3
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.symbolSize)
-        self.fntSmallMorinus = ImageFont.truetype(common.common.symbols, self.smallsymbolSize)
-        self.fntMorinusSigns = ImageFont.truetype(common.common.symbols, self.signSize)
-        self.fntText = ImageFont.truetype(common.common.abc, self.symbolSize / 2)
-        self.fntSmallText = ImageFont.truetype(common.common.abc, self.symbolSize / 4)
-        self.fntSmallText2 = ImageFont.truetype(common.common.abc, self.symbolSize / 3)
-        self.fntBigText = ImageFont.truetype(common.common.abc, self.symbolSize / 4 * 3)
-        self.fntMorinus2 = ImageFont.truetype(common.common.symbols, self.symbolSize / 4 * 3)
-        self.fntRetr = ImageFont.truetype(common.common.symbols, self.symbolSize / 2)
+        self.smallsymbolSize = 2 * self.symbolSize // 3
+        self.fntMorinus = util.truetype(common.common.symbols, self.symbolSize)
+        self.fntSmallMorinus = util.truetype(common.common.symbols, self.smallsymbolSize)
+        self.fntMorinusSigns = util.truetype(common.common.symbols, self.signSize)
+        self.fntText = util.truetype(common.common.abc, self.symbolSize // 2)
+        self.fntSmallText = util.truetype(common.common.abc, self.symbolSize // 4)
+        self.fntSmallText2 = util.truetype(common.common.abc, self.symbolSize // 3)
+        self.fntBigText = util.truetype(common.common.abc, self.symbolSize // 4 * 3)
+        self.fntMorinus2 = util.truetype(common.common.symbols, self.symbolSize // 4 * 3)
+        self.fntRetr = util.truetype(common.common.symbols, self.symbolSize // 2)
         self.deg_symbol = '\xb0'
         return
 
@@ -79,7 +92,7 @@ class GraphChartPDs:
         self.drawAscMC(self.chartPDs.houses.ascmc, self.rAscMCPDsBeg, self.rASCMCPDs, self.rArrowPDs, True)
         wxImag = self.buffer.ConvertToImage()
         self.img = Image.new('RGB', (wxImag.GetWidth(), wxImag.GetHeight()))
-        self.img.fromstring(wxImag.GetData())
+        self.img.frombytes(wxImag.GetData())
         self.draw = ImageDraw.Draw(self.img)
         if self.options.houses:
             self.drawHouseNames(self.chartRadix, self.rHouseName)
@@ -90,9 +103,9 @@ class GraphChartPDs:
         self.drawPlanets(self.chartPDs, self.pshiftPDs, self.rPlanetsPDs, self.rPosDegPDs, self.rPosMinPDs, self.rRetrPDs)
         self.pshiftIng = self.arrange(self.chartIngress.planets.planets, self.chartIngress.fortune.fortune, self.rPlanetsIng)
         self.drawPlanets(self.chartIngress, self.pshiftIng, self.rPlanetsIng, self.rPosDegIng, self.rPosMinIng, self.rRetrIng)
-        wxImg = wx.EmptyImage(self.img.size[0], self.img.size[1])
-        wxImg.SetData(self.img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(self.img.size[0], self.img.size[1])
+        wxImg.SetData(self.img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
         self.bdc = wx.BufferedDC(None, self.buffer)
         self.drawPlanetLines(self.pshift, self.chartRadix.planets.planets, self.chartRadix.fortune.fortune, self.r0, self.rLine)
         self.drawPlanetLines(self.pshiftPDs, self.chartPDs.planets.planets, self.chartPDs.fortune.fortune, self.r30, self.rLinePDs)
@@ -105,7 +118,6 @@ class GraphChartPDs:
             bkgclr = (255, 255, 255)
         self.bdc.SetBackground(wx.Brush(bkgclr))
         self.bdc.Clear()
-        self.bdc.BeginDrawing()
         self.bdc.SetBrush(wx.Brush(bkgclr))
         cx, cy = self.center.Get()
         clr = self.options.clrframe
@@ -118,29 +130,29 @@ class GraphChartPDs:
             w = 2
         pen = wx.Pen(clr, 1)
         self.bdc.SetPen(pen)
-        self.bdc.DrawCircle(cx, cy, self.rIngressline0)
+        self.bdc.DrawCircle(int(cx), int(cy), int(self.rIngressline0))
         pen = wx.Pen(clr, 1)
         self.bdc.SetPen(pen)
-        self.bdc.DrawCircle(cx, cy, self.rPDsline0)
+        self.bdc.DrawCircle(int(cx), int(cy), int(self.rPDsline0))
         pen = wx.Pen(clr, w)
         self.bdc.SetPen(pen)
-        self.bdc.DrawCircle(cx, cy, self.r30)
+        self.bdc.DrawCircle(int(cx), int(cy), int(self.r30))
         pen = wx.Pen(clr, 1)
         self.bdc.SetPen(pen)
-        self.bdc.DrawCircle(cx, cy, self.r10)
+        self.bdc.DrawCircle(int(cx), int(cy), int(self.r10))
         pen = wx.Pen(clr, 1)
         self.bdc.SetPen(pen)
-        self.bdc.DrawCircle(cx, cy, self.r10Inner)
+        self.bdc.DrawCircle(int(cx), int(cy), int(self.r10Inner))
         pen = wx.Pen(clr, w)
         self.bdc.SetPen(pen)
-        self.bdc.DrawCircle(cx, cy, self.r0)
+        self.bdc.DrawCircle(int(cx), int(cy), int(self.r0))
         if self.options.houses:
             clr = self.options.clrhouses
             if self.bw:
                 clr = (0, 0, 0)
             pen = wx.Pen(clr, 1)
             self.bdc.SetPen(pen)
-            self.bdc.DrawCircle(cx, cy, self.rHouses)
+            self.bdc.DrawCircle(int(cx), int(cy), int(self.rHouses))
         clr = self.options.clrAscMC
         if self.bw:
             clr = (0, 0, 0)
@@ -151,7 +163,7 @@ class GraphChartPDs:
             w = 3
         pen = wx.Pen(clr, w)
         self.bdc.SetPen(pen)
-        self.bdc.DrawCircle(cx, cy, self.rEarth)
+        self.bdc.DrawCircle(int(cx), int(cy), int(self.rEarth))
         asclon = self.chartRadix.houses.ascmc[houses.Houses.ASC]
         if self.options.ayanamsha != 0:
             asclon -= self.chartRadix.ayanamsha
@@ -180,7 +192,6 @@ class GraphChartPDs:
         self.bdc.SetPen(pen)
         self.drawLines(GraphChartPDs.DEG10, asclon, self.r30, self.r10)
         self.drawLines(GraphChartPDs.DEG10, asclon, self.r0, self.r10Inner)
-        self.bdc.EndDrawing()
 
     def drawSigns(self):
         cx, cy = self.center.Get()
@@ -197,7 +208,7 @@ class GraphChartPDs:
         while j < chart.Chart.SIGN_NUM:
             x = cx + math.cos(i) * self.rSigns
             y = cy + math.sin(i) * self.rSigns
-            self.draw.text((x - self.signSize / 2, y - self.signSize / 2), signs[j], font=self.fntMorinusSigns, fill=clr)
+            self.draw.text((x - self.signSize // 2, y - self.signSize // 2), signs[j], font=self.fntMorinusSigns, fill=clr)
             i -= GraphChartPDs.DEG30
             j += 1
 
@@ -217,7 +228,7 @@ class GraphChartPDs:
             y1 = cy + math.sin(math.pi + dif) * r1
             x2 = cx + math.cos(math.pi + dif) * r2
             y2 = cy + math.sin(math.pi + dif) * r2
-            self.bdc.DrawLine(x1, y1, x2, y2)
+            self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
 
     def drawAscMC(self, ascmc, r1, r2, rArrow, AscMConly=False):
         cx, cy = self.center.Get()
@@ -248,7 +259,7 @@ class GraphChartPDs:
             y1 = cy + math.sin(ang) * r1
             x2 = cx + math.cos(ang) * r2
             y2 = cy + math.sin(ang) * r2
-            self.bdc.DrawLine(x1, y1, x2, y2)
+            self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
             if i == 0 or i == 2:
                 self.drawArrow(ang, r2, clr, rArrow)
 
@@ -264,7 +275,7 @@ class GraphChartPDs:
         li = (
          (
           xl, yl, xr, yr), (xr, yr, xm, ym), (xm, ym, xl, yl))
-        self.bdc.DrawLineList(li)
+        self.bdc.DrawLineList([[int(v) for v in ln] for ln in li])
 
     def drawAscMCPos(self):
         cx, cy = self.center.Get()
@@ -278,12 +289,12 @@ class GraphChartPDs:
                 lon = util.normalize(lon)
             d, m, s = util.decToDeg(lon)
             d = d % chart.Chart.SIGN_DEG
-            wdeg, hdeg = self.draw.textsize(str(d), self.fntText)
-            wmin, hmin = self.draw.textsize(str(m).zfill(2), self.fntSmallText)
+            wdeg, hdeg = self.draw.textbbox((0, 0), str(d), self.fntText)[2:]
+            wmin, hmin = self.draw.textbbox((0, 0), str(m).zfill(2), self.fntSmallText)[2:]
             x = cx + math.cos(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - self.chart.houses.ascmc[i])) * self.rPosAscMC
             y = cy + math.sin(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - self.chart.houses.ascmc[i])) * self.rPosAscMC
-            xdeg = x - wdeg / 2
-            ydeg = y - hdeg / 2
+            xdeg = x - wdeg // 2
+            ydeg = y - hdeg // 2
             self.draw.text((xdeg, ydeg), str(d), fill=clrpos, font=self.fntText)
             self.draw.text((xdeg + wdeg, ydeg), str(m).zfill(2), fill=clrpos, font=self.fntSmallText)
 
@@ -312,12 +323,12 @@ class GraphChartPDs:
                 lon = util.normalize(lon)
             d, m, s = util.decToDeg(lon)
             d = d % chart.Chart.SIGN_DEG
-            wdeg, hdeg = self.draw.textsize(str(d), self.fntText)
-            wmin, hmin = self.draw.textsize(str(m).zfill(2), self.fntSmallText)
+            wdeg, hdeg = self.draw.textbbox((0, 0), str(d), self.fntText)[2:]
+            wmin, hmin = self.draw.textbbox((0, 0), str(m).zfill(2), self.fntSmallText)[2:]
             x = cx + math.cos(math.pi + math.radians(asc - self.chart.houses.cusps[i])) * self.rPosHouses
             y = cy + math.sin(math.pi + math.radians(asc - self.chart.houses.cusps[i])) * self.rPosHouses
-            xdeg = x - wdeg / 2
-            ydeg = y - hdeg / 2
+            xdeg = x - wdeg // 2
+            ydeg = y - hdeg // 2
             self.draw.text((xdeg, ydeg), str(d), fill=clrpos, font=self.fntText)
             self.draw.text((xdeg + wdeg, ydeg), str(m).zfill(2), fill=clrpos, font=self.fntSmallText)
 
@@ -344,12 +355,12 @@ class GraphChartPDs:
             y = cy + math.sin(math.pi + dif - halfwidth) * rHouseNames
             if i == 1 or i == 2:
                 xoffs = 0
-                yoffs = self.symbolSize / 4
+                yoffs = self.symbolSize // 4
                 if i == 2:
-                    xoffs = self.symbolSize / 8
+                    xoffs = self.symbolSize // 8
             else:
-                xoffs = self.symbolSize / 4
-                yoffs = self.symbolSize / 4
+                xoffs = self.symbolSize // 4
+                yoffs = self.symbolSize // 4
             self.draw.text((x - xoffs, y - yoffs), common.common.housenames[(i - 1)], fill=clr, font=self.fntText)
 
     def drawPlanets(self, chrt, pshift, rPlanet, rPosDeg, rPosMin, rRetr, reverse=True):
@@ -374,7 +385,7 @@ class GraphChartPDs:
                 obj = common.common.planets[i]
             else:
                 obj = common.common.fortune
-            self.draw.text((x - self.symbolSize / 2, y - self.symbolSize / 2), obj, fill=clr, font=self.fntMorinus)
+            self.draw.text((x - self.symbolSize // 2, y - self.symbolSize // 2), obj, fill=clr, font=self.fntMorinus)
             alon = lon
             if self.options.ayanamsha != 0:
                 alon -= chrt.ayanamsha
@@ -382,18 +393,18 @@ class GraphChartPDs:
             d, m, s = util.decToDeg(alon)
             d = d % chart.Chart.SIGN_DEG
             degtxt = str(d).zfill(2) + self.deg_symbol
-            wdeg, hdeg = self.draw.textsize(degtxt, self.fntText)
+            wdeg, hdeg = self.draw.textbbox((0, 0), degtxt, self.fntText)[2:]
             x = cx + math.cos(math.pi + math.radians(self.chartRadix.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * rPosDeg
             y = cy + math.sin(math.pi + math.radians(self.chartRadix.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * rPosDeg
-            xdeg = x - wdeg / 2
-            ydeg = y - hdeg / 2
+            xdeg = x - wdeg // 2
+            ydeg = y - hdeg // 2
             self.draw.text((xdeg, ydeg), degtxt, fill=clr, font=self.fntText)
             mintxt = str(m).zfill(2) + "'"
-            wdeg, hdeg = self.draw.textsize(mintxt, self.fntSmallText2)
+            wdeg, hdeg = self.draw.textbbox((0, 0), mintxt, self.fntSmallText2)[2:]
             x = cx + math.cos(math.pi + math.radians(self.chartRadix.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * rPosMin
             y = cy + math.sin(math.pi + math.radians(self.chartRadix.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * rPosMin
-            xdeg = x - wdeg / 2
-            ydeg = y - hdeg / 2
+            xdeg = x - wdeg // 2
+            ydeg = y - hdeg // 2
             self.draw.text((xdeg, ydeg), mintxt.zfill(2), fill=clr, font=self.fntSmallText2)
             if i < planets.Planets.BODIES_NUM and chrt.planets.planets[i].data[planets.Planet.SPLON] <= 0.0:
                 if chrt.planets.planets[i].data[planets.Planet.SPLON] == 0.0:
@@ -402,11 +413,11 @@ class GraphChartPDs:
                 elif chrt.planets.planets[i].data[planets.Planet.SPLON] < 0.0:
                     t = common.common.retr
                     rfnt = self.fntRetr
-                wdeg, hdeg = self.draw.textsize(t, rfnt)
+                wdeg, hdeg = self.draw.textbbox((0, 0), t, rfnt)[2:]
                 x = cx + math.cos(math.pi + math.radians(self.chartRadix.houses.ascmc[houses.Houses.ASC] - chrt.planets.planets[i].data[planets.Planet.LON] - pshift[i])) * rRetr
                 y = cy + math.sin(math.pi + math.radians(self.chartRadix.houses.ascmc[houses.Houses.ASC] - chrt.planets.planets[i].data[planets.Planet.LON] - pshift[i])) * rRetr
-                xdeg = x - wdeg / 2
-                ydeg = y - hdeg / 2
+                xdeg = x - wdeg // 2
+                ydeg = y - hdeg // 2
                 self.draw.text((xdeg, ydeg), t, fill=clr, font=rfnt)
 
         return
@@ -419,7 +430,7 @@ class GraphChartPDs:
             y1 = cy + math.sin(i) * r1
             x2 = cx + math.cos(i) * r2
             y2 = cy + math.sin(i) * r2
-            self.bdc.DrawLine(x1, y1, x2, y2)
+            self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
             i -= deg
 
     def drawTermsLines(self):
@@ -441,7 +452,7 @@ class GraphChartPDs:
                 y1 = cy + math.sin(math.pi + shift - math.radians(deg)) * self.rTerms
                 x2 = cx + math.cos(math.pi + shift - math.radians(deg)) * self.rDecans
                 y2 = cy + math.sin(math.pi + shift - math.radians(deg)) * self.rDecans
-                self.bdc.DrawLine(x1, y1, x2, y2)
+                self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
 
             sign += signdeg
 
@@ -466,7 +477,7 @@ class GraphChartPDs:
                 deg += float(self.options.terms[self.options.selterm][i][j][1])
                 x = cx + math.cos(math.pi + shift - math.radians(pldeg)) * self.rTermsPlanet
                 y = cy + math.sin(math.pi + shift - math.radians(pldeg)) * self.rTermsPlanet
-                self.draw.text((x - self.smallsymbolSize / 2, y - self.smallsymbolSize / 2), common.common.Planets[self.options.terms[self.options.selterm][i][j][0]], fill=clr, font=self.fntSmallMorinus)
+                self.draw.text((x - self.smallsymbolSize // 2, y - self.smallsymbolSize // 2), common.common.Planets[self.options.terms[self.options.selterm][i][j][0]], fill=clr, font=self.fntSmallMorinus)
 
             sign += signdeg
 
@@ -484,7 +495,7 @@ class GraphChartPDs:
             y1 = cy + math.sin(i) * self.rInner
             x2 = cx + math.cos(i) * self.rDecans
             y2 = cy + math.sin(i) * self.rDecans
-            self.bdc.DrawLine(x1, y1, x2, y2)
+            self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
             i -= deg
 
     def drawDecans(self):
@@ -504,7 +515,7 @@ class GraphChartPDs:
             for j in range(subnum):
                 x = cx + math.cos(math.pi + shift - math.radians(deg)) * self.rDecansPlanet
                 y = cy + math.sin(math.pi + shift - math.radians(deg)) * self.rDecansPlanet
-                self.draw.text((x - self.smallsymbolSize / 2, y - self.smallsymbolSize / 2), common.common.Planets[self.options.decans[self.options.seldecan][i][j]], fill=clr, font=self.fntSmallMorinus)
+                self.draw.text((x - self.smallsymbolSize // 2, y - self.smallsymbolSize // 2), common.common.Planets[self.options.decans[self.options.seldecan][i][j]], fill=clr, font=self.fntSmallMorinus)
                 deg += 10.0
 
     def drawPlanetLines(self, pshift, pls, frtn, r0, rl1):
@@ -530,7 +541,7 @@ class GraphChartPDs:
         y1 = cy + math.sin(math.pi + math.radians(self.chartRadix.houses.ascmc[houses.Houses.ASC] - lon)) * r1
         x2 = cx + math.cos(math.pi + math.radians(self.chartRadix.houses.ascmc[houses.Houses.ASC] - lon - pshift[planet])) * r2
         y2 = cy + math.sin(math.pi + math.radians(self.chartRadix.houses.ascmc[houses.Houses.ASC] - lon - pshift[planet])) * r2
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
 
     def arrange(self, plnts, frtn, rPlanet):
         """Arranges bodies(planets, nodes, LoF) so they won't overlap each other"""
@@ -613,14 +624,14 @@ class GraphChartPDs:
         y2 = cy + math.sin(math.pi + math.radians(self.chartRadix.houses.ascmc[houses.Houses.ASC] - order[p2] - pshift[mixed[p2]])) * rPlanet
         w1, h1 = (0.0, 0.0)
         if mixed[p1] < planets.Planets.BODIES_NUM:
-            w1, h1 = self.fntMorinus.getsize(common.common.planets[mixed[p1]])
+            w1, h1 = self.fntMorinus.getbbox(common.common.planets[mixed[p1]])[2:]
         else:
-            w1, h1 = self.fntMorinus.getsize(common.common.fortune)
+            w1, h1 = self.fntMorinus.getbbox(common.common.fortune)[2:]
         w2, h2 = (0.0, 0.0)
         if mixed[p2] < planets.Planets.BODIES_NUM:
-            w2, h2 = self.fntMorinus.getsize(common.common.planets[mixed[p2]])
+            w2, h2 = self.fntMorinus.getbbox(common.common.planets[mixed[p2]])[2:]
         else:
-            w2, h2 = self.fntMorinus.getsize(common.common.fortune)
+            w2, h2 = self.fntMorinus.getbbox(common.common.fortune)[2:]
         while self.overlap(x1, y1, w1, h1, x2, y2, w2, h2):
             if not forward:
                 pshift[mixed[p1]] -= 0.1

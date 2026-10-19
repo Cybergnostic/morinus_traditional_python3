@@ -1,6 +1,9 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, mtexts, chart, util
+import wx
+import mtexts
+import chart
+import util
 
 class ElectionStepperDlg(wx.Dialog):
 
@@ -25,7 +28,7 @@ class ElectionStepperDlg(wx.Dialog):
         ID_DecrSec = wx.NewId()
         sb = wx.StaticBox(self, label='')
         sbsizer = wx.StaticBoxSizer(sb, wx.VERTICAL)
-        gsizer = wx.FlexGridSizer(6, 2)
+        gsizer = wx.FlexGridSizer(0, 2, 0, 0)
         label = wx.StaticText(self, -1, mtexts.txtselectionsstepperdlg['Year'])
         gsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         btnIncrYear = wx.Button(self, ID_IncrYear, '++', size=(40, 30))

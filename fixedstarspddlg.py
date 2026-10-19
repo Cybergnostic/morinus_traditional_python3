@@ -1,6 +1,13 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import sys, os, wx, limchecklistctrlmixin, chart, mtexts, astrology, util
+import sys
+import os
+import wx
+import limchecklistctrlmixin
+import chart
+import mtexts
+import astrology
+import util
 
 class FixedStars:
 
@@ -36,7 +43,7 @@ class FixedStars:
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
-class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
+class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
     NUM = 0
     NAME = 1
     NOMNAME = 2
@@ -73,9 +80,9 @@ class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin
         for key, data in items:
             cnt += 1
             index = self.InsertStringItem(sys.maxsize, data[0])
-            self.SetStringItem(index, FixedStarListCtrl.NUM, str(cnt) + '.')
-            self.SetStringItem(index, FixedStarListCtrl.NAME, data[0])
-            self.SetStringItem(index, FixedStarListCtrl.NOMNAME, data[1])
+            self.SetItem(index, FixedStarListCtrl.NUM, str(cnt) + '.')
+            self.SetItem(index, FixedStarListCtrl.NAME, data[0])
+            self.SetItem(index, FixedStarListCtrl.NOMNAME, data[1])
             self.SetItemData(index, key)
 
         self.SetColumnWidth(FixedStarListCtrl.NUM, 50)
@@ -116,10 +123,9 @@ class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin
 class FixedStarsPDDlg(wx.Dialog):
 
     def __init__(self, parent, options, pdfixedstarssel, ephepath):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsfixedstarspddlg['FixedStars'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsfixedstarspddlg['FixedStars'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         self.sstars = wx.StaticBox(self, label='')
         starssizer = wx.StaticBoxSizer(self.sstars, wx.VERTICAL)

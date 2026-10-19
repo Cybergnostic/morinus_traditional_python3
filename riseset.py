@@ -1,6 +1,11 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import math, astrology, chart, planets, mtexts, util
+import math
+import astrology
+import chart
+import planets
+import mtexts
+import util
 
 class RiseSet:
     """Computes Rise/Set times (for the birthday)"""

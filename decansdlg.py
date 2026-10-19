@@ -1,6 +1,8 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import copy, wx, mtexts
+import copy
+import wx
+import mtexts
 
 class DecansDlg(wx.Dialog):
 
@@ -46,7 +48,7 @@ class DecansDlg(wx.Dialog):
         decanssizer = wx.StaticBoxSizer(sdecans, wx.VERTICAL)
         num = len(self.decans)
         subnum = len(self.decans[0])
-        gsizer = wx.FlexGridSizer(num, 2, 0, 0)
+        gsizer = wx.FlexGridSizer(0, 2, 0, 0)
         signs = (mtexts.txtscommon['Aries'], mtexts.txtscommon['Taurus'], mtexts.txtscommon['Gemini'], mtexts.txtscommon['Cancer'], mtexts.txtscommon['Leo'], mtexts.txtscommon['Virgo'], mtexts.txtscommon['Libra'], mtexts.txtscommon['Scorpio'], mtexts.txtscommon['Sagittarius'], mtexts.txtscommon['Capricorn'], mtexts.txtscommon['Aquarius'], mtexts.txtscommon['Pisces'])
         pls = (mtexts.txtscommon['Saturn'], mtexts.txtscommon['Jupiter'], mtexts.txtscommon['Mars'], mtexts.txtscommon['Sun'], mtexts.txtscommon['Venus'], mtexts.txtscommon['Mercury'], mtexts.txtscommon['Moon'])
         for i in range(num):

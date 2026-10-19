@@ -1,6 +1,9 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, pdsinchartingresswnd, mtexts
+import wx
+import chart
+import pdsinchartingresswnd
+import mtexts
 
 class PDsInChartIngressFrame(wx.Frame):
     XSIZE = 512

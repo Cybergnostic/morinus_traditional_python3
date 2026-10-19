@@ -1,6 +1,11 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, intvalidator, rangechecker, mtexts, util
+import wx
+import chart
+import intvalidator
+import rangechecker
+import mtexts
+import util
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
@@ -9,10 +14,9 @@ class ProfDlg(wx.Dialog):
     def __init__(self, parent, radixjd, radixplace):
         self.radixjd = radixjd
         self.radixplace = radixplace
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsprofdlg['Profections'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsprofdlg['Profections'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         rnge = 3000
@@ -22,7 +26,7 @@ class ProfDlg(wx.Dialog):
         self.sdate = wx.StaticBox(self, label='')
         datesizer = wx.StaticBoxSizer(self.sdate, wx.VERTICAL)
         vsizer = wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(1, 3)
+        fgsizer = wx.FlexGridSizer(0, 3, 0, 0)
         self.yeartxt = wx.StaticText(self, -1, mtexts.txtsprofdlg['Year'] + ':')
         vsizer.Add(self.yeartxt, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         self.year = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, rnge), size=(50,
@@ -52,10 +56,10 @@ class ProfDlg(wx.Dialog):
         self.day.SetMaxLength(2)
         vsizer.Add(self.day, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        datesizer.Add(fgsizer, 0, wx.GROW | wx.ALIGN_CENTER | wx.ALL, 5)
+        datesizer.Add(fgsizer, 0, wx.GROW | wx.ALL, 5)
         self.stime = wx.StaticBox(self, label='')
         timesizer = wx.StaticBoxSizer(self.stime, wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(1, 3)
+        fgsizer = wx.FlexGridSizer(0, 3, 0, 0)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         self.hourtxt = wx.StaticText(self, -1, mtexts.txtsprofdlg['Hour'] + ':')
         vsizer.Add(self.hourtxt, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
@@ -83,7 +87,7 @@ class ProfDlg(wx.Dialog):
         self.second.SetMaxLength(2)
         vsizer.Add(self.second, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        timesizer.Add(fgsizer, 0, wx.GROW | wx.ALIGN_CENTER | wx.ALL, 5)
+        timesizer.Add(fgsizer, 0, wx.GROW | wx.ALL, 5)
         mvsizer.Add(datesizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, 5)
         mvsizer.Add(timesizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, 5)
         btnsizer = wx.StdDialogButtonSizer()

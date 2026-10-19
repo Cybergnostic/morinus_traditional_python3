@@ -1,6 +1,11 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, copy, floatvalidator, planets, mtexts
+import wx
+import copy
+import floatvalidator
+import planets
+import mtexts
+import util
 
 class OrbsDlg(wx.Dialog):
     MAXPLANETORB = 17.0
@@ -18,7 +23,7 @@ class OrbsDlg(wx.Dialog):
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         splanets = wx.StaticBox(self, label='')
         splanetssizer = wx.StaticBoxSizer(splanets, wx.VERTICAL)
-        gsizer = wx.GridSizer(7, 2)
+        gsizer = wx.GridSizer(0, 2, 0, 0)
         label = wx.StaticText(self, -1, mtexts.txtscommon['Saturn'] + ':')
         gsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         self.saturnorb = wx.TextCtrl(self, -1, '', validator=floatvalidator.FloatValidator(0.0, OrbsDlg.MAXPLANETORB), size=(50,
@@ -62,12 +67,12 @@ class OrbsDlg(wx.Dialog):
         self.moonorb.SetMaxLength(4)
         gsizer.Add(self.moonorb, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         splanetssizer.Add(gsizer, 0, wx.ALIGN_LEFT | wx.LEFT | wx.TOP, 5)
-        mhsizer.Add(splanetssizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL, 0)
+        mhsizer.Add(splanetssizer, 0, wx.GROW, 0)
         self.arplsorbs = (
          self.saturnorb, self.jupiterorb, self.marsorb, self.sunorb, self.venusorb, self.mercuryorb, self.moonorb)
         spplanets = wx.StaticBox(self, label=mtexts.txtsorbsdlg['Parallels'])
         spplanetssizer = wx.StaticBoxSizer(spplanets, wx.VERTICAL)
-        gsizer = wx.GridSizer(7, 2)
+        gsizer = wx.GridSizer(0, 2, 0, 0)
         label = wx.StaticText(self, -1, mtexts.txtscommon['Saturn'] + ':')
         gsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         self.saturnporb = wx.TextCtrl(self, -1, '', validator=floatvalidator.FloatValidator(0.0, OrbsDlg.MAXPLANETPORB), size=(50,
@@ -111,12 +116,12 @@ class OrbsDlg(wx.Dialog):
         self.moonporb.SetMaxLength(3)
         gsizer.Add(self.moonporb, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         spplanetssizer.Add(gsizer, 0, wx.ALIGN_LEFT | wx.LEFT | wx.TOP, 5)
-        mhsizer.Add(spplanetssizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
+        mhsizer.Add(spplanetssizer, 0, wx.GROW | wx.LEFT, 5)
         self.arpplsorbs = (
          self.saturnporb, self.jupiterporb, self.marsporb, self.sunporb, self.venusporb, self.mercuryporb, self.moonporb)
         self.scusps = wx.StaticBox(self, label=mtexts.txtsorbsdlg['PlanetsInHouse'])
         scuspssizer = wx.StaticBoxSizer(self.scusps, wx.VERTICAL)
-        gsizer = wx.GridSizer(2, 2)
+        gsizer = wx.GridSizer(0, 2, 0, 0)
         label = wx.StaticText(self, -1, mtexts.txtsorbsdlg['AscMC'] + ':')
         gsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         self.cuspascmc = wx.TextCtrl(self, -1, '', validator=floatvalidator.FloatValidator(0.0, OrbsDlg.MAXHOUSEORB), size=(50,
@@ -134,7 +139,7 @@ class OrbsDlg(wx.Dialog):
         vsizer.Add(scuspssizer, 0)
         self.sdaynight = wx.StaticBox(self, label='')
         sdaynightsizer = wx.StaticBoxSizer(self.sdaynight, wx.VERTICAL)
-        gsizer = wx.GridSizer(1, 2)
+        gsizer = wx.GridSizer(0, 2, 0, 0)
         label = wx.StaticText(self, -1, mtexts.txtsorbsdlg['DayNight'] + ':')
         gsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         self.daynight = wx.TextCtrl(self, -1, '', validator=floatvalidator.FloatValidator(0.0, OrbsDlg.MAXDAYNIGHTORB), size=(50,
@@ -147,7 +152,7 @@ class OrbsDlg(wx.Dialog):
         self.prevselection = 0
         sfsorbs = wx.StaticBox(self, label=mtexts.txtsorbsdlg['FixedStars'])
         sfsorbssizer = wx.StaticBoxSizer(sfsorbs, wx.VERTICAL)
-        gsizer = wx.GridSizer(2, 2)
+        gsizer = wx.GridSizer(0, 2, 0, 0)
         self.fsnames = list(self.options.fixedstars.keys())
         if self.nofixedstars:
             seltxt = ''
@@ -163,7 +168,7 @@ class OrbsDlg(wx.Dialog):
                                                                                                                                 -1))
         self.fsorbstxt.SetMaxLength(4)
         if not self.nofixedstars:
-            self.fsorbstxt.SetValue(str(self.fixedstars[self.fsnames[0]]))
+            self.fsorbstxt.SetValue(util.floatstr(self.fixedstars[self.fsnames[0]]))
         else:
             self.fsorbstxt.Enable(False)
         gsizer.Add(self.fsorbstxt, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -178,13 +183,13 @@ class OrbsDlg(wx.Dialog):
                                                                                                                                -1))
         self.fsorbtxt.SetMaxLength(4)
         if not self.nofixedstars:
-            self.fsorbtxt.SetValue(str(self.options.fixedstarsorb))
+            self.fsorbtxt.SetValue(util.floatstr(self.options.fixedstarsorb))
         else:
             self.fsorbtxt.Enable(False)
         gsizer.Add(self.fsorbtxt, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         sfsorbssizer.Add(gsizer, 0, wx.ALIGN_LEFT | wx.LEFT | wx.TOP, 5)
         vsizer.Add(sfsorbssizer, 0)
-        mhsizer.Add(vsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
+        mhsizer.Add(vsizer, 0, wx.GROW | wx.LEFT, 5)
         mvsizer.Add(mhsizer, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
         btnsizer = wx.StdDialogButtonSizer()
         btnOk = wx.Button(self, wx.ID_OK, mtexts.txtscommon['Ok'])
@@ -193,7 +198,7 @@ class OrbsDlg(wx.Dialog):
         btn = wx.Button(self, wx.ID_CANCEL, mtexts.txtscommon['Cancel'])
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()
@@ -241,14 +246,14 @@ class OrbsDlg(wx.Dialog):
 
     def fill(self, opts):
         for i in range(planets.Planets.PLANETS_NUM):
-            self.arplsorbs[i].SetValue(str(opts.orbs[i]))
+            self.arplsorbs[i].SetValue(util.floatstr(opts.orbs[i]))
 
         for i in range(planets.Planets.PLANETS_NUM):
-            self.arpplsorbs[i].SetValue(str(opts.orbsplanetspar[i]))
+            self.arpplsorbs[i].SetValue(util.floatstr(opts.orbsplanetspar[i]))
 
-        self.cuspascmc.SetValue(str(opts.orbscuspAscMC))
-        self.cuspinter.SetValue(str(opts.orbscuspH))
-        self.daynight.SetValue(str(opts.daynightorb))
+        self.cuspascmc.SetValue(util.floatstr(opts.orbscuspAscMC))
+        self.cuspinter.SetValue(util.floatstr(opts.orbscuspH))
+        self.daynight.SetValue(util.floatstr(opts.daynightorb))
 
     def check(self, opts):
         changed = False

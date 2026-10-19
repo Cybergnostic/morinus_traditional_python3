@@ -1,16 +1,17 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, intvalidator, mtexts
+import wx
+import intvalidator
+import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class SecondaryDirsDlg(wx.Dialog):
 
     def __init__(self, parent):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtssecdirdlg['SecondaryDirs'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtssecdirdlg['SecondaryDirs'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         sage = wx.StaticBox(self, label=mtexts.txtssecdirdlg['Age'])
@@ -29,7 +30,7 @@ class SecondaryDirsDlg(wx.Dialog):
         vsizer.Add(self.converserb, 0, wx.ALIGN_LEFT | wx.TOP, 2)
         dirsizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         mhsizer.Add(dirsizer, 1, wx.GROW | wx.ALIGN_LEFT | wx.LEFT, 5)
-        mvsizer.Add(mhsizer, 1, wx.GROW | wx.ALIGN_CENTER | wx.TOP | wx.LEFT | wx.RIGHT, 5)
+        mvsizer.Add(mhsizer, 1, wx.GROW | wx.TOP | wx.LEFT | wx.RIGHT, 5)
         stime = wx.StaticBox(self, label='')
         timesizer = wx.StaticBoxSizer(stime, wx.VERTICAL)
         vsizer = wx.BoxSizer(wx.VERTICAL)
@@ -38,7 +39,7 @@ class SecondaryDirsDlg(wx.Dialog):
         self.meantimerb = wx.RadioButton(self, -1, mtexts.txtssecdirdlg['MeanTime'])
         vsizer.Add(self.meantimerb, 0, wx.ALIGN_LEFT | wx.TOP, 2)
         timesizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        mvsizer.Add(timesizer, 0, wx.GROW | wx.ALIGN_CENTER | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        mvsizer.Add(timesizer, 0, wx.GROW | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         btnsizer = wx.StdDialogButtonSizer()
         if wx.Platform != '__WXMSW__':
             btn = wx.ContextHelpButton(self)

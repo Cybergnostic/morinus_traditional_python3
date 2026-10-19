@@ -1,6 +1,13 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import math, wx, astrology, chart, planets, rangechecker, findtimedlg, util
+import math
+import wx
+import astrology
+import chart
+import planets
+import rangechecker
+import findtimedlg
+import util
 
 class FindTime:
     NONE = -1

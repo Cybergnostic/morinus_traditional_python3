@@ -1,6 +1,10 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, copy, planets, chart, mtexts
+import wx
+import copy
+import planets
+import chart
+import mtexts
 
 class DignitiesDlg(wx.Dialog):
 
@@ -38,7 +42,7 @@ class DignitiesDlg(wx.Dialog):
         splanetssizer.Add(self.mercuryrb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
         self.moonrb = wx.RadioButton(self, self.ID_Moon, mtexts.txtscommon['Moon'])
         splanetssizer.Add(self.moonrb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
-        mhsizer.Add(splanetssizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
+        mhsizer.Add(splanetssizer, 0, wx.GROW | wx.LEFT, 5)
         sdomicile = wx.StaticBox(self, label='')
         sdomicilesizer = wx.StaticBoxSizer(sdomicile, wx.VERTICAL)
         self.domicilerb = wx.RadioButton(self, self.ID_Domicile, mtexts.txtsdignitiesdlg['Domicile'], style=wx.RB_GROUP)
@@ -55,8 +59,8 @@ class DignitiesDlg(wx.Dialog):
             self.arsigns.append(ckb)
             ssignssizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
 
-        mhsizer.Add(ssignssizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
-        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
+        mhsizer.Add(ssignssizer, 0, wx.GROW | wx.LEFT, 5)
+        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALL, 5)
         btnsizer = wx.StdDialogButtonSizer()
         btnOk = wx.Button(self, wx.ID_OK, mtexts.txtscommon['Ok'])
         btnOk.SetDefault()
@@ -64,7 +68,7 @@ class DignitiesDlg(wx.Dialog):
         btn = wx.Button(self, wx.ID_CANCEL, mtexts.txtscommon['Cancel'])
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()

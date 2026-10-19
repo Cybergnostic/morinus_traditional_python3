@@ -1,6 +1,9 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import copy, wx, chart, mtexts
+import copy
+import wx
+import chart
+import mtexts
 
 class TriplicitiesDlg(wx.Dialog):
 
@@ -27,7 +30,7 @@ class TriplicitiesDlg(wx.Dialog):
         tripssizer = wx.StaticBoxSizer(strips, wx.VERTICAL)
         num = len(self.trips)
         subnum = len(self.trips[0])
-        gsizer = wx.FlexGridSizer(num + 1, 2, 0, 0)
+        gsizer = wx.FlexGridSizer(0, 2, 0, 0)
         label = wx.StaticText(self, -1, '')
         gsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         hsizercap = wx.BoxSizer(wx.HORIZONTAL)

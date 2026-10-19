@@ -1,6 +1,12 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import json, urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
+import json
+import urllib.request
+import urllib.parse
+import urllib.error
+import urllib.request
+import urllib.error
+import urllib.parse
 
 class Geonames:
     NAME, LON, LAT, COUNTRYCODE, COUNTRYNAME, ALTITUDE, GMTOFFS = list(range(0, 7))

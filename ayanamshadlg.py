@@ -1,6 +1,8 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, intvalidator, mtexts
+import wx
+import intvalidator
+import mtexts
 
 class AyanamshaDlg(wx.Dialog):
 
@@ -18,7 +20,7 @@ class AyanamshaDlg(wx.Dialog):
         btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()

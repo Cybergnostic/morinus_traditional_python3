@@ -1,6 +1,12 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, positionswnd, positionswnd2, transitwnd, squarechartwnd, mtexts
+import wx
+import chart
+import positionswnd
+import positionswnd2
+import transitwnd
+import squarechartwnd
+import mtexts
 
 class PDsInChartFrame(wx.Frame):
     XSIZE = 512
@@ -31,7 +37,7 @@ class PDsInChartFrame(wx.Frame):
         self.compoundmenu = self.selmenu.Append(self.ID_Comparison, mtexts.txtspopupmenu['Comparison'], '', wx.ITEM_RADIO)
         self.positionsmenu = self.selmenu.Append(self.ID_Positions, mtexts.txtspopupmenu['Positions'], '', wx.ITEM_RADIO)
         self.squaremenu = self.selmenu.Append(self.ID_Square, mtexts.txtspopupmenu['Square'], '', wx.ITEM_RADIO)
-        self.pmenu.AppendMenu(self.ID_Selection, mtexts.txtspopupmenu['Windows'], self.selmenu)
+        self.pmenu.Append(wx.MenuItem(self.pmenu, self.ID_Selection, mtexts.txtspopupmenu['Windows'], subMenu=self.selmenu))
         self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveChart'])
         self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['ChartBW'], wx.ITEM_CHECK)
         self.SetMinSize((200, 200))

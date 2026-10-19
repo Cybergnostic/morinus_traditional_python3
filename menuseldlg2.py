@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, mtexts
+import wx
+import mtexts
 
 class MenuSelDlg(wx.Dialog):
 
@@ -28,7 +29,7 @@ class MenuSelDlg(wx.Dialog):
             self.aroptions.append(ckb)
             vsizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
 
-        hsizer.Add(vsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
+        hsizer.Add(vsizer, 0, wx.GROW | wx.ALL, 5)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         for i in range(12, len(optionstxts)):
             ckb = wx.CheckBox(self, -1, optionstxts[i])
@@ -41,9 +42,9 @@ class MenuSelDlg(wx.Dialog):
         self.aroptions[(val - 2)].Enable(False)
         self.aroptions[(val - 1)].Enable(False)
         self.aroptions[val].Enable(False)
-        hsizer.Add(vsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
-        soptionssizer.Add(hsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
-        mhsizer.Add(soptionssizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
+        hsizer.Add(vsizer, 0, wx.GROW | wx.ALL, 5)
+        soptionssizer.Add(hsizer, 0, wx.GROW | wx.LEFT, 5)
+        mhsizer.Add(soptionssizer, 0, wx.GROW | wx.LEFT, 5)
         shelp = wx.StaticBox(self, label=mtexts.menutxts['MHelp'])
         shelpsizer = wx.StaticBoxSizer(shelp, wx.VERTICAL)
         self.arhelp = []
@@ -61,8 +62,8 @@ class MenuSelDlg(wx.Dialog):
             self.arhelp.append(ckb)
             shelpsizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
 
-        mhsizer.Add(shelpsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
-        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
+        mhsizer.Add(shelpsizer, 0, wx.GROW | wx.LEFT, 5)
+        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALL, 5)
         btnsizer = wx.StdDialogButtonSizer()
         btnOk = wx.Button(self, wx.ID_OK, mtexts.txtscommon['Ok'])
         btnOk.SetDefault()
@@ -70,7 +71,7 @@ class MenuSelDlg(wx.Dialog):
         btn = wx.Button(self, wx.ID_CANCEL, mtexts.txtscommon['Cancel'])
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()

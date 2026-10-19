@@ -1,6 +1,8 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import transitframe, common, mtexts
+import transitframe
+import common
+import mtexts
 
 class ElectionsFrame(transitframe.TransitFrame):
 

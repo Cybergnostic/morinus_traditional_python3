@@ -1,18 +1,21 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, intvalidator, mtexts, util
+import wx
+import chart
+import intvalidator
+import mtexts
+import util
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class UserPDDlg(wx.Dialog):
 
     def __init__(self, parent, titletxt):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, titletxt, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, titletxt, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(2, 4)
+        fgsizer = wx.FlexGridSizer(0, 4, 0, 0)
         self.suser = wx.StaticBox(self, label='')
         usersizer = wx.StaticBoxSizer(self.suser, wx.VERTICAL)
         label = wx.StaticText(self, -1, mtexts.txtsuserpddlg['Long'] + ':')

@@ -1,6 +1,12 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, intvalidator, rangechecker, placesdlg, mtexts, util
+import wx
+import chart
+import intvalidator
+import rangechecker
+import placesdlg
+import mtexts
+import util
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
@@ -11,10 +17,9 @@ class DataDlg(wx.Dialog):
     def __init__(self, parent, langid, netbook):
         self.langid = langid
         self.netbook = netbook
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsdatadlg['Data'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsdatadlg['Data'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         sname = wx.StaticBox(self, label='')
@@ -58,7 +63,7 @@ class DataDlg(wx.Dialog):
         vsizer = wx.BoxSizer(wx.VERTICAL)
         self.timeckb = wx.CheckBox(self, -1, mtexts.txtsdatadlg['BC'])
         vsizer.Add(self.timeckb, 0, wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT | wx.TOP, 5)
-        fgsizer = wx.FlexGridSizer(2, 3)
+        fgsizer = wx.FlexGridSizer(0, 3, 0, 0)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
         label = wx.StaticText(self, -1, mtexts.txtsdatadlg['Year'] + ':')
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
@@ -120,7 +125,7 @@ class DataDlg(wx.Dialog):
         timesizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 0)
         vvsubsizer = wx.BoxSizer(wx.VERTICAL)
         vvsubsizer.Add(timesizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.RIGHT, 5)
-        fgsizer = wx.FlexGridSizer(2, 4)
+        fgsizer = wx.FlexGridSizer(0, 4, 0, 0)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         self.splace = wx.StaticBox(self, label='')
         placesizer = wx.StaticBoxSizer(self.splace, wx.VERTICAL)
@@ -198,9 +203,9 @@ class DataDlg(wx.Dialog):
         self.gmtlabel = wx.StaticText(self, -1, mtexts.txtsdatadlg['GMT'])
         hhsizer.Add(self.gmtlabel, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
         self.pluscb = wx.ComboBox(self, -1, DataDlg.PLUSCHOICES[0], size=(50, -1), choices=DataDlg.PLUSCHOICES, style=wx.CB_DROPDOWN | wx.CB_READONLY)
-        hhsizer.Add(self.pluscb, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
+        hhsizer.Add(self.pluscb, 0, wx.LEFT, 5)
         zonesizer.Add(hhsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        fgsizer = wx.FlexGridSizer(1, 2)
+        fgsizer = wx.FlexGridSizer(0, 2, 0, 0)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
         self.zhourlabel = wx.StaticText(self, -1, mtexts.txtsdatadlg['Hour'] + ':')
         vvsizer.Add(self.zhourlabel, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
@@ -246,7 +251,9 @@ class DataDlg(wx.Dialog):
         notessizer = wx.StaticBoxSizer(self.snotes, wx.VERTICAL)
         self.notes = wx.TextCtrl(self, -1, '', style=wx.TE_MULTILINE, size=(250, -1))
         self.notes.SetHelpText(mtexts.txtsdatadlg['HelpNotes'])
-        self.notes.SetMaxLength(500)
+        # GTK cannot limit the length of multiline text
+        if wx.Platform == '__WXMSW__':
+            self.notes.SetMaxLength(500)
         notessizer.Add(self.notes, 1, wx.ALIGN_LEFT | wx.ALL, 0)
         mhsizer.Add(notessizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.ALL, 0)
         mvsizer.Add(mhsizer, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT, 5)

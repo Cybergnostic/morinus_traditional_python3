@@ -1,6 +1,11 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, mtexts, chart, profections, munprofections, util
+import wx
+import mtexts
+import chart
+import profections
+import munprofections
+import util
 
 class ProfectionStepperDlg(wx.Dialog):
 
@@ -27,9 +32,9 @@ class ProfectionStepperDlg(wx.Dialog):
         sb = wx.StaticBox(self, label='')
         sbsizer = wx.StaticBoxSizer(sb, wx.VERTICAL)
         if self.zodprofs or self.usezodprojs:
-            gsizer = wx.FlexGridSizer(3, 2)
+            gsizer = wx.FlexGridSizer(0, 2, 0, 0)
         else:
-            gsizer = wx.FlexGridSizer(2, 2)
+            gsizer = wx.FlexGridSizer(0, 2, 0, 0)
         self.yeartxt = wx.TextCtrl(self, -1, '', size=(50, -1), style=wx.TE_READONLY)
         self.yeartxt.SetValue(str(self.y))
         gsizer.Add(self.yeartxt, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)

@@ -1,16 +1,17 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, syzygy, mtexts
+import wx
+import syzygy
+import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class SyzygyDlg(wx.Dialog):
 
     def __init__(self, parent):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtssyzygydlg['Syzygy'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtssyzygydlg['Syzygy'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         ssyzygy = wx.StaticBox(self, label='')
         syzygysizer = wx.StaticBoxSizer(ssyzygy, wx.VERTICAL)
@@ -33,7 +34,7 @@ class SyzygyDlg(wx.Dialog):
         btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()

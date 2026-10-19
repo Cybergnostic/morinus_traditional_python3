@@ -1,16 +1,20 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import datetime, wx, intvalidator, rangechecker, util, mtexts
+import datetime
+import wx
+import intvalidator
+import rangechecker
+import util
+import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class GraphEphemDlg(wx.Dialog):
 
     def __init__(self, parent):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsgraphephemdlg['Ephemeris'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsgraphephemdlg['Ephemeris'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         rnge = 3000
@@ -21,14 +25,14 @@ class GraphEphemDlg(wx.Dialog):
         yearsizer = wx.StaticBoxSizer(self.syear, wx.VERTICAL)
         self.year = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, rnge), size=(50,
                                                                                                   -1))
-        yearsizer.Add(self.year, 0, wx.GROW | wx.ALIGN_CENTER | wx.ALL, 5)
+        yearsizer.Add(self.year, 0, wx.GROW | wx.ALL, 5)
         if checker.isExtended():
             self.year.SetHelpText(mtexts.txtsgraphephemdlg['HelpYear'])
         else:
             self.year.SetHelpText(mtexts.txtsgraphephemdlg['HelpYear2'])
         self.year.SetMaxLength(4)
-        mhsizer.Add(yearsizer, 1, wx.GROW | wx.ALIGN_CENTER | wx.ALL, 5)
-        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALIGN_CENTER | wx.ALL, 5)
+        mhsizer.Add(yearsizer, 1, wx.GROW | wx.ALL, 5)
+        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALL, 5)
         btnsizer = wx.StdDialogButtonSizer()
         if wx.Platform != '__WXMSW__':
             btn = wx.ContextHelpButton(self)

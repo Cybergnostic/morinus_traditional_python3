@@ -1,6 +1,16 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, os, chart, houses, common, commonwnd, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import os
+import chart
+import houses
+import common
+import commonwnd
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class MiscWnd(commonwnd.CommonWnd):
 
@@ -8,7 +18,7 @@ class MiscWnd(commonwnd.CommonWnd):
         commonwnd.CommonWnd.__init__(self, parent, chrt, options, id, size)
         self.mainfr = mainfr
         self.FONT_SIZE = int(21 * self.options.tablesize)
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.LINE_NUM = 3
         self.COLUMN_NUM = 1
@@ -18,8 +28,8 @@ class MiscWnd(commonwnd.CommonWnd):
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.drawBkg()
@@ -58,22 +68,22 @@ class MiscWnd(commonwnd.CommonWnd):
         data = (self.chart.houses.ascmc[houses.Houses.ARMC] / 15.0, self.chart.obl[0], self.chart.time.jd)
         dnum = len(txts)
         for i in range(dnum):
-            w, h = draw.textsize(txts[i], self.fntText)
-            draw.text((BOR + (self.CELL_WIDTH - w) / 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) / 2), txts[i], fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txts[i], self.fntText)[2:]
+            draw.text((BOR + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) // 2), txts[i], fill=txtclr, font=self.fntText)
             d, m, s = util.decToDeg(data[i])
             if i == SIDTIME:
                 txt = str(d) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((BOR + self.CELL_WIDTH + (self.CELL_WIDTH - w) / 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((BOR + self.CELL_WIDTH + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             elif i == OBL:
                 txt = str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((BOR + self.CELL_WIDTH + (self.CELL_WIDTH - w) / 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((BOR + self.CELL_WIDTH + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             elif i == JD:
-                txt = str(data[i])
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((BOR + self.CELL_WIDTH + (self.CELL_WIDTH - w) / 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                txt = util.floatstr(data[i])
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((BOR + self.CELL_WIDTH + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)

@@ -1,6 +1,16 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import math, wx, Image, ImageDraw, ImageFont, chart, planets, options, common, util, mtexts
+import math
+import wx
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import chart
+import planets
+import options
+import common
+import util
+import mtexts
 
 class GraphChartHelio:
     DEG30 = math.pi / 6
@@ -12,13 +22,13 @@ class GraphChartHelio:
         self.chart = chrt
         self.options = opts
         self.bw = bw
-        self.buffer = wx.EmptyBitmap(self.w, self.h)
+        self.buffer = wx.Bitmap(self.w, self.h)
         self.bdc = wx.BufferedDC(None, self.buffer)
         self.chartsize = min(self.w, self.h)
-        self.maxradius = self.chartsize / 2
-        self.center = wx.Point(size[0] / 2, size[1] / 2)
-        self.symbolSize = self.maxradius / 12
-        self.signSize = self.maxradius / 12
+        self.maxradius = self.chartsize // 2
+        self.center = wx.Point(size[0] // 2, size[1] // 2)
+        self.symbolSize = self.maxradius // 12
+        self.signSize = self.maxradius // 12
         signsectorlen = 0.16
         self.r30 = self.maxradius * 0.96
         self.signoffs = (signsectorlen / 2.0 - 0.01) * self.maxradius
@@ -31,21 +41,21 @@ class GraphChartHelio:
         self.rJupiter = self.maxradius * 0.6
         self.rSaturn = self.maxradius * 0.75
         self.rads = (self.rSaturn, self.rJupiter, self.rMars, self.rEarth, self.rVenus, self.rMercury)
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.symbolSize)
-        self.fntMorinusSigns = ImageFont.truetype(common.common.symbols, self.signSize)
+        self.fntMorinus = util.truetype(common.common.symbols, self.symbolSize)
+        self.fntMorinusSigns = util.truetype(common.common.symbols, self.signSize)
         return
 
     def drawChart(self):
         self.drawCircles()
         wxImag = self.buffer.ConvertToImage()
         self.img = Image.new('RGB', (wxImag.GetWidth(), wxImag.GetHeight()))
-        self.img.fromstring(wxImag.GetData())
+        self.img.frombytes(wxImag.GetData())
         self.draw = ImageDraw.Draw(self.img)
         self.drawSigns()
         self.drawSymbols()
-        wxImg = wx.EmptyImage(self.img.size[0], self.img.size[1])
-        wxImg.SetData(self.img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(self.img.size[0], self.img.size[1])
+        wxImg.SetData(self.img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
         return self.buffer
 
     def drawCircles(self):
@@ -54,7 +64,6 @@ class GraphChartHelio:
             bkgclr = (255, 255, 255)
         self.bdc.SetBackground(wx.Brush(bkgclr))
         self.bdc.Clear()
-        self.bdc.BeginDrawing()
         self.bdc.SetBrush(wx.Brush(bkgclr))
         cx, cy = self.center.Get()
         clr = self.options.clrframe
@@ -62,7 +71,7 @@ class GraphChartHelio:
             clr = (0, 0, 0)
         pen = wx.Pen(clr, 1)
         self.bdc.SetPen(pen)
-        self.bdc.DrawCircle(cx, cy, self.r30)
+        self.bdc.DrawCircle(int(cx), int(cy), int(self.r30))
         clr = self.options.clrframe
         if self.bw:
             clr = (0, 0, 0)
@@ -73,7 +82,7 @@ class GraphChartHelio:
             w = 2
         pen = wx.Pen(clr, w)
         self.bdc.SetPen(pen)
-        self.bdc.DrawCircle(cx, cy, self.r0)
+        self.bdc.DrawCircle(int(cx), int(cy), int(self.r0))
         lon = 0.0
         if self.options.ayanamsha != 0:
             lon -= self.chart.ayanamsha
@@ -98,9 +107,8 @@ class GraphChartHelio:
                     clr = self.options.clrLoF
             pen = wx.Pen(clr, 1)
             self.bdc.SetPen(pen)
-            self.bdc.DrawCircle(cx, cy, self.rads[i])
+            self.bdc.DrawCircle(int(cx), int(cy), int(self.rads[i]))
 
-        self.bdc.EndDrawing()
 
     def drawLines(self, deg, shift, r1, r2):
         cx, cy = self.center.Get()
@@ -110,7 +118,7 @@ class GraphChartHelio:
             y1 = cy + math.sin(i) * r1
             x2 = cx + math.cos(i) * r2
             y2 = cy + math.sin(i) * r2
-            self.bdc.DrawLine(x1, y1, x2, y2)
+            self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
             i -= deg
 
     def drawSigns(self):
@@ -128,7 +136,7 @@ class GraphChartHelio:
         while j < chart.Chart.SIGN_NUM:
             x = cx + math.cos(i) * self.rSign
             y = cy + math.sin(i) * self.rSign
-            self.draw.text((x - self.signSize / 2, y - self.signSize / 2), signs[j], font=self.fntMorinusSigns, fill=clr)
+            self.draw.text((x - self.signSize // 2, y - self.signSize // 2), signs[j], font=self.fntMorinusSigns, fill=clr)
             i -= GraphChartHelio.DEG30
             j += 1
 
@@ -137,7 +145,7 @@ class GraphChartHelio:
         clr = (0, 0, 0)
         if not self.bw:
             clr = self.options.clrplanets[planets.Planets.SUN]
-        self.draw.text((cx - self.symbolSize / 2, cy - self.symbolSize / 2), common.common.planets[planets.Planets.SUN], fill=clr, font=self.fntMorinus)
+        self.draw.text((cx - self.symbolSize // 2, cy - self.symbolSize // 2), common.common.planets[planets.Planets.SUN], fill=clr, font=self.fntMorinus)
         for i in range(planets.Planets.MOON):
             lon = self.chart.planetshelio.lons[i]
             x = cx + math.cos(math.pi + math.radians(-lon)) * self.rads[i]
@@ -149,4 +157,4 @@ class GraphChartHelio:
                 sym = common.common.planets[i]
                 if not self.bw:
                     clr = self.options.clrplanets[i]
-            self.draw.text((x - self.symbolSize / 2, y - self.symbolSize / 2), sym, fill=clr, font=self.fntMorinus)
+            self.draw.text((x - self.symbolSize // 2, y - self.symbolSize // 2), sym, fill=clr, font=self.fntMorinus)

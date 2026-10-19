@@ -1,6 +1,16 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, Image, ImageDraw, ImageFont, astrology, chart, common, commonwnd, hours, util, mtexts
+import wx
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import astrology
+import chart
+import common
+import commonwnd
+import hours
+import util
+import mtexts
 
 class HoursWnd(commonwnd.CommonWnd):
     HOURSPERHALFDAY = 12
@@ -9,7 +19,7 @@ class HoursWnd(commonwnd.CommonWnd):
         commonwnd.CommonWnd.__init__(self, parent, chrt, options, id, size)
         self.mainfr = mainfr
         self.FONT_SIZE = int(21 * self.options.tablesize)
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.COLUMN_NUM = 2
         self.LINE_NUM = HoursWnd.HOURSPERHALFDAY
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
@@ -23,8 +33,8 @@ class HoursWnd(commonwnd.CommonWnd):
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
         self.drawBkg()
 
     def getExt(self):
@@ -54,8 +64,8 @@ class HoursWnd(commonwnd.CommonWnd):
         jy, jm, jd, jh = astrology.swe_revjul(jdlocal, 1)
         hh, mm, ss = util.decToDeg(jh)
         txt = mtexts.txtshours['LocalBirthTime'] + ': ' + str(hh) + ':' + str(mm).zfill(2) + ':' + str(ss).zfill(2)
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((BOR + (self.TITLE_WIDTH - w) / 2, BOR + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((BOR + (self.TITLE_WIDTH - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         if self.chart.time.ph != None:
             rh, rm, rs = self.chart.time.ph.revTime(self.chart.time.ph.risetime, self.chart.time.cal)
             sh, sm, ss = self.chart.time.ph.revTime(self.chart.time.ph.settime, self.chart.time.cal)
@@ -65,10 +75,10 @@ class HoursWnd(commonwnd.CommonWnd):
             else:
                 txt2 = mtexts.txtshours['RiseTime'] + ': ' + str(rh) + ':' + str(rm).zfill(2) + ':' + str(rs).zfill(2)
                 txt1 = mtexts.txtshours['SetTime'] + ': ' + str(sh) + ':' + str(sm).zfill(2) + ':' + str(ss).zfill(2)
-            w, h = draw.textsize(txt1, self.fntText)
-            draw.text((BOR + (self.TITLE_WIDTH - w) / 2, BOR + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt1, fill=txtclr, font=self.fntText)
-            w, h = draw.textsize(txt2, self.fntText)
-            draw.text((BOR + (self.TITLE_WIDTH - w) / 2, BOR + 2 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt2, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt1, self.fntText)[2:]
+            draw.text((BOR + (self.TITLE_WIDTH - w) // 2, BOR + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt1, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt2, self.fntText)[2:]
+            draw.text((BOR + (self.TITLE_WIDTH - w) // 2, BOR + 2 * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt2, fill=txtclr, font=self.fntText)
             x = BOR
             y = BOR + self.TITLE_HEIGHT + self.SPACE_TITLEY
             draw.line((x, y, x + self.TABLE_WIDTH, y), fill=tableclr)
@@ -80,9 +90,9 @@ class HoursWnd(commonwnd.CommonWnd):
             for i in range(int(HoursWnd.HOURSPERHALFDAY)):
                 self.drawline(draw, x, y + i * self.LINE_HEIGHT, tableclr, i)
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
         return
 
     def drawline(self, draw, x, y, clr, idx):
@@ -110,8 +120,8 @@ class HoursWnd(commonwnd.CommonWnd):
                 if not self.bw:
                     tclr = self.options.clrplanets[planetaryhour]
                 txtpl = common.common.planets[planetaryhour]
-                w, h = draw.textsize(txtpl, self.fntMorinus)
-                draw.text((x + summa + (offs[i] - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txtpl, fill=tclr, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txtpl, self.fntMorinus)[2:]
+                draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txtpl, fill=tclr, font=self.fntMorinus)
             elif i > 1:
                 h, m, s = (0, 0, 0)
                 if i == 2:
@@ -119,7 +129,7 @@ class HoursWnd(commonwnd.CommonWnd):
                 else:
                     h, m, s = self.chart.time.ph.revTime(endtime, self.chart.time.cal)
                 txt = str(h) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((x + summa + (offs[i] - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
                 self.begtime = endtime
             summa += offs[i]

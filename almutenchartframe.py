@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, almutenchartwnd
+import wx
+import almutenchartwnd
 
 class AlmutenChartFrame(wx.Frame):
     XSIZE = 640

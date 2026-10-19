@@ -1,6 +1,12 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import sys, wx, intvalidator, placedb, geonames, mtexts, util
+import sys
+import wx
+import intvalidator
+import placedb
+import geonames
+import mtexts
+import util
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
@@ -30,13 +36,13 @@ class PlaceListCtrl(wx.ListCtrl):
         self.InsertColumn(PlaceListCtrl.ALT, mtexts.txtsplacesdlg['Alt'] + '.')
         items = list(self.placedata.items())
         for key, data in items:
-            index = self.InsertStringItem(sys.maxsize, data[0])
-            self.SetStringItem(index, PlaceListCtrl.PLACE, data[0])
-            self.SetStringItem(index, PlaceListCtrl.COUNTRY, data[1])
-            self.SetStringItem(index, PlaceListCtrl.LON, data[2])
-            self.SetStringItem(index, PlaceListCtrl.LAT, data[3])
-            self.SetStringItem(index, PlaceListCtrl.ZONE, data[4])
-            self.SetStringItem(index, PlaceListCtrl.ALT, data[5])
+            index = self.InsertItem(sys.maxsize, data[0])
+            self.SetItem(index, PlaceListCtrl.PLACE, data[0])
+            self.SetItem(index, PlaceListCtrl.COUNTRY, data[1])
+            self.SetItem(index, PlaceListCtrl.LON, data[2])
+            self.SetItem(index, PlaceListCtrl.LAT, data[3])
+            self.SetItem(index, PlaceListCtrl.ZONE, data[4])
+            self.SetItem(index, PlaceListCtrl.ALT, data[5])
             self.SetItemData(index, key)
 
         self.SetColumnWidth(PlaceListCtrl.PLACE, 200)
@@ -98,10 +104,9 @@ class PlaceListCtrl(wx.ListCtrl):
 class PlacesListDlg(wx.Dialog):
 
     def __init__(self, parent, li):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsplacesdlg['Places'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsplacesdlg['Places'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         splaces = wx.StaticBox(self, label='')

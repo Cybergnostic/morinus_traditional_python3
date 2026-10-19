@@ -1,10 +1,18 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import sys, wx, limchecklistctrlmixin, intvalidator, chart, lots, options, mtexts, copy
+import sys
+import wx
+import limchecklistctrlmixin
+import intvalidator
+import chart
+import lots
+import options
+import mtexts
+import copy
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
-class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
+class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
     NUM = 0
     NAME = 1
     FORMULA = 2
@@ -34,10 +42,10 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
         for key, data in items:
             cnt += 1
             index = self.InsertStringItem(sys.maxsize, data[0])
-            self.SetStringItem(index, LotsListCtrl.NUM, str(cnt) + '.')
-            self.SetStringItem(index, LotsListCtrl.NAME, data[0])
-            self.SetStringItem(index, LotsListCtrl.FORMULA, data[1])
-            self.SetStringItem(index, LotsListCtrl.DIURNAL, data[2])
+            self.SetItem(index, LotsListCtrl.NUM, str(cnt) + '.')
+            self.SetItem(index, LotsListCtrl.NAME, data[0])
+            self.SetItem(index, LotsListCtrl.FORMULA, data[1])
+            self.SetItem(index, LotsListCtrl.DIURNAL, data[2])
             self.SetItemData(index, key)
 
         self.SetColumnWidth(LotsListCtrl.NUM, 60)
@@ -221,7 +229,7 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
             return False
         self.InsertStringItem(num, str(num + 1))
         for i in range(1, len(it)):
-            self.SetStringItem(num, i, it[i])
+            self.SetItem(num, i, it[i])
 
         self.currentItem = num
         self.EnsureVisible(self.currentItem)
@@ -235,11 +243,11 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
         if self.currentItem == 0:
             nametxt = self.getColumnText(0, LotsListCtrl.NAME)
             if nametxt != item[0]:
-                self.SetStringItem(0, LotsListCtrl.NAME, item[0])
+                self.SetItem(0, LotsListCtrl.NAME, item[0])
                 self.changed = True
             diurnaltxt = self.getColumnText(0, LotsListCtrl.DIURNAL)
             if diurnaltxt != item[2]:
-                self.SetStringItem(0, LotsListCtrl.DIURNAL, item[2])
+                self.SetItem(0, LotsListCtrl.DIURNAL, item[2])
                 self.changed = True
         else:
             if self.checkName(it[LotsListCtrl.NAME], self.currentItem):
@@ -248,7 +256,7 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
                 dlgm.Destroy()
                 return
             for i in range(1, len(it)):
-                self.SetStringItem(self.currentItem, i, it[i])
+                self.SetItem(self.currentItem, i, it[i])
 
             self.changed = True
         self.EnsureVisible(self.currentItem)
@@ -284,14 +292,14 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
                                         fs[j] += LotsListCtrl.LORDTXT
 
                         formula = fs[0] + ' + ' + fs[1] + ' - ' + fs[2]
-                        self.SetStringItem(i, LotsListCtrl.FORMULA, formula)
+                        self.SetItem(i, LotsListCtrl.FORMULA, formula)
 
                 for l in range(len(linestodelete)):
                     self.DeleteItem(linestodelete[l] - l)
 
                 self.parent.removeRefs(len(linestodelete))
                 for i in range(1, self.GetItemCount() + 1):
-                    self.SetStringItem(i - 1, LotsListCtrl.NUM, str(i) + '.')
+                    self.SetItem(i - 1, LotsListCtrl.NUM, str(i) + '.')
 
                 if self.currentItem >= self.GetItemCount():
                     self.currentItem = self.GetItemCount() - 1
@@ -332,7 +340,7 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
                 formula = ''
                 for j in range(len(fs)):
                     if fs[j] == lots.Lots.DEG or fs[j] == lots.Lots.DEGLORD:
-                        sign = refordegs[j] / chart.Chart.SIGN_DEG
+                        sign = refordegs[j] // chart.Chart.SIGN_DEG
                         deg = refordegs[j] % chart.Chart.SIGN_DEG
                         formula += str(deg) + self.parent.signsabbr[sign]
                         if fs[j] == lots.Lots.DEGLORD:
@@ -435,10 +443,9 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
 class LotsDlg(wx.Dialog):
 
     def __init__(self, parent, opts):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtslotsdlg['Lots'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtslotsdlg['Lots'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         self.options = opts
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -792,7 +799,7 @@ class LotsDlg(wx.Dialog):
             else:
                 arrefcbs[i].SetStringSelection('1')
             if valdeg:
-                degsign = item[lots.Lots.REFORDEG][i] / chart.Chart.SIGN_DEG
+                degsign = item[lots.Lots.REFORDEG][i] // chart.Chart.SIGN_DEG
                 degval = item[lots.Lots.REFORDEG][i] % chart.Chart.SIGN_DEG
                 ardegcbs[i].SetStringSelection(self.signs[degsign])
                 ardegdegs[i].SetValue(str(degval))

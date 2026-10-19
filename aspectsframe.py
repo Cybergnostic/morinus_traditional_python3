@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, aspectswnd
+import wx
+import aspectswnd
 
 class AspectsFrame(wx.Frame):
     XSIZE = 640

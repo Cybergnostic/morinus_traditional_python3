@@ -1,16 +1,19 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, planets, chart, options, mtexts
+import wx
+import planets
+import chart
+import options
+import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class Appearance1Dlg(wx.Dialog):
 
     def __init__(self, parent):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsappearance1dlg['Appearance1'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsappearance1dlg['Appearance1'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         inchart = wx.StaticBox(self, label=mtexts.txtsappearance1dlg['InChart'])
@@ -50,7 +53,7 @@ class Appearance1Dlg(wx.Dialog):
         self.dodecrb = wx.RadioButton(self, -1, mtexts.txtsappearance1dlg['Dodecatemoria'])
         self.Bind(wx.EVT_RADIOBUTTON, self.onDodecatemoria, id=self.dodecrb.GetId())
         inchartsizer.Add(self.dodecrb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
-        mhsizer.Add(inchartsizer, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
+        mhsizer.Add(inchartsizer, 0, wx.LEFT, 5)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         color = wx.StaticBox(self, label=mtexts.txtsappearance1dlg['Color'])
         colorsizer = wx.StaticBoxSizer(color, wx.VERTICAL)
@@ -79,8 +82,8 @@ class Appearance1Dlg(wx.Dialog):
         self.fsoutorbckb = wx.CheckBox(self, -1, mtexts.txtsappearance1dlg['FSOutOrb'])
         fsoutorbsizer.Add(self.fsoutorbckb, 0, wx.ALIGN_LEFT | wx.ALL | wx.GROW, 2)
         vsizer.Add(fsoutorbsizer, 0, wx.GROW | wx.RIGHT, 5)
-        mhsizer.Add(vsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
-        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 0)
+        mhsizer.Add(vsizer, 0, wx.GROW | wx.LEFT, 5)
+        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALL, 0)
         btnsizer = wx.StdDialogButtonSizer()
         if wx.Platform != '__WXMSW__':
             btn = wx.ContextHelpButton(self)
@@ -93,7 +96,7 @@ class Appearance1Dlg(wx.Dialog):
         btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()
@@ -133,7 +136,7 @@ class Appearance1Dlg(wx.Dialog):
         else:
             self.colorrb.SetValue(not opts.bw)
         self.ascmcsizeslider.SetValue(opts.maxascmcsize)
-        self.sizeslider.SetValue(opts.tablesize * 100)
+        self.sizeslider.SetValue(int(round(opts.tablesize * 100)))
         self.netbookckb.SetValue(opts.netbook)
         self.fsoutorbckb.SetValue(opts.showfixedstarsoutoforb)
         if opts.showobject == chart.Chart.SHOWNONE:

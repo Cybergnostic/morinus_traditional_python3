@@ -1,6 +1,10 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, os, chart, graphchartpds, mtexts
+import wx
+import os
+import chart
+import graphchartpds
+import mtexts
 
 class PDsInChartIngressWnd(wx.Window):
 

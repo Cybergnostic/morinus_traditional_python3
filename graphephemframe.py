@@ -1,6 +1,8 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, graphephemwnd, mtexts
+import wx
+import graphephemwnd
+import mtexts
 
 class GraphEphemFrame(wx.Frame):
     XSIZE = 640

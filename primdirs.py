@@ -1,6 +1,21 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import math, datetime, astrology, houses, chart, fortune, syzygy, planets, fixedstars, transits, secmotion, userpd, placspec, regiospec, mtexts, util
+import math
+import datetime
+import astrology
+import houses
+import chart
+import fortune
+import syzygy
+import planets
+import fixedstars
+import transits
+import secmotion
+import userpd
+import placspec
+import regiospec
+import mtexts
+import util
 
 class AbortPD:
 

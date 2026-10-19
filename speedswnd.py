@@ -1,6 +1,17 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, os, astrology, planets, chart, common, commonwnd, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import os
+import astrology
+import planets
+import chart
+import common
+import commonwnd
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class SpeedsWnd(commonwnd.CommonWnd):
 
@@ -8,7 +19,7 @@ class SpeedsWnd(commonwnd.CommonWnd):
         commonwnd.CommonWnd.__init__(self, parent, chrt, options, id, size)
         self.mainfr = mainfr
         self.FONT_SIZE = int(21 * self.options.tablesize)
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.LINE_NUM = planets.Planets.BODIES_NUM - 1
         self.COLUMN_NUM = 2
@@ -22,8 +33,8 @@ class SpeedsWnd(commonwnd.CommonWnd):
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
         self.deg_symbol = '\xb0'
         self.drawBkg()
 
@@ -48,8 +59,8 @@ class SpeedsWnd(commonwnd.CommonWnd):
         draw.rectangle(((BOR + self.SMALL_CELL_WIDTH, BOR), (BOR + self.SMALL_CELL_WIDTH + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
         txt = (mtexts.txtsspeeds['InLong'], mtexts.txtsspeeds['InLat'])
         for i in range(len(txt)):
-            w, h = draw.textsize(txt[i], self.fntText)
-            draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH * i + (self.CELL_WIDTH - w) / 2, BOR + (self.TITLE_HEIGHT - h) / 2), txt[i], fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt[i], self.fntText)[2:]
+            draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH * i + (self.CELL_WIDTH - w) // 2, BOR + (self.TITLE_HEIGHT - h) // 2), txt[i], fill=txtclr, font=self.fntText)
 
         x = BOR
         y = BOR + self.TITLE_HEIGHT + self.SPACE_TITLEY
@@ -57,9 +68,9 @@ class SpeedsWnd(commonwnd.CommonWnd):
         for i in range(planets.Planets.BODIES_NUM - 1):
             self.drawline(draw, x, y + i * self.LINE_HEIGHT, tableclr, i)
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
 
     def drawline(self, draw, x, y, clr, idx):
         draw.line((x, y + self.LINE_HEIGHT, x + self.TABLE_WIDTH, y + self.LINE_HEIGHT), fill=clr)
@@ -77,8 +88,8 @@ class SpeedsWnd(commonwnd.CommonWnd):
                 tclr = self.options.clrplanets[objidx]
             if i == 1:
                 txt = common.common.planets[idx]
-                w, h = draw.textsize(txt, self.fntMorinus)
-                draw.text((x + summa + (offs[i] - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=tclr, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
+                draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntMorinus)
             elif i != 0:
                 data = self.chart.planets.planets[idx].data[(planets.Planet.SPLON + (i - 2))]
                 d, m, s = util.decToDeg(data)
@@ -86,6 +97,6 @@ class SpeedsWnd(commonwnd.CommonWnd):
                 if data < 0.0:
                     sign = '-'
                 txt = sign + str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((x + summa + (offs[i] - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=tclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntText)
             summa += offs[i]

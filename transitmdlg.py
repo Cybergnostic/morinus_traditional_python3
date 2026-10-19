@@ -1,16 +1,20 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, intvalidator, options, rangechecker, util, mtexts
+import wx
+import intvalidator
+import options
+import rangechecker
+import util
+import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class TransitMonthDlg(wx.Dialog):
 
     def __init__(self, parent, time):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtstransitmdlg['Transit'].capitalize(), pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtstransitmdlg['Transit'].capitalize(), pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         rnge = 3000
         checker = rangechecker.RangeChecker()
@@ -19,7 +23,7 @@ class TransitMonthDlg(wx.Dialog):
         self.stime = wx.StaticBox(self, label='')
         timesizer = wx.StaticBoxSizer(self.stime, wx.VERTICAL)
         vsizer = wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(1, 2)
+        fgsizer = wx.FlexGridSizer(0, 2, 0, 0)
         label = wx.StaticText(self, -1, mtexts.txtstransitmdlg['Year'] + ':')
         vsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         self.year = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, rnge), size=(50,

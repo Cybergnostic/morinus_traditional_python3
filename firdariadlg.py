@@ -1,16 +1,16 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, mtexts
+import wx
+import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class FirdariaDlg(wx.Dialog):
 
     def __init__(self, parent):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsfirdariadlg['Firdaria'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsfirdariadlg['Firdaria'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         sfirdaria = wx.StaticBox(self, label=mtexts.txtsfirdariadlg['Nocturnal'])
         firdariasizer = wx.StaticBoxSizer(sfirdaria, wx.VERTICAL)
@@ -20,7 +20,7 @@ class FirdariaDlg(wx.Dialog):
         self.birrb = wx.RadioButton(self, -1, mtexts.txtsfirdariadlg['AlBiruni'])
         vsizer.Add(self.birrb, 0, wx.ALIGN_CENTER, 5)
         firdariasizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        mvsizer.Add(firdariasizer, 0, wx.GROW | wx.ALIGN_CENTER | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        mvsizer.Add(firdariasizer, 0, wx.GROW | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         btnsizer = wx.StdDialogButtonSizer()
         if wx.Platform != '__WXMSW__':
             btn = wx.ContextHelpButton(self)

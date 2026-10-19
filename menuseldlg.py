@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, mtexts
+import wx
+import mtexts
 
 class MenuSelDlg(wx.Dialog):
 
@@ -26,7 +27,7 @@ class MenuSelDlg(wx.Dialog):
             self.arhoroscope.append(ckb)
             shoroscopesizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
 
-        mhsizer.Add(shoroscopesizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
+        mhsizer.Add(shoroscopesizer, 0, wx.GROW | wx.LEFT, 5)
         val = len(hortxts) - 1
         self.arhoroscope[0].Enable(False)
         self.arhoroscope[(val - 1)].Enable(False)
@@ -50,16 +51,16 @@ class MenuSelDlg(wx.Dialog):
             self.artables.append(ckb)
             vsizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
 
-        hsizer.Add(vsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
+        hsizer.Add(vsizer, 0, wx.GROW | wx.ALL, 5)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         for i in range(11, len(tablestxts)):
             ckb = wx.CheckBox(self, -1, tablestxts[i])
             self.artables.append(ckb)
             vsizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
 
-        hsizer.Add(vsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
-        stablessizer.Add(hsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
-        mhsizer.Add(stablessizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
+        hsizer.Add(vsizer, 0, wx.GROW | wx.ALL, 5)
+        stablessizer.Add(hsizer, 0, wx.GROW | wx.LEFT, 5)
+        mhsizer.Add(stablessizer, 0, wx.GROW | wx.LEFT, 5)
         scharts = wx.StaticBox(self, label=mtexts.menutxts['MCharts'])
         schartssizer = wx.StaticBoxSizer(scharts, wx.VERTICAL)
         self.archarts = []
@@ -77,8 +78,8 @@ class MenuSelDlg(wx.Dialog):
             self.archarts.append(ckb)
             schartssizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
 
-        mhsizer.Add(schartssizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
-        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
+        mhsizer.Add(schartssizer, 0, wx.GROW | wx.LEFT, 5)
+        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALL, 5)
         btnsizer = wx.StdDialogButtonSizer()
         btnOk = wx.Button(self, wx.ID_OK, mtexts.txtscommon['Ok'])
         btnOk.SetDefault()
@@ -86,7 +87,7 @@ class MenuSelDlg(wx.Dialog):
         btn = wx.Button(self, wx.ID_CANCEL, mtexts.txtscommon['Cancel'])
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()

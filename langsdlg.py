@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, mtexts
+import wx
+import mtexts
 
 class LanguagesDlg(wx.Dialog):
 
@@ -9,7 +10,7 @@ class LanguagesDlg(wx.Dialog):
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         self.langcb = wx.ComboBox(self, -1, mtexts.langtexts[0], size=(100, -1), choices=mtexts.langtexts, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.langcb.SetStringSelection(mtexts.langtexts[langid])
-        mvsizer.Add(self.langcb, 0, wx.GROW | wx.ALIGN_CENTER | wx.ALL, 20)
+        mvsizer.Add(self.langcb, 0, wx.GROW | wx.ALL, 20)
         btnsizer = wx.StdDialogButtonSizer()
         btnOk = wx.Button(self, wx.ID_OK, mtexts.txtscommon['Ok'])
         btnsizer.AddButton(btnOk)

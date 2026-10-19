@@ -1,6 +1,19 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import math, wx, planets, fixedstars, fortune, houses, chart, common, commonwnd, Image, ImageDraw, ImageFont, mtexts, util
+import math
+import wx
+import planets
+import fixedstars
+import fortune
+import houses
+import chart
+import common
+import commonwnd
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import mtexts
+import util
 
 class FixedStarsAspectsWnd(commonwnd.CommonWnd):
 
@@ -8,7 +21,7 @@ class FixedStarsAspectsWnd(commonwnd.CommonWnd):
         commonwnd.CommonWnd.__init__(self, parent, chrt, options, id, size)
         self.mainfr = mainfr
         self.FONT_SIZE = int(36 * self.options.tablesize)
-        self.SPACE = self.FONT_SIZE / 6
+        self.SPACE = self.FONT_SIZE // 6
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.LINE_NUM = len(self.chart.fixedstars.data)
         self.CELL_WIDTH = 6 * self.FONT_SIZE
@@ -25,10 +38,10 @@ class FixedStarsAspectsWnd(commonwnd.CommonWnd):
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, 4 * self.FONT_SIZE / 5)
-        self.fntSymbol = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntAspects = ImageFont.truetype(common.common.symbols, 3 * self.FONT_SIZE / 4)
-        self.fntText = ImageFont.truetype(common.common.abc, 3 * self.FONT_SIZE / 5)
+        self.fntMorinus = util.truetype(common.common.symbols, 4 * self.FONT_SIZE // 5)
+        self.fntSymbol = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntAspects = util.truetype(common.common.symbols, 3 * self.FONT_SIZE // 4)
+        self.fntText = util.truetype(common.common.abc, 3 * self.FONT_SIZE // 5)
         self.hidx = (1, 2, 3, 10, 11, 12)
         self.drawBkg()
 
@@ -68,16 +81,16 @@ class FixedStarsAspectsWnd(commonwnd.CommonWnd):
             name = self.chart.fixedstars.data[i][fixedstars.FixedStars.NAME]
             if name == '':
                 name = self.chart.fixedstars.data[i][fixedstars.FixedStars.NOMNAME]
-            w, h = draw.textsize(name, self.fntText)
-            draw.text((x + (self.CELL_WIDTH - w) / 2, y + i * (self.LINE_HEIGHT + self.SPACE) + (self.LINE_HEIGHT - h) / 2), name, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), name, self.fntText)[2:]
+            draw.text((x + (self.CELL_WIDTH - w) // 2, y + i * (self.LINE_HEIGHT + self.SPACE) + (self.LINE_HEIGHT - h) // 2), name, fill=txtclr, font=self.fntText)
 
         x = BOR + self.CELL_WIDTH + self.SPACE
         y = BOR
         txts = ('0', '3', '1', '2')
         for i in range(len(txts)):
             self.drawSquare(draw, x, y, tableclr)
-            w, h = draw.textsize(txts[i], self.fntSymbol)
-            draw.text((x + (self.SQUARE_SIZE - w) / 2, y + (self.SQUARE_SIZE - h) / 2), txts[i], fill=txtclr, font=self.fntSymbol)
+            w, h = draw.textbbox((0, 0), txts[i], self.fntSymbol)[2:]
+            draw.text((x + (self.SQUARE_SIZE - w) // 2, y + (self.SQUARE_SIZE - h) // 2), txts[i], fill=txtclr, font=self.fntSymbol)
             x += self.SQUARE_SIZE + self.SPACE
 
         ASC = self.chart.houses.ascmc[houses.Houses.ASC]
@@ -90,13 +103,13 @@ class FixedStarsAspectsWnd(commonwnd.CommonWnd):
             num2 = len(self.chart.fsaspmatrixAngles[i][1])
             for j in range(num2):
                 txt = common.common.aspects[chart.Chart.CONIUNCTIO]
-                w, h = draw.textsize(txt, self.fntAspects)
+                w, h = draw.textbbox((0, 0), txt, self.fntAspects)[2:]
                 clr = self.options.clraspect[chart.Chart.CONIUNCTIO]
                 if self.bw:
                     clr = (0, 0, 0)
                 xx = BOR + self.CELL_WIDTH + self.SPACE + self.chart.fsaspmatrixAngles[i][1][j] * (self.SQUARE_SIZE + self.SPACE)
                 yy = BOR + self.TITLE_HEIGHT + self.SPACE + self.chart.fsaspmatrixAngles[i][0] * (self.SQUARE_SIZE + self.SPACE)
-                draw.text((xx + (self.SQUARE_SIZE - w) / 2, yy + (self.SQUARE_SIZE - h) / 2), txt, fill=clr, font=self.fntAspects)
+                draw.text((xx + (self.SQUARE_SIZE - w) // 2, yy + (self.SQUARE_SIZE - h) // 2), txt, fill=clr, font=self.fntAspects)
 
         j = 0
         for i in range(planets.Planets.BODIES_NUM):
@@ -107,8 +120,8 @@ class FixedStarsAspectsWnd(commonwnd.CommonWnd):
                 if i == planets.Planets.BODIES_NUM - 1:
                     objidx -= 1
                 clr = self.options.clrplanets[objidx]
-            w, h = draw.textsize(common.common.planets[i], self.fntMorinus)
-            draw.text((x + (self.SQUARE_SIZE - w) / 2, y + (self.SQUARE_SIZE - h) / 2), common.common.planets[i], fill=clr, font=self.fntMorinus)
+            w, h = draw.textbbox((0, 0), common.common.planets[i], self.fntMorinus)[2:]
+            draw.text((x + (self.SQUARE_SIZE - w) // 2, y + (self.SQUARE_SIZE - h) // 2), common.common.planets[i], fill=clr, font=self.fntMorinus)
             x += self.SQUARE_SIZE + self.SPACE
             j += 1
 
@@ -118,36 +131,36 @@ class FixedStarsAspectsWnd(commonwnd.CommonWnd):
             for j in range(num2):
                 k = self.chart.fsaspmatrix[i][1][j]
                 txt = common.common.aspects[chart.Chart.CONIUNCTIO]
-                w, h = draw.textsize(txt, self.fntAspects)
+                w, h = draw.textbbox((0, 0), txt, self.fntAspects)[2:]
                 clr = self.options.clraspect[chart.Chart.CONIUNCTIO]
                 if self.bw:
                     clr = (0, 0, 0)
                 xx = BOR + self.CELL_WIDTH + self.SPACE + self.PLANETSOFFS * (self.SQUARE_SIZE + self.SPACE) + k * (self.SQUARE_SIZE + self.SPACE)
                 yy = BOR + self.TITLE_HEIGHT + self.SPACE + self.chart.fsaspmatrix[i][0] * (self.SQUARE_SIZE + self.SPACE)
-                draw.text((xx + (self.SQUARE_SIZE - w) / 2, yy + (self.SQUARE_SIZE - h) / 2), txt, fill=clr, font=self.fntAspects)
+                draw.text((xx + (self.SQUARE_SIZE - w) // 2, yy + (self.SQUARE_SIZE - h) // 2), txt, fill=clr, font=self.fntAspects)
 
         self.drawSquare(draw, x, y, tableclr)
-        w, h = draw.textsize(common.common.fortune, self.fntText)
+        w, h = draw.textbbox((0, 0), common.common.fortune, self.fntText)[2:]
         clr = (0, 0, 0)
         if not self.bw:
             clr = self.options.clrLoF
-        draw.text((x + (self.SQUARE_SIZE - w) / 2, y + (self.SQUARE_SIZE - h) / 2), common.common.fortune, clr, font=self.fntMorinus)
+        draw.text((x + (self.SQUARE_SIZE - w) // 2, y + (self.SQUARE_SIZE - h) // 2), common.common.fortune, clr, font=self.fntMorinus)
         num = len(self.chart.fsaspmatrixLoF)
         for i in range(num):
             txt = common.common.aspects[chart.Chart.CONIUNCTIO]
-            w, h = draw.textsize(txt, self.fntAspects)
+            w, h = draw.textbbox((0, 0), txt, self.fntAspects)[2:]
             clr = self.options.clraspect[chart.Chart.CONIUNCTIO]
             if self.bw:
                 clr = (0, 0, 0)
             xx = BOR + self.CELL_WIDTH + self.SPACE + self.LOFOFFS * (self.SQUARE_SIZE + self.SPACE)
             yy = BOR + self.TITLE_HEIGHT + self.SPACE + self.chart.fsaspmatrixLoF[i] * (self.SQUARE_SIZE + self.SPACE)
-            draw.text((xx + (self.SQUARE_SIZE - w) / 2, yy + (self.SQUARE_SIZE - h) / 2), txt, fill=clr, font=self.fntAspects)
+            draw.text((xx + (self.SQUARE_SIZE - w) // 2, yy + (self.SQUARE_SIZE - h) // 2), txt, fill=clr, font=self.fntAspects)
 
         x += self.SQUARE_SIZE + self.SPACE
         for i in range(len(self.hidx)):
             self.drawSquare(draw, x + (self.SQUARE_SIZE + self.SPACE) * i, y, tableclr)
-            w, h = draw.textsize(common.common.housenames2[(self.hidx[i] - 1)], self.fntText)
-            draw.text((x + (self.SQUARE_SIZE + self.SPACE) * i + (self.SQUARE_SIZE - w) / 2, y + (self.SQUARE_SIZE - h) / 2), common.common.housenames2[(self.hidx[i] - 1)], fill=(0,
+            w, h = draw.textbbox((0, 0), common.common.housenames2[(self.hidx[i] - 1)], self.fntText)[2:]
+            draw.text((x + (self.SQUARE_SIZE + self.SPACE) * i + (self.SQUARE_SIZE - w) // 2, y + (self.SQUARE_SIZE - h) // 2), common.common.housenames2[(self.hidx[i] - 1)], fill=(0,
                                                                                                                                                                                    0,
                                                                                                                                                                                    0), font=self.fntText)
 
@@ -162,17 +175,17 @@ class FixedStarsAspectsWnd(commonwnd.CommonWnd):
                 if isopp[k]:
                     asp = chart.Chart.OPPOSITIO
                 txt = common.common.aspects[asp]
-                w, h = draw.textsize(txt, self.fntAspects)
+                w, h = draw.textbbox((0, 0), txt, self.fntAspects)[2:]
                 clr = self.options.clraspect[asp]
                 if self.bw:
                     clr = (0, 0, 0)
                 xx = BOR + self.CELL_WIDTH + self.SPACE + self.HOUSESOFFS * (self.SQUARE_SIZE + self.SPACE) + aroffs[k] * (self.SQUARE_SIZE + self.SPACE)
                 yy = BOR + self.TITLE_HEIGHT + self.SPACE + self.chart.fsaspmatrixHCs[i][0] * (self.SQUARE_SIZE + self.SPACE)
-                draw.text((xx + (self.SQUARE_SIZE - w) / 2, yy + (self.SQUARE_SIZE - h) / 2), txt, fill=clr, font=self.fntAspects)
+                draw.text((xx + (self.SQUARE_SIZE - w) // 2, yy + (self.SQUARE_SIZE - h) // 2), txt, fill=clr, font=self.fntAspects)
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
 
     def drawSquare(self, draw, x, y, tableclr):
         draw.line((x, y, x + self.SQUARE_SIZE, y), fill=tableclr)

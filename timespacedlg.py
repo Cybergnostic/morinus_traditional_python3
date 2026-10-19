@@ -1,6 +1,13 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, datetime, chart, intvalidator, rangechecker, placesdlg, mtexts, util
+import wx
+import datetime
+import chart
+import intvalidator
+import rangechecker
+import placesdlg
+import mtexts
+import util
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
@@ -11,10 +18,9 @@ class TimeSpaceDlg(wx.Dialog):
     def __init__(self, parent, title, langid, netbook):
         self.langid = langid
         self.netbook = netbook
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, title, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, title, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         rnge = 3000
@@ -26,7 +32,7 @@ class TimeSpaceDlg(wx.Dialog):
         vsizer = wx.BoxSizer(wx.VERTICAL)
         self.timeckb = wx.CheckBox(self, -1, mtexts.txtsdatadlg['BC'])
         vsizer.Add(self.timeckb, 0, wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT | wx.TOP, 5)
-        fgsizer = wx.FlexGridSizer(2, 3)
+        fgsizer = wx.FlexGridSizer(0, 3, 0, 0)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
         self.yearlabel = wx.StaticText(self, -1, mtexts.txtsdatadlg['Year'] + ':')
         vvsizer.Add(self.yearlabel, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
@@ -88,7 +94,7 @@ class TimeSpaceDlg(wx.Dialog):
         timesizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 0)
         vvsubsizer = wx.BoxSizer(wx.VERTICAL)
         vvsubsizer.Add(timesizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.RIGHT, 5)
-        fgsizer = wx.FlexGridSizer(2, 4)
+        fgsizer = wx.FlexGridSizer(0, 4, 0, 0)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         self.splace = wx.StaticBox(self, label='')
         placesizer = wx.StaticBoxSizer(self.splace, wx.VERTICAL)
@@ -167,9 +173,9 @@ class TimeSpaceDlg(wx.Dialog):
         hhsizer.Add(self.gmtlabel, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
         self.pluscb = wx.ComboBox(self, -1, TimeSpaceDlg.PLUSCHOICES[0], size=(50,
                                                                                -1), choices=TimeSpaceDlg.PLUSCHOICES, style=wx.CB_DROPDOWN | wx.CB_READONLY)
-        hhsizer.Add(self.pluscb, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
+        hhsizer.Add(self.pluscb, 0, wx.LEFT, 5)
         zonesizer.Add(hhsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        fgsizer = wx.FlexGridSizer(1, 2)
+        fgsizer = wx.FlexGridSizer(0, 2, 0, 0)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
         self.zhourlabel = wx.StaticText(self, -1, mtexts.txtsdatadlg['Hour'] + ':')
         vvsizer.Add(self.zhourlabel, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)

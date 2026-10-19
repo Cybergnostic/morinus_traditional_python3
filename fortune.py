@@ -1,6 +1,12 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import math, astrology, houses, planets, placspec, regiospec, util
+import math
+import astrology
+import houses
+import planets
+import placspec
+import regiospec
+import util
 
 class Fortune:
     """Speculum of Lot-of-Fortune and several methods"""

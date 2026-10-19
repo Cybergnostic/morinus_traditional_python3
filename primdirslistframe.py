@@ -1,6 +1,19 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, primdirs, placidiansapd, placidianutppd, regiomontanpd, campanianpd, primdirslistwnd, intvalidator, rangechecker, mtexts, util, _thread, wx.lib.newevent
+import wx
+import chart
+import primdirs
+import placidiansapd
+import placidianutppd
+import regiomontanpd
+import campanianpd
+import primdirslistwnd
+import intvalidator
+import rangechecker
+import mtexts
+import util
+import _thread
+import wx.lib.newevent
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
 pdlock = _thread.allocate_lock()
 
@@ -29,16 +42,16 @@ class PrimDirsListFrame(wx.Frame):
         toend_bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_TOOLBAR, tsize)
         self.tb.SetToolBitmapSize(tsize)
         self.ID_Start = 10
-        self.tb.AddLabelTool(10, 'Start', tostart_bmp, shortHelp=mtexts.txtsprimdirslist['Start'], longHelp=mtexts.txtsprimdirslist['ToFirstPage'])
+        self.tb.AddTool(10, 'Start', tostart_bmp, wx.NullBitmap, wx.ITEM_NORMAL, mtexts.txtsprimdirslist['Start'], mtexts.txtsprimdirslist['ToFirstPage'])
         self.Bind(wx.EVT_TOOL, self.OnStart, id=self.ID_Start)
         self.ID_Back = 20
-        self.tb.AddLabelTool(20, 'Back', back_bmp, shortHelp=mtexts.txtsprimdirslist['Back'], longHelp=mtexts.txtsprimdirslist['ToBackPage'])
+        self.tb.AddTool(20, 'Back', back_bmp, wx.NullBitmap, wx.ITEM_NORMAL, mtexts.txtsprimdirslist['Back'], mtexts.txtsprimdirslist['ToBackPage'])
         self.Bind(wx.EVT_TOOL, self.OnBack, id=self.ID_Back)
         self.ID_Forward = 30
-        self.tb.AddLabelTool(30, 'Forward', forward_bmp, shortHelp=mtexts.txtsprimdirslist['Forward'], longHelp=mtexts.txtsprimdirslist['ToForwardPage'])
+        self.tb.AddTool(30, 'Forward', forward_bmp, wx.NullBitmap, wx.ITEM_NORMAL, mtexts.txtsprimdirslist['Forward'], mtexts.txtsprimdirslist['ToForwardPage'])
         self.Bind(wx.EVT_TOOL, self.OnForward, id=self.ID_Forward)
         self.ID_End = 40
-        self.tb.AddLabelTool(40, 'End', toend_bmp, shortHelp=mtexts.txtsprimdirslist['End'], longHelp=mtexts.txtsprimdirslist['ToLastPage'])
+        self.tb.AddTool(40, 'End', toend_bmp, wx.NullBitmap, wx.ITEM_NORMAL, mtexts.txtsprimdirslist['End'], mtexts.txtsprimdirslist['ToLastPage'])
         self.Bind(wx.EVT_TOOL, self.OnEnd, id=self.ID_End)
         self.tb.AddSeparator()
         self.tb.AddControl(wx.StaticText(self.tb, -1, '              '))
@@ -124,7 +137,7 @@ class PrimDirsListFrame(wx.Frame):
         addition = 0
         if remainder > 0:
             addition = 1
-        self.maxpage = int(self.pdsmaxnum / self.PAGE) + addition
+        self.maxpage = int(self.pdsmaxnum // self.PAGE) + addition
         fr, to = self.getRange()
         self.w = primdirslistwnd.PrimDirsListWnd(self, chrt, options, pds, parent, 1, self.maxpage, fr, to, -1, self.GetClientSize())
         self.tb.EnableTool(self.ID_Start, False)

@@ -1,6 +1,18 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, os, planets, houses, chart, fortune, common, commonwnd, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import os
+import planets
+import houses
+import chart
+import fortune
+import common
+import commonwnd
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class ProfectionsMonWnd(commonwnd.CommonWnd):
     AGE, DATE, ASC, MC, SUN, MOON, FORTUNE, SATURN, JUPITER, MARS, VENUS, MERCURY = list(range(0, 12))
@@ -13,7 +25,7 @@ class ProfectionsMonWnd(commonwnd.CommonWnd):
         self.mainfr = mainfr
         self.mainsigs = mainsigs
         self.FONT_SIZE = int(21 * self.options.tablesize)
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.LINE_NUM = len(dates)
         if self.mainsigs:
@@ -33,8 +45,8 @@ class ProfectionsMonWnd(commonwnd.CommonWnd):
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.drawBkg()
@@ -70,11 +82,11 @@ class ProfectionsMonWnd(commonwnd.CommonWnd):
             tclr = (0, 0, 0)
             if not self.bw:
                 tclr = arclrs[i]
-            w, h = draw.textsize(txt[i], fnt)
+            w, h = draw.textbbox((0, 0), txt[i], fnt)[2:]
             clr = txtclr
             if i > ProfectionsMonWnd.MC:
                 clr = tclr
-            draw.text((BOR + offs + (cols[i] - w) / 2, BOR + (self.TITLE_HEIGHT - h) / 2), txt[i], fill=clr, font=fnt)
+            draw.text((BOR + offs + (cols[i] - w) // 2, BOR + (self.TITLE_HEIGHT - h) // 2), txt[i], fill=clr, font=fnt)
             offs += cols[i]
 
         x = BOR
@@ -83,8 +95,8 @@ class ProfectionsMonWnd(commonwnd.CommonWnd):
         if not self.bw:
             txtclr = self.options.clrtexts
         txt = str(self.age)
-        w, h = draw.textsize(txt, self.fntText)
-        draw.text((x + (self.CELL_WIDTH - w) / 2, y + (self.TABLE_HEIGHT - h) / 2 - self.LINE_HEIGHT / 2), txt, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((x + (self.CELL_WIDTH - w) // 2, y + (self.TABLE_HEIGHT - h) // 2 - self.LINE_HEIGHT // 2), txt, fill=txtclr, font=self.fntText)
         agestart = agecont = self.age % 12
         for i in range(self.LINE_NUM):
             if i < len(self.pcharts):
@@ -107,9 +119,9 @@ class ProfectionsMonWnd(commonwnd.CommonWnd):
 
         else:
             draw.line((x, y, x + self.TABLE_WIDTH, y), fill=tableclr)
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
 
     def drawline(self, draw, x, y, clr, pcharts, dates, idx):
         val = self.CELL_WIDTH
@@ -126,8 +138,8 @@ class ProfectionsMonWnd(commonwnd.CommonWnd):
                 txtclr = self.options.clrtexts
             if i == ProfectionsMonWnd.DATE:
                 txt = str(dates[idx][0]) + '.' + str(dates[idx][1]).zfill(2) + '.' + str(dates[idx][2]).zfill(2) + '.'
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((x + summa + (offs[i] - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=tclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntText)
             elif i != ProfectionsMonWnd.AGE:
                 if i == ProfectionsMonWnd.ASC:
                     lon = pcharts[0].houses.ascmc[houses.Houses.ASC]
@@ -145,13 +157,13 @@ class ProfectionsMonWnd(commonwnd.CommonWnd):
                     lon -= self.chart.ayanamsha
                     lon = util.normalize(lon)
                 d, m, s = util.decToDeg(lon)
-                sign = d / chart.Chart.SIGN_DEG
+                sign = d // chart.Chart.SIGN_DEG
                 pos = d % chart.Chart.SIGN_DEG
-                wsp, hsp = draw.textsize(' ', self.fntText)
-                wsg, hsg = draw.textsize(self.signs[sign], self.fntMorinus)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                wsg, hsg = draw.textbbox((0, 0), self.signs[sign], self.fntMorinus)[2:]
                 txt = str(pos).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - (w + wsp + wsg)) / 2
-                draw.text((x + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=tclr, font=self.fntText)
-                draw.text((x + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) / 2), self.signs[sign], fill=tclr, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - (w + wsp + wsg)) // 2
+                draw.text((x + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntText)
+                draw.text((x + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) // 2), self.signs[sign], fill=tclr, font=self.fntMorinus)
             summa += offs[i]

@@ -34,7 +34,6 @@ class Morinus(wx.App):
 		except:
 			pass
 
-		wx.SetDefaultPyEncoding('utf-8')
 		opts = options.Options()
 		mtexts.setLang(opts.langid)
 

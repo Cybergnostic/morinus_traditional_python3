@@ -1,6 +1,10 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import astrology, chart, houses, planets, util
+import astrology
+import chart
+import houses
+import planets
+import util
 
 class Syzygy:
     LON = 0

@@ -1,11 +1,16 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import copy, string, wx, chart, util, mtexts
+import copy
+import string
+import wx
+import chart
+import util
+import mtexts
 
-class IntValidator(wx.PyValidator):
+class IntValidator(wx.Validator):
 
     def __init__(self, minim=None, maxim=None):
-        wx.PyValidator.__init__(self)
+        wx.Validator.__init__(self)
         self.minim = minim
         self.maxim = maxim
         self.Bind(wx.EVT_CHAR, self.OnChar)
@@ -46,7 +51,7 @@ class IntValidator(wx.PyValidator):
         if chr(key) in string.digits:
             event.Skip()
             return
-        if not wx.Validator_IsSilent():
+        if not wx.Validator.IsSilent():
             wx.Bell()
 
 
@@ -106,7 +111,7 @@ class TermsDlg(wx.Dialog):
         termssizer = wx.StaticBoxSizer(sterms, wx.VERTICAL)
         num = len(self.terms)
         subnum = len(self.terms[0])
-        gsizer = wx.FlexGridSizer(num, 2, 0, 0)
+        gsizer = wx.FlexGridSizer(0, 2, 0, 0)
         self.signs = (mtexts.txtscommon['Aries'], mtexts.txtscommon['Taurus'], mtexts.txtscommon['Gemini'], mtexts.txtscommon['Cancer'], mtexts.txtscommon['Leo'], mtexts.txtscommon['Virgo'], mtexts.txtscommon['Libra'], mtexts.txtscommon['Scorpio'], mtexts.txtscommon['Sagittarius'], mtexts.txtscommon['Capricorn'], mtexts.txtscommon['Aquarius'], mtexts.txtscommon['Pisces'])
         pls = (mtexts.txtscommon['Saturn'], mtexts.txtscommon['Jupiter'], mtexts.txtscommon['Mars'], mtexts.txtscommon['Sun'], mtexts.txtscommon['Venus'], mtexts.txtscommon['Mercury'], mtexts.txtscommon['Moon'])
         for i in range(num):

@@ -1,6 +1,14 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import sys, wx, rangechecker, intvalidator, findtime, mtexts, util, _thread, wx.lib.newevent
+import sys
+import wx
+import rangechecker
+import intvalidator
+import findtime
+import mtexts
+import util
+import _thread
+import wx.lib.newevent
 FTReadyEvent, EVT_FTREADY = wx.lib.newevent.NewEvent()
 FTDataReadyEvent, EVT_FTDATAREADY = wx.lib.newevent.NewEvent()
 FTYearEvent, EVT_FTYEAR = wx.lib.newevent.NewEvent()
@@ -55,9 +63,9 @@ class ResListCtrl(wx.ListCtrl):
     def OnAdd(self, item):
         num = self.GetItemCount() + 1
         numtxt = str(num) + '.'
-        self.InsertStringItem(num - 1, numtxt)
-        self.SetStringItem(num - 1, 1, item[0])
-        self.SetStringItem(num - 1, 2, item[1])
+        self.InsertItem(num - 1, numtxt)
+        self.SetItem(num - 1, 1, item[0])
+        self.SetItem(num - 1, 2, item[1])
         self.currentItem = 0
         self.EnsureVisible(self.currentItem)
         self.SetItemState(self.currentItem, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
@@ -103,7 +111,7 @@ class FindTimeDlg(wx.Dialog):
         vsizer.Add(sbcsizer, 0, wx.GROW)
         splanets = wx.StaticBox(self, label='')
         splanetssizer = wx.StaticBoxSizer(splanets, wx.VERTICAL)
-        gsizer = wx.GridSizer(7, 5)
+        gsizer = wx.GridSizer(0, 5, 0, 0)
         label = wx.StaticText(self, -1, mtexts.txtscommon['Saturn'] + ':')
         gsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         self.saturndeg = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 359), size=(40,
@@ -348,11 +356,11 @@ class FindTimeDlg(wx.Dialog):
         self.useretrckb = wx.CheckBox(self, -1, mtexts.txtsfindtimedlg['Retrograde'])
         susesizer.Add(self.useretrckb, 0, wx.ALIGN_LEFT | wx.LEFT | wx.TOP, 5)
         vsizer.Add(susesizer, 1, wx.GROW)
-        mhsizer.Add(vsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL, 0)
+        mhsizer.Add(vsizer, 0, wx.GROW, 0)
         vvvsizer = wx.BoxSizer(wx.VERTICAL)
         sangles = wx.StaticBox(self, label='')
         sanglessizer = wx.StaticBoxSizer(sangles, wx.VERTICAL)
-        gsizer = wx.GridSizer(2, 4)
+        gsizer = wx.GridSizer(0, 4, 0, 0)
         self.asctxt = wx.StaticText(self, -1, mtexts.txtscommon['Asc'] + ':')
         gsizer.Add(self.asctxt, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         self.ascdeg = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 359), size=(40,
@@ -421,7 +429,7 @@ class FindTimeDlg(wx.Dialog):
             rnge = 5000
         sforce = wx.StaticBox(self, label='')
         sforcesizer = wx.StaticBoxSizer(sforce, wx.VERTICAL)
-        gsizer = wx.GridSizer(2, 3)
+        gsizer = wx.GridSizer(0, 3, 0, 0)
         self.fyear = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(1, rnge), size=(50,
                                                                                                    -1))
         if checker.isExtended():
@@ -531,10 +539,10 @@ class FindTimeDlg(wx.Dialog):
         self.btnShow = wx.Button(self, List_Show_ID, mtexts.txtsfindtimedlg['Show'])
         self.btnShow.Enable(False)
         hbtnsizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbtnsizer.Add(self.btnStart, 1, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL, 5)
-        hbtnsizer.Add(self.btnShow, 1, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL, 5)
-        vvvsizer.Add(hbtnsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL, 5)
-        mhsizer.Add(vvvsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL, 0)
+        hbtnsizer.Add(self.btnStart, 1, wx.GROW, 5)
+        hbtnsizer.Add(self.btnShow, 1, wx.GROW, 5)
+        vvvsizer.Add(hbtnsizer, 0, wx.GROW, 5)
+        mhsizer.Add(vvvsizer, 0, wx.GROW, 0)
         mvsizer.Add(mhsizer, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
         btnsizer = wx.StdDialogButtonSizer()
         if wx.Platform != '__WXMSW__':
@@ -544,7 +552,7 @@ class FindTimeDlg(wx.Dialog):
         btnOk.SetDefault()
         btnsizer.AddButton(btnOk)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         self.Bind(wx.EVT_CHECKBOX, self.onUseMin, id=self.useminckb.GetId())

@@ -1,16 +1,20 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, planets, placspec, regiospec, chart, mtexts
+import wx
+import planets
+import placspec
+import regiospec
+import chart
+import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class Appearance2Dlg(wx.Dialog):
 
     def __init__(self, parent):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsappearance2dlg['Appearance2'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsappearance2dlg['Appearance2'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         placidian = wx.StaticBox(self, label=mtexts.txtsappearance2dlg['Placidian'])
@@ -74,7 +78,7 @@ class Appearance2Dlg(wx.Dialog):
         self.cmpckb.SetHelpText(mtexts.txtsappearance2dlg['HelpCMP'])
         regiomontansizer.Add(self.cmpckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
         mhsizer.Add(regiomontansizer, 1, wx.GROW | wx.RIGHT, 5)
-        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALL, 5)
         ra = wx.StaticBox(self, label=mtexts.txtsappearance2dlg['Rectascension'])
         rasizer = wx.StaticBoxSizer(ra, wx.VERTICAL)
         self.intimeckb = wx.CheckBox(self, -1, mtexts.txtsappearance2dlg['InTime'])
@@ -92,7 +96,7 @@ class Appearance2Dlg(wx.Dialog):
         btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()

@@ -1,16 +1,17 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, intvalidator, mtexts
+import wx
+import intvalidator
+import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class AlmutenChartDlg(wx.Dialog):
 
     def __init__(self, parent):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsalmutenchartdlg['AlmutenOfTheChart'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsalmutenchartdlg['AlmutenOfTheChart'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         self.sessential = wx.StaticBox(self, label=mtexts.txtsalmutenchartdlg['Essential'])
@@ -29,7 +30,7 @@ class AlmutenChartDlg(wx.Dialog):
         essentialsizer.Add(orbsizer, 0, wx.GROW | wx.LEFT | wx.RIGHT, 5)
         self.sscores = wx.StaticBox(self, label=mtexts.txtsalmutenchartdlg['RulershipScores'])
         scoressizer = wx.StaticBoxSizer(self.sscores, wx.VERTICAL)
-        gsizer = wx.GridSizer(5, 2)
+        gsizer = wx.GridSizer(0, 2, 0, 0)
         label = wx.StaticText(self, -1, mtexts.txtsalmutenchartdlg['Domicile'] + ':')
         gsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         self.domicil = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 5), size=(40,
@@ -76,7 +77,7 @@ class AlmutenChartDlg(wx.Dialog):
         self.shouses = wx.StaticBox(self, label=mtexts.txtsalmutenchartdlg['HouseScores'])
         housessizer = wx.StaticBoxSizer(self.shouses, wx.HORIZONTAL)
         self.houselabels = []
-        gsizer = wx.GridSizer(6, 2)
+        gsizer = wx.GridSizer(0, 2, 0, 0)
         self.houselabels.append(wx.StaticText(self, -1, mtexts.txtsalmutenchartdlg['HC1'] + ':'))
         gsizer.Add(self.houselabels[0], 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         self.hc1 = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 12), size=(40,
@@ -120,7 +121,7 @@ class AlmutenChartDlg(wx.Dialog):
         self.hc6.SetHelpText(mtexts.txtsalmutenchartdlg['HelpLessThanTwelve'])
         self.hc6.SetMaxLength(2)
         housessizer.Add(gsizer, 0, wx.ALL, 5)
-        gsizer = wx.GridSizer(6, 2)
+        gsizer = wx.GridSizer(0, 2, 0, 0)
         self.houselabels.append(wx.StaticText(self, -1, mtexts.txtsalmutenchartdlg['HC7'] + ':'))
         gsizer.Add(self.houselabels[6], 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         self.hc7 = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 12), size=(40,
@@ -169,7 +170,7 @@ class AlmutenChartDlg(wx.Dialog):
         self.sphase = wx.StaticBox(self, label=mtexts.txtsalmutenchartdlg['SunPhaseScores'])
         phasessizer = wx.StaticBoxSizer(self.sphase, wx.HORIZONTAL)
         self.phaselabels = []
-        gsizer = wx.GridSizer(3, 2)
+        gsizer = wx.GridSizer(0, 2, 0, 0)
         self.phaselabels.append(wx.StaticText(self, -1, mtexts.txtsalmutenchartdlg['Strong'] + ':'))
         gsizer.Add(self.phaselabels[0], 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         self.strong = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 5), size=(40,
@@ -197,7 +198,7 @@ class AlmutenChartDlg(wx.Dialog):
         self.sdayhour = wx.StaticBox(self, label=mtexts.txtsalmutenchartdlg['RulerScores'])
         dayhoursizer = wx.StaticBoxSizer(self.sdayhour, wx.HORIZONTAL)
         self.dayhourlabels = []
-        gsizer = wx.GridSizer(2, 2)
+        gsizer = wx.GridSizer(0, 2, 0, 0)
         self.dayhourlabels.append(wx.StaticText(self, -1, mtexts.txtsalmutenchartdlg['Day'] + ':'))
         gsizer.Add(self.dayhourlabels[0], 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         self.dayruler = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 10), size=(40,
@@ -231,7 +232,7 @@ class AlmutenChartDlg(wx.Dialog):
         btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         self.Bind(wx.EVT_RADIOBUTTON, self.onOneTrip, id=self.onetriprb.GetId())

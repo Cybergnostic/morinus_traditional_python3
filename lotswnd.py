@@ -1,6 +1,16 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, planets, chart, lots, common, commonwnd, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import planets
+import chart
+import lots
+import common
+import commonwnd
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class LotsWnd(commonwnd.CommonWnd):
 
@@ -8,7 +18,7 @@ class LotsWnd(commonwnd.CommonWnd):
         commonwnd.CommonWnd.__init__(self, parent, chrt, opts, id, size)
         self.mainfr = mainfr
         self.FONT_SIZE = int(21 * self.options.tablesize)
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         lengthlots = 0
         for l in range(len(self.options.lotsvisible)):
@@ -27,9 +37,9 @@ class LotsWnd(commonwnd.CommonWnd):
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, int(5.0 / 4.0 * self.FONT_SIZE))
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
-        self.fntLord = ImageFont.truetype(common.common.abc, int(5.0 / 4.0 * self.FONT_SIZE))
+        self.fntMorinus = util.truetype(common.common.symbols, int(5.0 / 4.0 * self.FONT_SIZE))
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntLord = util.truetype(common.common.abc, int(5.0 / 4.0 * self.FONT_SIZE))
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.lordtxt = '!'
@@ -56,8 +66,8 @@ class LotsWnd(commonwnd.CommonWnd):
         draw.rectangle(((BOR, BOR), (BOR + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
         txts = (mtexts.txtslots['Name'], mtexts.txtslots['Formula'], mtexts.txtslots['Longitude'], mtexts.txtslots['Almuten'])
         for i in range(len(txts)):
-            w, h = draw.textsize(txts[i], self.fntText)
-            draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH * i + (self.CELL_WIDTH - w) / 2, BOR + (self.TITLE_HEIGHT - h) / 2), txts[i], fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txts[i], self.fntText)[2:]
+            draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH * i + (self.CELL_WIDTH - w) // 2, BOR + (self.TITLE_HEIGHT - h) // 2), txts[i], fill=txtclr, font=self.fntText)
 
         x = BOR
         y = BOR + self.TITLE_HEIGHT + self.SPACE_TITLEY
@@ -71,9 +81,9 @@ class LotsWnd(commonwnd.CommonWnd):
                     self.drawline(draw, x, y, self.chart.lots.lots, tableclr, i, l)
                     l += 1
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
         return
 
     def drawline(self, draw, x, y, data, clr, idx, ln):
@@ -88,12 +98,12 @@ class LotsWnd(commonwnd.CommonWnd):
         for i in range(self.COLUMN_NUM + 1 + 1 + 1):
             draw.line((x + summa + offs[i], y, x + summa + offs[i], y + self.LINE_HEIGHT), fill=clr)
             if i == 0:
-                w, h = draw.textsize(str(idx + 1), self.fntText)
-                draw.text((x + summa + (offs[(i + 1)] - w) / 2, y + (self.LINE_HEIGHT - h) / 2), str(idx + 1), fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), str(idx + 1), self.fntText)[2:]
+                draw.text((x + summa + (offs[(i + 1)] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), str(idx + 1), fill=txtclr, font=self.fntText)
             elif i == lots.Lots.NAME + 1:
                 name = data[idx][(i - 1)]
-                w, h = draw.textsize(name, self.fntText)
-                draw.text((x + summa + self.SMALL_CELL_WIDTH + (offs[(i + 1)] - w) / 2, y + (self.LINE_HEIGHT - h) / 2), name, fill=txtclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), name, self.fntText)[2:]
+                draw.text((x + summa + self.SMALL_CELL_WIDTH + (offs[(i + 1)] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), name, fill=txtclr, font=self.fntText)
             elif i == lots.Lots.FORMULA + 1:
                 A = mtexts.lotstxts[data[idx][lots.Lots.FORMULA][0]]
                 B = mtexts.lotstxts[data[idx][lots.Lots.FORMULA][1]]
@@ -126,7 +136,7 @@ class LotsWnd(commonwnd.CommonWnd):
                             lordtxt = ''
                             if data[idx][lots.Lots.FORMULA][f] == lots.Lots.DEGLORD:
                                 lordtxt = self.lordtxt
-                            sign = data[idx][lots.Lots.REFORDEG][f] / chart.Chart.SIGN_DEG
+                            sign = data[idx][lots.Lots.REFORDEG][f] // chart.Chart.SIGN_DEG
                             deg = data[idx][lots.Lots.REFORDEG][f] % chart.Chart.SIGN_DEG
                             ar[f][0][0] = str(deg)
                             ar[f][1][0] = common.common.signs[sign]
@@ -140,7 +150,7 @@ class LotsWnd(commonwnd.CommonWnd):
                             lordtxt = ''
                             if data[idx][lots.Lots.FORMULA][f] == lots.Lots.REFLORD:
                                 lordtxt = self.lordtxt
-                            sign = data[idx][lots.Lots.REFORDEG][f] / chart.Chart.SIGN_DEG
+                            sign = data[idx][lots.Lots.REFORDEG][f] // chart.Chart.SIGN_DEG
                             deg = data[idx][lots.Lots.REFORDEG][f] % chart.Chart.SIGN_DEG
                             ar[f][0][0] = mtexts.txtslotsdlg['R'] + str(data[idx][lots.Lots.REFORDEG][f])
                             ar[f][1][0] = lordtxt
@@ -172,40 +182,40 @@ class LotsWnd(commonwnd.CommonWnd):
                             if not self.bw:
                                 clrsym = self.options.clrplanets[self.chart.time.ph.planetaryhour]
                             ar[f][0][2] = clrsym
-                        ar[f][ff][3] = draw.textsize(ar[f][ff][0], ar[f][ff][1])
+                        ar[f][ff][3] = draw.textbbox((0, 0), ar[f][ff][0], ar[f][ff][1])[2:]
                         wall += ar[f][ff][3][0]
 
-                    ww, hh = draw.textsize(delimtxts[f], self.fntText)
+                    ww, hh = draw.textbbox((0, 0), delimtxts[f], self.fntText)[2:]
                     wall += ww
 
                 if data[idx][lots.Lots.DIURNAL] and not self.chart.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon:
                     tmp = ar[1]
                     ar[1] = ar[2]
                     ar[2] = tmp
-                begx = x + summa + self.CELL_WIDTH + (offs[i] - wall) / 2
+                begx = x + summa + self.CELL_WIDTH + (offs[i] - wall) // 2
                 subwall = 0
                 for f in range(3):
                     for ff in range(3):
-                        draw.text((begx + subwall, y + (self.LINE_HEIGHT - h) / 2), ar[f][ff][0], fill=ar[f][ff][2], font=ar[f][ff][1])
+                        draw.text((begx + subwall, y + (self.LINE_HEIGHT - h) // 2), ar[f][ff][0], fill=ar[f][ff][2], font=ar[f][ff][1])
                         subwall += ar[f][ff][3][0]
 
-                    draw.text((begx + subwall, y + (self.LINE_HEIGHT - h) / 2), delimtxts[f], fill=txtclr, font=self.fntText)
-                    ww, hh = draw.textsize(delimtxts[f], self.fntText)
+                    draw.text((begx + subwall, y + (self.LINE_HEIGHT - h) // 2), delimtxts[f], fill=txtclr, font=self.fntText)
+                    ww, hh = draw.textbbox((0, 0), delimtxts[f], self.fntText)[2:]
                     subwall += ww
 
             elif i == lots.Lots.LON + 1:
                 lon = data[idx][(i - 1)]
                 d, m, s = util.decToDeg(lon)
-                sign = d / chart.Chart.SIGN_DEG
+                sign = d // chart.Chart.SIGN_DEG
                 pos = d % chart.Chart.SIGN_DEG
-                wsp, hsp = draw.textsize(' ', self.fntText)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
                 txtsign = self.signs[sign]
-                wsg, hsg = draw.textsize(txtsign, self.fntMorinus)
+                wsg, hsg = draw.textbbox((0, 0), txtsign, self.fntMorinus)[2:]
                 txt = str(pos).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - (w + wsp + wsg)) / 2
-                draw.text((x + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
-                draw.text((x + summa + offset + w + wsp, y + (self.LINE_HEIGHT - h) / 2), txtsign, fill=txtclr, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - (w + wsp + wsg)) // 2
+                draw.text((x + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
+                draw.text((x + summa + offset + w + wsp, y + (self.LINE_HEIGHT - h) // 2), txtsign, fill=txtclr, font=self.fntMorinus)
             elif i == lots.Lots.DEGWINNER + 1:
                 self.drawDegWinner2(draw, x + summa, y, data[idx][(i - 1)], txtclr)
             if i != lots.Lots.REFORDEG + 1:
@@ -219,11 +229,11 @@ class LotsWnd(commonwnd.CommonWnd):
             pid = degwinner[i][j][0]
             if pid != -1:
                 ptxt = common.common.planets[pid]
-                wpl, hpl = draw.textsize(ptxt, self.fntMorinus)
+                wpl, hpl = draw.textbbox((0, 0), ptxt, self.fntMorinus)[2:]
                 sco = degwinner[i][0][1]
                 txt = '(' + str(sco) + ')'
-                w, h = draw.textsize(txt, self.fntText)
-                wsp, hsp = draw.textsize(' ', self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
                 aux[j][0] = pid
                 aux[j][1] = sco
                 aux[j][2] = wpl + wsp + w
@@ -239,10 +249,10 @@ class LotsWnd(commonwnd.CommonWnd):
                 if not self.bw:
                     clr = self.options.clrplanets[aux[j][0]]
                 pltxt = common.common.planets[aux[j][0]]
-                wpl, hpl = draw.textsize(pltxt, self.fntMorinus)
+                wpl, hpl = draw.textbbox((0, 0), pltxt, self.fntMorinus)[2:]
                 txt = '(' + str(aux[j][1]) + ')'
-                wsp, hsp = draw.textsize(' ', self.fntText)
-                w, h = draw.textsize(txt, self.fntText)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
                 prev = 0
                 for p in range(j):
                     prev += aux[j][2] + wsp
@@ -250,8 +260,8 @@ class LotsWnd(commonwnd.CommonWnd):
                 offs = i
                 if onlyone:
                     offs = 0
-                draw.text((x + (self.CELL_WIDTH - mwidth) / 2 + prev, y + offs * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), pltxt, fill=clr, font=self.fntMorinus)
-                draw.text((x + (self.CELL_WIDTH - mwidth) / 2 + prev + wpl + wsp, y + offs * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                draw.text((x + (self.CELL_WIDTH - mwidth) // 2 + prev, y + offs * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), pltxt, fill=clr, font=self.fntMorinus)
+                draw.text((x + (self.CELL_WIDTH - mwidth) // 2 + prev + wpl + wsp, y + offs * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
 
     def drawDegWinner2(self, draw, x, y, degwinner, txtclr):
         aux = [[-1, -1, -1], [-1, -1, -1], [-1, -1, -1]]
@@ -261,11 +271,11 @@ class LotsWnd(commonwnd.CommonWnd):
             pid = degwinner[j][0]
             if pid != -1:
                 ptxt = common.common.planets[pid]
-                wpl, hpl = draw.textsize(ptxt, self.fntMorinus)
+                wpl, hpl = draw.textbbox((0, 0), ptxt, self.fntMorinus)[2:]
                 sco = degwinner[0][1]
                 txt = '(' + str(sco) + ')'
-                w, h = draw.textsize(txt, self.fntText)
-                wsp, hsp = draw.textsize(' ', self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
                 aux[j][0] = pid
                 aux[j][1] = sco
                 aux[j][2] = wpl + wsp + w
@@ -281,13 +291,13 @@ class LotsWnd(commonwnd.CommonWnd):
                 if not self.bw:
                     clr = self.options.clrplanets[aux[j][0]]
                 pltxt = common.common.planets[aux[j][0]]
-                wpl, hpl = draw.textsize(pltxt, self.fntMorinus)
+                wpl, hpl = draw.textbbox((0, 0), pltxt, self.fntMorinus)[2:]
                 txt = '(' + str(aux[j][1]) + ')'
-                wsp, hsp = draw.textsize(' ', self.fntText)
-                w, h = draw.textsize(txt, self.fntText)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
                 prev = 0
                 for p in range(j):
                     prev += aux[j][2] + wsp
 
-                draw.text((x + (self.CELL_WIDTH - mwidth) / 2 + prev, y + (self.LINE_HEIGHT - h) / 2), pltxt, fill=clr, font=self.fntMorinus)
-                draw.text((x + (self.CELL_WIDTH - mwidth) / 2 + prev + wpl + wsp, y + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=self.fntText)
+                draw.text((x + (self.CELL_WIDTH - mwidth) // 2 + prev, y + (self.LINE_HEIGHT - h) // 2), pltxt, fill=clr, font=self.fntMorinus)
+                draw.text((x + (self.CELL_WIDTH - mwidth) // 2 + prev + wpl + wsp, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)

@@ -1,6 +1,21 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import math, datetime, wx, astrology, planets, houses, chart, transits, pdsinchart, pdsinchartdlgopts, intvalidator, floatvalidator, rangechecker, primdirs, mtexts, util
+import math
+import datetime
+import wx
+import astrology
+import planets
+import houses
+import chart
+import transits
+import pdsinchart
+import pdsinchartdlgopts
+import intvalidator
+import floatvalidator
+import rangechecker
+import primdirs
+import mtexts
+import util
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
@@ -16,10 +31,9 @@ class PDsInChartStepperDlg(wx.Dialog):
         self.direct = direct
         self.arc = arc
         self.options = opts
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtspdsinchartstepperdlg['PDsInChart'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtspdsinchartstepperdlg['PDsInChart'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         rnge = 3000
@@ -31,7 +45,7 @@ class PDsInChartStepperDlg(wx.Dialog):
         self.daterb = wx.RadioButton(self, -1, '', style=wx.RB_GROUP)
         datesizer.Add(self.daterb, 0, wx.GROW | wx.ALIGN_LEFT | wx.ALL, 5)
         vsizer = wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(2, 3)
+        fgsizer = wx.FlexGridSizer(0, 3, 0, 0)
         self.yeartxt = wx.StaticText(self, -1, mtexts.txtspdsinchartstepperdlg['Year'] + ':')
         vsizer.Add(self.yeartxt, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         self.year = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, rnge), size=(50,
@@ -95,7 +109,7 @@ class PDsInChartStepperDlg(wx.Dialog):
         self.second.SetValue(str(se))
         vsizer.Add(self.second, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        datesizer.Add(fgsizer, 0, wx.GROW | wx.ALIGN_CENTER | wx.ALL, 5)
+        datesizer.Add(fgsizer, 0, wx.GROW | wx.ALL, 5)
         self.sda = wx.StaticBox(self, label='')
         dasizer = wx.StaticBoxSizer(self.sda, wx.VERTICAL)
         self.arcrb = wx.RadioButton(self, -1, '')
@@ -107,10 +121,10 @@ class PDsInChartStepperDlg(wx.Dialog):
         self.da = wx.TextCtrl(self, -1, '', validator=floatvalidator.FloatValidator(0.0, 100.0), size=(100,
                                                                                                        -1))
         self.da.SetMaxLength(10)
-        hsizer.Add(self.da, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
+        hsizer.Add(self.da, 0, wx.LEFT, 0)
         vsizer.Add(hsizer, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         dasizer.Add(vsizer, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.ALL, 5)
-        self.da.SetValue(str(self.arc))
+        self.da.SetValue(util.floatstr(self.arc))
         self.sdir = wx.StaticBox(self, label='')
         dirsizer = wx.StaticBoxSizer(self.sdir, wx.VERTICAL)
         vsizer = wx.BoxSizer(wx.VERTICAL)

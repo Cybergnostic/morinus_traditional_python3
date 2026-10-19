@@ -1,6 +1,16 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, houses, planets, chart, fortune, common, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import houses
+import planets
+import chart
+import fortune
+import common
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class SquareChart:
     SMALL_SIZE = 400
@@ -11,22 +21,22 @@ class SquareChart:
         self.options = opts
         self.w, self.h = size
         self.bw = bw
-        self.buffer = wx.EmptyBitmap(self.w, self.h)
+        self.buffer = wx.Bitmap(self.w, self.h)
         self.bdc = wx.BufferedDC(None, self.buffer)
         self.chartsize = min(self.w, self.h)
-        self.maxradius = self.chartsize / 2
-        self.center = wx.Point(self.w / 2, self.h / 2)
-        self.symbolSize = self.maxradius / 16
-        self.smallSize = self.maxradius / 18
+        self.maxradius = self.chartsize // 2
+        self.center = wx.Point(self.w // 2, self.h // 2)
+        self.symbolSize = self.maxradius // 16
+        self.smallSize = self.maxradius // 18
         self.fontSize = self.symbolSize
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.symbolSize)
-        self.fntMorinusSmall = ImageFont.truetype(common.common.symbols, self.smallSize)
-        self.fntText = ImageFont.truetype(common.common.abc, self.fontSize)
-        self.fntTextSmall = ImageFont.truetype(common.common.abc, 3 * self.fontSize / 4)
-        self.fntTextSmaller = ImageFont.truetype(common.common.abc, self.fontSize / 2)
-        self.fntRetr = ImageFont.truetype(common.common.symbols, self.symbolSize / 2)
+        self.fntMorinus = util.truetype(common.common.symbols, self.symbolSize)
+        self.fntMorinusSmall = util.truetype(common.common.symbols, self.smallSize)
+        self.fntText = util.truetype(common.common.abc, self.fontSize)
+        self.fntTextSmall = util.truetype(common.common.abc, 3 * self.fontSize // 4)
+        self.fntTextSmaller = util.truetype(common.common.abc, self.fontSize // 2)
+        self.fntRetr = util.truetype(common.common.symbols, self.symbolSize // 2)
         self.deg_symbol = '\xb0'
-        self.SPACE = self.fontSize / 5
+        self.SPACE = self.fontSize // 5
         self.LINE_HEIGHT = self.SPACE + self.fontSize + self.SPACE
         self.ayans = {0: mtexts.txtsayanamsha['None'], 1: mtexts.txtsayanamsha['FaganBradley'], 2: mtexts.txtsayanamsha['Lahiri'], 3: mtexts.txtsayanamsha['Deluce'], 4: mtexts.txtsayanamsha['Raman'], 5: mtexts.txtsayanamsha['Ushashashi'], 6: mtexts.txtsayanamsha['Krishnamurti'], 7: mtexts.txtsayanamsha['DjwhalKhul'], 8: mtexts.txtsayanamsha['Yukteshwar'], 9: mtexts.txtsayanamsha['JNBhasin'], 10: mtexts.txtsayanamsha['BabylonianKuglerI2'], 11: mtexts.txtsayanamsha['BabylonianKuglerII2'], 12: mtexts.txtsayanamsha['BabylonianKuglerIII2'], 13: mtexts.txtsayanamsha['BabylonianHuber2'], 14: mtexts.txtsayanamsha['BabylonianMercier2'], 15: mtexts.txtsayanamsha['Aldebaran15Tau2'], 16: mtexts.txtsayanamsha['Hipparchos'], 17: mtexts.txtsayanamsha['Sassanian'], 18: mtexts.txtsayanamsha['GalacticCenter0Sag2'], 19: mtexts.txtsayanamsha['J2000'], 20: mtexts.txtsayanamsha['J1900'], 21: mtexts.txtsayanamsha['B1950']}
         self.hsystem = (
@@ -48,7 +58,6 @@ class SquareChart:
         self.bdc.SetBackground(wx.Brush(bkgclr))
         self.bdc.SetBrush(wx.Brush(bkgclr))
         self.bdc.Clear()
-        self.bdc.BeginDrawing()
         cx, cy = self.center.Get()
         w = 4
         if self.chartsize <= SquareChart.SMALL_SIZE:
@@ -61,7 +70,7 @@ class SquareChart:
         x = cx - radius
         y = cy - radius
         w = h = 2 * radius + w
-        self.bdc.DrawRectangle(x, y, w, h)
+        self.bdc.DrawRectangle(int(x), int(y), int(w), int(h))
         w = 3
         if self.chartsize <= SquareChart.SMALL_SIZE:
             w = 1
@@ -74,50 +83,49 @@ class SquareChart:
         y1 = cy - radius
         x2 = cx - radius
         y2 = cy
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
         x1 = cx - radius
         y1 = cy
         x2 = cx
         y2 = cy + radius
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
         x1 = cx
         y1 = cy + radius
         x2 = cx + radius
         y2 = cy
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
         x1 = cx + radius
         y1 = cy
         x2 = cx
         y2 = cy - radius
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
         x1 = cx - radius
         y1 = cy - radius
         x2 = cx - radius / 2
         y2 = cy - radius / 2
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
         x1 = cx - radius
         y1 = cy + radius
         x2 = cx - radius / 2
         y2 = cy + radius / 2
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
         x1 = cx + radius
         y1 = cy + radius
         x2 = cx + radius / 2
         y2 = cy + radius / 2
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
         x1 = cx + radius
         y1 = cy - radius
         x2 = cx + radius / 2
         y2 = cy - radius / 2
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
         x = cx - radius / 2
         y = cy - radius / 2
         w = h = radius + 1
-        self.bdc.DrawRectangle(x, y, w, h)
-        self.bdc.EndDrawing()
+        self.bdc.DrawRectangle(int(x), int(y), int(w), int(h))
         wxImag = self.buffer.ConvertToImage()
         img = Image.new('RGB', (wxImag.GetWidth(), wxImag.GetHeight()))
-        img.fromstring(wxImag.GetData())
+        img.frombytes(wxImag.GetData())
         draw = ImageDraw.Draw(img)
         datetxt = str(self.chart.time.origyear) + '.' + mtexts.months[(self.chart.time.origmonth - 1)] + '.' + str(self.chart.time.origday).zfill(2)
         if self.chart.time.cal == chart.Time.JULIAN:
@@ -153,20 +161,20 @@ class SquareChart:
         ar = (
          6, 2, 5, 1, 4, 0, 3)
         draw.text((x, y + 8 * self.LINE_HEIGHT), common.common.planets[ar[self.chart.time.ph.weekday]], fill=txtclr, font=self.fntMorinus)
-        wsym, hsym = draw.textsize(common.common.planets[ar[self.chart.time.ph.weekday]], self.fntMorinus)
-        wsp, hsp = draw.textsize(' ', self.fntText)
+        wsym, hsym = draw.textbbox((0, 0), common.common.planets[ar[self.chart.time.ph.weekday]], self.fntMorinus)[2:]
+        wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
         draw.text((x + wsym + wsp, y + 8 * self.LINE_HEIGHT), mtexts.txtscommon['Day'], fill=txtclr, font=self.fntText)
-        wday, hday = draw.textsize(mtexts.txtscommon['Day'], self.fntText)
+        wday, hday = draw.textbbox((0, 0), mtexts.txtscommon['Day'], self.fntText)[2:]
         draw.text((x + wsym + wsp + wday + 2 * wsp, y + 8 * self.LINE_HEIGHT), common.common.planets[self.chart.time.ph.planetaryhour], fill=txtclr, font=self.fntMorinus)
-        wsym2, hsym2 = draw.textsize(common.common.planets[self.chart.time.ph.planetaryhour], self.fntMorinus)
+        wsym2, hsym2 = draw.textbbox((0, 0), common.common.planets[self.chart.time.ph.planetaryhour], self.fntMorinus)[2:]
         draw.text((x + wsym + wsp + wday + wsp + wsym2 + 2 * wsp, y + 8 * self.LINE_HEIGHT), mtexts.txtscommon['Hour'], fill=txtclr, font=self.fntText)
         ar = (
          (
           (
-           cx - 3 * radius / 4 - 3 * self.fontSize / 2, cy - radius / 3 + self.fontSize), (cx - 3 * radius / 4 - self.fontSize / 2, cy - radius / 3), (cx - 3 * radius / 4 + self.fontSize / 2, cy - radius / 3 - self.fontSize / 2)), ((cx - 3 * radius / 4 - self.fontSize, cy + radius / 3 - 3 * self.fontSize), (cx - 3 * radius / 4, cy + radius / 3 - 2 * self.fontSize - self.fontSize / 4), (cx - 3 * radius / 4 + self.fontSize, cy + radius / 3 - self.fontSize)), ((cx - 3 * radius / 4 - 5 * self.fontSize / 2, cy + 3 * radius / 4 + 4 * self.fontSize / 5), (cx - 3 * radius / 4 - 3 * self.fontSize / 2, cy + 3 * radius / 4 - self.fontSize / 5), (cx - 3 * radius / 4 - self.fontSize / 2, cy + 3 * radius / 4 - 4 * self.fontSize / 5)), ((cx - radius / 4 - 2 * self.fontSize, cy + 3 * radius / 4 - self.fontSize), (cx - radius / 4 - self.fontSize, cy + 3 * radius / 4 - self.fontSize / 4), (cx - radius / 4, cy + 3 * radius / 4 + self.fontSize)), ((cx + radius / 4 - 5 * self.fontSize / 2, cy + 3 * radius / 4 + 4 * self.fontSize / 5), (cx + radius / 4 - 3 * self.fontSize / 2, cy + 3 * radius / 4 - self.fontSize / 5), (cx + radius / 4 - self.fontSize / 2, cy + 3 * radius / 4 - 4 * self.fontSize / 5)), ((cx + 3 * radius / 4 - 2 * self.fontSize, cy + 3 * radius / 4 - self.fontSize), (cx + 3 * radius / 4 - self.fontSize, cy + 3 * radius / 4 - self.fontSize / 4), (cx + 3 * radius / 4, cy + 3 * radius / 4 + self.fontSize)), ((cx + 3 * radius / 4 - 3 * self.fontSize / 4, cy + radius / 3 - self.fontSize / 2), (cx + 3 * radius / 4 + self.fontSize / 4, cy + radius / 3 - 3 * self.fontSize / 2), (cx + 3 * radius / 4 + 5 * self.fontSize / 4, cy + radius / 3 - 9 * self.fontSize / 4)), ((cx + 3 * radius / 4 - 3 * self.fontSize / 2, cy - radius / 3 + self.fontSize), (cx + 3 * radius / 4 - self.fontSize / 4, cy - radius / 3 + 7 * self.fontSize / 4), (cx + 3 * radius / 4 + 3 * self.fontSize / 4, cy - radius / 3 + 11 * self.fontSize / 4)), ((cx + 3 * radius / 4 - self.fontSize, cy - 3 * radius / 4 + self.fontSize), (cx + 3 * radius / 4, cy - 3 * radius / 4), (cx + 3 * radius / 4 + self.fontSize, cy - 3 * radius / 4 - 3 * self.fontSize / 4)), ((cx + radius / 4 - self.fontSize / 4, cy - 3 * radius / 4 - self.fontSize), (cx + radius / 4 + 3 * self.fontSize / 4, cy - 3 * radius / 4 - self.fontSize / 4), (cx + radius / 4 + 7 * self.fontSize / 4, cy - 3 * radius / 4 + self.fontSize)), ((cx - radius / 4 - self.fontSize, cy - 3 * radius / 4 + self.fontSize), (cx - radius / 4, cy - 3 * radius / 4), (cx - radius / 4 + self.fontSize, cy - 3 * radius / 4 - 3 * self.fontSize / 4)), ((cx - 3 * radius / 4, cy - 3 * radius / 4 - self.fontSize), (cx - 3 * radius / 4 + self.fontSize, cy - 3 * radius / 4), (cx - 3 * radius / 4 + 2 * self.fontSize, cy - 3 * radius / 4 + 5 * self.fontSize / 4)))
+           cx - 3 * radius / 4 - 3 * self.fontSize // 2, cy - radius / 3 + self.fontSize), (cx - 3 * radius / 4 - self.fontSize // 2, cy - radius / 3), (cx - 3 * radius / 4 + self.fontSize // 2, cy - radius / 3 - self.fontSize // 2)), ((cx - 3 * radius / 4 - self.fontSize, cy + radius / 3 - 3 * self.fontSize), (cx - 3 * radius / 4, cy + radius / 3 - 2 * self.fontSize - self.fontSize // 4), (cx - 3 * radius / 4 + self.fontSize, cy + radius / 3 - self.fontSize)), ((cx - 3 * radius / 4 - 5 * self.fontSize // 2, cy + 3 * radius / 4 + 4 * self.fontSize // 5), (cx - 3 * radius / 4 - 3 * self.fontSize // 2, cy + 3 * radius / 4 - self.fontSize // 5), (cx - 3 * radius / 4 - self.fontSize // 2, cy + 3 * radius / 4 - 4 * self.fontSize // 5)), ((cx - radius / 4 - 2 * self.fontSize, cy + 3 * radius / 4 - self.fontSize), (cx - radius / 4 - self.fontSize, cy + 3 * radius / 4 - self.fontSize // 4), (cx - radius / 4, cy + 3 * radius / 4 + self.fontSize)), ((cx + radius / 4 - 5 * self.fontSize // 2, cy + 3 * radius / 4 + 4 * self.fontSize // 5), (cx + radius / 4 - 3 * self.fontSize // 2, cy + 3 * radius / 4 - self.fontSize // 5), (cx + radius / 4 - self.fontSize // 2, cy + 3 * radius / 4 - 4 * self.fontSize // 5)), ((cx + 3 * radius / 4 - 2 * self.fontSize, cy + 3 * radius / 4 - self.fontSize), (cx + 3 * radius / 4 - self.fontSize, cy + 3 * radius / 4 - self.fontSize // 4), (cx + 3 * radius / 4, cy + 3 * radius / 4 + self.fontSize)), ((cx + 3 * radius / 4 - 3 * self.fontSize // 4, cy + radius / 3 - self.fontSize // 2), (cx + 3 * radius / 4 + self.fontSize // 4, cy + radius / 3 - 3 * self.fontSize // 2), (cx + 3 * radius / 4 + 5 * self.fontSize // 4, cy + radius / 3 - 9 * self.fontSize // 4)), ((cx + 3 * radius / 4 - 3 * self.fontSize // 2, cy - radius / 3 + self.fontSize), (cx + 3 * radius / 4 - self.fontSize // 4, cy - radius / 3 + 7 * self.fontSize // 4), (cx + 3 * radius / 4 + 3 * self.fontSize // 4, cy - radius / 3 + 11 * self.fontSize // 4)), ((cx + 3 * radius / 4 - self.fontSize, cy - 3 * radius / 4 + self.fontSize), (cx + 3 * radius / 4, cy - 3 * radius / 4), (cx + 3 * radius / 4 + self.fontSize, cy - 3 * radius / 4 - 3 * self.fontSize // 4)), ((cx + radius / 4 - self.fontSize // 4, cy - 3 * radius / 4 - self.fontSize), (cx + radius / 4 + 3 * self.fontSize // 4, cy - 3 * radius / 4 - self.fontSize // 4), (cx + radius / 4 + 7 * self.fontSize // 4, cy - 3 * radius / 4 + self.fontSize)), ((cx - radius / 4 - self.fontSize, cy - 3 * radius / 4 + self.fontSize), (cx - radius / 4, cy - 3 * radius / 4), (cx - radius / 4 + self.fontSize, cy - 3 * radius / 4 - 3 * self.fontSize // 4)), ((cx - 3 * radius / 4, cy - 3 * radius / 4 - self.fontSize), (cx - 3 * radius / 4 + self.fontSize, cy - 3 * radius / 4), (cx - 3 * radius / 4 + 2 * self.fontSize, cy - 3 * radius / 4 + 5 * self.fontSize // 4)))
         arpl = (
          (
-          cx - 3 * radius / 4 - 3 * self.fontSize / 4, cy - self.fontSize / 2), (cx - radius + self.fontSize / 2, cy + radius / 2 - self.fontSize / 2), (cx - 3 * radius / 4 + self.fontSize, cy + 3 * radius / 4 + self.fontSize), (cx - radius / 5 + self.fontSize, cy + radius / 2 + 2 * self.fontSize), (cx + radius / 2 - 5 * self.fontSize / 2, cy + 3 * radius / 4 + self.fontSize), (cx + 2 * radius / 3 + self.fontSize / 2, cy + radius / 2 - self.fontSize / 2), (cx + radius / 2 + self.fontSize / 2, cy - self.fontSize / 2), (cx + 2 * radius / 3 + self.fontSize / 2, cy - radius / 2 - self.fontSize / 2), (cx + radius / 2 - 2 * self.fontSize, cy - radius + 2 * self.fontSize), (cx - radius / 6 + self.fontSize, cy - 3 * radius / 4 + self.fontSize / 2), (cx - 3 * radius / 4 + 2 * self.fontSize, cy - radius + 2 * self.fontSize), (cx - radius + self.fontSize / 2, cy - radius / 2 - self.fontSize / 2))
+          cx - 3 * radius / 4 - 3 * self.fontSize // 4, cy - self.fontSize // 2), (cx - radius + self.fontSize // 2, cy + radius / 2 - self.fontSize // 2), (cx - 3 * radius / 4 + self.fontSize, cy + 3 * radius / 4 + self.fontSize), (cx - radius / 5 + self.fontSize, cy + radius / 2 + 2 * self.fontSize), (cx + radius / 2 - 5 * self.fontSize // 2, cy + 3 * radius / 4 + self.fontSize), (cx + 2 * radius / 3 + self.fontSize // 2, cy + radius / 2 - self.fontSize // 2), (cx + radius / 2 + self.fontSize // 2, cy - self.fontSize // 2), (cx + 2 * radius / 3 + self.fontSize // 2, cy - radius / 2 - self.fontSize // 2), (cx + radius / 2 - 2 * self.fontSize, cy - radius + 2 * self.fontSize), (cx - radius / 6 + self.fontSize, cy - 3 * radius / 4 + self.fontSize // 2), (cx - 3 * radius / 4 + 2 * self.fontSize, cy - radius + 2 * self.fontSize), (cx - radius + self.fontSize // 2, cy - radius / 2 - self.fontSize // 2))
         lh = self.fontSize
         lhoffs = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         for i in range(houses.Houses.HOUSE_NUM):
@@ -175,7 +183,7 @@ class SquareChart:
                 lon -= self.chart.ayanamsha
                 lon = util.normalize(lon)
             d, m, s = util.decToDeg(lon)
-            sign = d / chart.Chart.SIGN_DEG
+            sign = d // chart.Chart.SIGN_DEG
             pos = d % chart.Chart.SIGN_DEG
             txt = str(pos).rjust(2) + self.deg_symbol
             draw.text((ar[i][0][0], ar[i][0][1]), txt, fill=(0, 0, 0), font=self.fntTextSmall)
@@ -185,12 +193,12 @@ class SquareChart:
             order, mixed = self.getPlanetsInHouse(i)
             num = len(order)
             if num > 1 and num % 2 == 0:
-                lhoffs[i] -= lh / 2
+                lhoffs[i] -= lh // 2
             if num > 2:
                 shift = num
                 if shift % 2 == 0:
                     shift -= 1
-                lhoffs[i] -= int(shift / 2) * lh
+                lhoffs[i] -= int(shift // 2) * lh
             for j in range(num):
                 idxpl = mixed[j]
                 lon = order[j]
@@ -205,8 +213,8 @@ class SquareChart:
                     pl = common.common.planets[idxpl]
                 else:
                     pl = common.common.fortune
-                wpl, hpl = draw.textsize('F', self.fntMorinusSmall)
-                wpl2, hpl2 = draw.textsize(pl, self.fntMorinusSmall)
+                wpl, hpl = draw.textbbox((0, 0), 'F', self.fntMorinusSmall)[2:]
+                wpl2, hpl2 = draw.textbbox((0, 0), pl, self.fntMorinusSmall)[2:]
                 clrpl = (
                  0, 0, 0)
                 if not self.bw:
@@ -218,8 +226,8 @@ class SquareChart:
                     else:
                         clrpl = self.options.clrLoF
                 draw.text((x, y + lhoffs[i]), pl, fill=clrpl, font=self.fntMorinusSmall)
-                wr, hr = draw.textsize('R', self.fntTextSmaller)
-                wsp, hsp = draw.textsize(' ', self.fntTextSmall)
+                wr, hr = draw.textbbox((0, 0), 'R', self.fntTextSmaller)[2:]
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntTextSmall)[2:]
                 if idxpl < planets.Planets.PLANETS_NUM:
                     speed = self.chart.planets.planets[idxpl].data[planets.Planet.SPLON]
                     if speed <= 0.0:
@@ -228,22 +236,22 @@ class SquareChart:
                         if speed == 0.0:
                             t = 'S'
                             fnt = self.fntTextSmaller
-                        draw.text((x + wpl2, y + lhoffs[i] + self.fontSize / 2), t, fill=clrpl, font=fnt)
-                sign = d / chart.Chart.SIGN_DEG
+                        draw.text((x + wpl2, y + lhoffs[i] + self.fontSize // 2), t, fill=clrpl, font=fnt)
+                sign = d // chart.Chart.SIGN_DEG
                 pos = d % chart.Chart.SIGN_DEG
                 txtdeg = str(pos).zfill(2) + self.deg_symbol
                 txtmin = str(m).zfill(2) + "'"
-                wdeg, hdeg = draw.textsize(txtdeg, self.fntTextSmall)
-                wsg, hsg = draw.textsize(common.common.signs[sign], self.fntMorinusSmall)
-                wmin, hmin = draw.textsize(txtmin, self.fntTextSmaller)
+                wdeg, hdeg = draw.textbbox((0, 0), txtdeg, self.fntTextSmall)[2:]
+                wsg, hsg = draw.textbbox((0, 0), common.common.signs[sign], self.fntMorinusSmall)[2:]
+                wmin, hmin = draw.textbbox((0, 0), txtmin, self.fntTextSmaller)[2:]
                 draw.text((x + wpl + wr + wsp, y + lhoffs[i]), txtdeg, fill=clrpl, font=self.fntTextSmall)
                 draw.text((x + wpl + wr + wsp + wdeg, y + lhoffs[i]), common.common.signs[sign], fill=clrpl, font=self.fntMorinusSmall)
                 draw.text((x + wpl + wr + wsp + wdeg + wsp + wsg, y + lhoffs[i]), txtmin, fill=clrpl, font=self.fntTextSmaller)
                 lhoffs[i] += lh
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
         return self.buffer
 
     def getPlanetsInHouse(self, hnum):

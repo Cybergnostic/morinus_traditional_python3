@@ -1,6 +1,9 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import os, wx, squarechart, mtexts
+import os
+import wx
+import squarechart
+import mtexts
 
 class SquareChartWnd(wx.Window):
 

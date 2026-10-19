@@ -1,6 +1,10 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, intvalidator, primdirs, mtexts
+import wx
+import intvalidator
+import primdirs
+import mtexts
+import util
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
@@ -10,10 +14,9 @@ class PrimaryKeysDlg(wx.Dialog):
     SEC = 2
 
     def __init__(self, parent, options):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsprimarykeysdlg['PrimaryKeys'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsprimarykeysdlg['PrimaryKeys'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         self.dynsel = options.pdkeyd
         self.statsel = options.pdkeys
         mvsizer = wx.BoxSizer(wx.VERTICAL)
@@ -64,7 +67,7 @@ class PrimaryKeysDlg(wx.Dialog):
         self.sec.SetHelpText(mtexts.txtsprimarykeysdlg['HelpMin'])
         vsizer.Add(self.sec, 1, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT | wx.RIGHT, 5)
         hsizer.Add(vsizer, 0, wx.LEFT, 5)
-        fgsizer = wx.FlexGridSizer(1, 2)
+        fgsizer = wx.FlexGridSizer(0, 2, 0, 0)
         fgsizer.Add(hsizer, 1, wx.LEFT | wx.ALL, 5)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         label = wx.StaticText(self, -1, mtexts.txtsprimarykeysdlg['Coefficient'])
@@ -95,7 +98,7 @@ class PrimaryKeysDlg(wx.Dialog):
         btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         self.Bind(wx.EVT_RADIOBUTTON, self.dynamicbtn, id=self.dynamicrb.GetId())
@@ -279,7 +282,7 @@ class PrimaryKeysDlg(wx.Dialog):
             self.deg.SetValue(str(deg))
             self.minu.SetValue(str(minu))
             self.sec.SetValue(str(sec))
-            self.coeff.SetValue(str(coeff))
+            self.coeff.SetValue(util.floatstr(coeff))
         self.custom = [options.pdkeydeg, options.pdkeymin, options.pdkeysec]
         self.useregrckb.SetValue(options.useregressive)
 

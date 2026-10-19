@@ -1,16 +1,19 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, primdirs, fixedstarspddlg, userpddlg, mtexts
+import wx
+import primdirs
+import fixedstarspddlg
+import userpddlg
+import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
 class PrimDirsDlgSmall(wx.Dialog):
 
     def __init__(self, parent, options, ephepath):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsprimdirsdlg['PrimaryDirs'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsprimdirsdlg['PrimaryDirs'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         self.parent = parent
         self.options = options
         self.ephepath = ephepath
@@ -94,7 +97,7 @@ class PrimDirsDlgSmall(wx.Dialog):
         mhsizer.Add(vsizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.LEFT, 0)
         sapply = wx.StaticBox(self, label='')
         applysizer = wx.StaticBoxSizer(sapply, wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(2, 3)
+        fgsizer = wx.FlexGridSizer(0, 3, 0, 0)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         label = wx.StaticText(self, -1, mtexts.txtsprimdirsdlg['Promissors'])
         vsizer.Add(label, 0, wx.ALIGN_LEFT | wx.ALL | wx.TOP, 2)
@@ -237,7 +240,7 @@ class PrimDirsDlgSmall(wx.Dialog):
         btnsizer.AddButton(btn)
         btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
         btnsizer.Realize()
-        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
+        mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 2)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()

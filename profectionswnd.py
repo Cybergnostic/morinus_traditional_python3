@@ -1,6 +1,20 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, profectionsmonthly, planets, houses, chart, fortune, proftablemondlg, profstablemonframe, common, commonwnd, Image, ImageDraw, ImageFont, util, mtexts
+import wx
+import profectionsmonthly
+import planets
+import houses
+import chart
+import fortune
+import proftablemondlg
+import profstablemonframe
+import common
+import commonwnd
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class ProfectionsWnd(commonwnd.CommonWnd):
     AGE, DATE, ASC, MC, SUN, MOON, FORTUNE, SATURN, JUPITER, MARS, VENUS, MERCURY = list(range(0, 12))
@@ -12,7 +26,7 @@ class ProfectionsWnd(commonwnd.CommonWnd):
         self.mainfr = mainfr
         self.mainsigs = mainsigs
         self.FONT_SIZE = int(21 * self.options.tablesize)
-        self.SPACE = self.FONT_SIZE / 2
+        self.SPACE = self.FONT_SIZE // 2
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.LINE_NUM = 12
         if self.mainsigs:
@@ -32,8 +46,8 @@ class ProfectionsWnd(commonwnd.CommonWnd):
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
-        self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
-        self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
+        self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.Bind(wx.EVT_LEFT_UP, self.onMonthly)
@@ -45,7 +59,7 @@ class ProfectionsWnd(commonwnd.CommonWnd):
         scrolledoffs = yu * ys
         x, y = event.GetPosition()
         if y + scrolledoffs > commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TITLE_HEIGHT and y + scrolledoffs < commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TABLE_HEIGHT and x > commonwnd.CommonWnd.BORDER and x < commonwnd.CommonWnd.BORDER + self.CELL_WIDTH:
-            rownum = (y + scrolledoffs - (commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TITLE_HEIGHT)) / self.LINE_HEIGHT
+            rownum = (y + scrolledoffs - (commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TITLE_HEIGHT)) // self.LINE_HEIGHT
             dlg = proftablemondlg.ProfTableMonDlg(self)
             val = dlg.ShowModal()
             if val == wx.ID_OK:
@@ -75,8 +89,8 @@ class ProfectionsWnd(commonwnd.CommonWnd):
             txtclr = self.options.clrtexts
         txt = mtexts.txtsprofwnd['LeftClick']
         fnt = self.fntText
-        w, h = draw.textsize(txt, fnt)
-        draw.text((BOR, BOR + (self.LINE_HEIGHT - h) / 2), txt, fill=txtclr, font=fnt)
+        w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+        draw.text((BOR, BOR + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=fnt)
         draw.rectangle(((BOR, BOR + 2 * self.LINE_HEIGHT), (BOR + self.TITLE_WIDTH, BOR + 2 * self.LINE_HEIGHT + self.TITLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
         txt = (mtexts.txtsprofwnd['Age'], mtexts.txtsprofwnd['Date'], mtexts.txtsprofwnd['Asc'], mtexts.txtsprofwnd['MC'], common.common.planets[planets.Planets.SUN], common.common.planets[planets.Planets.MOON], common.common.fortune, common.common.planets[planets.Planets.SATURN], common.common.planets[planets.Planets.JUPITER], common.common.planets[planets.Planets.MARS], common.common.planets[planets.Planets.VENUS], common.common.planets[planets.Planets.MERCURY])
         arclrs = (txtclr, txtclr, txtclr, txtclr, self.options.clrplanets[planets.Planets.SUN], self.options.clrplanets[planets.Planets.MOON], self.options.clrLoF, self.options.clrplanets[planets.Planets.SATURN], self.options.clrplanets[planets.Planets.JUPITER], self.options.clrplanets[planets.Planets.MARS], self.options.clrplanets[planets.Planets.VENUS], self.options.clrplanets[planets.Planets.MERCURY])
@@ -90,11 +104,11 @@ class ProfectionsWnd(commonwnd.CommonWnd):
             tclr = (0, 0, 0)
             if not self.bw:
                 tclr = arclrs[i]
-            w, h = draw.textsize(txt[i], fnt)
+            w, h = draw.textbbox((0, 0), txt[i], fnt)[2:]
             clr = txtclr
             if i > ProfectionsWnd.MC:
                 clr = tclr
-            draw.text((BOR + offs + (cols[i] - w) / 2, BOR + 2 * self.LINE_HEIGHT + (self.TITLE_HEIGHT - h) / 2), txt[i], fill=clr, font=fnt)
+            draw.text((BOR + offs + (cols[i] - w) // 2, BOR + 2 * self.LINE_HEIGHT + (self.TITLE_HEIGHT - h) // 2), txt[i], fill=clr, font=fnt)
             offs += cols[i]
 
         x = BOR
@@ -102,9 +116,9 @@ class ProfectionsWnd(commonwnd.CommonWnd):
         for i in range(self.LINE_NUM):
             self.drawline(draw, x, y + i * self.LINE_HEIGHT, tableclr, self.pcharts[i], self.age, i)
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
 
     def drawline(self, draw, x, y, clr, pcharts, age, idx):
         draw.line((x, y + self.LINE_HEIGHT, x + self.TABLE_WIDTH, y + self.LINE_HEIGHT), fill=clr)
@@ -119,12 +133,12 @@ class ProfectionsWnd(commonwnd.CommonWnd):
                 txtclr = self.options.clrtexts
             if i == ProfectionsWnd.AGE:
                 txt = str(age + idx)
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((x + summa + (offs[i] - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=tclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntText)
             elif i == ProfectionsWnd.DATE:
                 txt = str(pcharts[1]) + '.' + str(pcharts[2]).zfill(2) + '.' + str(pcharts[3]).zfill(2) + '.'
-                w, h = draw.textsize(txt, self.fntText)
-                draw.text((x + summa + (offs[i] - w) / 2, y + (self.LINE_HEIGHT - h) / 2), txt, fill=tclr, font=self.fntText)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntText)
             else:
                 if i == ProfectionsWnd.ASC:
                     lon = pcharts[0].houses.ascmc[houses.Houses.ASC]
@@ -142,13 +156,13 @@ class ProfectionsWnd(commonwnd.CommonWnd):
                     lon -= self.chart.ayanamsha
                     lon = util.normalize(lon)
                 d, m, s = util.decToDeg(lon)
-                sign = d / chart.Chart.SIGN_DEG
+                sign = d // chart.Chart.SIGN_DEG
                 pos = d % chart.Chart.SIGN_DEG
-                wsp, hsp = draw.textsize(' ', self.fntText)
-                wsg, hsg = draw.textsize(self.signs[sign], self.fntMorinus)
+                wsp, hsp = draw.textbbox((0, 0), ' ', self.fntText)[2:]
+                wsg, hsg = draw.textbbox((0, 0), self.signs[sign], self.fntMorinus)[2:]
                 txt = str(pos).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textsize(txt, self.fntText)
-                offset = (offs[i] - (w + wsp + wsg)) / 2
-                draw.text((x + summa + offset, y + (self.LINE_HEIGHT - h) / 2), txt, fill=tclr, font=self.fntText)
-                draw.text((x + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) / 2), self.signs[sign], fill=tclr, font=self.fntMorinus)
+                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+                offset = (offs[i] - (w + wsp + wsg)) // 2
+                draw.text((x + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntText)
+                draw.text((x + summa + offset + w + wsp, y + (self.LINE_HEIGHT - hsg) // 2), self.signs[sign], fill=tclr, font=self.fntMorinus)
             summa += offs[i]

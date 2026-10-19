@@ -1,6 +1,9 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, mtexts, secdir, chart
+import wx
+import mtexts
+import secdir
+import chart
 
 class StepperDlg(wx.Dialog):
 

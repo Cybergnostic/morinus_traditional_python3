@@ -1,6 +1,13 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import sys, wx, intvalidator, placedb, placeslistdlg, geonames, mtexts, util
+import sys
+import wx
+import intvalidator
+import placedb
+import placeslistdlg
+import geonames
+import mtexts
+import util
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
@@ -28,12 +35,12 @@ class PlaceListCtrl(wx.ListCtrl):
         self.InsertColumn(PlaceListCtrl.ALT, mtexts.txtsplacesdlg['Alt'] + '.')
         items = list(self.placedata.items())
         for key, data in items:
-            index = self.InsertStringItem(sys.maxsize, data[0])
-            self.SetStringItem(index, PlaceListCtrl.PLACE, data[0])
-            self.SetStringItem(index, PlaceListCtrl.LON, data[1])
-            self.SetStringItem(index, PlaceListCtrl.LAT, data[2])
-            self.SetStringItem(index, PlaceListCtrl.ZONE, data[3])
-            self.SetStringItem(index, PlaceListCtrl.ALT, data[4])
+            index = self.InsertItem(sys.maxsize, data[0])
+            self.SetItem(index, PlaceListCtrl.PLACE, data[0])
+            self.SetItem(index, PlaceListCtrl.LON, data[1])
+            self.SetItem(index, PlaceListCtrl.LAT, data[2])
+            self.SetItem(index, PlaceListCtrl.ZONE, data[3])
+            self.SetItem(index, PlaceListCtrl.ALT, data[4])
             self.SetItemData(index, key)
 
         self.SetColumnWidth(PlaceListCtrl.PLACE, 200)
@@ -64,9 +71,9 @@ class PlaceListCtrl(wx.ListCtrl):
 
     def OnAdd(self, item):
         num = self.GetItemCount()
-        self.InsertStringItem(num, item[PlaceListCtrl.PLACE])
+        self.InsertItem(num, item[PlaceListCtrl.PLACE])
         for i in range(1, len(item)):
-            self.SetStringItem(num, i, item[i])
+            self.SetItem(num, i, item[i])
 
         self.currentItem = num
         self.EnsureVisible(self.currentItem)
@@ -123,15 +130,14 @@ class PlacesDlg(wx.Dialog):
     PLUSCHOICES = ('+', '-')
 
     def __init__(self, parent, langid, netbook):
-        pre = wx.PreDialog()
-        pre.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        pre.Create(parent, -1, mtexts.txtsplacesdlg['Places'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
-        self.PostCreate(pre)
+        wx.Dialog.__init__(self)
+        self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
+        self.Create(parent, -1, mtexts.txtsplacesdlg['Places'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         self.langid = langid
         self.netbook = netbook
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
-        fgsizer = wx.FlexGridSizer(2, 4)
+        fgsizer = wx.FlexGridSizer(0, 4, 0, 0)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         self.splace = wx.StaticBox(self, label='')
         placesizer = wx.StaticBoxSizer(self.splace, wx.VERTICAL)
@@ -218,9 +224,9 @@ class PlacesDlg(wx.Dialog):
         hhsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
         self.pluscb = wx.ComboBox(self, -1, PlacesDlg.PLUSCHOICES[0], size=(50, -1), choices=PlacesDlg.PLUSCHOICES, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.pluscb.SetStringSelection(PlacesDlg.PLUSCHOICES[0])
-        hhsizer.Add(self.pluscb, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
+        hhsizer.Add(self.pluscb, 0, wx.LEFT, 5)
         zonesizer.Add(hhsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        fgsizer = wx.FlexGridSizer(1, 2)
+        fgsizer = wx.FlexGridSizer(0, 2, 0, 0)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
         label = wx.StaticText(self, -1, mtexts.txtsplacesdlg['Hour'] + ':')
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
@@ -255,7 +261,7 @@ class PlacesDlg(wx.Dialog):
         hhhsubsizer.Add(self.alt, 0, wx.ALIGN_CENTER | wx.ALL, 5)
         label = wx.StaticText(self, -1, 'm')
         hhhsubsizer.Add(label, 0, wx.ALIGN_CENTER | wx.TOP, 2)
-        altsizer.Add(hhhsubsizer, 0, wx.GROW | wx.ALIGN_CENTER | wx.TOP, 20)
+        altsizer.Add(hhhsubsizer, 0, wx.GROW | wx.TOP, 20)
         hhsubsizer.Add(altsizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.RIGHT, 5)
         vsubsizer.Add(hhsubsizer, 0, wx.GROW | wx.ALIGN_LEFT)
         sbtns = wx.StaticBox(self, label='')

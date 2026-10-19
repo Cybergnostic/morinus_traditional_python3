@@ -1,6 +1,10 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import astrology, planets, fortune, houses, util
+import astrology
+import planets
+import fortune
+import houses
+import util
 
 class Antiscion:
     """Antiscion of a planet, LoF or AscMC"""

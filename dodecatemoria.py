@@ -1,6 +1,10 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import planets, fortune, houses, util, math
+import planets
+import fortune
+import houses
+import util
+import math
 
 class Dodecatemoria:
     """Computes dodecatemoria (twelfth parts) of the bodies(planets, LoF, Asc and MC)"""

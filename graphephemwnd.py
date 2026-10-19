@@ -1,6 +1,15 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import os, wx, chart, planets, common, Image, ImageDraw, ImageFont, util, mtexts
+import os
+import wx
+import chart
+import planets
+import common
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import util
+import mtexts
 
 class GraphEphemWnd(wx.Window):
     SMALL_SIZE = 400
@@ -25,26 +34,26 @@ class GraphEphemWnd(wx.Window):
     def drawBkg(self):
         size = self.GetClientSize()
         self.w, self.h = size
-        self.buffer = wx.EmptyBitmap(self.w, self.h)
+        self.buffer = wx.Bitmap(self.w, self.h)
         self.bdc = wx.BufferedDC(None, self.buffer)
         self.tableSize = min(self.w, self.h)
-        self.planetSymbolSize = int(self.tableSize / 40)
+        self.planetSymbolSize = int(self.tableSize // 40)
         self.BORDER = self.planetSymbolSize
-        self.spaceSize = self.planetSymbolSize / 3
+        self.spaceSize = self.planetSymbolSize // 3
         y1 = self.BORDER
         y2 = self.h - 4 * self.BORDER
-        self.signSize = (y2 - y1) / (chart.Chart.SIGN_NUM + 2)
-        self.signSymbolSize = self.signSize / 2
+        self.signSize = (y2 - y1) // (chart.Chart.SIGN_NUM + 2)
+        self.signSymbolSize = self.signSize // 2
         self.fontSize = self.planetSymbolSize
         x1 = 2 * self.BORDER + self.signSymbolSize + self.spaceSize
         x2 = self.w - 2 * self.BORDER
-        self.monthSize = (x2 - x1) / 13
-        self.txtSymbolSize = self.monthSize / 4
-        self.txtSymbolSize = min(self.signSize, self.monthSize) / 3
+        self.monthSize = (x2 - x1) // 13
+        self.txtSymbolSize = self.monthSize // 4
+        self.txtSymbolSize = min(self.signSize, self.monthSize) // 3
         self.signSymbolSize = self.txtSymbolSize
-        self.fntPlanets = ImageFont.truetype(common.common.symbols, self.planetSymbolSize)
-        self.fntSigns = ImageFont.truetype(common.common.symbols, self.signSymbolSize)
-        self.fntTxt = ImageFont.truetype(common.common.abc, self.txtSymbolSize)
+        self.fntPlanets = util.truetype(common.common.symbols, self.planetSymbolSize)
+        self.fntSigns = util.truetype(common.common.symbols, self.signSymbolSize)
+        self.fntTxt = util.truetype(common.common.abc, self.txtSymbolSize)
         tableclr = (0, 0, 0)
         txtclr = (0, 0, 0)
         bkgclr = (255, 255, 255)
@@ -58,7 +67,6 @@ class GraphEphemWnd(wx.Window):
         self.bdc.SetBackground(wx.Brush(bkgclr))
         self.bdc.SetBrush(wx.Brush(bkgclr))
         self.bdc.Clear()
-        self.bdc.BeginDrawing()
         w = 4
         if self.tableSize <= GraphEphemWnd.SMALL_SIZE:
             w = 2
@@ -71,12 +79,12 @@ class GraphEphemWnd(wx.Window):
         y1 = self.BORDER
         x2 = x1
         y2 = self.h - self.BORDER
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
         x1 = self.BORDER
         y1 = self.h - 4 * self.BORDER
         x2 = self.w - self.BORDER
         y2 = self.h - 4 * self.BORDER
-        self.bdc.DrawLine(x1, y1, x2, y2)
+        self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
         pen = wx.Pen(tableclr, 1, wx.USER_DASH)
         pen.SetDashes([6, 3])
         self.bdc.SetPen(pen)
@@ -90,7 +98,7 @@ class GraphEphemWnd(wx.Window):
         for i in range(13):
             x1 += self.monthSize
             x2 += self.monthSize
-            self.bdc.DrawLine(x1, y1, x2, y2)
+            self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
 
         x1 = 2 * self.BORDER + self.signSymbolSize + self.spaceSize
         y1 = self.h - 4 * self.BORDER
@@ -98,7 +106,7 @@ class GraphEphemWnd(wx.Window):
         for i in range(chart.Chart.SIGN_NUM + 1):
             y1 -= self.signSize
             y2 -= self.signSize
-            self.bdc.DrawLine(x1, y1, x2, y2)
+            self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
 
         plpixelpos = []
         pltoppixelpos = []
@@ -133,10 +141,10 @@ class GraphEphemWnd(wx.Window):
                     w = 1
                 pen = wx.Pen(plsclr, w)
                 self.bdc.SetPen(pen)
-                self.bdc.DrawPoint(x, y)
+                self.bdc.DrawPoint(int(x), int(y))
                 transition = prevy > self.h - 4 * self.BORDER - 2 * self.signSize and y < yOrig2 + self.signSize or y > self.h - 4 * self.BORDER - 2 * self.signSize and prevy < yOrig2 + self.signSize
                 if i != 0 and not transition:
-                    self.bdc.DrawLine(prevx, prevy, x, y)
+                    self.bdc.DrawLine(int(prevx), int(prevy), int(x), int(y))
                 if i != 0 and transition:
                     if prevy > self.h - 4 * self.BORDER - 2 * self.signSize and y < yOrig2 + self.signSize:
                         pltoppixelpos.append(x)
@@ -166,7 +174,7 @@ class GraphEphemWnd(wx.Window):
                 plsclr = self.options.clrplanets[pl]
             pen = wx.Pen(plsclr, 1)
             self.bdc.SetPen(pen)
-            self.bdc.DrawLine(x1, y + bshift[pl], x2, y)
+            self.bdc.DrawLine(int(x1), int(y + bshift[pl]), int(x2), int(y))
 
         if len(plstop) != 0:
             y1 = yOrig2
@@ -179,9 +187,9 @@ class GraphEphemWnd(wx.Window):
                 pen = wx.Pen(plsclr, 1)
                 self.bdc.SetPen(pen)
                 if len(plstop) > 1:
-                    self.bdc.DrawLine(x, y1, x + bshifttop[pl], y2)
+                    self.bdc.DrawLine(int(x), int(y1), int(x + bshifttop[pl]), int(y2))
                 else:
-                    self.bdc.DrawLine(x, y1, x, y2)
+                    self.bdc.DrawLine(int(x), int(y1), int(x), int(y2))
 
         if len(plsbottom) != 0:
             y1 = yOrig + 3 * self.spaceSize
@@ -194,34 +202,33 @@ class GraphEphemWnd(wx.Window):
                 pen = wx.Pen(plsclr, 1)
                 self.bdc.SetPen(pen)
                 if len(plsbottom) > 1:
-                    self.bdc.DrawLine(x + bshiftbottom[pl], y1, x, y2)
+                    self.bdc.DrawLine(int(x + bshiftbottom[pl]), int(y1), int(x), int(y2))
                 else:
-                    self.bdc.DrawLine(x, y1, x, y2)
+                    self.bdc.DrawLine(int(x), int(y1), int(x), int(y2))
 
-        self.bdc.EndDrawing()
         wxImag = self.buffer.ConvertToImage()
         img = Image.new('RGB', (wxImag.GetWidth(), wxImag.GetHeight()))
-        img.fromstring(wxImag.GetData())
+        img.frombytes(wxImag.GetData())
         draw = ImageDraw.Draw(img)
         x = 2 * self.BORDER
         y = self.h - 4 * self.BORDER - self.signSize
         for i in range(chart.Chart.SIGN_NUM):
-            wsym, hsym = draw.textsize(common.common.signs[i], self.fntSigns)
-            draw.text((x, y - self.signSize / 2 - hsym / 2 - i * self.signSize), common.common.signs[i], fill=signsclr, font=self.fntSigns)
+            wsym, hsym = draw.textbbox((0, 0), common.common.signs[i], self.fntSigns)[2:]
+            draw.text((x, y - self.signSize // 2 - hsym // 2 - i * self.signSize), common.common.signs[i], fill=signsclr, font=self.fntSigns)
 
         txt = str(self.year)
-        wtxt, htxt = draw.textsize(txt, self.fntTxt)
+        wtxt, htxt = draw.textbbox((0, 0), txt, self.fntTxt)[2:]
         x = 2 * self.BORDER + self.signSymbolSize + self.spaceSize
         y = self.h - 4 * self.BORDER + self.spaceSize
-        offs = (self.monthSize - wtxt) / 2
+        offs = (self.monthSize - wtxt) // 2
         draw.text((x + offs, y), txt, fill=tableclr, font=self.fntTxt)
         x = 2 * self.BORDER + self.signSymbolSize + self.spaceSize + self.monthSize
         y = self.h - 4 * self.BORDER + self.spaceSize
         mnum = len(mtexts.monthabbr)
         for i in range(mnum):
             txt = mtexts.monthabbr[i]
-            wtxt, htxt = draw.textsize(txt, self.fntTxt)
-            offs = (self.monthSize - wtxt) / 2
+            wtxt, htxt = draw.textbbox((0, 0), txt, self.fntTxt)[2:]
+            offs = (self.monthSize - wtxt) // 2
             draw.text((x + i * self.monthSize + offs, y), txt, fill=tableclr, font=self.fntTxt)
 
         x = 2 * self.BORDER + self.signSymbolSize + self.spaceSize + self.monthSize - 2 * self.spaceSize
@@ -229,9 +236,9 @@ class GraphEphemWnd(wx.Window):
             y = plpixelpos[pl]
             if not self.bw:
                 plsclr = self.options.clrplanets[pl]
-            wsym, hsym = draw.textsize(common.common.planets[pl], self.fntPlanets)
+            wsym, hsym = draw.textbbox((0, 0), common.common.planets[pl], self.fntPlanets)[2:]
             xoffs = 2 * self.spaceSize + wsym
-            draw.text((x - xoffs, y - hsym / 2 + bshift[pl]), common.common.planets[pl], fill=plsclr, font=self.fntPlanets)
+            draw.text((x - xoffs, y - hsym // 2 + bshift[pl]), common.common.planets[pl], fill=plsclr, font=self.fntPlanets)
 
         if len(plstop) != 0:
             y = yOrig2 - 2 * self.spaceSize
@@ -240,12 +247,12 @@ class GraphEphemWnd(wx.Window):
                 x = pltoppixelpos[pl]
                 if not self.bw:
                     plsclr = self.options.clrplanets[plstopids[pl]]
-                wsym, hsym = draw.textsize(plstop[pl], self.fntPlanets)
+                wsym, hsym = draw.textbbox((0, 0), plstop[pl], self.fntPlanets)[2:]
                 yoffs = 2 * self.spaceSize + hsym
                 if len(plstop) > 1:
-                    draw.text((x - wsym / 2 + bshifttop[pl], y - yoffs), plstop[pl], fill=plsclr, font=self.fntPlanets)
+                    draw.text((x - wsym // 2 + bshifttop[pl], y - yoffs), plstop[pl], fill=plsclr, font=self.fntPlanets)
                 else:
-                    draw.text((x - wsym / 2, y - yoffs), plstop[pl], fill=plsclr, font=self.fntPlanets)
+                    draw.text((x - wsym // 2, y - yoffs), plstop[pl], fill=plsclr, font=self.fntPlanets)
 
         if len(plsbottom) != 0:
             y = yOrig + 2 * self.spaceSize
@@ -254,16 +261,16 @@ class GraphEphemWnd(wx.Window):
                 x = plbottompixelpos[pl]
                 if not self.bw:
                     plsclr = self.options.clrplanets[plsbottomids[pl]]
-                wsym, hsym = draw.textsize(plsbottom[pl], self.fntPlanets)
+                wsym, hsym = draw.textbbox((0, 0), plsbottom[pl], self.fntPlanets)[2:]
                 yoffs = 2 * self.spaceSize
                 if len(plsbottom) > 1:
-                    draw.text((x - wsym / 2 + bshiftbottom[pl], y + yoffs), plsbottom[pl], fill=plsclr, font=self.fntPlanets)
+                    draw.text((x - wsym // 2 + bshiftbottom[pl], y + yoffs), plsbottom[pl], fill=plsclr, font=self.fntPlanets)
                 else:
-                    draw.text((x - wsym / 2, y + yoffs), plsbottom[pl], fill=plsclr, font=self.fntPlanets)
+                    draw.text((x - wsym // 2, y + yoffs), plsbottom[pl], fill=plsclr, font=self.fntPlanets)
 
-        wxImg = wx.EmptyImage(img.size[0], img.size[1])
-        wxImg.SetData(img.tostring())
-        self.buffer = wx.BitmapFromImage(wxImg)
+        wxImg = wx.Image(img.size[0], img.size[1])
+        wxImg.SetData(img.tobytes())
+        self.buffer = wx.Bitmap(wxImg)
         self.Refresh()
         return
 
@@ -334,8 +341,8 @@ class GraphEphemWnd(wx.Window):
             diff = BOR - (order[0] + bshift[mixed[0]])
             bshift[mixed[0]] += diff
             for i in range(num - 1):
-                w1, h1 = self.fntPlanets.getsize(pls[i])
-                w2, h2 = self.fntPlanets.getsize(pls[(i + 1)])
+                w1, h1 = self.fntPlanets.getbbox(pls[i])[2:]
+                w2, h2 = self.fntPlanets.getbbox(pls[(i + 1)])[2:]
                 x1 = order[i] + bshift[mixed[i]]
                 x2 = order[(i + 1)] + bshift[mixed[(i + 1)]]
                 if order[i] + bshift[mixed[i]] > order[(i + 1)] + bshift[mixed[(i + 1)]] or self.overlap(x1, w1, x2, w2):
@@ -349,8 +356,8 @@ class GraphEphemWnd(wx.Window):
             diff = order[lenord] + bshift[mixed[lenord]] - greaterBOR
             bshift[mixed[lenord]] -= diff
             for i in range(lenord, 0, -1):
-                w1, h1 = self.fntPlanets.getsize(pls[(i - 1)])
-                w2, h2 = self.fntPlanets.getsize(pls[i])
+                w1, h1 = self.fntPlanets.getbbox(pls[(i - 1)])[2:]
+                w2, h2 = self.fntPlanets.getbbox(pls[i])[2:]
                 x1 = order[(i - 1)] + bshift[mixed[(i - 1)]]
                 x2 = order[i] + bshift[mixed[i]]
                 if order[(i - 1)] + bshift[mixed[(i - 1)]] > order[i] + bshift[mixed[i]] or self.overlap(x1, w1, x2, w2):
@@ -372,8 +379,8 @@ class GraphEphemWnd(wx.Window):
         shifted = False
         x1 = order[b1] + bshift[mixed[b1]]
         x2 = order[b2] + bshift[mixed[b2]]
-        w1, h1 = self.fntPlanets.getsize(pls[mixed[b1]])
-        w2, h2 = self.fntPlanets.getsize(pls[mixed[b2]])
+        w1, h1 = self.fntPlanets.getbbox(pls[mixed[b1]])[2:]
+        w2, h2 = self.fntPlanets.getbbox(pls[mixed[b2]])[2:]
         while self.overlap(x1, w1, x2, w2):
             if not forward:
                 bshift[mixed[b1]] -= 1.0

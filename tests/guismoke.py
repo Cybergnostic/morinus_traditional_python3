@@ -104,21 +104,22 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 
 
 HANDLERS = ['onLoad', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
-	'onAspects', 'onFixStars', 'onFixStarsAsps', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onArabians', 'onStrip',
-	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onCustomerSpeculum', 'onPrimaryDirs', 'onTransits', 'onRevolutions',
-	'onSunTransits', 'onSecondaryDirs', 'onElections', 'onSquareChart', 'onProfectionsChart', 'onMundaneChart', 'onEphemeris',
-	'onFindTime', 'onSynastry', 'onSaveAsBitmap', 'onSave', 'onNew', 'onData', 'onLoad',
-	'onAppearance1', 'onAppearance2', 'onSymbols', 'onDignities', 'onAyanamsha', 'onColors', 'onOrbs', 'onPrimaryDirsOpt', 'onPrimaryKeys',
-	'onPDsInChartOptZod', 'onPDsInChartOptMun', 'onFortune', 'onArabicParts', 'onSyzygy', 'onFixStarsOpt', 'onProfectionsOpt',
-	'onLanguages', 'onTriplicities', 'onTerms', 'onDecans', 'onChartAlmuten', 'onTopicals', 'onAutoSaveOpts', 'onSaveOpts',
-	'onReload', 'onHelp', 'onAbout', 'onClose', 'onLoad', 'onExit']
+	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
+	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
+	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
+	'onProfectionsChart', 'onHelioChart', 'onEphemeris', 'onFindTime', 'onSynastry', 'onSaveAsBitmap', 'onSave', 'onHereAndNow',
+	'onNew', 'onData', 'onLoad',
+	'onAppearance1', 'onAppearance2', 'onDignities', 'onTriplicities', 'onTerms', 'onDecans', 'onChartAlmuten', 'onTopicals',
+	'onAyanamsha', 'onColors', 'onOrbs', 'onPrimaryDirsOpt', 'onPrimaryKeys', 'onPDsInChartOpt', 'onLotsOpt', 'onSyzygy',
+	'onFixedStarsOpt', 'onProfectionsOpt', 'onFirdariaOpt', 'onDefLocationOpt', 'onMenuSelFirst', 'onMenuSelSecond',
+	'onLanguages', 'onAutoSaveOpts', 'onSaveOpts', 'onReload', 'onHelp', 'onAbout', 'onClose', 'onLoad', 'onExit']
 
 
 # option overrides for --variant N, to reach code behind non-default settings
 VARIANTS = {
-	1: {'theme': 1, 'primarydir': 2, 'subprimarydir': 2, 'ayanamsha': 1, 'bw': True, 'intables': True, 'hsys': 'R', 'traditionalaspects': True},
-	2: {'theme': 1, 'primarydir': 3, 'subprimarydir': 1, 'positions': True, 'topocentric': True, 'hsys': 'W', 'lotoffortune': 2},
-	3: {'theme': 0, 'primarydir': 1, 'subprimarydir': 2, 'bw': True, 'positions': True, 'intables': True, 'ayanamsha': 3},
+	1: {'primarydir': 2, 'subprimarydir': 2, 'ayanamsha': 1, 'bw': True, 'hsys': 2, 'showterms': True, 'showdecans': True, 'netbook': True, 'showobject': 1, 'isfirbonatti': False},
+	2: {'primarydir': 3, 'subprimarydir': 1, 'topocentric': True, 'hsys': 5, 'showobject': 2, 'zodprof': False, 'enableclick': False},
+	3: {'primarydir': 1, 'subprimarydir': 2, 'bw': True, 'ayanamsha': 3, 'netbook': True, 'usezodprojsprof': True, 'showterms': True},
 }
 
 
@@ -216,7 +217,7 @@ def main():
 			assert hasattr(opts, k), k
 			setattr(opts, k, v)
 	mtexts.setLang(opts.langid)
-	frame = morin.MFrame(None, -1, mtexts.txts['Morinus'], opts)
+	frame = morin.MFrame(None, -1, mtexts.txtscommon['ProgramTitle'], opts)
 	frame.Show(True)
 
 	steps = iter(HANDLERS)
@@ -260,7 +261,7 @@ def main():
 			try:
 				if w.IsShown():
 					w.Refresh()
-					w.Update()
+					wx.Window.Update(w)
 			except Exception:
 				record('paint')
 		settle(0.3)
@@ -304,7 +305,7 @@ def main():
 					for w in wx.GetTopLevelWindows():
 						if w not in before and w.IsShown():
 							w.Refresh()
-							w.Update()
+							wx.Window.Update(w)
 					settle(0.2)
 				except Exception:
 					record('popup')
