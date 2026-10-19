@@ -7,6 +7,7 @@ import rangechecker
 import placesdlg
 import mtexts
 import util
+from auto_timezone import resolve_timezone, TimezoneLookupError
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
@@ -227,6 +228,9 @@ class DataDlg(wx.Dialog):
         zonesizer.Add(fgsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         self.daylightckb = wx.CheckBox(self, -1, mtexts.txtsdatadlg['Daylight'])
         zonesizer.Add(self.daylightckb, 0, wx.ALIGN_LEFT | wx.ALL, 5)
+        auto_zone_btn = wx.Button(self, -1, 'Auto time zone (date + location)')
+        zonesizer.Add(auto_zone_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
+        self.Bind(wx.EVT_BUTTON, self.onAutoTimezone, auto_zone_btn)
         self.daylightckb.SetHelpText(mtexts.txtsdatadlg['HelpDaylight'])
         vvsubsizer = wx.BoxSizer(wx.VERTICAL)
         vvsubsizer.Add(zonesizer, 2, wx.ALIGN_LEFT | wx.ALL, 0)
@@ -290,6 +294,47 @@ class DataDlg(wx.Dialog):
                 dlgm.ShowModal()
                 dlgm.Destroy()
         return
+
+    def onAutoTimezone(self, event):
+        """Explicit lookup; existing charts/manual edits are never changed silently."""
+        if self.timeckb.GetValue():
+            wx.MessageBox('Automatic time zones require an AD/CE date. Use manual settings for BC dates.',
+                          'Automatic time zone', wx.OK | wx.ICON_WARNING, self)
+            return
+        if self.calcb.GetCurrentSelection() != chart.Time.GREGORIAN:
+            wx.MessageBox('Automatic time zones require a Gregorian calendar date. Use manual settings for Julian dates.',
+                          'Automatic time zone', wx.OK | wx.ICON_WARNING, self)
+            return
+        try:
+            lat = int(self.latdeg.GetValue()) + int(self.latmin.GetValue()) / 60.0
+            lon = int(self.londeg.GetValue()) + int(self.lonmin.GetValue()) / 60.0
+            if self.placerbS.GetValue():
+                lat = -lat
+            if self.placerbW.GetValue():
+                lon = -lon
+            name, offset_minutes, dst, warning = resolve_timezone(
+                int(self.year.GetValue()), int(self.month.GetValue()),
+                int(self.day.GetValue()), int(self.hour.GetValue()),
+                int(self.minute.GetValue()), int(self.sec.GetValue()), lat, lon)
+        except (TimezoneLookupError, ValueError) as exc:
+            wx.MessageBox(str(exc), 'Automatic time zone',
+                          wx.OK | wx.ICON_WARNING, self)
+            return
+        sign = '+' if offset_minutes >= 0 else '-'
+        hours, minutes = divmod(abs(offset_minutes), 60)
+        confirmation = ('IANA zone: %s\\nStandard GMT offset: %s%02d:%02d\\n'
+                        'Daylight saving: %s\\n\\n%s\\n\\nApply to chart?'
+                        % (name, sign, hours, minutes, 'Yes' if dst else 'No',
+                           warning or 'Please confirm the offset is correct.'))
+        if wx.MessageBox(confirmation, 'Automatic time zone',
+                         wx.YES_NO | wx.ICON_QUESTION, self) != wx.YES:
+            return
+        self.zonecb.SetSelection(chart.Time.ZONE)
+        self.enableGMT(True)
+        self.pluscb.SetStringSelection(sign)
+        self.zhour.SetValue(str(hours))
+        self.zminute.SetValue(str(minutes))
+        self.daylightckb.SetValue(dst)
 
     def onZone(self, event):
         self.enableGMT(self.zonecb.GetCurrentSelection() == 0)
