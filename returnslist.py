@@ -1,7 +1,7 @@
-"""Returns within one solar year: the lunar returns (12 or 13, plus the one in
-force when the solar year begins) or the monthly solar returns (the Sun on the
-natal degree of each following sign), as they are used to narrow the
-year down. Returns are cast for the place of birth.
+"""The lunar returns covering one solar year (birthday to birthday): the lunar
+return in force when the solar return happens, every lunar return beginning
+during the year, the last of which is in force when the year ends. Returns are
+cast for the place of birth.
 """
 
 import chart
@@ -10,15 +10,14 @@ import transits
 import revolutions
 import util
 
-LUNAR, MONTHLYSOLAR = list(range(2))
-
 SOLAR_RETURN = 'Solar return'
-IN_FORCE = 'in force at the solar return'
+IN_FORCE = 'in force at the start of the solar year'
+AT_END = 'in force at the end of the solar year'
 
 
 class Return:
     def __init__(self, kind, t, chrt, note=''):
-        self.kind = kind	# 'Solar return', 'Lunar return' or 'Monthly solar return'
+        self.kind = kind	# 'Solar return' or 'Lunar return'
         self.t = t	# (year, month, day, hour, minute, second) UT
         self.chart = chrt
         self.note = note
@@ -100,24 +99,8 @@ def lunar_returns(radix, sr_jd, next_jd, sr_t):
     return before[-1:], within
 
 
-def monthly_solar_returns(radix, sr_t):
-    """The Sun on the natal degree of each of the 11 signs after the solar return."""
-    natal = radix.planets.planets[planets.Planets.SUN].data[planets.Planet.LON]
-    out = []
-    y, m = sr_t[0], sr_t[1]
-    for k in range(1, 12):
-        target = (natal+30.0*k) % 360.0
-        for i in range(3):
-            hits = _month_returns(y, m, radix, planets.Planets.SUN, target)
-            if hits:
-                out.append(hits[0])
-                break
-            y, m = util.incrMonth(y, m)
-    return out
-
-
-def compute(radix, year, kind):
-    """Returns of the solar year beginning with the solar return in `year`."""
+def compute(radix, year):
+    """The solar return in `year` and the lunar returns covering that solar year."""
     sr_t = solar_return(radix, year)
     next_t = solar_return(radix, year+1)
     if sr_t is None or next_t is None:
@@ -125,16 +108,13 @@ def compute(radix, year, kind):
     sr = Return(SOLAR_RETURN, sr_t, return_chart(sr_t, radix, chart.Chart.SOLAR))
     next_jd = gmt_time(next_t, radix).jd
     rows = [sr]
-    if kind == LUNAR:
-        before, within = lunar_returns(radix, sr.jd, next_jd, sr_t)
-        for jd, t in before:
-            rows.append(Return('Lunar return', t, return_chart(t, radix, chart.Chart.LUNAR), IN_FORCE))
-        for jd, t in within:
-            rows.append(Return('Lunar return', t, return_chart(t, radix, chart.Chart.LUNAR)))
-    else:
-        for jd, t in monthly_solar_returns(radix, sr_t):
-            if jd < next_jd:
-                rows.append(Return('Monthly solar return', t, return_chart(t, radix, chart.Chart.SOLAR)))
+    before, within = lunar_returns(radix, sr.jd, next_jd, sr_t)
+    for jd, t in before:
+        rows.append(Return('Lunar return', t, return_chart(t, radix, chart.Chart.LUNAR), IN_FORCE))
+    for jd, t in within:
+        rows.append(Return('Lunar return', t, return_chart(t, radix, chart.Chart.LUNAR)))
+    if within:
+        rows[-1].note = AT_END
     return rows
 
 

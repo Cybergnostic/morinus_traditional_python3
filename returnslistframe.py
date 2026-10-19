@@ -1,5 +1,5 @@
-"""Window listing the lunar returns (or monthly solar returns) of a solar year;
-double-click opens a return as a chart with the radix, like Charts > Revolutions."""
+"""Window listing the lunar returns covering a solar year; double-click opens a
+return as a chart with the radix, like Charts > Revolutions."""
 
 import datetime
 import wx
@@ -8,7 +8,6 @@ import transitframe
 import util
 
 SIGNS = ('Ari', 'Tau', 'Gem', 'Can', 'Leo', 'Vir', 'Lib', 'Sco', 'Sag', 'Cap', 'Aqu', 'Pis')
-KINDS = ('Lunar returns', 'Monthly solar returns')
 
 
 def lonstr(lon):
@@ -18,7 +17,7 @@ def lonstr(lon):
 
 class ReturnsListFrame(wx.Frame):
     def __init__(self, parent, title, radix, options):
-        wx.Frame.__init__(self, parent, -1, title+' - Returns of the year', wx.DefaultPosition, wx.Size(860, 520))
+        wx.Frame.__init__(self, parent, -1, title+' - Lunar returns of the solar year', wx.DefaultPosition, wx.Size(900, 520))
         self.parent = parent
         self.title = title
         self.radix = radix
@@ -30,21 +29,17 @@ class ReturnsListFrame(wx.Frame):
         top.Add(wx.StaticText(panel, -1, 'Solar year:'), 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         self.year = wx.SpinCtrl(panel, -1, '', size=(100, -1), min=1, max=9999, initial=self.currentSolarYear())
         top.Add(self.year, 0, wx.ALL, 5)
-        self.kind = wx.Choice(panel, -1, choices=list(KINDS))
-        self.kind.SetSelection(0)
-        top.Add(self.kind, 0, wx.ALL, 5)
         btn = wx.Button(panel, -1, 'Compute')
         top.Add(btn, 0, wx.ALL, 5)
         self.info = wx.StaticText(panel, -1, '')
         top.Add(self.info, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
 
         self.li = wx.ListCtrl(panel, -1, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_VRULES)
-        for col, (text, width) in enumerate((('Return', 170), ('Date (UT)', 100), ('Time (UT)', 85), ('Ascendant', 105), ('Asc in solar house', 125), ('Asc in natal house', 125), ('Note', 190))):
+        for col, (text, width) in enumerate((('Return', 120), ('Date (UT)', 100), ('Time (UT)', 85), ('Ascendant', 105), ('Asc in solar house', 125), ('Asc in natal house', 125), ('Note', 250))):
             self.li.InsertColumn(col, text)
             self.li.SetColumnWidth(col, width)
 
-        hint = wx.StaticText(panel, -1, 'Double-click a row to open the chart. Returns are cast for the place of birth; houses are counted by whole signs. '
-                             'Lunar returns follow the Moon back to its natal degree (a sidereal month), so a solar year has 13 or 14 of them.')
+        hint = wx.StaticText(panel, -1, 'Double-click a row to open the chart. Returns are cast for the place of birth; houses are counted by whole signs.')
         hint.Wrap(820)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -54,7 +49,6 @@ class ReturnsListFrame(wx.Frame):
         panel.SetSizer(sizer)
 
         btn.Bind(wx.EVT_BUTTON, self.onCompute)
-        self.kind.Bind(wx.EVT_CHOICE, self.onCompute)
         self.li.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onOpen)
         self.compute()
 
@@ -69,7 +63,7 @@ class ReturnsListFrame(wx.Frame):
 
     def compute(self):
         wait = wx.BusyCursor()
-        self.rows = returnslist.compute(self.radix, self.year.GetValue(), self.kind.GetSelection())
+        self.rows = returnslist.compute(self.radix, self.year.GetValue())
         self.li.DeleteAllItems()
         if not self.rows:
             self.info.SetLabel('Could not compute the solar return for this year.')
@@ -89,9 +83,8 @@ class ReturnsListFrame(wx.Frame):
                 font = self.li.GetFont()
                 font.SetWeight(wx.FONTWEIGHT_BOLD)
                 self.li.SetItemFont(idx, font)
-        n = len(self.rows)-1-sum(1 for r in self.rows if r.note == returnslist.IN_FORCE)
-        what = 'lunar returns' if self.kind.GetSelection() == returnslist.LUNAR else 'monthly solar returns'
-        self.info.SetLabel('%d %s after the solar return' % (n, what))
+        nxt = returnslist.solar_return(self.radix, self.year.GetValue()+1)
+        self.info.SetLabel('%d lunar returns; solar year %04d-%02d-%02d to %04d-%02d-%02d' % ((len(self.rows)-1,)+self.rows[0].t[:3]+(nxt[:3] if nxt else (0, 0, 0))))
 
     def onOpen(self, event):
         r = self.rows[event.GetIndex()]
