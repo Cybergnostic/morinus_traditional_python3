@@ -1,15 +1,18 @@
-# Morinus on Linux (Python 3)
+# Morinus 6.2 (2014 Windows build) on Linux
 
-This is Morinus 6 ported from Python 2 / wxPython 2.8 to Python 3 / wxPython 4,
-so it runs natively on current Linux distributions.
+This is the Morinus version that shipped as `morinus.exe` in March 2014 —
+with firdaria, lots, heliocentric charts, dodecatemoria, the user speculum,
+default location and menu selection — ported to Python 3 and wxPython 4 so it
+runs natively on Linux.
+
+No public source exists for this build, so the code was recovered from the
+executable (see *How the source was recovered* below).
 
 ## Requirements
 
 - Python 3.10 or newer
 - wxPython 4.2 and Pillow
 - a C compiler and the Python headers, to build the Swiss Ephemeris module
-
-Distribution packages are the easiest way to get wxPython:
 
 | Distribution    | Command |
 |-----------------|---------|
@@ -22,40 +25,55 @@ Distribution packages are the easiest way to get wxPython:
 ```sh
 ./build.sh            # compiles the sweastrology module next to morinus.py
 python3 morinus.py
+./install-desktop.sh  # optional: adds "Morinus 2014" to the application menu
 ```
 
-To add Morinus to your desktop's application menu (runs it from this folder):
+Settings live in `Opts/` and charts in `Hors/` inside this folder (both kept
+out of git). `.hor` charts and `.opt` settings files from the Windows program
+load unchanged, and files saved here can be opened by the Windows program.
 
-```sh
-./install-desktop.sh              # ./install-desktop.sh --uninstall to remove
-```
+The full Swiss Ephemeris data files are in `SWEP/Ephem/` (from the Windows
+installation), so positions are computed with full precision, 5400 BC–5400 AD.
 
-Morinus keeps its settings in `Opts/` and looks for charts in `Hors/` inside
-this folder, as the original did, so the folder must be writable.
+## How the source was recovered
 
-## Compatibility with the original Morinus
+1. `morinus.exe` is a PyInstaller bundle of Python 2.7 bytecode. The 164
+   Morinus modules were extracted and decompiled; `morinus.py` was stored as
+   source in the bundle.
+2. Every decompiled module was recompiled with Python 2.7 and compared with the
+   original bytecode. 148 of 164 are byte-identical; the other 16 differ only
+   in unreachable code, constant-table order or compiler optimisation details.
+   18 functions where the decompiler had placed statements in the wrong block
+   were corrected until their bytecode matched the original.
+3. 13 modules unchanged since the public 2012 source use that source, with its
+   original comments. Elsewhere comments could not be recovered.
 
-- Existing `.hor` charts, option files and the place database open unchanged.
-- Files saved by this version use a pickle format the original Python 2
-  Morinus can still read, so charts can be exchanged with Windows users.
+The first commit on `main` is the recovered Python 2 code, before porting.
+
+## Known issues from the original program
+
+- Saving primary directions as text fails for the **Campanian** method: the
+  list of method names used in the export has no entry for it. The same
+  happens in the Windows build; it is left as is.
+
+Fixed during the port: in transit/revolution windows, primary directions with
+**Placidian under the pole** referred to a misspelt attribute, so the
+calculation thread died and the progress dialog never closed.
 
 ## Tests
 
-`tests/` contains the checks used during the port:
-
-- `refdump.py` / `refcompare.py` compute a set of charts headlessly and compare
-  every value (positions, houses, almutens, primary directions, transits,
-  revolutions, profections, ...) with `tests/reference/py2.json.gz`, which was
-  produced by the original code under Python 2.7:
+- `tests/refdump.py` / `tests/refcompare.py` compute a set of charts headlessly
+  and compare every value with `tests/reference/py2.json.gz`, produced by the
+  recovered code under Python 2.7:
 
   ```sh
   python3 tests/refdump.py . /tmp/py3.json
   python3 tests/refcompare.py tests/reference/py2.json.gz /tmp/py3.json
   ```
 
-- `guismoke.py` opens a chart and triggers every menu command and popup-menu
-  item, recording any exception. Run it on a copy of the program folder, since
-  it confirms the options dialogs (which save to `Opts/`):
+- `tests/guismoke.py` opens a chart and triggers every menu command and
+  popup-menu item, recording any exception. Run it on a copy of this folder,
+  since it confirms the options dialogs (which save to `Opts/`):
 
   ```sh
   xvfb-run python3 tests/guismoke.py /path/to/copy /tmp/smoke [--variant 1|2|3]

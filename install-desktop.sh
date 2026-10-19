@@ -5,7 +5,7 @@ set -e
 
 DIR=$(cd "$(dirname "$0")" && pwd)
 APPS=${XDG_DATA_HOME:-$HOME/.local/share}/applications
-FILE=$APPS/morinus.desktop
+FILE=$APPS/morinus-2014.desktop
 
 if [ "$1" = "--uninstall" ]; then
 	rm -f "$FILE"
@@ -17,8 +17,8 @@ mkdir -p "$APPS"
 cat > "$FILE" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Morinus
-Comment=Astrology program
+Name=Morinus 2014
+Comment=Astrology program (Morinus 6.2, 2014 Windows build)
 Exec=python3 "$DIR/morinus.py"
 Path=$DIR
 Icon=$DIR/Res/morinus-icon.png
