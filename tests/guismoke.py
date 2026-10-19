@@ -5,6 +5,8 @@
 #
 #   xvfb-run python3 guismoke.py <morinus-copy> <outdir> [--shots] [--trace-div]
 #
+# --exercise also selects list rows, changes choices and check boxes, types
+# into fields and presses the buttons inside every dialog it opens.
 # --trace-div rewrites every '/' in the program at import time to record
 # which division sites see two ints (Py2 floor division semantics), and
 # every str()/'%s' formatting that sees a float (Py2 printed 12 digits).
@@ -103,7 +105,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'onTraditional:0', 'onTraditional:1', 'onTraditional:2', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -169,6 +171,56 @@ def main():
 
 	horpath = os.path.join(mdir, 'Hors', 'Morinus.hor')
 
+	SKIP_BUTTONS = (wx.ID_OK, wx.ID_CANCEL, wx.ID_CLOSE, wx.ID_HELP, wx.ID_CONTEXT_HELP, wx.ID_YES, wx.ID_NO)
+
+	def all_children(win):
+		for c in win.GetChildren():
+			yield c
+			for cc in all_children(c):
+				yield cc
+
+	def fire(ctrl, evtype):
+		evt = wx.CommandEvent(evtype, ctrl.GetId())
+		evt.SetEventObject(ctrl)
+		ctrl.GetEventHandler().ProcessEvent(evt)
+
+	def exercise(dlg):
+		# what a user does inside a dialog: select list rows, change choices and
+		# check boxes, type into fields, press the dialog's own buttons
+		name = type(dlg).__name__
+		for c in list(all_children(dlg)):
+			try:
+				if c.IsBeingDeleted():
+					continue
+				if isinstance(c, wx.ListCtrl):
+					for i in range(min(c.GetItemCount(), 3)):
+						c.SetItemState(i, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+						wx.SafeYield()
+				elif isinstance(c, (wx.Choice, wx.ComboBox)) and c.GetCount() > 1:
+					c.SetSelection(1)
+					fire(c, wx.wxEVT_CHOICE if isinstance(c, wx.Choice) else wx.wxEVT_COMBOBOX)
+				elif isinstance(c, wx.CheckBox):
+					c.SetValue(not c.GetValue())
+					fire(c, wx.wxEVT_CHECKBOX)
+				elif isinstance(c, wx.RadioButton):
+					c.SetValue(True)
+					fire(c, wx.wxEVT_RADIOBUTTON)
+				elif isinstance(c, wx.TextCtrl) and c.IsEditable():
+					evt = wx.KeyEvent(wx.wxEVT_CHAR)
+					evt.SetKeyCode(ord('5'))
+					evt.SetEventObject(c)
+					c.GetEventHandler().ProcessEvent(evt)
+			except Exception:
+				record('exercise %s %s' % (name, type(c).__name__))
+		for c in list(all_children(dlg)):
+			try:
+				if isinstance(c, wx.Button) and c.GetId() not in SKIP_BUTTONS and not c.IsBeingDeleted() and c.IsEnabled():
+					state['button'] = c.GetLabel()
+					fire(c, wx.wxEVT_BUTTON)
+					wx.SafeYield()
+			except Exception:
+				record('button %s "%s"' % (name, state.get('button')))
+
 	def show_briefly(dlg):
 		try:
 			dlg.Fit()
@@ -176,6 +228,12 @@ def main():
 			for i in range(5):
 				wx.SafeYield()
 			shot('dlg-'+type(dlg).__name__)
+			if '--exercise' in sys.argv and state.get('depth', 0) == 0:
+				state['depth'] = 1
+				try:
+					exercise(dlg)
+				finally:
+					state['depth'] = 0
 			dlg.Hide()
 		except Exception:
 			record('dialog '+type(dlg).__name__)
@@ -200,6 +258,9 @@ def main():
 	wx.FileDialog.ShowModal = file_modal
 	wx.FileDialog.GetPath = lambda self: state['filepath']
 	wx.FileDialog.GetDirectory = lambda self: os.path.dirname(state['filepath'])
+	# native pickers would block the run; answer them like a user who cancels
+	for cls in (wx.ColourDialog, wx.FontDialog, wx.DirDialog, wx.TextEntryDialog, wx.SingleChoiceDialog, wx.MultiChoiceDialog, wx.PrintDialog):
+		cls.ShowModal = lambda self: wx.ID_CANCEL
 	# the native GTK about box is not a wx window and cannot be closed from here
 	wx.adv.AboutBox = lambda info, parent=None: wx.adv.GenericAboutBox(info, parent)
 
@@ -241,6 +302,7 @@ def main():
 				except Exception:
 					record('destroy')
 		settle(0.2)
+		write_results(out, errors, quiet=True)	# keep findings if a later step hangs
 		try:
 			name = next(steps)
 		except StopIteration:
@@ -249,7 +311,14 @@ def main():
 		state['n'] += 1
 		sys.stderr.write('== %s\n' % name)
 		try:
-			if ':' in name:
+			if name == 'clickWheel':
+				w, h = frame.GetClientSize()
+				for fx in range(1, 10):
+					for fy in range(1, 10):
+						evt = wx.MouseEvent(wx.wxEVT_LEFT_UP)
+						evt.SetPosition(wx.Point(w*fx//10, h*fy//10))
+						frame.GetEventHandler().ProcessEvent(evt)
+			elif ':' in name:
 				# handlers taking an argument instead of an event, e.g. onTraditional:0
 				method, arg = name.split(':')
 				getattr(frame, method)(int(arg))
@@ -330,7 +399,7 @@ def main():
 		write_results(out, errors)
 
 
-def write_results(out, errors):
+def write_results(out, errors, quiet=False):
 	res = {'errors': errors}
 	if DIVSITES:
 		res['divsites'] = dict((k, sorted(v)) for k, v in DIVSITES.items())
@@ -338,7 +407,8 @@ def write_results(out, errors):
 		res['floatstrsites'] = dict((k, sorted(v)) for k, v in STRSITES.items())
 	with open(os.path.join(out, 'guismoke.json'), 'w') as f:
 		json.dump(res, f, indent=1)
-	sys.stderr.write('%d errors\n' % len(errors))
+	if not quiet:
+		sys.stderr.write('%d errors\n' % len(errors))
 
 
 if __name__ == '__main__':

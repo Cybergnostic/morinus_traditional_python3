@@ -90,7 +90,7 @@ class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl
         self.SetColumnWidth(FixedStarListCtrl.NOMNAME, 80)
 
     def OnItemActivated(self, evt):
-        self.ToggleItem(evt.m_itemIndex)
+        self.ToggleItem(evt.GetIndex())
 
     def OnDeselectAll(self):
         items = iter(self.fixedstardata.items())

@@ -138,7 +138,7 @@ class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl
         self.SetColumnWidth(FixedStarListCtrl.LAT, 80)
 
     def OnItemActivated(self, evt):
-        self.ToggleItem(evt.m_itemIndex)
+        self.ToggleItem(evt.GetIndex())
 
     def OnCheckItem(self, index, flag):
         if not self.initchecking:

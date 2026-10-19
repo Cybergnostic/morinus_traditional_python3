@@ -63,7 +63,7 @@ class PlaceListCtrl(wx.ListCtrl):
         return item.GetText()
 
     def OnItemSelected(self, event):
-        self.currentItem = event.m_itemIndex
+        self.currentItem = event.GetIndex()
         event.Skip()
 
     def OnColClick(self, event):

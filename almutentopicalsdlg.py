@@ -57,7 +57,7 @@ class RowsListCtrl(wx.ListCtrl):
         return item.GetText()
 
     def OnItemSelected(self, event):
-        self.currentItem = event.m_itemIndex
+        self.currentItem = event.GetIndex()
         event.Skip()
 
     def OnColClick(self, event):
@@ -421,7 +421,7 @@ class AlmutenTopicalsDlg(wx.Dialog):
                     self.li.fill(rows, self.options)
                 elif num > 0:
                     self.namestxt = []
-                    self.namescb.SetItems('')
+                    self.namescb.SetItems([])
                     self.namescb.SetStringSelection('')
                     self.namescb.SetValue('')
                     del self.tpcls
@@ -438,7 +438,7 @@ class AlmutenTopicalsDlg(wx.Dialog):
             val = dlg.ShowModal()
             if val == wx.ID_YES:
                 self.namestxt = []
-                self.namescb.SetItems('')
+                self.namescb.SetItems([])
                 self.namescb.SetStringSelection('')
                 self.namescb.SetValue('')
                 del self.tpcls
