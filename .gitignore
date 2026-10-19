@@ -7,3 +7,6 @@ build/
 /Opts/*
 /Hors/*
 !/Hors/Morinus.hor
+# your own place database (the shipped list is Res/placedb-default.dat)
+/Res/placedb.dat
+/Images/

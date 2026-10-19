@@ -23,6 +23,8 @@ class PlaceDB:
             self.alt = alt
 
     FILENAME = os.path.join('Res', 'placedb.dat')
+    # shipped list, used until the user's own placedb.dat is saved
+    DEFAULTFILENAME = os.path.join('Res', 'placedb-default.dat')
 
     def __init__(self):
         self.placedb = []
@@ -33,7 +35,8 @@ class PlaceDB:
     def read(self):
         lines = []
         try:
-            f = open(PlaceDB.FILENAME, 'rb')
+            fname = PlaceDB.FILENAME if os.path.exists(PlaceDB.FILENAME) else PlaceDB.DEFAULTFILENAME
+            f = open(fname, 'rb')
             try:
                 while True:
                     lines.append(pickle.load(f, encoding='utf-8'))
