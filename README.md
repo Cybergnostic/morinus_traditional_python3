@@ -44,6 +44,10 @@ Added in this version:
   python3 tools/merge_lots.py --arp parts.arp --dry-run
   ```
 
+- **Automatic time zones** — a button in New Chart / Edit Data looks up the
+  time zone and daylight saving for the birth date and place (offline);
+  see [below](#automatic-time-zones-birth-data).
+
 The planetary conditions, relationships and temperament come from
 [hor-tools](hor_tools/VENDORED.txt) (vendored in `hor_tools/`), run on Morinus's own
 Swiss Ephemeris through `swe_compat.py`.
@@ -51,7 +55,9 @@ Swiss Ephemeris through `swe_compat.py`.
 ## Install
 
 You need Python 3.10 or newer, wxPython 4.2, Pillow, and a C compiler with the
-Python headers for the Swiss Ephemeris module:
+Python headers for the Swiss Ephemeris module. Automatic time zones also need
+the `timezonefinder` package (`pip install timezonefinder`); the time-zone
+data itself comes with Linux.
 
 | Distribution    | Command |
 |-----------------|---------|
@@ -127,13 +133,6 @@ compares them with the Python 2 reference. `guismoke.py` opens a chart and
 triggers every menu command and popup-menu item (run it on a copy of the
 folder, since it saves options).
 
-## Credits and licences
-
-- Morinus — Robert Nagy, GNU GPL v3 (`LICENSE`).
-- Swiss Ephemeris 1.76 — Astrodienst AG (`SWEP/src/LICENSE`).
-- hor-tools — Cybergnostic (`hor_tools/`).
-
-
 ## Automatic time zones (birth data)
 
 Install dependencies with `pip install -r requirements.txt`. In **New Chart**
@@ -151,9 +150,17 @@ Existing charts are never automatically rewritten.
 Dates before 1970 require independent historical verification. BC dates and
 Julian-calendar input are not supported by the automatic lookup. Ambiguous
 autumn clock-change times and nonexistent spring clock-change times are
-rejected; enter researched settings manually. Non-hour DST and offsets that
-cannot be represented in the existing Morinus controls must also be entered
-manually. The lookup does not change Morinus's underlying .hor file format.
+rejected; enter researched settings manually. Daylight saving that does not
+fit Morinus's one-hour checkbox (such as Irish winter time, which IANA counts
+as negative DST) is entered as the total offset with DST unchecked. Offsets beyond
+Morinus's 12-hour field must be entered manually. The lookup does not change
+Morinus's underlying .hor file format.
 
 Run the isolated time-zone tests with
-`python -m unittest discover -s tests -p 'test_auto_timezone.py'`.
+`python3 -m unittest discover -s tests -p 'test_auto_timezone.py'`.
+
+## Credits and licences
+
+- Morinus — Robert Nagy, GNU GPL v3 (`LICENSE`).
+- Swiss Ephemeris 1.76 — Astrodienst AG (`SWEP/src/LICENSE`).
+- hor-tools — Cybergnostic (`hor_tools/`).

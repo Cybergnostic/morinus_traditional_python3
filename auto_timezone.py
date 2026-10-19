@@ -11,7 +11,8 @@ def resolve_timezone(year, month, day, hour, minute, second, latitude, longitude
     """Return (zone_name, standard_utc_minutes, dst, warning).
 
     Morinus subtracts a separate one-hour DST flag, so do NOT enter the
-    full summer UTC offset in its GMT fields. Reject non-hour DST rules.
+    full summer UTC offset in its GMT fields. DST that is not one hour is
+    folded into the standard offset with the flag off.
     """
     try:
         from timezonefinder import TimezoneFinder
@@ -55,12 +56,13 @@ def resolve_timezone(year, month, day, hour, minute, second, latitude, longitude
             "Enter the correct GMT offset and DST setting manually."
         )
     offset, dst = candidates[0]
+    notes = []
     if dst not in (timedelta(0), timedelta(hours=1)):
-        raise TimezoneLookupError(
-            "This place/date uses a non-one-hour DST adjustment; "
-            "Morinus's DST checkbox cannot represent it. Enter the "
-            "total offset manually with DST unchecked."
-        )
+        # Morinus's DST checkbox is always one hour; enter the whole offset
+        # (Irish winter time, which IANA counts as negative DST, ends up here).
+        dst = timedelta(0)
+        notes.append("Daylight saving here is not one hour; the total "
+                     "offset is entered with DST unchecked.")
     standard = offset - dst
     seconds = standard.total_seconds()
     if seconds % 60:
@@ -73,6 +75,9 @@ def resolve_timezone(year, month, day, hour, minute, second, latitude, longitude
         raise TimezoneLookupError(
             "UTC offset exceeds Morinus's 12-hour field limit; enter it manually."
         )
-    warning = ("Historical time-zone rules before 1970 may be incomplete. "
-               "Confirm against a historical atlas." if year < 1970 else "")
-    return name, minutes, dst != timedelta(0), warning
+    if name.startswith("Etc/"):
+        notes.append("No country time zone here (at sea); nautical time assumed.")
+    if year < 1970:
+        notes.append("Historical time-zone rules before 1970 may be incomplete. "
+                     "Confirm against a historical atlas.")
+    return name, minutes, dst != timedelta(0), " ".join(notes)

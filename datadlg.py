@@ -322,8 +322,8 @@ class DataDlg(wx.Dialog):
             return
         sign = '+' if offset_minutes >= 0 else '-'
         hours, minutes = divmod(abs(offset_minutes), 60)
-        confirmation = ('IANA zone: %s\\nStandard GMT offset: %s%02d:%02d\\n'
-                        'Daylight saving: %s\\n\\n%s\\n\\nApply to chart?'
+        confirmation = ('IANA zone: %s\nStandard GMT offset: %s%02d:%02d\n'
+                        'Daylight saving: %s\n\n%s\n\nApply to chart?'
                         % (name, sign, hours, minutes, 'Yes' if dst else 'No',
                            warning or 'Please confirm the offset is correct.'))
         if wx.MessageBox(confirmation, 'Automatic time zone',
