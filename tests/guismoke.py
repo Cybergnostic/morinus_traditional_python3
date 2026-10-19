@@ -106,7 +106,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 HANDLERS = ['onLoad', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
-	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
+	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'onTraditional:0', 'onTraditional:1', 'onTraditional:2', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
 	'onProfectionsChart', 'onHelioChart', 'onEphemeris', 'onFindTime', 'onSynastry', 'onSaveAsBitmap', 'onSave', 'onHereAndNow',
 	'onNew', 'onData', 'onLoad',
 	'onAppearance1', 'onAppearance2', 'onDignities', 'onTriplicities', 'onTerms', 'onDecans', 'onChartAlmuten', 'onTopicals',
@@ -249,7 +249,12 @@ def main():
 		state['n'] += 1
 		sys.stderr.write('== %s\n' % name)
 		try:
-			getattr(frame, name)(wx.CommandEvent())
+			if ':' in name:
+				# handlers taking an argument instead of an event, e.g. onTraditional:0
+				method, arg = name.split(':')
+				getattr(frame, method)(int(arg))
+			else:
+				getattr(frame, name)(wx.CommandEvent())
 		except Exception:
 			record('handler')
 		# primary directions run in a thread and post EVT_PDREADY
