@@ -3,6 +3,7 @@
 import wx
 import wx.adv
 import traditionalwnd
+import temperamentwnd
 import returnslistframe
 import os
 import pickle
@@ -895,7 +896,10 @@ class MFrame(wx.Frame):
     def onTraditional(self, kind):
         if not self.splash:
             wait = wx.BusyCursor()
-            frame = traditionalwnd.TraditionalFrame(self, self.title, self.horoscope, kind)
+            if kind == traditionalwnd.TEMPERAMENT:
+                frame = temperamentwnd.TemperamentFrame(self, self.title, self.horoscope, self.options)
+            else:
+                frame = traditionalwnd.TraditionalFrame(self, self.title, self.horoscope, kind)
             frame.Show(True)
 
     def onPositions(self, event):
