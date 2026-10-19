@@ -1,0 +1,436 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, time, timedelta, timezone
+import math
+from typing import Dict, List, Tuple
+
+import swisseph as swe
+
+from .analysis.dignity import TRIPLICITIES, essential_dignity, sign_index_from_longitude
+from .analysis.sect import chart_sect
+from .almuten_types import AccidentalScores, AlmutenResult
+from .astro_engine import ensure_ephe_path, julian_day_from_chart
+from .models import ChartInput, Houses, PlanetPosition
+
+CHALDEAN_ORDER = ["Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"]
+ALMUTEN_PLANETS = CHALDEAN_ORDER
+
+# Morinus Almuten Figuris accidental house scores, as configured here.
+# This setup intentionally gives VIII=4 and IX=5 (the actual Morinus
+# options), which differs from the 5/4 ordering printed in the reference tables.
+HOUSE_STRENGTH_SCORES = {
+    1: 12,
+    2: 6,
+    3: 3,
+    4: 9,
+    5: 7,
+    6: 1,
+    7: 10,
+    8: 4,
+    9: 5,
+    10: 11,
+    11: 8,
+    12: 2,
+}
+
+# Project/Morinus Almuten Figuris convention already established for this
+# calculator. The reference confirms day/hour ruler points are added;
+# these exact weights are the working values used by the project examples.
+DAY_RULER_BONUS = 7
+HOUR_RULER_BONUS = 6
+
+DAY_RULERS = {
+    0: "Moon",
+    1: "Mars",
+    2: "Mercury",
+    3: "Jupiter",
+    4: "Venus",
+    5: "Saturn",
+    6: "Sun",
+}
+
+ESSENTIAL_WEIGHTS = {
+    "dom": 5,
+    "exalt": 4,
+    "trip": 3,
+    "term": 2,
+    "face": 1,
+}
+
+
+def _parse_hhmmss(s: str) -> time:
+    h, m, sec = s.split(":")
+    return time(int(h), int(m), int(sec))
+
+
+def planetary_hour_from_local(birth_str: str, sunrise_str: str, sunset_str: str, day_ruler: str) -> str:
+    """Reference implementation for a daytime planetary hour from local clock times."""
+    base_date = datetime(2000, 1, 1)
+
+    def dt(t: time) -> datetime:
+        return base_date.replace(hour=t.hour, minute=t.minute, second=t.second)
+
+    birth = dt(_parse_hhmmss(birth_str))
+    sunrise = dt(_parse_hhmmss(sunrise_str))
+    sunset = dt(_parse_hhmmss(sunset_str))
+
+    day_length = sunset - sunrise
+    hour_len = day_length / 12
+    hours_since_sunrise = int((birth - sunrise) / hour_len)
+    hours_since_sunrise = max(0, min(hours_since_sunrise, 11))
+
+    start_idx = CHALDEAN_ORDER.index(day_ruler)
+    return CHALDEAN_ORDER[(start_idx + hours_since_sunrise) % len(CHALDEAN_ORDER)]
+
+
+@dataclass
+class EssentialRow:
+    name: str
+    longitude: float
+    contributions: Dict[str, List[int]]
+    totals: Dict[str, int]
+    winners: List[str]
+
+
+def get_essential_dignities_at_degree(longitude: float, is_day_chart: bool) -> Dict[str, Dict[str, bool]]:
+    """For a given longitude, return per-planet dignity flags."""
+    flags: Dict[str, Dict[str, bool]] = {}
+    for planet in ALMUTEN_PLANETS:
+        ess = essential_dignity(planet, longitude, is_day_chart=is_day_chart)
+        flags[planet] = {
+            "dom": ess["is_domicile"],
+            "exalt": ess["is_exalted"],
+            "trip": ess["triplicity_lord"] == planet,
+            "term": ess["term_lord"] == planet,
+            "face": ess["face_lord"] == planet,
+        }
+    return flags
+
+
+def essential_contributions_at_degree(longitude: float, is_day_chart: bool) -> Dict[str, List[int]]:
+    """Return per-planet contribution list of point weights."""
+    flags = get_essential_dignities_at_degree(longitude, is_day_chart)
+    sign_idx = sign_index_from_longitude(longitude)
+    element = "fire" if sign_idx in {0, 4, 8} else "earth" if sign_idx in {1, 5, 9} else "air" if sign_idx in {2, 6, 10} else "water"
+    trip_day, trip_night, trip_part = TRIPLICITIES[element]
+    contributions: Dict[str, List[int]] = {}
+    for planet, vals in flags.items():
+        contribs: List[int] = []
+        for key, weight in ESSENTIAL_WEIGHTS.items():
+            if key == "trip":
+                # Degree almutens give the triplicity share to all three
+                # Dorothean rulers, as in the reference examples.
+                if planet in {trip_day, trip_night, trip_part}:
+                    contribs.append(weight)
+            elif vals.get(key):
+                contribs.append(weight)
+        contributions[planet] = contribs
+    return contributions
+
+
+def part_of_fortune_longitude(asc_long: float, sun_long: float, moon_long: float, sect_chart: str) -> float:
+    if sect_chart == "day":
+        fortune = asc_long + moon_long - sun_long
+    else:
+        fortune = asc_long + sun_long - moon_long
+    return fortune % 360.0
+
+
+def compute_syzygy_longitude(chart: ChartInput, sect_chart: str) -> float:
+    """
+    Approximate previous syzygy (new or full) longitude.
+
+    Syzygy is the last exact lunation before birth. At a full Moon, use the
+    luminary that is actually above the horizon at the syzygy moment.
+    """
+    ensure_ephe_path()
+    start_jd = julian_day_from_chart(chart)
+
+    def _sun_moon_diff(jd: float) -> float:
+        sun_pos = swe.calc_ut(jd, swe.SUN)[0]
+        moon_pos = swe.calc_ut(jd, swe.MOON)[0]
+        return (float(moon_pos[0]) - float(sun_pos[0])) % 360.0
+
+    def _phase_distance(diff: float, target: float) -> float:
+        return min((diff - target) % 360.0, (target - diff) % 360.0)
+
+    def _find_previous_phase(target: float) -> float:
+        best_jd = start_jd
+        best_dist = _phase_distance(_sun_moon_diff(start_jd), target)
+        last_dist = best_dist
+        jd = start_jd
+        for _ in range(160):
+            jd -= 0.25
+            dist = _phase_distance(_sun_moon_diff(jd), target)
+            if dist <= best_dist:
+                best_dist = dist
+                best_jd = jd
+            elif dist > last_dist and best_jd < start_jd:
+                break
+            last_dist = dist
+
+        for step in (0.1, 0.01, 0.001):
+            improved = True
+            while improved:
+                improved = False
+                for direction in (-step, step):
+                    cand = best_jd + direction
+                    dist = _phase_distance(_sun_moon_diff(cand), target)
+                    if dist < best_dist and cand <= start_jd:
+                        best_dist = dist
+                        best_jd = cand
+                        improved = True
+                        break
+        return best_jd
+
+    new_jd = _find_previous_phase(0.0)
+    full_jd = _find_previous_phase(180.0)
+    if new_jd >= full_jd:
+        jd_syzygy = new_jd
+        syzygy_type = "new"
+    else:
+        jd_syzygy = full_jd
+        syzygy_type = "full"
+
+    sun_pos = swe.calc_ut(jd_syzygy, swe.SUN)[0]
+    moon_pos = swe.calc_ut(jd_syzygy, swe.MOON)[0]
+    sun_long = float(sun_pos[0]) % 360.0
+    moon_long = float(moon_pos[0]) % 360.0
+
+    if syzygy_type == "new":
+        return sun_long
+
+    def _altitude(body: int) -> float:
+        res = swe.calc_ut(jd_syzygy, body, swe.FLG_SWIEPH | swe.FLG_EQUATORIAL)
+        equ = res[0] if isinstance(res[0], (list, tuple)) else res
+        if len(equ) < 3:
+            raise RuntimeError("Swiss Ephemeris did not return RA/Dec for altitude computation.")
+        ra, dec = float(equ[0]), float(equ[1])
+        lst = swe.sidtime(jd_syzygy) * 15.0
+        ha = (lst + chart.longitude - ra) % 360.0
+        ha_rad = math.radians(ha)
+        dec_rad = math.radians(dec)
+        lat_rad = math.radians(chart.latitude)
+        return math.degrees(
+            math.asin(
+                math.sin(dec_rad) * math.sin(lat_rad)
+                + math.cos(dec_rad) * math.cos(lat_rad) * math.cos(ha_rad)
+            )
+        )
+
+    sun_alt = _altitude(swe.SUN)
+    moon_alt = _altitude(swe.MOON)
+    if sun_alt > 0 and moon_alt <= 0:
+        return sun_long
+    if moon_alt > 0 and sun_alt <= 0:
+        return moon_long
+
+    # At extreme latitudes or an exact horizon edge, choose the higher luminary
+    # rather than falling back to Whole Sign houses as a surrogate horizon.
+    return sun_long if sun_alt >= moon_alt else moon_long
+
+
+def build_essential_rows(chart: ChartInput, planets: List[PlanetPosition], houses: Houses) -> Tuple[List[EssentialRow], Dict[str, int], Dict[str, int]]:
+    sun = next(p for p in planets if p.name == "Sun")
+    moon = next(p for p in planets if p.name == "Moon")
+    sect_chart = chart_sect(chart, sun)
+
+    fortune_long = part_of_fortune_longitude(houses.asc, sun.longitude, moon.longitude, sect_chart)
+    syzygy_long = compute_syzygy_longitude(chart, sect_chart)
+
+    points = [
+        ("Sun", sun.longitude),
+        ("Moon", moon.longitude),
+        ("Asc", houses.asc),
+        ("Fortune", fortune_long),
+        ("Syzygy", syzygy_long),
+    ]
+
+    rows: List[EssentialRow] = []
+    total_shares = {p: 0 for p in ALMUTEN_PLANETS}
+    total_scores = {p: 0 for p in ALMUTEN_PLANETS}
+
+    for name, lon in points:
+        contribs = essential_contributions_at_degree(lon, sect_chart == "day")
+        totals = {planet: sum(vals) for planet, vals in contribs.items()}
+        max_score = max(totals.values()) if totals else 0
+        winners = [p for p, score in totals.items() if score == max_score and score > 0]
+        for p, score in totals.items():
+            total_scores[p] += score
+        for planet, vals in contribs.items():
+            total_shares[planet] += len(vals)
+        rows.append(EssentialRow(name=name, longitude=lon, contributions=contribs, totals=totals, winners=winners))
+
+    return rows, total_shares, total_scores
+
+
+def _sunrise_sunset(jd: float, lat: float, lon: float, tz_offset_hours: float = 0.0) -> Tuple[float, float]:
+    """Return UT Julian days for geographic sunrise and sunset.
+
+    The timezone offset is deliberately NOT used as a substitute longitude.
+    It belongs only to civil-time/date conversion. Sunrise/sunset must use the
+    chart's real geographic longitude.
+    """
+    ensure_ephe_path()
+    rise_flag, rise_tret = swe.rise_trans(
+        jd,
+        swe.SUN,
+        rsmi=swe.CALC_RISE | swe.BIT_DISC_CENTER,
+        geopos=(lon, lat, 0.0),
+    )
+    set_flag, set_tret = swe.rise_trans(
+        jd,
+        swe.SUN,
+        rsmi=swe.CALC_SET | swe.BIT_DISC_CENTER,
+        geopos=(lon, lat, 0.0),
+    )
+
+    if rise_flag < 0 or not rise_tret:
+        raise RuntimeError(f"Failed to compute sunrise for jd={jd}, lat={lat}, lon={lon}")
+    if set_flag < 0 or not set_tret:
+        raise RuntimeError(f"Failed to compute sunset for jd={jd}, lat={lat}, lon={lon}")
+    return float(rise_tret[0]), float(set_tret[0])
+
+
+def planetary_day_hour_rulers(chart: ChartInput) -> Tuple[str, str]:
+    """Return (day_ruler, hour_ruler) from local geographic sunrise to sunrise."""
+    dt_utc = chart.datetime_utc
+    if dt_utc.tzinfo is not None:
+        dt_utc = dt_utc.astimezone(timezone.utc).replace(tzinfo=None)
+
+    dt_local = dt_utc + timedelta(hours=chart.tz_offset_hours)
+    birth_jd = julian_day_from_chart(chart)
+
+    local_midnight = dt_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    utc_midnight = local_midnight - timedelta(hours=chart.tz_offset_hours)
+    base_jd = swe.julday(
+        utc_midnight.year,
+        utc_midnight.month,
+        utc_midnight.day,
+        utc_midnight.hour + utc_midnight.minute / 60.0 + utc_midnight.second / 3600.0,
+        swe.GREG_CAL,
+    )
+
+    sunrise_today, sunset_today = _sunrise_sunset(base_jd, chart.latitude, chart.longitude)
+    _sunrise_prev, sunset_prev = _sunrise_sunset(base_jd - 1, chart.latitude, chart.longitude)
+    sunrise_next, _sunset_next = _sunrise_sunset(base_jd + 1, chart.latitude, chart.longitude)
+
+    if sunrise_today <= birth_jd <= sunset_today:
+        planetary_weekday = dt_local.weekday()
+        day_ruler_name = DAY_RULERS[planetary_weekday]
+        day_length = sunset_today - sunrise_today
+        hour_len_day = day_length / 12.0 if day_length > 0 else 0.0
+        hours_since_sunrise = int((birth_jd - sunrise_today) / hour_len_day) if hour_len_day else 0
+    elif birth_jd > sunset_today:
+        planetary_weekday = dt_local.weekday()
+        day_ruler_name = DAY_RULERS[planetary_weekday]
+        night_length = sunrise_next - sunset_today
+        hour_len_night = night_length / 12.0 if night_length > 0 else 0.0
+        night_hours_since_sunset = int((birth_jd - sunset_today) / hour_len_night) if hour_len_night else 0
+        hours_since_sunrise = 12 + night_hours_since_sunset
+    else:
+        prev_local = dt_local - timedelta(days=1)
+        planetary_weekday = prev_local.weekday()
+        day_ruler_name = DAY_RULERS[planetary_weekday]
+        night_length_prev = sunrise_today - sunset_prev
+        hour_len_night_prev = night_length_prev / 12.0 if night_length_prev > 0 else 0.0
+        night_hours_since_prev_sunset = int((birth_jd - sunset_prev) / hour_len_night_prev) if hour_len_night_prev else 0
+        hours_since_sunrise = 12 + night_hours_since_prev_sunset
+
+    hours_since_sunrise = max(0, min(hours_since_sunrise, 23))
+    start_idx = CHALDEAN_ORDER.index(day_ruler_name)
+    hour_ruler_name = CHALDEAN_ORDER[(start_idx + hours_since_sunrise) % len(CHALDEAN_ORDER)]
+    return day_ruler_name, hour_ruler_name
+
+
+def phase_score(planet: PlanetPosition, sun_longitude: float) -> int:
+    """Return the configured Morinus Sun-phase score.
+
+    Morinus scores only Mars, Jupiter, and Saturn.  It measures the directional
+    zodiacal distance from the superior planet forward to the Sun,
+    ``(Sun - planet) mod 360``, and uses five strict bands:
+
+    18-30 = weak (1), 30-40 = medium (2), 40-80 = strong (3),
+    80-100 = medium (2), 100-120 = weak (1).
+
+    The original Morinus ``inorbsinister`` implementation uses strict
+    inequalities, so exact band boundaries receive no phase score.  It does
+    not test direct/retrograde motion or station state here.
+    """
+    if planet.name not in {"Saturn", "Jupiter", "Mars"}:
+        return 0
+
+    separation = (sun_longitude - planet.longitude) % 360.0
+    bands = (
+        (18.0, 30.0, 1),
+        (30.0, 40.0, 2),
+        (40.0, 80.0, 3),
+        (80.0, 100.0, 2),
+        (100.0, 120.0, 1),
+    )
+    for lower, upper, score in bands:
+        if lower < separation < upper:
+            return score
+    return 0
+
+
+def compute_accidental_scores(
+    chart: ChartInput, planets: List[PlanetPosition]
+) -> AccidentalScores:
+    house_scores = {p.name: HOUSE_STRENGTH_SCORES.get(p.house, 0) for p in planets}
+    day_ruler, hour_ruler = planetary_day_hour_rulers(chart)
+    day_bonus = {
+        planet: DAY_RULER_BONUS if planet == day_ruler else 0
+        for planet in ALMUTEN_PLANETS
+    }
+    hour_bonus = {
+        planet: HOUR_RULER_BONUS if planet == hour_ruler else 0
+        for planet in ALMUTEN_PLANETS
+    }
+    sun = next(p for p in planets if p.name == "Sun")
+    phase_scores = {p.name: phase_score(p, sun.longitude) for p in planets}
+
+    accidental_totals = {
+        planet: house_scores.get(planet, 0)
+        + day_bonus.get(planet, 0)
+        + hour_bonus.get(planet, 0)
+        + phase_scores.get(planet, 0)
+        for planet in ALMUTEN_PLANETS
+    }
+
+    return AccidentalScores(
+        house_scores=house_scores,
+        day_ruler=day_ruler,
+        hour_ruler=hour_ruler,
+        day_bonus=day_bonus,
+        hour_bonus=hour_bonus,
+        phase_scores=phase_scores,
+        accidental_totals=accidental_totals,
+    )
+
+
+def build_almuten_figuris(
+    chart: ChartInput, planets: List[PlanetPosition], houses: Houses
+) -> AlmutenResult:
+    rows, total_shares, total_scores = build_essential_rows(chart, planets, houses)
+    accidental = compute_accidental_scores(chart, planets)
+
+    essential_totals = total_scores
+    grand_scores = {
+        planet: essential_totals.get(planet, 0)
+        + accidental.accidental_totals.get(planet, 0)
+        for planet in ALMUTEN_PLANETS
+    }
+    max_score = max(grand_scores.values()) if grand_scores else 0
+    almuten = [planet for planet, score in grand_scores.items() if score == max_score]
+
+    return AlmutenResult(
+        rows=rows,
+        total_shares=total_shares,
+        essential_totals=essential_totals,
+        accidental=accidental,
+        grand_scores=grand_scores,
+        almuten=almuten,
+        almuten_score=max_score,
+    )

@@ -1,0 +1,2 @@
+Vendored from the astro_data repository (hor-tools), commit fe6fd93.
+Keep this copy unchanged so it can be updated from upstream; Morinus-specific glue lives in traditional.py and swe_compat.py.
