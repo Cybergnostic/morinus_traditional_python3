@@ -8,6 +8,43 @@ runs natively on Linux.
 No public source exists for this build, so the code was recovered from the
 executable (see *How the source was recovered* below).
 
+## Added in this version
+
+On top of the 2014 program, this version adds:
+
+- **Tables → Planetary conditions**: sect by the Sun's true altitude,
+  hayz/halb, synodic phase (combust, under the beams, cazimi), oriental /
+  occidental, stations, motion, joys, latitude, Via Combusta, void-of-course
+  Moon.
+- **Tables → Reception, generosity, repulsion** (odbojnost).
+- **Tables → Temperament**: the temperament worksheet with every factor and
+  its points.
+
+  These three use the rules as implemented in hor-tools (vendored in
+  `hor_tools/`, see `hor_tools/VENDORED.txt`), on Morinus's own Swiss
+  Ephemeris through `swe_compat.py`. Right-click saves a table as HTML.
+- **Charts → Returns of the year**: the solar return, the lunar return in force
+  at it and every lunar return until the next solar return (13 or 14: lunar
+  returns follow the Moon back to its natal degree), or the monthly solar
+  returns (the Sun on the natal degree of each following sign). Each row shows
+  the return's Ascendant and its whole-sign house in the solar and natal
+  charts; double-click opens the return.
+- **Steppers** (right-click in a chart window): *Step solar/lunar returns* moves
+  a return chart to the previous or next return; *Step time* moves transits
+  over the natal chart by seconds up to years.
+- **Duads on bi-wheels**: with dodecatemoria chosen in Appearance I, return and
+  transit charts show their duads in an outer ring.
+- **Lots**: no limit on the number of lots (was 40), longer names, and a
+  Day/Night selector in the lots dialog that shows each formula as it applies
+  to day or night charts (it opens on the current chart's sect).
+  `tools/arp_lots.py` converts Solar Fire `.arp` Arabic-parts files to Morinus
+  lots and `tools/merge_lots.py` merges them, into the
+  lots in `Opts/`:
+
+  ```sh
+  python3 tools/merge_lots.py --arp parts.arp --dry-run
+  ```
+
 ## Requirements
 
 - Python 3.10 or newer
@@ -25,7 +62,7 @@ executable (see *How the source was recovered* below).
 ```sh
 ./build.sh            # compiles the sweastrology module next to morinus.py
 python3 morinus.py
-./install-desktop.sh  # optional: adds "Morinus 2014" to the application menu
+./install-desktop.sh  # optional: adds "Morinus 2014+" to the application menu
 ```
 
 Settings live in `Opts/` and charts in `Hors/` inside this folder (both kept
@@ -78,3 +115,7 @@ calculation thread died and the progress dialog never closed.
   ```sh
   xvfb-run python3 tests/guismoke.py /path/to/copy /tmp/smoke [--variant 1|2|3]
   ```
+
+- `tests/check_arp_lots.py file.arp` evaluates every line of a Solar Fire
+  Arabic-parts file directly from its codes and checks that Morinus computes
+  the same lots from the converted definitions, for a day and a night chart.
