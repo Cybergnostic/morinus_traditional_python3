@@ -132,3 +132,28 @@ folder, since it saves options).
 - Morinus — Robert Nagy, GNU GPL v3 (`LICENSE`).
 - Swiss Ephemeris 1.76 — Astrodienst AG (`SWEP/src/LICENSE`).
 - hor-tools — Cybergnostic (`hor_tools/`).
+
+
+## Automatic time zones (birth data)
+
+Install dependencies with `pip install -r requirements.txt`. In **New Chart**
+or **Edit Data**, enter the civil birth date/time and select a location
+(or enter longitude/latitude). Click **Auto time zone (date + location)**,
+review the IANA zone, standard GMT offset and daylight-saving flag, and
+confirm. This works offline once `timezonefinder` and IANA `tzdata` are
+installed. Place-name *search* still uses the existing GeoNames service.
+
+Morinus stores a standard GMT offset and a separate one-hour daylight-saving
+flag. The automatic lookup deliberately splits those values to avoid
+counting summer time twice. You can change the values manually afterward.
+Existing charts are never automatically rewritten.
+
+Dates before 1970 require independent historical verification. BC dates and
+Julian-calendar input are not supported by the automatic lookup. Ambiguous
+autumn clock-change times and nonexistent spring clock-change times are
+rejected; enter researched settings manually. Non-hour DST and offsets that
+cannot be represented in the existing Morinus controls must also be entered
+manually. The lookup does not change Morinus's underlying .hor file format.
+
+Run the isolated time-zone tests with
+`python -m unittest discover -s tests -p 'test_auto_timezone.py'`.
