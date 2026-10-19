@@ -7,6 +7,7 @@ from PIL import ImageFont
 import math
 import astrology
 import chart
+import dodecatemoria
 import houses
 import planets
 import fortune
@@ -209,6 +210,13 @@ class GraphChart:
                 self.rHouse = self.rBase + self.rHousesectorlen * self.maxradius
                 self.rHouseName = self.rBase + self.rHousesectorlen * self.maxradius / 2.0
         else:
+            # duads of the second chart (return/transit) go in an outer ring; the wheel is drawn smaller to make room
+            self.duads2 = self.options.showobject == chart.Chart.SHOWDODECATEMORIA
+            if self.duads2:
+                fullradius = self.maxradius
+                self.maxradius = int(self.maxradius * 0.86)
+                self.rDodec = fullradius * 0.94
+                self.rDodecLines = fullradius * 0.89
             self.symbolSize = self.maxradius // 16
             self.signSize = self.maxradius // 20
             self.outerplanetsectorlen = 0.12
@@ -499,34 +507,14 @@ class GraphChart:
                         self.lotnames = None
                         self.lotlons = None
             elif self.options.showobject == chart.Chart.SHOWDODECATEMORIA:
-                lonsdodec = []
-                objsdodec = []
-                fntsdodec = []
-                artxt = (mtexts.txtscommon['AntAsc'], mtexts.txtscommon['AntMC'])
-                for i in range(planets.Planets.BODIES_NUM + 2):
-                    lon = self.chart.dodecatemoria.lons[i]
-                    if self.options.ayanamsha != 0:
-                        lon += self.chart.ayanamsha
-                        lon = util.normalize(lon)
-                    lonsdodec.append(lon)
-                    if i < planets.Planets.BODIES_NUM:
-                        objsdodec.append(common.common.planets[i])
-                        fntsdodec.append(self.fntMorinus)
-                    else:
-                        objsdodec.append(artxt[(i - planets.Planets.BODIES_NUM)])
-                        fntsdodec.append(self.fntDodecText)
-
-                if self.options.lotsvisible[0]:
-                    lon = self.chart.dodecatemoria.lons[(planets.Planets.BODIES_NUM + 2)]
-                    if self.options.ayanamsha != 0:
-                        lon += self.chart.ayanamsha
-                        lon = util.normalize(lon)
-                    lonsdodec.append(lon)
-                    objsdodec.append(common.common.fortune)
-                    fntsdodec.append(self.fntMorinus)
+                lonsdodec, objsdodec, fntsdodec = self.dodecObjs(self.chart)
                 idorderant = self.getIdOrder(lonsdodec)
                 self.dodecshift = self.arrangeObjs(objsdodec, lonsdodec, fntsdodec, idorderant, self.rDodec)
                 self.drawObjLines(self.dodecshift, lonsdodec, self.r30, self.rDodecLines)
+        if self.chart2 != None and self.duads2:
+            lonsdodec2, objsdodec2, fntsdodec2 = self.dodecObjs(self.chart2)
+            self.dodecshift2 = self.arrangeObjs(objsdodec2, lonsdodec2, fntsdodec2, self.getIdOrder(lonsdodec2), self.rDodec)
+            self.drawObjLines(self.dodecshift2, lonsdodec2, self.rOuterMax, self.rDodecLines)
         wxImag = self.buffer.ConvertToImage()
         self.img = Image.new('RGB', (wxImag.GetWidth(), wxImag.GetHeight()))
         self.img.frombytes(wxImag.GetData())
@@ -553,6 +541,8 @@ class GraphChart:
                 pass
             elif self.options.showobject == chart.Chart.SHOWDODECATEMORIA:
                 self.drawDodecatemoria(self.chart, lonsdodec, self.dodecshift, self.rDodec)
+        if self.chart2 != None and self.duads2:
+            self.drawDodecatemoria(self.chart2, lonsdodec2, self.dodecshift2, self.rDodec)
         if self.plId != None:
             self.drawOrbs(self.draw, self.chart)
         wxImg = wx.Image(self.img.size[0], self.img.size[1])
@@ -1146,6 +1136,37 @@ class GraphChart:
                 y = cy + math.sin(math.pi + shift - math.radians(deg)) * self.rDecansPlanet
                 self.draw.text((x - self.smallsymbolSize // 2, y - self.smallsymbolSize // 2), common.common.planets[self.options.decans[self.options.seldecan][i][j]], fill=clr, font=self.fntSmallMorinus)
                 deg += 10.0
+
+    def dodecObjs(self, chrt):
+        """Duad longitudes, symbols and fonts of a chart (computed here for charts made without them)"""
+        if chrt.dodecatemoria is None:
+            chrt.dodecatemoria = dodecatemoria.Dodecatemoria(chrt.planets, chrt.houses.ascmc, chrt.fortune.fortune, chrt.options.ayanamsha, chrt.ayanamsha)
+        lonsdodec = []
+        objsdodec = []
+        fntsdodec = []
+        artxt = (mtexts.txtscommon['AntAsc'], mtexts.txtscommon['AntMC'])
+        for i in range(planets.Planets.BODIES_NUM + 2):
+            lon = chrt.dodecatemoria.lons[i]
+            if self.options.ayanamsha != 0:
+                lon += chrt.ayanamsha
+                lon = util.normalize(lon)
+            lonsdodec.append(lon)
+            if i < planets.Planets.BODIES_NUM:
+                objsdodec.append(common.common.planets[i])
+                fntsdodec.append(self.fntMorinus)
+            else:
+                objsdodec.append(artxt[(i - planets.Planets.BODIES_NUM)])
+                fntsdodec.append(self.fntDodecText)
+
+        if self.options.lotsvisible[0]:
+            lon = chrt.dodecatemoria.lons[(planets.Planets.BODIES_NUM + 2)]
+            if self.options.ayanamsha != 0:
+                lon += chrt.ayanamsha
+                lon = util.normalize(lon)
+            lonsdodec.append(lon)
+            objsdodec.append(common.common.fortune)
+            fntsdodec.append(self.fntMorinus)
+        return lonsdodec, objsdodec, fntsdodec
 
     def drawObjLines(self, objshift, lons, r1, r2):
         clr = (0, 0, 0)
