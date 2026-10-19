@@ -35,7 +35,7 @@ class PlaceDB:
             f = open(PlaceDB.FILENAME, 'rb')
             try:
                 while True:
-                    lines.append(pickle.load(f))
+                    lines.append(pickle.load(f, encoding='utf-8'))
 
                 f.close()
             except EOFError:
@@ -54,7 +54,7 @@ class PlaceDB:
             f = open(PlaceDB.FILENAME, 'wb')
             for rec in self.placedb:
                 txt = rec.name + PlaceDB.Record.DELIMITER + rec.lon + PlaceDB.Record.DELIMITER + rec.lat + PlaceDB.Record.DELIMITER + rec.tz + PlaceDB.Record.DELIMITER + rec.alt + '\n'
-                pickle.dump(txt, f)
+                pickle.dump(txt, f, 2)
 
             f.close()
         except IOError:

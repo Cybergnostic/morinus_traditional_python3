@@ -63,10 +63,10 @@ class PlanetaryHours:
     def logCalc(self, tjd):
         jy, jm, jd, jh = astrology.swe_revjul(tjd, 1)
         d, m, s = util.decToDeg(jh)
-        print 'GMT: %d.%d.%d %d:%d:%d' % (jy, jm, jd, d, m, s)
+        print('GMT: %d.%d.%d %d:%d:%d' % (jy, jm, jd, d, m, s))
 
     def printDayHour(self):
         pls = ('Saturnus', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')
-        print ''
-        print 'Planetary Day and Hour:'
-        print 'Day: %s Hour: %s' % (pls[PlanetaryHours.PHs[self.weekday][0]], pls[self.planetaryhour])
+        print('')
+        print('Planetary Day and Hour:')
+        print('Day: %s Hour: %s' % (pls[PlanetaryHours.PHs[self.weekday][0]], pls[self.planetaryhour]))

@@ -148,7 +148,7 @@ class OrbsDlg(wx.Dialog):
         sfsorbs = wx.StaticBox(self, label=mtexts.txtsorbsdlg['FixedStars'])
         sfsorbssizer = wx.StaticBoxSizer(sfsorbs, wx.VERTICAL)
         gsizer = wx.GridSizer(2, 2)
-        self.fsnames = self.options.fixedstars.keys()
+        self.fsnames = list(self.options.fixedstars.keys())
         if self.nofixedstars:
             seltxt = ''
             arseltxt = []
@@ -272,7 +272,7 @@ class OrbsDlg(wx.Dialog):
             opts.daynightorb = float(self.daynight.GetValue())
             changed = True
         if not self.nofixedstars:
-            for k in self.fixedstars.iterkeys():
+            for k in self.fixedstars.keys():
                 if self.fixedstars[k] != opts.fixedstars[k]:
                     opts.fixedstars[k] = self.fixedstars[k]
                     changed = True

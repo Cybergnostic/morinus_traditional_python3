@@ -4,7 +4,7 @@ import math, houses, util
 
 class RegiomontanianSpeculum:
     """Calculates Regiomontanian Speculum for an object"""
-    LON, LAT, RA, DECL, RMD, RHD, ZD, POLE, Q, W, CMP = range(11)
+    LON, LAT, RA, DECL, RMD, RHD, ZD, POLE, Q, W, CMP = list(range(11))
 
     def __init__(self, placelat, ascmc2, lon, lat, ra, decl):
         ramc = ascmc2[houses.Houses.MC][houses.Houses.RA]

@@ -9,8 +9,8 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
     NAME = 1
     FORMULA = 2
     DIURNAL = 3
-    LORDTXT = u'!'
-    DIURNALTXT = u'*'
+    LORDTXT = '!'
+    DIURNALTXT = '*'
     MAX_LOTS_NUM = 40
 
     def __init__(self, parent, ID, lots, pos=wx.DefaultPosition, size=wx.DefaultSize, style=0):
@@ -29,11 +29,11 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
         self.InsertColumn(LotsListCtrl.NAME, mtexts.txtslotsdlg['Name'])
         self.InsertColumn(LotsListCtrl.FORMULA, mtexts.txtslotsdlg['Formula'], format=wx.LIST_FORMAT_CENTER)
         self.InsertColumn(LotsListCtrl.DIURNAL, mtexts.txtslotsdlg['Diurnal'], format=wx.LIST_FORMAT_CENTER)
-        items = self.lotsdata.items()
+        items = list(self.lotsdata.items())
         cnt = 0
         for key, data in items:
             cnt += 1
-            index = self.InsertStringItem(sys.maxint, data[0])
+            index = self.InsertStringItem(sys.maxsize, data[0])
             self.SetStringItem(index, LotsListCtrl.NUM, str(cnt) + '.')
             self.SetStringItem(index, LotsListCtrl.NAME, data[0])
             self.SetStringItem(index, LotsListCtrl.FORMULA, data[1])
@@ -283,7 +283,7 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
                                     if lord:
                                         fs[j] += LotsListCtrl.LORDTXT
 
-                        formula = fs[0] + u' + ' + fs[1] + u' - ' + fs[2]
+                        formula = fs[0] + ' + ' + fs[1] + ' - ' + fs[2]
                         self.SetStringItem(i, LotsListCtrl.FORMULA, formula)
 
                 for l in range(len(linestodelete)):
@@ -329,7 +329,7 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
             for i in range(num):
                 fs = (lotsobj[i][lots.Lots.FORMULA][0], lotsobj[i][lots.Lots.FORMULA][1], lotsobj[i][lots.Lots.FORMULA][2])
                 refordegs = (lotsobj[i][lots.Lots.REFORDEG][0], lotsobj[i][lots.Lots.REFORDEG][1], lotsobj[i][lots.Lots.REFORDEG][2])
-                formula = u''
+                formula = ''
                 for j in range(len(fs)):
                     if fs[j] == lots.Lots.DEG or fs[j] == lots.Lots.DEGLORD:
                         sign = refordegs[j] / chart.Chart.SIGN_DEG
@@ -344,9 +344,9 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
                     else:
                         formula += mtexts.lotstxts[fs[j]]
                     if j == 0:
-                        formula += u' + '
+                        formula += ' + '
                     if j == 1:
-                        formula += u' - '
+                        formula += ' - '
 
                 diurnal = ''
                 if lotsobj[i][3]:
@@ -419,14 +419,14 @@ class LotsListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin):
 
     def getFormula(self, txt, num):
         if num == 1:
-            idx = txt.find(u'+')
+            idx = txt.find('+')
             f = txt[0:idx]
         elif num == 2:
-            idx = txt.find(u'+')
-            idx2 = txt.find(u'-')
+            idx = txt.find('+')
+            idx2 = txt.find('-')
             f = txt[idx + 1:idx2]
         else:
-            idx = txt.find(u'-')
+            idx = txt.find('-')
             f = txt[idx + 1:]
         f = f.strip()
         return f
@@ -612,10 +612,10 @@ class LotsDlg(wx.Dialog):
         valref = self.acb.GetCurrentSelection() == lots.Lots.REF or self.acb.GetCurrentSelection() == lots.Lots.REFLORD
         valdeg = self.acb.GetCurrentSelection() == lots.Lots.DEG or self.acb.GetCurrentSelection() == lots.Lots.DEGLORD
         if not valref:
-            self.rcba.SetStringSelection(u'1')
+            self.rcba.SetStringSelection('1')
         if not valdeg:
             self.dcba.SetStringSelection(mtexts.txtscommon['Aries'])
-            self.dega.SetValue(u'0')
+            self.dega.SetValue('0')
         self.rcba.Enable(valref)
         self.dcba.Enable(valdeg)
         self.dega.Enable(valdeg)
@@ -624,10 +624,10 @@ class LotsDlg(wx.Dialog):
         valref = self.bcb.GetCurrentSelection() == lots.Lots.REF or self.bcb.GetCurrentSelection() == lots.Lots.REFLORD
         valdeg = self.bcb.GetCurrentSelection() == lots.Lots.DEG or self.bcb.GetCurrentSelection() == lots.Lots.DEGLORD
         if not valref:
-            self.rcbb.SetStringSelection(u'1')
+            self.rcbb.SetStringSelection('1')
         if not valdeg:
             self.dcbb.SetStringSelection(mtexts.txtscommon['Aries'])
-            self.degb.SetValue(u'0')
+            self.degb.SetValue('0')
         self.rcbb.Enable(valref)
         self.dcbb.Enable(valdeg)
         self.degb.Enable(valdeg)
@@ -636,10 +636,10 @@ class LotsDlg(wx.Dialog):
         valref = self.ccb.GetCurrentSelection() == lots.Lots.REF or self.ccb.GetCurrentSelection() == lots.Lots.REFLORD
         valdeg = self.ccb.GetCurrentSelection() == lots.Lots.DEG or self.ccb.GetCurrentSelection() == lots.Lots.DEGLORD
         if not valref:
-            self.rcbc.SetStringSelection(u'1')
+            self.rcbc.SetStringSelection('1')
         if not valdeg:
             self.dcbc.SetStringSelection(mtexts.txtscommon['Aries'])
-            self.degc.SetValue(u'0')
+            self.degc.SetValue('0')
         self.rcbc.Enable(valref)
         self.dcbc.Enable(valdeg)
         self.degc.Enable(valdeg)
@@ -684,7 +684,7 @@ class LotsDlg(wx.Dialog):
                 if arformcbs[i].GetCurrentSelection() == lots.Lots.REFLORD:
                     fs[i] += LotsListCtrl.LORDTXT
 
-        formula = fs[0] + u' + ' + fs[1] + u' - ' + fs[2]
+        formula = fs[0] + ' + ' + fs[1] + ' - ' + fs[2]
         diurnal = ''
         if self.diurnalckb.GetValue():
             diurnal = LotsListCtrl.DIURNALTXT
@@ -755,7 +755,7 @@ class LotsDlg(wx.Dialog):
                     if arformcbs[i].GetCurrentSelection() == lots.Lots.REFLORD:
                         fs[i] += LotsListCtrl.LORDTXT
 
-            formula = fs[0] + u' + ' + fs[1] + u' - ' + fs[2]
+            formula = fs[0] + ' + ' + fs[1] + ' - ' + fs[2]
             item = []
             item.append(name)
             item.append(formula)
@@ -790,7 +790,7 @@ class LotsDlg(wx.Dialog):
             if valref:
                 arrefcbs[i].SetStringSelection(str(item[lots.Lots.REFORDEG][i]))
             else:
-                arrefcbs[i].SetStringSelection(u'1')
+                arrefcbs[i].SetStringSelection('1')
             if valdeg:
                 degsign = item[lots.Lots.REFORDEG][i] / chart.Chart.SIGN_DEG
                 degval = item[lots.Lots.REFORDEG][i] % chart.Chart.SIGN_DEG
@@ -798,7 +798,7 @@ class LotsDlg(wx.Dialog):
                 ardegdegs[i].SetValue(str(degval))
             else:
                 ardegcbs[i].SetStringSelection(mtexts.txtscommon['Aries'])
-                ardegdegs[i].SetValue(u'0')
+                ardegdegs[i].SetValue('0')
             arrefcbs[i].Enable(valref)
             ardegcbs[i].Enable(valdeg)
             ardegdegs[i].Enable(valdeg)

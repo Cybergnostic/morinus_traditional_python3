@@ -56,7 +56,7 @@ class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin
         wx.BeginBusyCursor()
         self.load(names)
         self.Populate()
-        items = self.fixedstardata.iteritems()
+        items = iter(self.fixedstardata.items())
         for k, v in items:
             for i in range(len(sels)):
                 if sels[i]:
@@ -68,11 +68,11 @@ class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin
         self.InsertColumn(FixedStarListCtrl.NUM, '')
         self.InsertColumn(FixedStarListCtrl.NAME, mtexts.txtsfixedstarspddlg['Name'])
         self.InsertColumn(FixedStarListCtrl.NOMNAME, mtexts.txtsfixedstarspddlg['Nomencl'] + '.')
-        items = self.fixedstardata.items()
+        items = list(self.fixedstardata.items())
         cnt = 0
         for key, data in items:
             cnt += 1
-            index = self.InsertStringItem(sys.maxint, data[0])
+            index = self.InsertStringItem(sys.maxsize, data[0])
             self.SetStringItem(index, FixedStarListCtrl.NUM, str(cnt) + '.')
             self.SetStringItem(index, FixedStarListCtrl.NAME, data[0])
             self.SetStringItem(index, FixedStarListCtrl.NOMNAME, data[1])
@@ -86,13 +86,13 @@ class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin
         self.ToggleItem(evt.m_itemIndex)
 
     def OnDeselectAll(self):
-        items = self.fixedstardata.iteritems()
+        items = iter(self.fixedstardata.items())
         for k, v in items:
             if self.IsChecked(k - 1):
                 self.CheckItem(k - 1, False)
 
     def OnSelectAll(self):
-        items = self.fixedstardata.iteritems()
+        items = iter(self.fixedstardata.items())
         for k, v in items:
             if not self.IsChecked(k - 1):
                 self.CheckItem(k - 1, True)
@@ -163,7 +163,7 @@ class FixedStarsPDDlg(wx.Dialog):
 
     def getSelections(self):
         sels = []
-        keys = self.li.fixedstardata.iterkeys()
+        keys = iter(self.li.fixedstardata.keys())
         for k in keys:
             sels.append(self.li.IsChecked(k - 1))
 

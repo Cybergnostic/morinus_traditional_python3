@@ -1,8 +1,8 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, primdirs, placidiansapd, placidianutppd, regiomontanpd, campanianpd, primdirslistwnd, intvalidator, rangechecker, mtexts, util, thread, wx.lib.newevent
+import wx, chart, primdirs, placidiansapd, placidianutppd, regiomontanpd, campanianpd, primdirslistwnd, intvalidator, rangechecker, mtexts, util, _thread, wx.lib.newevent
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
-pdlock = thread.allocate_lock()
+pdlock = _thread.allocate_lock()
 
 class PrimDirsListFrame(wx.Frame):
     XSIZE = 640
@@ -253,7 +253,7 @@ class PrimDirsListFrame(wx.Frame):
         self.pds = None
         self.pdready = False
         self.abort = primdirs.AbortPD()
-        thId = thread.start_new_thread(self.calcPDs, (self.pdrange, self.direction, self))
+        thId = _thread.start_new_thread(self.calcPDs, (self.pdrange, self.direction, self))
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.OnTimer)
         self.timer.Start(500)

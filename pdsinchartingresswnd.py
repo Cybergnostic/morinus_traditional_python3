@@ -38,12 +38,12 @@ class PDsInChartIngressWnd(wx.Window):
         if os.path.isdir(self.mainfr.fpathimgs):
             dlg.SetDirectory(self.mainfr.fpathimgs)
         else:
-            dlg.SetDirectory(u'.')
+            dlg.SetDirectory('.')
         if dlg.ShowModal() == wx.ID_OK:
             dpath = dlg.GetDirectory()
             fpath = dlg.GetPath()
-            if not fpath.endswith(u'.png'):
-                fpath += u'.png'
+            if not fpath.endswith('.png'):
+                fpath += '.png'
             if os.path.isfile(fpath):
                 dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:

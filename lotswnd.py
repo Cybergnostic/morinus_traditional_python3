@@ -31,8 +31,8 @@ class LotsWnd(commonwnd.CommonWnd):
         self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
         self.fntLord = ImageFont.truetype(common.common.abc, int(5.0 / 4.0 * self.FONT_SIZE))
         self.signs = common.common.signs
-        self.deg_symbol = u'\xb0'
-        self.lordtxt = u'!'
+        self.deg_symbol = '\xb0'
+        self.lordtxt = '!'
         self.drawBkg()
 
     def getExt(self):
@@ -105,7 +105,7 @@ class LotsWnd(commonwnd.CommonWnd):
                  [
                   [
                    A, self.fntText, txtclr, [0, 0]], ['', self.fntText, txtclr, [0, 0]], ['', self.fntText, txtclr, [0, 0]]], [[B, self.fntText, txtclr, [0, 0]], ['', self.fntText, txtclr, [0, 0]], ['', self.fntText, txtclr, [0, 0]]], [[C, self.fntText, txtclr, [0, 0]], ['', self.fntText, txtclr, [0, 0]], ['', self.fntText, txtclr, [0, 0]]]]
-                delimtxts = [u' + ', u' - ', u'']
+                delimtxts = [' + ', ' - ', '']
                 for f in range(3):
                     for ff in range(3):
                         if data[idx][lots.Lots.FORMULA][f] >= lots.Lots.PLOFFS and data[idx][lots.Lots.FORMULA][f] <= lots.Lots.MOON or data[idx][lots.Lots.FORMULA][f] >= lots.Lots.PLLORDOFFS and data[idx][lots.Lots.FORMULA][f] <= lots.Lots.MOONLORD:

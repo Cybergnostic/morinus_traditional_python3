@@ -47,7 +47,7 @@ class PositionsWnd2(wx.Window):
         self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
         self.fntRText = ImageFont.truetype(common.common.abc, self.FONT_SIZE * 3 / 4)
         self.signs = common.common.signs
-        self.deg_symbol = u'\xb0'
+        self.deg_symbol = '\xb0'
         self.drawBkg()
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_RIGHT_UP, self.onPopupMenu)
@@ -61,12 +61,12 @@ class PositionsWnd2(wx.Window):
         if os.path.isdir(self.mainfr.fpathimgs):
             dlg.SetDirectory(self.mainfr.fpathimgs)
         else:
-            dlg.SetDirectory(u'.')
+            dlg.SetDirectory('.')
         if dlg.ShowModal() == wx.ID_OK:
             dpath = dlg.GetDirectory()
             fpath = dlg.GetPath()
-            if not fpath.endswith(u'.png'):
-                fpath += u'.png'
+            if not fpath.endswith('.png'):
+                fpath += '.png'
             if os.path.isfile(fpath):
                 dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:

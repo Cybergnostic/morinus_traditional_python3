@@ -221,6 +221,6 @@ class Fortune:
          okGa, okGd, lon)
 
     def printFortune(self):
-        print ''
-        print 'Fortune:'
-        print 'lon=%f lat=%f' % (self.fortune[Fortune.LON], self.fortune[Fortune.LAT])
+        print('')
+        print('Fortune:')
+        print('lon=%f lat=%f' % (self.fortune[Fortune.LON], self.fortune[Fortune.LAT]))

@@ -14,7 +14,7 @@ class FixedStars:
     def __init__(self, tjd_ut, flag, names, obl):
         self.data = []
         i = 0
-        for k in names.iterkeys():
+        for k in names.keys():
             self.data.append(['', '', 0.0, 0.0, 0.0, 0.0])
             ret, name, dat, serr = astrology.swe_fixstar_ut(',' + k, tjd_ut, flag)
             nam = name[0].strip()
@@ -54,11 +54,11 @@ class FixedStars:
     def printFixedStars(self):
         signs = ('Ari', 'Tau', 'Gem', 'Can', 'Leo', 'Vir', 'Lib', 'Sco', 'Sag', 'Cap',
                  'Aqu', 'Pis')
-        print ''
-        print 'FixedStars'
+        print('')
+        print('FixedStars')
         num = len(self.data)
         for i in range(num):
             si = int(self.data[i][FixedStars.LON] / chart.Chart.SIGN_DEG)
             d1, m1, s1 = util.decToDeg(self.data[i][FixedStars.LON])
             d2, m2, s2 = util.decToDeg(self.data[i][FixedStars.LAT])
-            print '%s %s %02d%s %02dm %02ds  %02ddeg %02dm %02ds' % (self.data[i][FixedStars.NAME], self.data[i][FixedStars.NOMNAME], d1, signs[si], m1, s1, d2, m2, s2)
+            print('%s %s %02d%s %02dm %02ds  %02ddeg %02dm %02ds' % (self.data[i][FixedStars.NAME], self.data[i][FixedStars.NOMNAME], d1, signs[si], m1, s1, d2, m2, s2))

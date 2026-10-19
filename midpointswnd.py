@@ -22,7 +22,7 @@ class MidPointsWnd(commonwnd.CommonWnd):
         self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
         self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
         self.signs = common.common.signs
-        self.deg_symbol = u'\xb0'
+        self.deg_symbol = '\xb0'
         LN = 9
         BOR = commonwnd.CommonWnd.BORDER
         self.ar = [[BOR, BOR], [BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH + self.XOFFSET, BOR], [BOR + 2 * (self.SMALL_CELL_WIDTH + self.CELL_WIDTH + self.XOFFSET), BOR], [BOR, BOR + LN * self.LINE_HEIGHT + self.YOFFSET], [BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH + self.XOFFSET, BOR + LN * self.LINE_HEIGHT + self.YOFFSET], [BOR + 2 * (self.SMALL_CELL_WIDTH + self.CELL_WIDTH + self.XOFFSET), BOR + LN * self.LINE_HEIGHT + self.YOFFSET], [BOR, BOR + (LN + 6) * self.LINE_HEIGHT + 2 * self.YOFFSET]]

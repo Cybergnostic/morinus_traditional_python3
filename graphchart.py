@@ -280,7 +280,7 @@ class GraphChart:
         self.fntDataText = ImageFont.truetype(common.common.abc, self.dataTxtSize)
         self.fntDataText2 = ImageFont.truetype(common.common.abc, self.dataTxtSize2)
         self.fntDataText3 = ImageFont.truetype(common.common.abc, self.dataTxtSize3)
-        self.deg_symbol = u'\xb0'
+        self.deg_symbol = '\xb0'
         self.hsystem = (
          mtexts.txtscommon['HSPlacidus'], mtexts.txtscommon['HSKoch'], mtexts.txtscommon['HSRegiomontanus'], mtexts.txtscommon['HSCampanus'], mtexts.txtscommon['HSEqual'], mtexts.txtscommon['HSWholeSign'], mtexts.txtscommon['HSAxial'], mtexts.txtscommon['HSMorinus'], mtexts.txtscommon['HSHorizontal'], mtexts.txtscommon['HSPagePolich'], mtexts.txtscommon['HSAlcabitus'], mtexts.txtscommon['HSPorphyrius'])
         self.ayans = {

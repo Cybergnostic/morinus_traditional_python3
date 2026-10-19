@@ -1,9 +1,9 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import json, urllib, urllib2
+import json, urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 
 class Geonames:
-    NAME, LON, LAT, COUNTRYCODE, COUNTRYNAME, ALTITUDE, GMTOFFS = range(0, 7)
+    NAME, LON, LAT, COUNTRYCODE, COUNTRYNAME, ALTITUDE, GMTOFFS = list(range(0, 7))
     username = 'morinastro'
     langs = ('en', 'ru', 'fr')
 
@@ -15,9 +15,9 @@ class Geonames:
         return
 
     def fetch_values_from_page(self, url, params, key):
-        url = url % urllib.urlencode(params)
+        url = url % urllib.parse.urlencode(params)
         try:
-            page = urllib2.urlopen(url)
+            page = urllib.request.urlopen(url)
             doc = json.loads(page.read())
             values = doc.get(key, None)
         except Exception as e:

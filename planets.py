@@ -4,8 +4,8 @@ import math, astrology, houses, placspec, regiospec, util
 
 class Planet:
     """Data of a Planet"""
-    LON, LAT, DIST, SPLON, SPLAT, SPDIST = range(0, 6)
-    RAEQU, DECLEQU, DISTEQU, SPRAEQU, SPDECLEQU, SPDISTEQU = range(0, 6)
+    LON, LAT, DIST, SPLON, SPLAT, SPDIST = list(range(0, 6))
+    RAEQU, DECLEQU, DISTEQU, SPRAEQU, SPDECLEQU, SPDISTEQU = list(range(0, 6))
     PLACIDIAN = 0
     REGIOMONTANIAN = 1
 
@@ -259,7 +259,7 @@ class Planet:
 
 class Planets:
     """Calculates the positions of the planets"""
-    SATURN, JUPITER, MARS, SUN, VENUS, MERCURY, MOON, ANODE, DNODE = range(0, 9)
+    SATURN, JUPITER, MARS, SUN, VENUS, MERCURY, MOON, ANODE, DNODE = list(range(0, 9))
     PLANETS_NUM = MOON + 1
     BODIES_NUM = DNODE + 1
 
@@ -310,7 +310,7 @@ class Planets:
             self.planets[pl].calcRegioPDsInChartsPos(ascmc2, pls[pl], placelat, obl)
 
     def printPlanets(self):
-        print ''
-        print 'Planets:'
+        print('')
+        print('Planets:')
         for i in range(Planets.BODIES_NUM):
-            print '%s: lon=%f lat=%f' % (self.planets[i].name, self.planets[i].data[Planet.LON], self.planets[i].data[Planet.LAT])
+            print('%s: lon=%f lat=%f' % (self.planets[i].name, self.planets[i].data[Planet.LON], self.planets[i].data[Planet.LAT]))

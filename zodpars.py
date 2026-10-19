@@ -67,8 +67,8 @@ class ZodPars:
         return Points(False, ((-1.0, PARALLEL), (-1.0, PARALLEL), (-1.0, PARALLEL), (-1.0, PARALLEL)))
 
     def printZodPars(self, pls):
-        print ''
-        print 'Zodiacal Parallels/ContraParallels:'
+        print('')
+        print('Zodiacal Parallels/ContraParallels:')
         for i in range(planets.Planets.PLANETS_NUM):
             if self.pars[i].valid:
                 leng = len(self.pars[i].pts)
@@ -78,4 +78,4 @@ class ZodPars:
                     txt = 'Parallel'
                     if self.pars[i].pts[j][1] == chart.Chart.CONTRAPARALLEL:
                         txt = 'Contraparallel'
-                    print '%s: lon=%f %s' % (pls.planets[i].name, self.pars[i].pts[j][0], txt)
+                    print('%s: lon=%f %s' % (pls.planets[i].name, self.pars[i].pts[j][0], txt))

@@ -4,7 +4,7 @@ import astrology, planets, util
 
 class PlanetsHelio:
     """Data of a Planet"""
-    LON, LAT, DIST, SPLON, SPLAT, SPDIST = range(0, 6)
+    LON, LAT, DIST, SPLON, SPLAT, SPDIST = list(range(0, 6))
 
     def __init__(self, tjd_ut, flag):
         self.lons = []

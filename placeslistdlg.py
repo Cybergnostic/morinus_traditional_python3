@@ -28,9 +28,9 @@ class PlaceListCtrl(wx.ListCtrl):
         self.InsertColumn(PlaceListCtrl.LAT, mtexts.txtsplacesdlg['Lat'] + '.')
         self.InsertColumn(PlaceListCtrl.ZONE, mtexts.txtsplacesdlg['Zone'])
         self.InsertColumn(PlaceListCtrl.ALT, mtexts.txtsplacesdlg['Alt'] + '.')
-        items = self.placedata.items()
+        items = list(self.placedata.items())
         for key, data in items:
-            index = self.InsertStringItem(sys.maxint, data[0])
+            index = self.InsertStringItem(sys.maxsize, data[0])
             self.SetStringItem(index, PlaceListCtrl.PLACE, data[0])
             self.SetStringItem(index, PlaceListCtrl.COUNTRY, data[1])
             self.SetStringItem(index, PlaceListCtrl.LON, data[2])
@@ -69,27 +69,27 @@ class PlaceListCtrl(wx.ListCtrl):
     def load(self, li):
         idx = 1
         for it in li:
-            dirtxt = u'E'
+            dirtxt = 'E'
             lon = it[geonames.Geonames.LON]
             if lon < 0.0:
-                dirtxt = u'W'
+                dirtxt = 'W'
                 lon *= -1
             d, m, s = util.decToDeg(lon)
             lontxt = str(d).zfill(2) + dirtxt + str(m).zfill(2)
-            dirtxt = u'N'
+            dirtxt = 'N'
             lat = it[geonames.Geonames.LAT]
             if lat < 0.0:
-                dirtxt = u'S'
+                dirtxt = 'S'
                 lat *= -1
             d, m, s = util.decToDeg(lat)
             lattxt = str(d).zfill(2) + dirtxt + str(m).zfill(2)
             gmtoffs = it[geonames.Geonames.GMTOFFS]
-            signtxt = u'+'
+            signtxt = '+'
             if gmtoffs < 0.0:
-                signtxt = u'-'
+                signtxt = '-'
                 gmtoffs *= -1
             frac = int((gmtoffs - int(gmtoffs)) * 60.0)
-            gmtoffstxt = signtxt + str(int(gmtoffs)) + u':' + str(frac).zfill(2)
+            gmtoffstxt = signtxt + str(int(gmtoffs)) + ':' + str(frac).zfill(2)
             self.placedata[idx] = (
              it[geonames.Geonames.NAME], it[geonames.Geonames.COUNTRYNAME], lontxt, lattxt, gmtoffstxt, str(it[geonames.Geonames.ALTITUDE]))
             idx += 1

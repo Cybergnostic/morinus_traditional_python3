@@ -6,8 +6,8 @@ class Houses:
     """Calculates the cusps of the Houses"""
     HOUSE_NUM = 12
     hsystems = ('P', 'K', 'R', 'C', 'E', 'W', 'X', 'M', 'H', 'T', 'B', 'O')
-    ASC, MC, ARMC, VERTEX, EQUASC, COASC, COASC2, POLARASC = range(0, 8)
-    LON, LAT, RA, DECL = range(0, 4)
+    ASC, MC, ARMC, VERTEX, EQUASC, COASC, COASC2, POLARASC = list(range(0, 8))
+    LON, LAT, RA, DECL = list(range(0, 4))
 
     def __init__(self, tjd_ut, flag, placelat, placelon, hsys, obl, ayanopt, ayan):
         if hsys >= 0 and hsys < len(Houses.hsystems):
@@ -19,7 +19,7 @@ class Houses:
         if ayanopt != 0 and self.hsys == 5:
             del self.cusps
             cusps = [0.0]
-            sign = int(util.normalize(self.ascmc[Houses.ASC] - ayan)) / 30
+            sign = int(util.normalize(self.ascmc[Houses.ASC] - ayan)) // 30
             cusps.append(sign * 30.0)
             for i in range(2, Houses.HOUSE_NUM + 1):
                 hc = util.normalize(cusps[(i - 1)] + 30.0)
@@ -94,15 +94,15 @@ class Houses:
           self.ascmc[Houses.ASC], 0.0, ascra, ascdecl), (self.ascmc[Houses.MC], 0.0, mcra, mcdecl))
 
     def printAscMC(self):
-        print ''
-        print 'Asc: lon=%f' % self.ascmc[Houses.ASC]
-        print 'MC: lon=%f' % self.ascmc[Houses.MC]
+        print('')
+        print('Asc: lon=%f' % self.ascmc[Houses.ASC])
+        print('MC: lon=%f' % self.ascmc[Houses.MC])
 
     def printHouses(self):
         housesystems = ('Placidus', 'Koch', 'Regiomontanus', 'Campanus', 'Equal', 'Whole Sign',
                         'Axial', 'Morinus', 'Horizontal', 'Page-Polich', 'Alcabitus',
                         'Porphyrius')
-        print ''
-        print 'Selected housesystem: %s' % housesystems[self.hsys]
+        print('')
+        print('Selected housesystem: %s' % housesystems[self.hsys])
         for i in range(1, Houses.HOUSE_NUM + 1):
-            print '%d. %f' % (i, self.cusps[i])
+            print('%d. %f' % (i, self.cusps[i]))

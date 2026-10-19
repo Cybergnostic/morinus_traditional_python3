@@ -18,11 +18,11 @@ def isnum(v):
 	return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
-# FixStars.mixed maps sorted stars back to options.fixstars iteration order,
+# FixedStars.mixed maps sorted stars back to options.fixedstars iteration order,
 # which differs between Py2 (hash order) and Py3 (insertion order) for the
-# built-in defaults. Saved option files keep their pickled Py2 order, and
-# pdfixstarssel is indexed consistently with it, so this is not a behavior change.
-IGNORE = [r'/fixstars/mixed\[']
+# built-in defaults (all unselected). Saved option files keep their pickled Py2
+# order, and pdfixedstarssel is indexed consistently with it, so this is not a behavior change.
+IGNORE = [r'/fixedstars/mixed\[']
 
 
 def compare(a, b, path, diffs, rtol, atol):

@@ -94,9 +94,9 @@ class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin
         self.load()
         self.Populate()
         nset = set()
-        items = self.fixedstardata.iteritems()
+        items = iter(self.fixedstardata.items())
         for k, v in items:
-            for nomname in names.iterkeys():
+            for nomname in names.keys():
                 if v[1] == nomname and nomname not in nset:
                     if len(nset) >= FixedStarListCtrl.MAX_SEL_NUM:
                         break
@@ -112,11 +112,11 @@ class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin
         self.InsertColumn(FixedStarListCtrl.NOMNAME, mtexts.txtsfixedstarsdlg['Nomencl'] + '.')
         self.InsertColumn(FixedStarListCtrl.LON, mtexts.txtsfixedstarsdlg['Long'] + '.')
         self.InsertColumn(FixedStarListCtrl.LAT, mtexts.txtsfixedstarsdlg['Lat'] + '.')
-        items = self.fixedstardata.items()
+        items = list(self.fixedstardata.items())
         cnt = 0
         for key, data in items:
             cnt += 1
-            index = self.InsertStringItem(sys.maxint, data[0])
+            index = self.InsertStringItem(sys.maxsize, data[0])
             self.SetStringItem(index, FixedStarListCtrl.NUM, str(cnt) + '.')
             self.SetStringItem(index, FixedStarListCtrl.NAME, data[0])
             self.SetStringItem(index, FixedStarListCtrl.NOMNAME, data[1])
@@ -139,7 +139,7 @@ class FixedStarListCtrl(wx.ListCtrl, limchecklistctrlmixin.LimCheckListCtrlMixin
 
     def OnDeselectAll(self):
         self.initchecking = True
-        items = self.fixedstardata.iteritems()
+        items = iter(self.fixedstardata.items())
         for k, v in items:
             if self.IsChecked(k - 1):
                 self.CheckItem(k - 1, False)
@@ -275,7 +275,7 @@ class FixedStarsDlg(wx.Dialog):
     def check(self, names, opts):
         changed = False
         self.selnames = []
-        items = self.li.fixedstardata.iteritems()
+        items = iter(self.li.fixedstardata.items())
         for k, v in items:
             if self.li.IsChecked(k - 1):
                 self.selnames.append(v[1])

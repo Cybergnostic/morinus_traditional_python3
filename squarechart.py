@@ -25,7 +25,7 @@ class SquareChart:
         self.fntTextSmall = ImageFont.truetype(common.common.abc, 3 * self.fontSize / 4)
         self.fntTextSmaller = ImageFont.truetype(common.common.abc, self.fontSize / 2)
         self.fntRetr = ImageFont.truetype(common.common.symbols, self.symbolSize / 2)
-        self.deg_symbol = u'\xb0'
+        self.deg_symbol = '\xb0'
         self.SPACE = self.fontSize / 5
         self.LINE_HEIGHT = self.SPACE + self.fontSize + self.SPACE
         self.ayans = {0: mtexts.txtsayanamsha['None'], 1: mtexts.txtsayanamsha['FaganBradley'], 2: mtexts.txtsayanamsha['Lahiri'], 3: mtexts.txtsayanamsha['Deluce'], 4: mtexts.txtsayanamsha['Raman'], 5: mtexts.txtsayanamsha['Ushashashi'], 6: mtexts.txtsayanamsha['Krishnamurti'], 7: mtexts.txtsayanamsha['DjwhalKhul'], 8: mtexts.txtsayanamsha['Yukteshwar'], 9: mtexts.txtsayanamsha['JNBhasin'], 10: mtexts.txtsayanamsha['BabylonianKuglerI2'], 11: mtexts.txtsayanamsha['BabylonianKuglerII2'], 12: mtexts.txtsayanamsha['BabylonianKuglerIII2'], 13: mtexts.txtsayanamsha['BabylonianHuber2'], 14: mtexts.txtsayanamsha['BabylonianMercier2'], 15: mtexts.txtsayanamsha['Aldebaran15Tau2'], 16: mtexts.txtsayanamsha['Hipparchos'], 17: mtexts.txtsayanamsha['Sassanian'], 18: mtexts.txtsayanamsha['GalacticCenter0Sag2'], 19: mtexts.txtsayanamsha['J2000'], 20: mtexts.txtsayanamsha['J1900'], 21: mtexts.txtsayanamsha['B1950']}

@@ -77,15 +77,15 @@ class Antiscia:
 
     def printants(self, pls):
         anttxt = ('Antiscia', 'Contraantiscia')
-        print ''
-        print 'Antiscia:'
+        print('')
+        print('Antiscia:')
         for i in range(planets.Planets.BODIES_NUM):
-            print '%s %s %f %f %f %f' % (anttxt[self.plantiscia[i].typ], pls.planets[self.plantiscia[i].Id].name, self.plantiscia[i].lon, self.plantiscia[i].lat, self.plantiscia[i].ra, self.plantiscia[i].decl)
-            print '%s %s %f %f %f %f' % (anttxt[self.plcontraant[i].typ], pls.planets[self.plcontraant[i].Id].name, self.plcontraant[i].lon, self.plcontraant[i].lat, self.plcontraant[i].ra, self.plcontraant[i].decl)
+            print('%s %s %f %f %f %f' % (anttxt[self.plantiscia[i].typ], pls.planets[self.plantiscia[i].Id].name, self.plantiscia[i].lon, self.plantiscia[i].lat, self.plantiscia[i].ra, self.plantiscia[i].decl))
+            print('%s %s %f %f %f %f' % (anttxt[self.plcontraant[i].typ], pls.planets[self.plcontraant[i].Id].name, self.plcontraant[i].lon, self.plcontraant[i].lat, self.plcontraant[i].ra, self.plcontraant[i].decl))
 
-        print '%s %s %f %f %f %f' % (anttxt[self.lofant.typ], 'LoF', self.lofant.lon, self.lofant.lat, self.lofant.ra, self.lofant.decl)
-        print '%s %s %f %f %f %f' % (anttxt[self.lofcontraant.typ], 'LoF', self.lofcontraant.lon, self.lofcontraant.lat, self.lofcontraant.ra, self.lofcontraant.decl)
-        print '%s %s %f %f %f %f' % (anttxt[self.ascmcant[0].typ], 'Asc', self.ascmcant[0].lon, self.ascmcant[0].lat, self.ascmcant[0].ra, self.ascmcant[0].decl)
-        print '%s %s %f %f %f %f' % (anttxt[self.ascmcant[1].typ], 'MC', self.ascmcant[1].lon, self.ascmcant[1].lat, self.ascmcant[1].ra, self.ascmcant[1].decl)
-        print '%s %s %f %f %f %f' % (anttxt[self.ascmccontraant[0].typ], 'Asc', self.ascmccontraant[0].lon, self.ascmccontraant[0].lat, self.ascmccontraant[0].ra, self.ascmccontraant[0].decl)
-        print '%s %s %f %f %f %f' % (anttxt[self.ascmccontraant[1].typ], 'MC', self.ascmccontraant[1].lon, self.ascmccontraant[1].lat, self.ascmccontraant[1].ra, self.ascmccontraant[1].decl)
+        print('%s %s %f %f %f %f' % (anttxt[self.lofant.typ], 'LoF', self.lofant.lon, self.lofant.lat, self.lofant.ra, self.lofant.decl))
+        print('%s %s %f %f %f %f' % (anttxt[self.lofcontraant.typ], 'LoF', self.lofcontraant.lon, self.lofcontraant.lat, self.lofcontraant.ra, self.lofcontraant.decl))
+        print('%s %s %f %f %f %f' % (anttxt[self.ascmcant[0].typ], 'Asc', self.ascmcant[0].lon, self.ascmcant[0].lat, self.ascmcant[0].ra, self.ascmcant[0].decl))
+        print('%s %s %f %f %f %f' % (anttxt[self.ascmcant[1].typ], 'MC', self.ascmcant[1].lon, self.ascmcant[1].lat, self.ascmcant[1].ra, self.ascmcant[1].decl))
+        print('%s %s %f %f %f %f' % (anttxt[self.ascmccontraant[0].typ], 'Asc', self.ascmccontraant[0].lon, self.ascmccontraant[0].lat, self.ascmccontraant[0].ra, self.ascmccontraant[0].decl))
+        print('%s %s %f %f %f %f' % (anttxt[self.ascmccontraant[1].typ], 'MC', self.ascmccontraant[1].lon, self.ascmccontraant[1].lat, self.ascmccontraant[1].ra, self.ascmccontraant[1].decl))

@@ -26,7 +26,7 @@ static PyObject* astrology_swe_calc(PyObject *self, PyObject *args)
 		return NULL;
 
 	double xx[6];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_calc(tjd, ipl, iflag, xx, serr);
 
 	return Py_BuildValue("(l)(dddddd)(s)", ret, xx[0], xx[1], xx[2], xx[3], xx[4], xx[5], serr);
@@ -43,7 +43,7 @@ static PyObject* astrology_swe_calc_ut(PyObject *self, PyObject *args)
 		return NULL;
 
 	double xx[6];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_calc_ut(tjd_ut, ipl, iflag, xx, serr);
 
 	return Py_BuildValue("(l)(dddddd)(s)", ret, xx[0], xx[1], xx[2], xx[3], xx[4], xx[5], serr);
@@ -61,7 +61,7 @@ static PyObject* astrology_swe_fixstar(PyObject *self, PyObject *args)
 		return NULL;
 
 	double xx[6];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_fixstar(star, tjd, iflag, xx, serr);
 
 	return Py_BuildValue("(l)(dddddd)(s)", ret, xx[0], xx[1], xx[2], xx[3], xx[4], xx[5], serr);
@@ -77,11 +77,11 @@ static PyObject* astrology_swe_fixstar_ut(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "sdi", &star, &tjd_ut, &iflag))
 		return NULL;
 
-	char st[64];
+	char st[64] = "";
   	strncpy(st, star, 63);
 
 	double xx[6];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_fixstar_ut(&st[0], tjd_ut, iflag, xx, serr);
 
 	return Py_BuildValue("(l)(s)(dddddd)(s)", ret, st, xx[0], xx[1], xx[2], xx[3], xx[4], xx[5], serr);
@@ -96,10 +96,10 @@ static PyObject* astrology_swe_fixstar_mag(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s", &star))
 		return NULL;
 
-	char st[64];
+	char st[64] = "";
   	strncpy(st, star, 63);
 	double mag;
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 
 	int ret = swe_fixstar_mag(st, &mag, serr);
 
@@ -152,7 +152,7 @@ static PyObject* astrology_swe_get_planet_name(PyObject *self, PyObject *args)
 {
 	int ipl;
 //	char* spname;
-	char spname[32];
+	char spname[32] = "";
 
 //	if (!PyArg_ParseTuple(args, "is", &ipl, &spname))
 	if (!PyArg_ParseTuple(args, "i", &ipl))
@@ -251,7 +251,7 @@ static PyObject* astrology_swe_heliacal_ut(PyObject *self, PyObject *args)
 		return NULL;
 
 	double dret[50];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_heliacal_ut(tjd_start, geopos, atm, obs, objname, eventtype, helflag, dret, serr);
 
 	return Py_BuildValue("(l)(dddddddddddddddddddddddddddddddddddddddddddddddddd)(s)", ret, dret[0], dret[1], dret[2], dret[3], dret[4], dret[5], dret[6], dret[7], dret[8], dret[9], dret[10], dret[11], dret[12], dret[13], dret[14], dret[15], dret[16], dret[17], dret[18], dret[19], dret[20], dret[21], dret[22], dret[23], dret[24], dret[25], dret[26], dret[27], dret[28], dret[29], dret[30], dret[32], dret[32], dret[33], dret[34], dret[35], dret[36], dret[37], dret[38], dret[39], dret[40], dret[41], dret[42], dret[43], dret[44], dret[45], dret[46], dret[47], dret[48], dret[49], serr);
@@ -325,7 +325,7 @@ static PyObject* astrology_swe_utc_to_jd(PyObject *self, PyObject *args)
 		return NULL;
 
 	double dret[2];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	swe_utc_to_jd(y, m, d, h, mi, s, calflag, dret, serr);
 
 	return Py_BuildValue("(dd)(s)", dret[0], dret[1], serr);
@@ -424,7 +424,7 @@ static PyObject* astrology_swe_house_pos(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "dddidd", &armc, &geolat, &eps, &hsys, &xpin[0], &xpin[1]))
 		return NULL;
 
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	double ret = swe_house_pos(armc, geolat, eps, hsys, xpin, serr);
 
 	return Py_BuildValue("ds", ret, serr);
@@ -445,7 +445,7 @@ static PyObject* astrology_swe_gauquelin_sector(PyObject *self, PyObject *args)
 		return NULL;
 
 	double dgsect;
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	double ret = swe_gauquelin_sector(tjd_ut, ipl, starname, iflag, imeth, geopos, atpress, attemp, &dgsect, serr);
 
 	return Py_BuildValue("dds", ret, dgsect, serr);
@@ -463,7 +463,7 @@ static PyObject* astrology_swe_sol_eclipse_where(PyObject *self, PyObject *args)
 		return NULL;
 
 	double geopos[2], attr[20];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_sol_eclipse_where(tjd_ut, ifl, geopos, attr, serr);
 
 	return Py_BuildValue("(l)(dd)(dddddddddddddddddddd)(s)", ret, geopos[0], geopos[1], attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7], attr[8], attr[9], attr[10], attr[11], attr[12], attr[13], attr[14], attr[15], attr[16], attr[17], attr[18], attr[19], serr);
@@ -480,7 +480,7 @@ static PyObject* astrology_swe_lun_occult_where(PyObject *self, PyObject *args)
 		return NULL;
 
 	double geopos[2], attr[20];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_lun_occult_where(tjd, ipl, starname, ifl, geopos, attr, serr);
 
 	return Py_BuildValue("(l)(dd)(dddddddddddddddddddd)(s)", ret, geopos[0], geopos[1], attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7], attr[8], attr[9], attr[10], attr[11], attr[12], attr[13], attr[14], attr[15], attr[16], attr[17], attr[18], attr[19], serr);
@@ -497,7 +497,7 @@ static PyObject* astrology_swe_sol_eclipse_how(PyObject *self, PyObject *args)
 		return NULL;
 
 	double attr[20];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_sol_eclipse_how(tjd, ifl, geopos, attr, serr);
 
 	return Py_BuildValue("(l)(dddddddddddddddddddd)(s)", ret, attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7], attr[8], attr[9], attr[10], attr[11], attr[12], attr[13], attr[14], attr[15], attr[16], attr[17], attr[18], attr[19], serr);
@@ -515,7 +515,7 @@ static PyObject* astrology_swe_sol_eclipse_when_loc(PyObject *self, PyObject *ar
 		return NULL;
 
 	double tret[10], attr[20];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_sol_eclipse_when_loc(tjd_start, ifl, geopos, tret, attr, backward, serr);
 
 	return Py_BuildValue("(l)(dddddddddd)(dddddddddddddddddddd)(s)", ret, tret[0], tret[1], tret[2], tret[3], tret[4], tret[5], tret[6], tret[7], tret[8], tret[9], attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7], attr[8], attr[9], attr[10], attr[11], attr[12], attr[13], attr[14], attr[15], attr[16], attr[17], attr[18], attr[19], serr);
@@ -533,7 +533,7 @@ static PyObject* astrology_swe_lun_occult_when_loc(PyObject *self, PyObject *arg
 		return NULL;
 
 	double tret[10], attr[20];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_lun_occult_when_loc(tjd_start, ipl, starname, ifl, geopos, tret, attr, backward, serr);
 
 	return Py_BuildValue("(l)(dddddddddd)(dddddddddddddddddddd)(s)", ret, tret[0], tret[1], tret[2], tret[3], tret[4], tret[5], tret[6], tret[7], tret[8], tret[9], attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7], attr[8], attr[9], attr[10], attr[11], attr[12], attr[13], attr[14], attr[15], attr[16], attr[17], attr[18], attr[19], serr);
@@ -551,7 +551,7 @@ static PyObject* astrology_swe_sol_eclipse_when_glob(PyObject *self, PyObject *a
 		return NULL;
 
 	double tret[10];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_sol_eclipse_when_glob(tjd_start, ifl, ifltype, tret, backward, serr);
 
 	return Py_BuildValue("(l)(dddddddddddddddddddd)(s)", ret, tret[0], tret[1], tret[2], tret[3], tret[4], tret[5], tret[6], tret[7], tret[8], tret[9], serr);
@@ -570,7 +570,7 @@ static PyObject* astrology_swe_lun_occult_when_glob(PyObject *self, PyObject *ar
 		return NULL;
 
 	double tret[10];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_lun_occult_when_glob(tjd_start, ipl, starname, ifl, ifltype, tret, backward, serr);
 
 	return Py_BuildValue("(l)(dddddddddddddddddddd)(s)", ret, tret[0], tret[1], tret[2], tret[3], tret[4], tret[5], tret[6], tret[7], tret[8], tret[9], serr);
@@ -587,7 +587,7 @@ static PyObject* astrology_swe_lun_eclipse_how(PyObject *self, PyObject *args)
 		return NULL;
 
 	double attr[20];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_lun_eclipse_how(tjd_ut, ifl, geopos, attr, serr);
 
 	return Py_BuildValue("(l)(dddddddddddddddddddd)(s)", ret, attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7], attr[8], attr[9], attr[10], attr[11], attr[12], attr[13], attr[14], attr[15], attr[16], attr[17], attr[18], attr[19], serr);
@@ -604,7 +604,7 @@ static PyObject* astrology_swe_lun_eclipse_when(PyObject *self, PyObject *args)
 		return NULL;
 
 	double tret[10];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_lun_eclipse_when(tjd_start, ifl, ifltype, &tret[0], backward, &serr[0]);
 
 	return Py_BuildValue("(l)(dddddddddd)(s)", ret, tret[0], tret[1], tret[2], tret[3], tret[4], tret[5], tret[6], tret[7], tret[8], tret[9], serr);
@@ -621,7 +621,7 @@ static PyObject* astrology_swe_pheno(PyObject *self, PyObject *args)
 		return NULL;
 
 	double attr[20];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_pheno(tjd, ipl, iflag, attr, serr);
 
 	return Py_BuildValue("(l)(dddddddddddddddddddd)(s)", ret, attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7], attr[8], attr[9], attr[10], attr[11], attr[12], attr[13], attr[14], attr[15], attr[16], attr[17], attr[18], attr[19], serr);
@@ -637,7 +637,7 @@ static PyObject* astrology_swe_pheno_ut(PyObject *self, PyObject *args)
 		return NULL;
 
 	double attr[20];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_pheno_ut(tjd_ut, ipl, iflag, attr, serr);
 
 	return Py_BuildValue("(l)(dddddddddddddddddddd)(s)", ret, attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7], attr[8], attr[9], attr[10], attr[11], attr[12], attr[13], attr[14], attr[15], attr[16], attr[17], attr[18], attr[19], serr);
@@ -727,7 +727,7 @@ static PyObject* astrology_swe_rise_trans(PyObject *self, PyObject *args)
 		return NULL;
 
 	double tret;
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_rise_trans(tjd_ut, ipl, starname, epheflag, rsmi, geopos, atpress, attemp, &tret, serr);
 
 	return Py_BuildValue("lds", ret, tret, serr);
@@ -743,7 +743,7 @@ static PyObject* astrology_swe_nod_aps(PyObject *self, PyObject *args)
 		return NULL;
 
 	double xnasc[6], xndsc[6], xperi[6], xaphe[6];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_nod_aps(tjd_et, ipl, iflag, method, xnasc, xndsc, xperi, xaphe, serr);
 
 	return Py_BuildValue("(l)(dddddd)(dddddd)(dddddd)(dddddd)(s)", ret, xnasc[0], xnasc[1], xnasc[2], xnasc[3], xnasc[4], xnasc[5], xndsc[0], xndsc[1], xndsc[2], xndsc[3], xndsc[4], xndsc[5], xperi[0], xperi[1], xperi[2], xperi[3], xperi[4], xperi[5], xaphe[0], xaphe[1], xaphe[2], xaphe[3], xaphe[4], xaphe[5], serr);
@@ -759,7 +759,7 @@ static PyObject* astrology_swe_nod_aps_ut(PyObject *self, PyObject *args)
 		return NULL;
 
 	double xnasc[6], xndsc[6], xperi[6], xaphe[6];
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_nod_aps_ut(tjd_ut, ipl, iflag, method, xnasc, xndsc, xperi, xaphe, serr);
 
 	return Py_BuildValue("(l)(dddddd)(dddddd)(dddddd)(dddddd)(s)", ret, xnasc[0], xnasc[1], xnasc[2], xnasc[3], xnasc[4], xnasc[5], xndsc[0], xndsc[1], xndsc[2], xndsc[3], xndsc[4], xndsc[5], xperi[0], xperi[1], xperi[2], xperi[3], xperi[4], xperi[5], xaphe[0], xaphe[1], xaphe[2], xaphe[3], xaphe[4], xaphe[5], serr);
@@ -793,7 +793,7 @@ static PyObject* astrology_swe_time_equ(PyObject *self, PyObject *args)
 		return NULL;
 
 	double te;
-	char serr[AS_MAXCH];
+	char serr[AS_MAXCH] = "";
 	int ret = swe_time_equ(tjd, &te, serr);
 
 	return Py_BuildValue("ids", ret, te, serr);

@@ -49,7 +49,7 @@ class Firdaria:
         for i in range(7):
             planet, years = planetaryyears[index]
             subperiodends = subperiodstart + timedelta(seconds=secs / 7)
-            print ('       {0:7}: {1}').format(pltxts[planet], subperiodstart.strftime(Firdaria.TIME_FORMAT))
+            print(('       {0:7}: {1}').format(pltxts[planet], subperiodstart.strftime(Firdaria.TIME_FORMAT)))
             subperiodstart = subperiodends
             index = self.nextIndex(index)
 
@@ -68,7 +68,7 @@ class Firdaria:
             aindex = index % len(planetaryyears)
             planet, years = planetaryyears[aindex]
             ending = datetime(starting.year + years, starting.month, starting.day)
-            print ('{0}: {1} - {2} ({3} years)').format(pltxts[planet], starting.strftime(Firdaria.TIME_FORMAT), (ending + timedelta(days=-1)).strftime(Firdaria.TIME_FORMAT), years)
+            print(('{0}: {1} - {2} ({3} years)').format(pltxts[planet], starting.strftime(Firdaria.TIME_FORMAT), (ending + timedelta(days=-1)).strftime(Firdaria.TIME_FORMAT), years))
             self.displaySubPeriods(planetaryyears, aindex, starting, ending, pltxts)
-            print ''
+            print('')
             starting = ending

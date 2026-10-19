@@ -26,9 +26,9 @@ class PlaceListCtrl(wx.ListCtrl):
         self.InsertColumn(PlaceListCtrl.LAT, mtexts.txtsplacesdlg['Lat'] + '.')
         self.InsertColumn(PlaceListCtrl.ZONE, mtexts.txtsplacesdlg['Zone'])
         self.InsertColumn(PlaceListCtrl.ALT, mtexts.txtsplacesdlg['Alt'] + '.')
-        items = self.placedata.items()
+        items = list(self.placedata.items())
         for key, data in items:
-            index = self.InsertStringItem(sys.maxint, data[0])
+            index = self.InsertStringItem(sys.maxsize, data[0])
             self.SetStringItem(index, PlaceListCtrl.PLACE, data[0])
             self.SetStringItem(index, PlaceListCtrl.LON, data[1])
             self.SetStringItem(index, PlaceListCtrl.LAT, data[2])
@@ -120,7 +120,7 @@ class PlaceListCtrl(wx.ListCtrl):
 
 
 class PlacesDlg(wx.Dialog):
-    PLUSCHOICES = (u'+', u'-')
+    PLUSCHOICES = ('+', '-')
 
     def __init__(self, parent, langid, netbook):
         pre = wx.PreDialog()
@@ -381,14 +381,14 @@ class PlacesDlg(wx.Dialog):
         if self.Validate() and self.splace.Validate() and self.szone.Validate() and self.salt.Validate():
             item = []
             item.append(self.birthplace.GetValue())
-            dirtxt = u'E'
+            dirtxt = 'E'
             if self.placerbW.GetValue():
-                dirtxt = u'W'
+                dirtxt = 'W'
             lon = self.londeg.GetValue().zfill(2) + dirtxt + self.lonmin.GetValue().zfill(2)
             item.append(lon)
-            dirtxt = u'N'
+            dirtxt = 'N'
             if self.placerbS.GetValue():
-                dirtxt = u'S'
+                dirtxt = 'S'
             lat = self.latdeg.GetValue().zfill(2) + dirtxt + self.latmin.GetValue().zfill(2)
             item.append(lat)
             sign = '+'

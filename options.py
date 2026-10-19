@@ -528,22 +528,22 @@ class Options:
         try:
             optfile = self.appearance1opt
             f = open(optfile, 'rb')
-            self.houses = pickle.load(f)
-            self.bw = pickle.load(f)
-            self.tablesize = pickle.load(f)
-            self.showterms = pickle.load(f)
-            self.showdecans = pickle.load(f)
-            self.showobject = pickle.load(f)
-            self.showfixedstarsnodes = pickle.load(f)
-            self.showfixedstarshcs = pickle.load(f)
-            self.showfixedstarslof = pickle.load(f)
-            self.showfixedstarsoutoforb = pickle.load(f)
-            self.maxascmcsize = pickle.load(f)
-            self.housesystem = pickle.load(f)
-            self.topocentric = pickle.load(f)
-            self.enableclick = pickle.load(f)
-            self.showdata = pickle.load(f)
-            self.netbook = pickle.load(f)
+            self.houses = pickle.load(f, encoding='utf-8')
+            self.bw = pickle.load(f, encoding='utf-8')
+            self.tablesize = pickle.load(f, encoding='utf-8')
+            self.showterms = pickle.load(f, encoding='utf-8')
+            self.showdecans = pickle.load(f, encoding='utf-8')
+            self.showobject = pickle.load(f, encoding='utf-8')
+            self.showfixedstarsnodes = pickle.load(f, encoding='utf-8')
+            self.showfixedstarshcs = pickle.load(f, encoding='utf-8')
+            self.showfixedstarslof = pickle.load(f, encoding='utf-8')
+            self.showfixedstarsoutoforb = pickle.load(f, encoding='utf-8')
+            self.maxascmcsize = pickle.load(f, encoding='utf-8')
+            self.housesystem = pickle.load(f, encoding='utf-8')
+            self.topocentric = pickle.load(f, encoding='utf-8')
+            self.enableclick = pickle.load(f, encoding='utf-8')
+            self.showdata = pickle.load(f, encoding='utf-8')
+            self.netbook = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -551,8 +551,8 @@ class Options:
         try:
             optfile = self.appearance2opt
             f = open(optfile, 'rb')
-            self.speculums = pickle.load(f)
-            self.intime = pickle.load(f)
+            self.speculums = pickle.load(f, encoding='utf-8')
+            self.intime = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -560,7 +560,7 @@ class Options:
         try:
             optfile = self.dignitiesopt
             f = open(optfile, 'rb')
-            self.dignities = pickle.load(f)
+            self.dignities = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -568,8 +568,8 @@ class Options:
         try:
             optfile = self.triplicitiesopt
             f = open(optfile, 'rb')
-            self.seltrip = pickle.load(f)
-            self.trips = pickle.load(f)
+            self.seltrip = pickle.load(f, encoding='utf-8')
+            self.trips = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -577,8 +577,8 @@ class Options:
         try:
             optfile = self.termsopt
             f = open(optfile, 'rb')
-            self.selterm = pickle.load(f)
-            self.terms = pickle.load(f)
+            self.selterm = pickle.load(f, encoding='utf-8')
+            self.terms = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -586,8 +586,8 @@ class Options:
         try:
             optfile = self.decansopt
             f = open(optfile, 'rb')
-            self.seldecan = pickle.load(f)
-            self.decans = pickle.load(f)
+            self.seldecan = pickle.load(f, encoding='utf-8')
+            self.decans = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -595,14 +595,14 @@ class Options:
         try:
             optfile = self.chartalmutenopt
             f = open(optfile, 'rb')
-            self.oneruler = pickle.load(f)
-            self.usedaynightorb = pickle.load(f)
-            self.dignityscores = pickle.load(f)
-            self.useaccidental = pickle.load(f)
-            self.housescores = pickle.load(f)
-            self.sunphases = pickle.load(f)
-            self.dayhourscores = pickle.load(f)
-            self.useexaltationmercury = pickle.load(f)
+            self.oneruler = pickle.load(f, encoding='utf-8')
+            self.usedaynightorb = pickle.load(f, encoding='utf-8')
+            self.dignityscores = pickle.load(f, encoding='utf-8')
+            self.useaccidental = pickle.load(f, encoding='utf-8')
+            self.housescores = pickle.load(f, encoding='utf-8')
+            self.sunphases = pickle.load(f, encoding='utf-8')
+            self.dayhourscores = pickle.load(f, encoding='utf-8')
+            self.useexaltationmercury = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -610,11 +610,11 @@ class Options:
         try:
             optfile = self.topicalandlotsopt
             f = open(optfile, 'rb')
-            self.topicals = pickle.load(f)
-            self.lots = pickle.load(f)
-            self.lotsref = pickle.load(f)
-            self.lotsvisible = pickle.load(f)
-            self.lotsusehouses = pickle.load(f)
+            self.topicals = pickle.load(f, encoding='utf-8')
+            self.lots = pickle.load(f, encoding='utf-8')
+            self.lotsref = pickle.load(f, encoding='utf-8')
+            self.lotsvisible = pickle.load(f, encoding='utf-8')
+            self.lotsusehouses = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -622,7 +622,7 @@ class Options:
         try:
             optfile = self.ayanamsaopt
             f = open(optfile, 'rb')
-            self.ayanamsha = pickle.load(f)
+            self.ayanamsha = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -630,18 +630,18 @@ class Options:
         try:
             optfile = self.colorsopt
             f = open(optfile, 'rb')
-            self.clrframe = pickle.load(f)
-            self.clrsigns = pickle.load(f)
-            self.clrAscMC = pickle.load(f)
-            self.clrhouses = pickle.load(f)
-            self.clrhousenumbers = pickle.load(f)
-            self.clraux = pickle.load(f)
-            self.clraspect = pickle.load(f)
-            self.clrplanets = pickle.load(f)
-            self.clrLoF = pickle.load(f)
-            self.clrbackground = pickle.load(f)
-            self.clrtable = pickle.load(f)
-            self.clrtexts = pickle.load(f)
+            self.clrframe = pickle.load(f, encoding='utf-8')
+            self.clrsigns = pickle.load(f, encoding='utf-8')
+            self.clrAscMC = pickle.load(f, encoding='utf-8')
+            self.clrhouses = pickle.load(f, encoding='utf-8')
+            self.clrhousenumbers = pickle.load(f, encoding='utf-8')
+            self.clraux = pickle.load(f, encoding='utf-8')
+            self.clraspect = pickle.load(f, encoding='utf-8')
+            self.clrplanets = pickle.load(f, encoding='utf-8')
+            self.clrLoF = pickle.load(f, encoding='utf-8')
+            self.clrbackground = pickle.load(f, encoding='utf-8')
+            self.clrtable = pickle.load(f, encoding='utf-8')
+            self.clrtexts = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -649,7 +649,7 @@ class Options:
         try:
             optfile = self.housesystemopt
             f = open(optfile, 'rb')
-            self.hsys = pickle.load(f)
+            self.hsys = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -657,7 +657,7 @@ class Options:
         try:
             optfile = self.nodesopt
             f = open(optfile, 'rb')
-            self.meannode = pickle.load(f)
+            self.meannode = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -665,11 +665,11 @@ class Options:
         try:
             optfile = self.orbsopt
             f = open(optfile, 'rb')
-            self.orbs = pickle.load(f)
-            self.orbsplanetspar = pickle.load(f)
-            self.orbscuspAscMC = pickle.load(f)
-            self.orbscuspH = pickle.load(f)
-            self.daynightorb = pickle.load(f)
+            self.orbs = pickle.load(f, encoding='utf-8')
+            self.orbsplanetspar = pickle.load(f, encoding='utf-8')
+            self.orbscuspAscMC = pickle.load(f, encoding='utf-8')
+            self.orbscuspH = pickle.load(f, encoding='utf-8')
+            self.daynightorb = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -677,35 +677,35 @@ class Options:
         try:
             optfile = self.primarydirsopt
             f = open(optfile, 'rb')
-            self.primarydir = pickle.load(f)
-            self.subprimarydir = pickle.load(f)
-            self.subzodiacal = pickle.load(f)
-            self.bianchini = pickle.load(f)
-            self.zodpromsigasps = pickle.load(f)
-            self.ascmchcsasproms = pickle.load(f)
-            self.pdfixedstars = pickle.load(f)
-            self.pdfixedstarssel = pickle.load(f)
-            self.pdlof = pickle.load(f)
-            self.pdsyzygy = pickle.load(f)
-            self.pdterms = pickle.load(f)
-            self.pdantiscia = pickle.load(f)
-            self.pduser = pickle.load(f)
-            self.pduserlon = pickle.load(f)
-            self.pduserlat = pickle.load(f)
-            self.pdusersouthern = pickle.load(f)
-            self.pduser2 = pickle.load(f)
-            self.pduser2lon = pickle.load(f)
-            self.pduser2lat = pickle.load(f)
-            self.pduser2southern = pickle.load(f)
-            self.sigascmc = pickle.load(f)
-            self.sighouses = pickle.load(f)
-            self.sigplanets = pickle.load(f)
-            self.promplanets = pickle.load(f)
-            self.pdaspects = pickle.load(f)
-            self.pdmidpoints = pickle.load(f)
-            self.pdparallels = pickle.load(f)
-            self.pdsecmotion = pickle.load(f)
-            self.pdsecmotioniter = pickle.load(f)
+            self.primarydir = pickle.load(f, encoding='utf-8')
+            self.subprimarydir = pickle.load(f, encoding='utf-8')
+            self.subzodiacal = pickle.load(f, encoding='utf-8')
+            self.bianchini = pickle.load(f, encoding='utf-8')
+            self.zodpromsigasps = pickle.load(f, encoding='utf-8')
+            self.ascmchcsasproms = pickle.load(f, encoding='utf-8')
+            self.pdfixedstars = pickle.load(f, encoding='utf-8')
+            self.pdfixedstarssel = pickle.load(f, encoding='utf-8')
+            self.pdlof = pickle.load(f, encoding='utf-8')
+            self.pdsyzygy = pickle.load(f, encoding='utf-8')
+            self.pdterms = pickle.load(f, encoding='utf-8')
+            self.pdantiscia = pickle.load(f, encoding='utf-8')
+            self.pduser = pickle.load(f, encoding='utf-8')
+            self.pduserlon = pickle.load(f, encoding='utf-8')
+            self.pduserlat = pickle.load(f, encoding='utf-8')
+            self.pdusersouthern = pickle.load(f, encoding='utf-8')
+            self.pduser2 = pickle.load(f, encoding='utf-8')
+            self.pduser2lon = pickle.load(f, encoding='utf-8')
+            self.pduser2lat = pickle.load(f, encoding='utf-8')
+            self.pduser2southern = pickle.load(f, encoding='utf-8')
+            self.sigascmc = pickle.load(f, encoding='utf-8')
+            self.sighouses = pickle.load(f, encoding='utf-8')
+            self.sigplanets = pickle.load(f, encoding='utf-8')
+            self.promplanets = pickle.load(f, encoding='utf-8')
+            self.pdaspects = pickle.load(f, encoding='utf-8')
+            self.pdmidpoints = pickle.load(f, encoding='utf-8')
+            self.pdparallels = pickle.load(f, encoding='utf-8')
+            self.pdsecmotion = pickle.load(f, encoding='utf-8')
+            self.pdsecmotioniter = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -713,13 +713,13 @@ class Options:
         try:
             optfile = self.primarykeysopt
             f = open(optfile, 'rb')
-            self.pdkeydyn = pickle.load(f)
-            self.pdkeyd = pickle.load(f)
-            self.pdkeys = pickle.load(f)
-            self.pdkeydeg = pickle.load(f)
-            self.pdkeymin = pickle.load(f)
-            self.pdkeysec = pickle.load(f)
-            self.useregressive = pickle.load(f)
+            self.pdkeydyn = pickle.load(f, encoding='utf-8')
+            self.pdkeyd = pickle.load(f, encoding='utf-8')
+            self.pdkeys = pickle.load(f, encoding='utf-8')
+            self.pdkeydeg = pickle.load(f, encoding='utf-8')
+            self.pdkeymin = pickle.load(f, encoding='utf-8')
+            self.pdkeysec = pickle.load(f, encoding='utf-8')
+            self.useregressive = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -727,7 +727,7 @@ class Options:
         try:
             optfile = self.syzygyopt
             f = open(optfile, 'rb')
-            self.syzmoon = pickle.load(f)
+            self.syzmoon = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -735,7 +735,7 @@ class Options:
         try:
             optfile = self.fixedstarsopt
             f = open(optfile, 'rb')
-            self.fixedstars = pickle.load(f)
+            self.fixedstars = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -743,8 +743,8 @@ class Options:
         try:
             optfile = self.profectionsopt
             f = open(optfile, 'rb')
-            self.zodprof = pickle.load(f)
-            self.usezodprojsprof = pickle.load(f)
+            self.zodprof = pickle.load(f, encoding='utf-8')
+            self.usezodprojsprof = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -752,7 +752,7 @@ class Options:
         try:
             optfile = self.firdariaopt
             f = open(optfile, 'rb')
-            self.isfirbonatti = pickle.load(f)
+            self.isfirbonatti = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -760,18 +760,18 @@ class Options:
         try:
             optfile = self.deflocationopt
             f = open(optfile, 'rb')
-            self.deflocname = pickle.load(f)
-            self.deflocplus = pickle.load(f)
-            self.defloczhour = pickle.load(f)
-            self.defloczminute = pickle.load(f)
-            self.deflocdst = pickle.load(f)
-            self.defloclondeg = pickle.load(f)
-            self.defloclonmin = pickle.load(f)
-            self.defloclatdeg = pickle.load(f)
-            self.defloclatmin = pickle.load(f)
-            self.defloceast = pickle.load(f)
-            self.deflocnorth = pickle.load(f)
-            self.deflocalt = pickle.load(f)
+            self.deflocname = pickle.load(f, encoding='utf-8')
+            self.deflocplus = pickle.load(f, encoding='utf-8')
+            self.defloczhour = pickle.load(f, encoding='utf-8')
+            self.defloczminute = pickle.load(f, encoding='utf-8')
+            self.deflocdst = pickle.load(f, encoding='utf-8')
+            self.defloclondeg = pickle.load(f, encoding='utf-8')
+            self.defloclonmin = pickle.load(f, encoding='utf-8')
+            self.defloclatdeg = pickle.load(f, encoding='utf-8')
+            self.defloclatmin = pickle.load(f, encoding='utf-8')
+            self.defloceast = pickle.load(f, encoding='utf-8')
+            self.deflocnorth = pickle.load(f, encoding='utf-8')
+            self.deflocalt = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -779,8 +779,8 @@ class Options:
         try:
             optfile = self.pdsinchartopt
             f = open(optfile, 'rb')
-            self.pdincharttyp = pickle.load(f)
-            self.pdinchartsecmotion = pickle.load(f)
+            self.pdincharttyp = pickle.load(f, encoding='utf-8')
+            self.pdinchartsecmotion = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -788,7 +788,7 @@ class Options:
         try:
             optfile = self.menuselopt
             f = open(optfile, 'rb')
-            self.menusels = pickle.load(f)
+            self.menusels = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -796,7 +796,7 @@ class Options:
         try:
             optfile = self.languagesopt
             f = open(optfile, 'rb')
-            self.langid = pickle.load(f)
+            self.langid = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -804,7 +804,7 @@ class Options:
         try:
             optfile = self.autosaveopt
             f = open(optfile, 'rb')
-            self.autosave = pickle.load(f)
+            self.autosave = pickle.load(f, encoding='utf-8')
             f.close()
         except IOError:
             res = False
@@ -815,22 +815,22 @@ class Options:
         try:
             optfile = self.appearance1opt
             f = open(optfile, 'wb')
-            pickle.dump(self.houses, f)
-            pickle.dump(self.bw, f)
-            pickle.dump(self.tablesize, f)
-            pickle.dump(self.showterms, f)
-            pickle.dump(self.showdecans, f)
-            pickle.dump(self.showobject, f)
-            pickle.dump(self.showfixedstarsnodes, f)
-            pickle.dump(self.showfixedstarshcs, f)
-            pickle.dump(self.showfixedstarslof, f)
-            pickle.dump(self.showfixedstarsoutoforb, f)
-            pickle.dump(self.maxascmcsize, f)
-            pickle.dump(self.housesystem, f)
-            pickle.dump(self.topocentric, f)
-            pickle.dump(self.enableclick, f)
-            pickle.dump(self.showdata, f)
-            pickle.dump(self.netbook, f)
+            pickle.dump(self.houses, f, 2)
+            pickle.dump(self.bw, f, 2)
+            pickle.dump(self.tablesize, f, 2)
+            pickle.dump(self.showterms, f, 2)
+            pickle.dump(self.showdecans, f, 2)
+            pickle.dump(self.showobject, f, 2)
+            pickle.dump(self.showfixedstarsnodes, f, 2)
+            pickle.dump(self.showfixedstarshcs, f, 2)
+            pickle.dump(self.showfixedstarslof, f, 2)
+            pickle.dump(self.showfixedstarsoutoforb, f, 2)
+            pickle.dump(self.maxascmcsize, f, 2)
+            pickle.dump(self.housesystem, f, 2)
+            pickle.dump(self.topocentric, f, 2)
+            pickle.dump(self.enableclick, f, 2)
+            pickle.dump(self.showdata, f, 2)
+            pickle.dump(self.netbook, f, 2)
             f.close()
             return True
         except IOError:
@@ -844,8 +844,8 @@ class Options:
         try:
             optfile = self.appearance2opt
             f = open(optfile, 'wb')
-            pickle.dump(self.speculums, f)
-            pickle.dump(self.intime, f)
+            pickle.dump(self.speculums, f, 2)
+            pickle.dump(self.intime, f, 2)
             f.close()
             return True
         except IOError:
@@ -859,7 +859,7 @@ class Options:
         try:
             optfile = self.dignitiesopt
             f = open(optfile, 'wb')
-            pickle.dump(self.dignities, f)
+            pickle.dump(self.dignities, f, 2)
             f.close()
             return True
         except IOError:
@@ -873,8 +873,8 @@ class Options:
         try:
             optfile = self.triplicitiesopt
             f = open(optfile, 'wb')
-            pickle.dump(self.seltrip, f)
-            pickle.dump(self.trips, f)
+            pickle.dump(self.seltrip, f, 2)
+            pickle.dump(self.trips, f, 2)
             f.close()
             return True
         except IOError:
@@ -888,8 +888,8 @@ class Options:
         try:
             optfile = self.termsopt
             f = open(optfile, 'wb')
-            pickle.dump(self.selterm, f)
-            pickle.dump(self.terms, f)
+            pickle.dump(self.selterm, f, 2)
+            pickle.dump(self.terms, f, 2)
             f.close()
             return True
         except IOError:
@@ -903,8 +903,8 @@ class Options:
         try:
             optfile = self.decansopt
             f = open(optfile, 'wb')
-            pickle.dump(self.seldecan, f)
-            pickle.dump(self.decans, f)
+            pickle.dump(self.seldecan, f, 2)
+            pickle.dump(self.decans, f, 2)
             f.close()
             return True
         except IOError:
@@ -918,14 +918,14 @@ class Options:
         try:
             optfile = self.chartalmutenopt
             f = open(optfile, 'wb')
-            pickle.dump(self.oneruler, f)
-            pickle.dump(self.usedaynightorb, f)
-            pickle.dump(self.dignityscores, f)
-            pickle.dump(self.useaccidental, f)
-            pickle.dump(self.housescores, f)
-            pickle.dump(self.sunphases, f)
-            pickle.dump(self.dayhourscores, f)
-            pickle.dump(self.useexaltationmercury, f)
+            pickle.dump(self.oneruler, f, 2)
+            pickle.dump(self.usedaynightorb, f, 2)
+            pickle.dump(self.dignityscores, f, 2)
+            pickle.dump(self.useaccidental, f, 2)
+            pickle.dump(self.housescores, f, 2)
+            pickle.dump(self.sunphases, f, 2)
+            pickle.dump(self.dayhourscores, f, 2)
+            pickle.dump(self.useexaltationmercury, f, 2)
             f.close()
             return True
         except IOError:
@@ -939,11 +939,11 @@ class Options:
         try:
             optfile = self.topicalandlotsopt
             f = open(optfile, 'wb')
-            pickle.dump(self.topicals, f)
-            pickle.dump(self.lots, f)
-            pickle.dump(self.lotsref, f)
-            pickle.dump(self.lotsvisible, f)
-            pickle.dump(self.lotsusehouses, f)
+            pickle.dump(self.topicals, f, 2)
+            pickle.dump(self.lots, f, 2)
+            pickle.dump(self.lotsref, f, 2)
+            pickle.dump(self.lotsvisible, f, 2)
+            pickle.dump(self.lotsusehouses, f, 2)
             f.close()
             return True
         except IOError:
@@ -957,7 +957,7 @@ class Options:
         try:
             optfile = self.ayanamsaopt
             f = open(optfile, 'wb')
-            pickle.dump(self.ayanamsha, f)
+            pickle.dump(self.ayanamsha, f, 2)
             f.close()
             return True
         except IOError:
@@ -971,18 +971,18 @@ class Options:
         try:
             optfile = self.colorsopt
             f = open(optfile, 'wb')
-            pickle.dump(self.clrframe, f)
-            pickle.dump(self.clrsigns, f)
-            pickle.dump(self.clrAscMC, f)
-            pickle.dump(self.clrhouses, f)
-            pickle.dump(self.clrhousenumbers, f)
-            pickle.dump(self.clraux, f)
-            pickle.dump(self.clraspect, f)
-            pickle.dump(self.clrplanets, f)
-            pickle.dump(self.clrLoF, f)
-            pickle.dump(self.clrbackground, f)
-            pickle.dump(self.clrtable, f)
-            pickle.dump(self.clrtexts, f)
+            pickle.dump(self.clrframe, f, 2)
+            pickle.dump(self.clrsigns, f, 2)
+            pickle.dump(self.clrAscMC, f, 2)
+            pickle.dump(self.clrhouses, f, 2)
+            pickle.dump(self.clrhousenumbers, f, 2)
+            pickle.dump(self.clraux, f, 2)
+            pickle.dump(self.clraspect, f, 2)
+            pickle.dump(self.clrplanets, f, 2)
+            pickle.dump(self.clrLoF, f, 2)
+            pickle.dump(self.clrbackground, f, 2)
+            pickle.dump(self.clrtable, f, 2)
+            pickle.dump(self.clrtexts, f, 2)
             f.close()
             return True
         except IOError:
@@ -996,7 +996,7 @@ class Options:
         try:
             optfile = self.housesystemopt
             f = open(optfile, 'wb')
-            pickle.dump(self.hsys, f)
+            pickle.dump(self.hsys, f, 2)
             f.close()
             return True
         except IOError:
@@ -1010,7 +1010,7 @@ class Options:
         try:
             optfile = self.nodesopt
             f = open(optfile, 'wb')
-            pickle.dump(self.meannode, f)
+            pickle.dump(self.meannode, f, 2)
             f.close()
             return True
         except IOError:
@@ -1024,11 +1024,11 @@ class Options:
         try:
             optfile = self.orbsopt
             f = open(optfile, 'wb')
-            pickle.dump(self.orbs, f)
-            pickle.dump(self.orbsplanetspar, f)
-            pickle.dump(self.orbscuspAscMC, f)
-            pickle.dump(self.orbscuspH, f)
-            pickle.dump(self.daynightorb, f)
+            pickle.dump(self.orbs, f, 2)
+            pickle.dump(self.orbsplanetspar, f, 2)
+            pickle.dump(self.orbscuspAscMC, f, 2)
+            pickle.dump(self.orbscuspH, f, 2)
+            pickle.dump(self.daynightorb, f, 2)
             f.close()
             return True
         except IOError:
@@ -1042,35 +1042,35 @@ class Options:
         try:
             optfile = self.primarydirsopt
             f = open(optfile, 'wb')
-            pickle.dump(self.primarydir, f)
-            pickle.dump(self.subprimarydir, f)
-            pickle.dump(self.subzodiacal, f)
-            pickle.dump(self.bianchini, f)
-            pickle.dump(self.zodpromsigasps, f)
-            pickle.dump(self.ascmchcsasproms, f)
-            pickle.dump(self.pdfixedstars, f)
-            pickle.dump(self.pdfixedstarssel, f)
-            pickle.dump(self.pdlof, f)
-            pickle.dump(self.pdsyzygy, f)
-            pickle.dump(self.pdterms, f)
-            pickle.dump(self.pdantiscia, f)
-            pickle.dump(self.pduser, f)
-            pickle.dump(self.pduserlon, f)
-            pickle.dump(self.pduserlat, f)
-            pickle.dump(self.pdusersouthern, f)
-            pickle.dump(self.pduser2, f)
-            pickle.dump(self.pduser2lon, f)
-            pickle.dump(self.pduser2lat, f)
-            pickle.dump(self.pduser2southern, f)
-            pickle.dump(self.sigascmc, f)
-            pickle.dump(self.sighouses, f)
-            pickle.dump(self.sigplanets, f)
-            pickle.dump(self.promplanets, f)
-            pickle.dump(self.pdaspects, f)
-            pickle.dump(self.pdmidpoints, f)
-            pickle.dump(self.pdparallels, f)
-            pickle.dump(self.pdsecmotion, f)
-            pickle.dump(self.pdsecmotioniter, f)
+            pickle.dump(self.primarydir, f, 2)
+            pickle.dump(self.subprimarydir, f, 2)
+            pickle.dump(self.subzodiacal, f, 2)
+            pickle.dump(self.bianchini, f, 2)
+            pickle.dump(self.zodpromsigasps, f, 2)
+            pickle.dump(self.ascmchcsasproms, f, 2)
+            pickle.dump(self.pdfixedstars, f, 2)
+            pickle.dump(self.pdfixedstarssel, f, 2)
+            pickle.dump(self.pdlof, f, 2)
+            pickle.dump(self.pdsyzygy, f, 2)
+            pickle.dump(self.pdterms, f, 2)
+            pickle.dump(self.pdantiscia, f, 2)
+            pickle.dump(self.pduser, f, 2)
+            pickle.dump(self.pduserlon, f, 2)
+            pickle.dump(self.pduserlat, f, 2)
+            pickle.dump(self.pdusersouthern, f, 2)
+            pickle.dump(self.pduser2, f, 2)
+            pickle.dump(self.pduser2lon, f, 2)
+            pickle.dump(self.pduser2lat, f, 2)
+            pickle.dump(self.pduser2southern, f, 2)
+            pickle.dump(self.sigascmc, f, 2)
+            pickle.dump(self.sighouses, f, 2)
+            pickle.dump(self.sigplanets, f, 2)
+            pickle.dump(self.promplanets, f, 2)
+            pickle.dump(self.pdaspects, f, 2)
+            pickle.dump(self.pdmidpoints, f, 2)
+            pickle.dump(self.pdparallels, f, 2)
+            pickle.dump(self.pdsecmotion, f, 2)
+            pickle.dump(self.pdsecmotioniter, f, 2)
             f.close()
             return True
         except IOError:
@@ -1084,13 +1084,13 @@ class Options:
         try:
             optfile = self.primarykeysopt
             f = open(optfile, 'wb')
-            pickle.dump(self.pdkeydyn, f)
-            pickle.dump(self.pdkeyd, f)
-            pickle.dump(self.pdkeys, f)
-            pickle.dump(self.pdkeydeg, f)
-            pickle.dump(self.pdkeymin, f)
-            pickle.dump(self.pdkeysec, f)
-            pickle.dump(self.useregressive, f)
+            pickle.dump(self.pdkeydyn, f, 2)
+            pickle.dump(self.pdkeyd, f, 2)
+            pickle.dump(self.pdkeys, f, 2)
+            pickle.dump(self.pdkeydeg, f, 2)
+            pickle.dump(self.pdkeymin, f, 2)
+            pickle.dump(self.pdkeysec, f, 2)
+            pickle.dump(self.useregressive, f, 2)
             f.close()
             return True
         except IOError:
@@ -1104,7 +1104,7 @@ class Options:
         try:
             optfile = self.syzygyopt
             f = open(optfile, 'wb')
-            pickle.dump(self.syzmoon, f)
+            pickle.dump(self.syzmoon, f, 2)
             f.close()
             return True
         except IOError:
@@ -1118,7 +1118,7 @@ class Options:
         try:
             optfile = self.fixedstarsopt
             f = open(optfile, 'wb')
-            pickle.dump(self.fixedstars, f)
+            pickle.dump(self.fixedstars, f, 2)
             f.close()
             return True
         except IOError:
@@ -1132,8 +1132,8 @@ class Options:
         try:
             optfile = self.profectionsopt
             f = open(optfile, 'wb')
-            pickle.dump(self.zodprof, f)
-            pickle.dump(self.usezodprojsprof, f)
+            pickle.dump(self.zodprof, f, 2)
+            pickle.dump(self.usezodprojsprof, f, 2)
             f.close()
             return True
         except IOError:
@@ -1147,7 +1147,7 @@ class Options:
         try:
             optfile = self.firdariaopt
             f = open(optfile, 'wb')
-            pickle.dump(self.isfirbonatti, f)
+            pickle.dump(self.isfirbonatti, f, 2)
             f.close()
             return True
         except IOError:
@@ -1161,18 +1161,18 @@ class Options:
         try:
             optfile = self.deflocationopt
             f = open(optfile, 'wb')
-            pickle.dump(self.deflocname, f)
-            pickle.dump(self.deflocplus, f)
-            pickle.dump(self.defloczhour, f)
-            pickle.dump(self.defloczminute, f)
-            pickle.dump(self.deflocdst, f)
-            pickle.dump(self.defloclondeg, f)
-            pickle.dump(self.defloclonmin, f)
-            pickle.dump(self.defloclatdeg, f)
-            pickle.dump(self.defloclatmin, f)
-            pickle.dump(self.defloceast, f)
-            pickle.dump(self.deflocnorth, f)
-            pickle.dump(self.deflocalt, f)
+            pickle.dump(self.deflocname, f, 2)
+            pickle.dump(self.deflocplus, f, 2)
+            pickle.dump(self.defloczhour, f, 2)
+            pickle.dump(self.defloczminute, f, 2)
+            pickle.dump(self.deflocdst, f, 2)
+            pickle.dump(self.defloclondeg, f, 2)
+            pickle.dump(self.defloclonmin, f, 2)
+            pickle.dump(self.defloclatdeg, f, 2)
+            pickle.dump(self.defloclatmin, f, 2)
+            pickle.dump(self.defloceast, f, 2)
+            pickle.dump(self.deflocnorth, f, 2)
+            pickle.dump(self.deflocalt, f, 2)
             f.close()
             return True
         except IOError:
@@ -1186,8 +1186,8 @@ class Options:
         try:
             optfile = self.pdsinchartopt
             f = open(optfile, 'wb')
-            pickle.dump(self.pdincharttyp, f)
-            pickle.dump(self.pdinchartsecmotion, f)
+            pickle.dump(self.pdincharttyp, f, 2)
+            pickle.dump(self.pdinchartsecmotion, f, 2)
             f.close()
             return True
         except IOError:
@@ -1201,7 +1201,7 @@ class Options:
         try:
             optfile = self.menuselopt
             f = open(optfile, 'wb')
-            pickle.dump(self.menusels, f)
+            pickle.dump(self.menusels, f, 2)
             f.close()
             return True
         except IOError:
@@ -1215,7 +1215,7 @@ class Options:
         try:
             optfile = self.languagesopt
             f = open(optfile, 'wb')
-            pickle.dump(self.langid, f)
+            pickle.dump(self.langid, f, 2)
             f.close()
             return True
         except IOError:
@@ -1229,7 +1229,7 @@ class Options:
         try:
             optfile = self.autosaveopt
             f = open(optfile, 'wb')
-            pickle.dump(self.autosave, f)
+            pickle.dump(self.autosave, f, 2)
             f.close()
             return True
         except IOError:

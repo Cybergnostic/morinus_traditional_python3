@@ -247,8 +247,8 @@ class Syzygy:
     def printSyzygy(self):
         signs = ('Ari', 'Tau', 'Gem', 'Can', 'Leo', 'Vir', 'Lib', 'Sco', 'Sag', 'Cap',
                  'Aqu', 'Pis')
-        print ''
-        print 'Syzygy:'
+        print('')
+        print('Syzygy:')
         txt = 'Full Moon'
         if self.newmoon:
             txt = 'New Moon'
@@ -256,9 +256,9 @@ class Syzygy:
         h, m, s = util.decToDeg(self.time.time)
         si = int(self.lon / chart.Chart.SIGN_DEG)
         d, mi, se = util.decToDeg(self.lon)
-        print '%s %d.%02d.%02d %02d:%02d:%02d lon=%02d%s %02dm %02ds' % (txt, ye, mo, da, h, m, s, d, signs[si], mi, se)
-        print ''
-        print 'Syzygy2:'
+        print('%s %d.%02d.%02d %02d:%02d:%02d lon=%02d%s %02dm %02ds' % (txt, ye, mo, da, h, m, s, d, signs[si], mi, se))
+        print('')
+        print('Syzygy2:')
         txt = 'New Moon'
         if self.newmoon:
             txt = 'Full Moon'
@@ -266,4 +266,4 @@ class Syzygy:
         h, m, s = util.decToDeg(self.time2.time)
         si = int(self.lon2 / chart.Chart.SIGN_DEG)
         d, mi, se = util.decToDeg(self.lon2)
-        print '%s %d.%02d.%02d %02d:%02d:%02d lon=%02d%s %02dm %02ds' % (txt, ye, mo, da, h, m, s, d, signs[si], mi, se)
+        print('%s %d.%02d.%02d %02d:%02d:%02d lon=%02d%s %02dm %02ds' % (txt, ye, mo, da, h, m, s, d, signs[si], mi, se))

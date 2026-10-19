@@ -1,10 +1,10 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import sys, wx, rangechecker, intvalidator, findtime, mtexts, util, thread, wx.lib.newevent
+import sys, wx, rangechecker, intvalidator, findtime, mtexts, util, _thread, wx.lib.newevent
 FTReadyEvent, EVT_FTREADY = wx.lib.newevent.NewEvent()
 FTDataReadyEvent, EVT_FTDATAREADY = wx.lib.newevent.NewEvent()
 FTYearEvent, EVT_FTYEAR = wx.lib.newevent.NewEvent()
-ftlock = thread.allocate_lock()
+ftlock = _thread.allocate_lock()
 
 class AbortFindTime:
 
@@ -756,7 +756,7 @@ class FindTimeDlg(wx.Dialog):
                 self.ar = None
             self.ftready = False
             self.abort = AbortFindTime()
-            thId = thread.start_new_thread(self.calcCharts, (self.bc, ftdata, ftdatause, ftdataascmc, ftdataapprox, self))
+            thId = _thread.start_new_thread(self.calcCharts, (self.bc, ftdata, ftdatause, ftdataascmc, ftdataapprox, self))
             self.timer = wx.Timer(self)
             self.Bind(wx.EVT_TIMER, self.OnTimer)
             self.timer.Start(500)

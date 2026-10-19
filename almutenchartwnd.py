@@ -50,7 +50,7 @@ class AlmutenChartWnd(commonwnd.CommonWnd):
         self.fntLargeText = ImageFont.truetype(common.common.abc, 5 * self.FONT_SIZE / 4)
         self.fntBigText = ImageFont.truetype(common.common.abc, 3 * self.FONT_SIZE / 2)
         self.signs = common.common.signs
-        self.deg_symbol = u'\xb0'
+        self.deg_symbol = '\xb0'
         self.drawBkg()
 
     def getExt(self):

@@ -22,9 +22,9 @@ class RowsListCtrl(wx.ListCtrl):
             self.InsertColumn(RowsListCtrl.TYPE, mtexts.txtsalmutentopicalsdlg['Type'])
             self.InsertColumn(RowsListCtrl.VALUE, mtexts.txtsalmutentopicalsdlg['Value'])
             self.InsertColumn(RowsListCtrl.RULERSHIP, mtexts.txtsalmutentopicalsdlg['Rulership'])
-        items = self.rowsdata.items()
+        items = list(self.rowsdata.items())
         for key, data in items:
-            index = self.InsertStringItem(sys.maxint, data[0])
+            index = self.InsertStringItem(sys.maxsize, data[0])
             self.SetStringItem(index, RowsListCtrl.TYPE, data[0])
             self.SetStringItem(index, RowsListCtrl.VALUE, data[1])
             self.SetStringItem(index, RowsListCtrl.RULERSHIP, data[2])
@@ -58,7 +58,7 @@ class RowsListCtrl(wx.ListCtrl):
     def OnAdd(self, item):
         num = self.GetItemCount()
         if num >= RowsListCtrl.MAX_ROW_NUM:
-            txt = mtexts.txtsalmutentopicalsdlg['MaxRowNum'] + str(RowsListCtrl.MAX_ROW_NUM) + u'!'
+            txt = mtexts.txtsalmutentopicalsdlg['MaxRowNum'] + str(RowsListCtrl.MAX_ROW_NUM) + '!'
             dlgm = wx.MessageDialog(self, txt, '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
@@ -337,7 +337,7 @@ class AlmutenTopicalsDlg(wx.Dialog):
     def OnAdd(self, event):
         num = len(self.namestxt)
         if num >= AlmutenTopicalsDlg.MAX_TOPICAL_NUM:
-            txt = mtexts.txtsalmutentopicalsdlg['MaxTopicalNum'] + str(RowsListCtrl.MAX_TOPICAL_NUM) + u'!'
+            txt = mtexts.txtsalmutentopicalsdlg['MaxTopicalNum'] + str(RowsListCtrl.MAX_TOPICAL_NUM) + '!'
             dlgm = wx.MessageDialog(self, mtexts.txts[''], '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()

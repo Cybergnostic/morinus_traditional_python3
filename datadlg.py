@@ -6,7 +6,7 @@ wx.HelpProvider.Set(provider)
 
 class DataDlg(wx.Dialog):
     PLUSCHOICES = (
-     u'+', u'-')
+     '+', '-')
 
     def __init__(self, parent, langid, netbook):
         self.langid = langid
@@ -306,9 +306,9 @@ class DataDlg(wx.Dialog):
                 zone = pdlg.li.getColumnText(pdlg.li.currentItem, placesdlg.PlaceListCtrl.ZONE)
                 alt = pdlg.li.getColumnText(pdlg.li.currentItem, placesdlg.PlaceListCtrl.ALT)
                 self.birthplace.SetValue(place.strip())
-                idx = lon.find(u'E')
+                idx = lon.find('E')
                 if idx == -1:
-                    idx = lon.find(u'W')
+                    idx = lon.find('W')
                     self.placerbW.SetValue(True)
                 else:
                     self.placerbE.SetValue(True)
@@ -320,9 +320,9 @@ class DataDlg(wx.Dialog):
                 if lon[idx] == '0':
                     idx += 1
                 self.lonmin.SetValue(lon[idx:])
-                idx = lat.find(u'N')
+                idx = lat.find('N')
                 if idx == -1:
-                    idx = lat.find(u'S')
+                    idx = lat.find('S')
                     self.placerbS.SetValue(True)
                 else:
                     self.placerbN.SetValue(True)

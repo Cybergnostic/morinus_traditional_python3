@@ -32,7 +32,7 @@ class MunPosWnd(commonwnd.CommonWnd):
         self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
         self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
         self.signs = common.common.signs
-        self.deg_symbol = u'\xb0'
+        self.deg_symbol = '\xb0'
         self.drawBkg()
 
     def getExt(self):

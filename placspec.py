@@ -5,7 +5,7 @@ import houses
 class PlacidianSpeculum:
 	'''Calculates Placidian Speculum for an object'''
 
-	LON, LAT, RA, DECL, ADLAT, SA, MD, HD, TH, HOD, PMP, ADPH, POH, AODO = range(0, 14)
+	LON, LAT, RA, DECL, ADLAT, SA, MD, HD, TH, HOD, PMP, ADPH, POH, AODO = list(range(0, 14))
 
 
 	def __init__(self, placelat, ascmc2, lon, lat, ra, decl):

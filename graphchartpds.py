@@ -68,7 +68,7 @@ class GraphChartPDs:
         self.fntBigText = ImageFont.truetype(common.common.abc, self.symbolSize / 4 * 3)
         self.fntMorinus2 = ImageFont.truetype(common.common.symbols, self.symbolSize / 4 * 3)
         self.fntRetr = ImageFont.truetype(common.common.symbols, self.symbolSize / 2)
-        self.deg_symbol = u'\xb0'
+        self.deg_symbol = '\xb0'
         return
 
     def drawChart(self):

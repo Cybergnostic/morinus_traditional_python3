@@ -24,7 +24,7 @@ class SpeedsWnd(commonwnd.CommonWnd):
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
         self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
         self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
-        self.deg_symbol = u'\xb0'
+        self.deg_symbol = '\xb0'
         self.drawBkg()
 
     def getExt(self):

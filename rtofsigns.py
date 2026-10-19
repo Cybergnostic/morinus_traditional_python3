@@ -23,4 +23,4 @@ class RiseTimeOfSigns:
 
     def printrts(self):
         for i in range(6):
-            print self.riseofsigns[i]
+            print(self.riseofsigns[i])

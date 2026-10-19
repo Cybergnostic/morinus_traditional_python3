@@ -10,7 +10,7 @@ class FindTime:
     OVER = 3
     CIRCLE = 360.0
     OFFSET = 20.0
-    YEAR, MONTH, DAY, TIME, JD = range(5)
+    YEAR, MONTH, DAY, TIME, JD = list(range(5))
 
     def __init__(self, bc, ftdata, ftdatause, ftdataascmc, ftdataapprox, abort, win):
         self.bc = bc

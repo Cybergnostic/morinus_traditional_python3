@@ -4,7 +4,7 @@ import math, astrology, chart, planets, mtexts, util
 
 class RiseSet:
     """Computes Rise/Set times (for the birthday)"""
-    RISE, MC, SET, IC = range(0, 4)
+    RISE, MC, SET, IC = list(range(0, 4))
     Angles = [
      astrology.SE_CALC_RISE, astrology.SE_CALC_MTRANSIT, astrology.SE_CALC_SET, astrology.SE_CALC_ITRANSIT]
 
@@ -53,9 +53,9 @@ class RiseSet:
     def printRiseSet(self, pls):
         numangles = len(RiseSet.Angles)
         txt = [mtexts.txtsriseset['Rise'], mtexts.txtsriseset['MC'], mtexts.txtsriseset['Set'], mtexts.txtsriseset['IC']]
-        print ''
-        print 'Rise/Set times:'
+        print('')
+        print('Rise/Set times:')
         for i in range(planets.Planets.PLANETS_NUM):
             for angle in range(numangles):
                 h, m, s = util.decToDeg(self.times[i][angle])
-                print '%s: %s: %02d:%02d:%02d' % (pls.planets[i].name, txt[angle], h, m, s)
+                print('%s: %s: %02d:%02d:%02d' % (pls.planets[i].name, txt[angle], h, m, s))

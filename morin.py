@@ -1,19 +1,19 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, os, pickle, datetime, Image, astrology, houses, planets, chart, common, datadlg, findtimedlg, graphephemdlg, graphephemframe, ephemcalc, userpd, primdirs, mtexts, util, placidiansapd, placidianutppd, regiomontanpd, campanianpd, positionsframe, almutenchartframe, almutentopicalsframe, almutenzodsframe, miscframe, munposframe, antisciaframe, aspectsframe, midpointsframe, risesetframe, speedsframe, zodparsframe, fixedstarsframe, fixedstarsaspectsframe, lotsframe, stripframe, hoursframe, transitmframe, profstableframe, userframe, firdariaframe, primdirslistframe, primdirsrangedlg, graphchart, squarechartframe, transits, revolutions, revolutionsdlg, transitframe, suntransits, suntransitsdlg, timespacedlg, secdir, secdirframe, secdirdlg, stepperdlg, electionstepperdlg, electionsframe, profdlg, profections, munprofections, profectionsframe, profectionstepperdlg, profectiontablestepperdlg, proftabledlg, heliochartframe, appearance1dlg, appearance2dlg, dignitiesdlg, triplicitiesdlg, termsdlg, decansdlg, almutenchartdlg, almutentopicalsdlg, colorsdlg, primarydirsdlg, primarydirsdlgsmall, primarykeysdlg, pdsinchartdlgopts, syzygydlg, lotsdlg, fixedstarsdlg, profdlgopts, firdariadlg, defaultlocdlg, ayanamshadlg, transitmdlg, orbsdlg, menuseldlg, menuseldlg2, langsdlg, htmlhelpframe, math, thread, wx.lib.newevent
+import wx, os, pickle, datetime, Image, astrology, houses, planets, chart, common, datadlg, findtimedlg, graphephemdlg, graphephemframe, ephemcalc, userpd, primdirs, mtexts, util, placidiansapd, placidianutppd, regiomontanpd, campanianpd, positionsframe, almutenchartframe, almutentopicalsframe, almutenzodsframe, miscframe, munposframe, antisciaframe, aspectsframe, midpointsframe, risesetframe, speedsframe, zodparsframe, fixedstarsframe, fixedstarsaspectsframe, lotsframe, stripframe, hoursframe, transitmframe, profstableframe, userframe, firdariaframe, primdirslistframe, primdirsrangedlg, graphchart, squarechartframe, transits, revolutions, revolutionsdlg, transitframe, suntransits, suntransitsdlg, timespacedlg, secdir, secdirframe, secdirdlg, stepperdlg, electionstepperdlg, electionsframe, profdlg, profections, munprofections, profectionsframe, profectionstepperdlg, profectiontablestepperdlg, proftabledlg, heliochartframe, appearance1dlg, appearance2dlg, dignitiesdlg, triplicitiesdlg, termsdlg, decansdlg, almutenchartdlg, almutentopicalsdlg, colorsdlg, primarydirsdlg, primarydirsdlgsmall, primarykeysdlg, pdsinchartdlgopts, syzygydlg, lotsdlg, fixedstarsdlg, profdlgopts, firdariadlg, defaultlocdlg, ayanamshadlg, transitmdlg, orbsdlg, menuseldlg, menuseldlg2, langsdlg, htmlhelpframe, math, _thread, wx.lib.newevent
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
-pdlock = thread.allocate_lock()
+pdlock = _thread.allocate_lock()
 
 class MFrame(wx.Frame):
     XSIZE = 512
     YSIZE = 512
-    MHOROSCOPE, MTABLES, MCHARTS, MOPTIONS, MHELP = range(0, 5)
+    MHOROSCOPE, MTABLES, MCHARTS, MOPTIONS, MHELP = list(range(0, 5))
 
     def __init__(self, parent, id, title, opts):
         wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(MFrame.XSIZE, MFrame.YSIZE))
         self.fpath = ''
-        self.fpathhors = u'Hors'
-        self.fpathimgs = u'Images'
+        self.fpathhors = 'Hors'
+        self.fpathimgs = 'Images'
         self.title = title
         self.origtitle = title
         self.hortitle = title
@@ -24,7 +24,7 @@ class MFrame(wx.Frame):
         self.SetBackgroundColour(self.options.clrbackground)
         self.dirty = False
         menubar = wx.MenuBar()
-        self.ID_New, self.ID_Data, self.ID_HereAndNow, self.ID_Load, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_FindTime, self.ID_Ephemeris, self.ID_Close, self.ID_Exit = range(100, 111)
+        self.ID_New, self.ID_Data, self.ID_HereAndNow, self.ID_Load, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_FindTime, self.ID_Ephemeris, self.ID_Close, self.ID_Exit = list(range(100, 111))
         self.horbase = 100
         if True in self.options.menusels[MFrame.MHOROSCOPE]:
             self.mhoros = wx.Menu()
@@ -67,7 +67,7 @@ class MFrame(wx.Frame):
                 self.mhoros.Append(self.ID_Exit, mtexts.menutxts['HMExit'], mtexts.menutxts['HMExitDoc'])
                 self.Bind(wx.EVT_MENU, self.onExit, id=self.ID_Exit)
             menubar.Append(self.mhoros, mtexts.menutxts['MHoroscope'])
-        self.ID_Positions, self.ID_TAlmutens, self.ID_AlmutenZodiacal, self.ID_AlmutenChart, self.ID_AlmutenTopical, self.ID_Misc, self.ID_MunPos, self.ID_Antiscia, self.ID_Aspects, self.ID_Midpoints, self.ID_RiseSet, self.ID_Speeds, self.ID_ZodPars, self.ID_FixedStars, self.ID_FixedStarsAsps, self.ID_Lots, self.ID_Strip, self.ID_PlanetaryHours, self.ID_ExactTransits, self.ID_Profections, self.ID_UserSpeculum, self.ID_Firdaria, self.ID_PrimaryDirs = range(120, 143)
+        self.ID_Positions, self.ID_TAlmutens, self.ID_AlmutenZodiacal, self.ID_AlmutenChart, self.ID_AlmutenTopical, self.ID_Misc, self.ID_MunPos, self.ID_Antiscia, self.ID_Aspects, self.ID_Midpoints, self.ID_RiseSet, self.ID_Speeds, self.ID_ZodPars, self.ID_FixedStars, self.ID_FixedStarsAsps, self.ID_Lots, self.ID_Strip, self.ID_PlanetaryHours, self.ID_ExactTransits, self.ID_Profections, self.ID_UserSpeculum, self.ID_Firdaria, self.ID_PrimaryDirs = list(range(120, 143))
         self.tabbase = 120
         if True in self.options.menusels[MFrame.MTABLES]:
             self.mtables = wx.Menu()
@@ -141,7 +141,7 @@ class MFrame(wx.Frame):
                 self.mtables.Append(self.ID_PrimaryDirs, mtexts.menutxts['TMPrimaryDirs'], mtexts.menutxts['TMPrimaryDirsDoc'])
                 self.Bind(wx.EVT_MENU, self.onPrimaryDirs, id=self.ID_PrimaryDirs)
             menubar.Append(self.mtables, mtexts.menutxts['MTable'])
-        self.ID_Transits, self.ID_Revolutions, self.ID_SunTransits, self.ID_SecondaryDirs, self.ID_Elections, self.ID_SquareChart, self.ID_SyzygyChart, self.ID_SyzygyChart2, self.ID_ProfectionsChart, self.ID_HelioChart = range(150, 160)
+        self.ID_Transits, self.ID_Revolutions, self.ID_SunTransits, self.ID_SecondaryDirs, self.ID_Elections, self.ID_SquareChart, self.ID_SyzygyChart, self.ID_SyzygyChart2, self.ID_ProfectionsChart, self.ID_HelioChart = list(range(150, 160))
         self.chartsbase = 150
         if True in self.options.menusels[MFrame.MCHARTS]:
             self.mcharts = wx.Menu()
@@ -176,10 +176,10 @@ class MFrame(wx.Frame):
                 self.mcharts.Append(self.ID_HelioChart, mtexts.menutxts['PMHelioChart'], mtexts.menutxts['PMHelioChartDoc'])
                 self.Bind(wx.EVT_MENU, self.onHelioChart, id=self.ID_HelioChart)
             menubar.Append(self.mcharts, mtexts.menutxts['MCharts'])
-        self.ID_Appearance1, self.ID_Appearance2, self.ID_Dignities, self.ID_MinorDignities, self.ID_Triplicities, self.ID_Terms, self.ID_Decans, self.ID_Almutens, self.ID_ChartAlmuten, self.ID_Topical, self.ID_Ayanamsha, self.ID_Colors, self.ID_HouseSystem, self.ID_Nodes, self.ID_Orbs, self.ID_PrimaryDirsOpt, self.ID_PrimaryKeys, self.ID_PDsInChartOpt, self.ID_LotsOpt, self.ID_Syzygy, self.ID_FixedStarsOpt, self.ID_ProfectionsOpt, self.ID_FirdariaOpt, self.ID_DefLocationOpt, self.ID_MenuSel, self.ID_MenuSelFirst, self.ID_MenuSelSecond, self.ID_Languages, self.ID_AutoSaveOpts, self.ID_SaveOpts, self.ID_Reload = range(170, 201)
+        self.ID_Appearance1, self.ID_Appearance2, self.ID_Dignities, self.ID_MinorDignities, self.ID_Triplicities, self.ID_Terms, self.ID_Decans, self.ID_Almutens, self.ID_ChartAlmuten, self.ID_Topical, self.ID_Ayanamsha, self.ID_Colors, self.ID_HouseSystem, self.ID_Nodes, self.ID_Orbs, self.ID_PrimaryDirsOpt, self.ID_PrimaryKeys, self.ID_PDsInChartOpt, self.ID_LotsOpt, self.ID_Syzygy, self.ID_FixedStarsOpt, self.ID_ProfectionsOpt, self.ID_FirdariaOpt, self.ID_DefLocationOpt, self.ID_MenuSel, self.ID_MenuSelFirst, self.ID_MenuSelSecond, self.ID_Languages, self.ID_AutoSaveOpts, self.ID_SaveOpts, self.ID_Reload = list(range(170, 201))
         self.optsbase = 170
         if True in self.options.menusels[MFrame.MOPTIONS]:
-            self.ID_Housesystem1, self.ID_Housesystem2, self.ID_Housesystem3, self.ID_Housesystem4, self.ID_Housesystem5, self.ID_Housesystem6, self.ID_Housesystem7, self.ID_Housesystem8, self.ID_Housesystem9, self.ID_Housesystem10, self.ID_Housesystem11, self.ID_Housesystem12 = range(1050, 1062)
+            self.ID_Housesystem1, self.ID_Housesystem2, self.ID_Housesystem3, self.ID_Housesystem4, self.ID_Housesystem5, self.ID_Housesystem6, self.ID_Housesystem7, self.ID_Housesystem8, self.ID_Housesystem9, self.ID_Housesystem10, self.ID_Housesystem11, self.ID_Housesystem12 = list(range(1050, 1062))
             self.ID_NodeMean = 1070
             self.ID_NodeTrue = 1071
             self.hsbase = self.ID_Housesystem1
@@ -497,12 +497,12 @@ class MFrame(wx.Frame):
         if os.path.isdir(self.fpathhors):
             dlg.SetDirectory(self.fpathhors)
         else:
-            dlg.SetDirectory(u'.')
+            dlg.SetDirectory('.')
         if dlg.ShowModal() == wx.ID_OK:
             dpath = dlg.GetDirectory()
             fpath = dlg.GetPath()
-            if not fpath.endswith(u'.hor'):
-                fpath += u'.hor'
+            if not fpath.endswith('.hor'):
+                fpath += '.hor'
             chrt = self.subLoad(fpath, dpath)
             if chrt != None:
                 self.horoscope = chrt
@@ -524,33 +524,33 @@ class MFrame(wx.Frame):
         chrt = None
         try:
             f = open(fpath, 'rb')
-            name = pickle.load(f)
-            male = pickle.load(f)
-            htype = pickle.load(f)
-            bc = pickle.load(f)
-            year = pickle.load(f)
-            month = pickle.load(f)
-            day = pickle.load(f)
-            hour = pickle.load(f)
-            minute = pickle.load(f)
-            second = pickle.load(f)
-            cal = pickle.load(f)
-            zt = pickle.load(f)
-            plus = pickle.load(f)
-            zh = pickle.load(f)
-            zm = pickle.load(f)
-            daylightsaving = pickle.load(f)
-            placename = pickle.load(f)
-            deglon = pickle.load(f)
-            minlon = pickle.load(f)
-            seclon = pickle.load(f)
-            east = pickle.load(f)
-            deglat = pickle.load(f)
-            minlat = pickle.load(f)
-            seclat = pickle.load(f)
-            north = pickle.load(f)
-            altitude = pickle.load(f)
-            notes = pickle.load(f)
+            name = pickle.load(f, encoding='utf-8')
+            male = pickle.load(f, encoding='utf-8')
+            htype = pickle.load(f, encoding='utf-8')
+            bc = pickle.load(f, encoding='utf-8')
+            year = pickle.load(f, encoding='utf-8')
+            month = pickle.load(f, encoding='utf-8')
+            day = pickle.load(f, encoding='utf-8')
+            hour = pickle.load(f, encoding='utf-8')
+            minute = pickle.load(f, encoding='utf-8')
+            second = pickle.load(f, encoding='utf-8')
+            cal = pickle.load(f, encoding='utf-8')
+            zt = pickle.load(f, encoding='utf-8')
+            plus = pickle.load(f, encoding='utf-8')
+            zh = pickle.load(f, encoding='utf-8')
+            zm = pickle.load(f, encoding='utf-8')
+            daylightsaving = pickle.load(f, encoding='utf-8')
+            placename = pickle.load(f, encoding='utf-8')
+            deglon = pickle.load(f, encoding='utf-8')
+            minlon = pickle.load(f, encoding='utf-8')
+            seclon = pickle.load(f, encoding='utf-8')
+            east = pickle.load(f, encoding='utf-8')
+            deglat = pickle.load(f, encoding='utf-8')
+            minlat = pickle.load(f, encoding='utf-8')
+            seclat = pickle.load(f, encoding='utf-8')
+            north = pickle.load(f, encoding='utf-8')
+            altitude = pickle.load(f, encoding='utf-8')
+            notes = pickle.load(f, encoding='utf-8')
             f.close()
             if not self.splash and not dontclose:
                 self.closeChildWnds()
@@ -572,12 +572,12 @@ class MFrame(wx.Frame):
         if os.path.isdir(self.fpathhors):
             dlg.SetDirectory(self.fpathhors)
         else:
-            dlg.SetDirectory(u'.')
+            dlg.SetDirectory('.')
         if dlg.ShowModal() == wx.ID_OK:
             dpath = dlg.GetDirectory()
             fpath = dlg.GetPath()
-            if not fpath.endswith(u'.hor'):
-                fpath += u'.hor'
+            if not fpath.endswith('.hor'):
+                fpath += '.hor'
             if os.path.isfile(fpath):
                 dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:
@@ -586,33 +586,33 @@ class MFrame(wx.Frame):
                 dlgm.Destroy()
             try:
                 f = open(fpath, 'wb')
-                pickle.dump(self.horoscope.name, f)
-                pickle.dump(self.horoscope.male, f)
-                pickle.dump(self.horoscope.htype, f)
-                pickle.dump(self.horoscope.time.bc, f)
-                pickle.dump(self.horoscope.time.origyear, f)
-                pickle.dump(self.horoscope.time.origmonth, f)
-                pickle.dump(self.horoscope.time.origday, f)
-                pickle.dump(self.horoscope.time.hour, f)
-                pickle.dump(self.horoscope.time.minute, f)
-                pickle.dump(self.horoscope.time.second, f)
-                pickle.dump(self.horoscope.time.cal, f)
-                pickle.dump(self.horoscope.time.zt, f)
-                pickle.dump(self.horoscope.time.plus, f)
-                pickle.dump(self.horoscope.time.zh, f)
-                pickle.dump(self.horoscope.time.zm, f)
-                pickle.dump(self.horoscope.time.daylightsaving, f)
-                pickle.dump(self.horoscope.place.placename, f)
-                pickle.dump(self.horoscope.place.deglon, f)
-                pickle.dump(self.horoscope.place.minlon, f)
-                pickle.dump(self.horoscope.place.seclon, f)
-                pickle.dump(self.horoscope.place.east, f)
-                pickle.dump(self.horoscope.place.deglat, f)
-                pickle.dump(self.horoscope.place.minlat, f)
-                pickle.dump(self.horoscope.place.seclat, f)
-                pickle.dump(self.horoscope.place.north, f)
-                pickle.dump(self.horoscope.place.altitude, f)
-                pickle.dump(self.horoscope.notes, f)
+                pickle.dump(self.horoscope.name, f, 2)
+                pickle.dump(self.horoscope.male, f, 2)
+                pickle.dump(self.horoscope.htype, f, 2)
+                pickle.dump(self.horoscope.time.bc, f, 2)
+                pickle.dump(self.horoscope.time.origyear, f, 2)
+                pickle.dump(self.horoscope.time.origmonth, f, 2)
+                pickle.dump(self.horoscope.time.origday, f, 2)
+                pickle.dump(self.horoscope.time.hour, f, 2)
+                pickle.dump(self.horoscope.time.minute, f, 2)
+                pickle.dump(self.horoscope.time.second, f, 2)
+                pickle.dump(self.horoscope.time.cal, f, 2)
+                pickle.dump(self.horoscope.time.zt, f, 2)
+                pickle.dump(self.horoscope.time.plus, f, 2)
+                pickle.dump(self.horoscope.time.zh, f, 2)
+                pickle.dump(self.horoscope.time.zm, f, 2)
+                pickle.dump(self.horoscope.time.daylightsaving, f, 2)
+                pickle.dump(self.horoscope.place.placename, f, 2)
+                pickle.dump(self.horoscope.place.deglon, f, 2)
+                pickle.dump(self.horoscope.place.minlon, f, 2)
+                pickle.dump(self.horoscope.place.seclon, f, 2)
+                pickle.dump(self.horoscope.place.east, f, 2)
+                pickle.dump(self.horoscope.place.deglat, f, 2)
+                pickle.dump(self.horoscope.place.minlat, f, 2)
+                pickle.dump(self.horoscope.place.seclat, f, 2)
+                pickle.dump(self.horoscope.place.north, f, 2)
+                pickle.dump(self.horoscope.place.altitude, f, 2)
+                pickle.dump(self.horoscope.notes, f, 2)
                 self.fpathhors = dpath
                 self.fpath = fpath
                 self.handleCaption(True)
@@ -633,12 +633,12 @@ class MFrame(wx.Frame):
         if os.path.isdir(self.fpathimgs):
             dlg.SetDirectory(self.fpathimgs)
         else:
-            dlg.SetDirectory(u'.')
+            dlg.SetDirectory('.')
         if dlg.ShowModal() == wx.ID_OK:
             dpath = dlg.GetDirectory()
             fpath = dlg.GetPath()
-            if not fpath.endswith(u'.png'):
-                fpath += u'.png'
+            if not fpath.endswith('.png'):
+                fpath += '.png'
             if os.path.isfile(fpath):
                 dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:
@@ -654,13 +654,13 @@ class MFrame(wx.Frame):
         if os.path.isdir(self.fpathhors):
             dlg.SetDirectory(self.fpathhors)
         else:
-            dlg.SetDirectory(u'.')
+            dlg.SetDirectory('.')
         chrt = None
         if dlg.ShowModal() == wx.ID_OK:
             dpath = dlg.GetDirectory()
             fpath = dlg.GetPath()
-            if not fpath.endswith(u'.hor'):
-                fpath += u'.hor'
+            if not fpath.endswith('.hor'):
+                fpath += '.hor'
             chrt = self.subLoad(fpath, dpath, True)
         dlg.Destroy()
         if chrt != None:
@@ -1036,7 +1036,7 @@ class MFrame(wx.Frame):
                 self.pds = None
                 self.pdready = False
                 self.abort = primdirs.AbortPD()
-                thId = thread.start_new_thread(self.calcPDs, (pdrange, direction, self))
+                thId = _thread.start_new_thread(self.calcPDs, (pdrange, direction, self))
                 self.timer = wx.Timer(self)
                 self.Bind(wx.EVT_TIMER, self.OnTimer)
                 self.timer.Start(500)

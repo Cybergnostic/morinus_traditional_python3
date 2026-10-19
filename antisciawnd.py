@@ -30,7 +30,7 @@ class AntisciaWnd(commonwnd.CommonWnd):
         self.fntSymbol = ImageFont.truetype(common.common.symbols, 3 * self.FONT_SIZE / 2)
         self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
         self.signs = common.common.signs
-        self.deg_symbol = u'\xb0'
+        self.deg_symbol = '\xb0'
         self.drawBkg()
 
     def getExt(self):

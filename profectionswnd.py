@@ -3,7 +3,7 @@
 import wx, profectionsmonthly, planets, houses, chart, fortune, proftablemondlg, profstablemonframe, common, commonwnd, Image, ImageDraw, ImageFont, util, mtexts
 
 class ProfectionsWnd(commonwnd.CommonWnd):
-    AGE, DATE, ASC, MC, SUN, MOON, FORTUNE, SATURN, JUPITER, MARS, VENUS, MERCURY = range(0, 12)
+    AGE, DATE, ASC, MC, SUN, MOON, FORTUNE, SATURN, JUPITER, MARS, VENUS, MERCURY = list(range(0, 12))
 
     def __init__(self, parent, age, pchrts, options, mainfr, mainsigs, id=-1, size=wx.DefaultSize):
         commonwnd.CommonWnd.__init__(self, parent, pchrts[0][0], options, id, size)
@@ -35,7 +35,7 @@ class ProfectionsWnd(commonwnd.CommonWnd):
         self.fntMorinus = ImageFont.truetype(common.common.symbols, self.FONT_SIZE)
         self.fntText = ImageFont.truetype(common.common.abc, self.FONT_SIZE)
         self.signs = common.common.signs
-        self.deg_symbol = u'\xb0'
+        self.deg_symbol = '\xb0'
         self.Bind(wx.EVT_LEFT_UP, self.onMonthly)
         self.drawBkg()
 

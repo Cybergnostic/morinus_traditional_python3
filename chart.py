@@ -28,7 +28,7 @@ class Time:
     """Time of Birth"""
     GREGORIAN = 0
     JULIAN = 1
-    ZONE, GREENWICH, LOCALMEAN, LOCALAPPARENT = range(0, 4)
+    ZONE, GREENWICH, LOCALMEAN, LOCALAPPARENT = list(range(0, 4))
     HOURSPERDAY = 24.0
 
     def __init__(self, year, month, day, hour, minute, second, bc, cal, zt, plus, zh, zm, daylightsaving, place, full=True):
@@ -151,18 +151,18 @@ class Asp:
 
 class Chart:
     """Represents a horoscope"""
-    RADIX, SOLAR, LUNAR, REVOLUTION, TRANSIT, HORARY, PROFECTION, PDINCHART = range(0, 8)
+    RADIX, SOLAR, LUNAR, REVOLUTION, TRANSIT, HORARY, PROFECTION, PDINCHART = list(range(0, 8))
     SIGN_NUM = 12
     SIGN_DEG = 30
-    ARIES, TAURUS, GEMINI, CANCER, LEO, VIRGO, LIBRA, SCORPIO, SAGITTARIUS, CAPRICORNUS, AQUARIUS, PISCES = range(0, 12)
-    NONE, CONIUNCTIO, SEXTIL, QUADRAT, TRIGON, OPPOSITIO, PARALLEL, CONTRAPARALLEL, RAPTPAR, RAPTCONTRAPAR, MIDPOINT = range(-1, 10)
-    DOMICIL, EXAL, PEREGRIN, CASUS, EXIL = range(0, 5)
+    ARIES, TAURUS, GEMINI, CANCER, LEO, VIRGO, LIBRA, SCORPIO, SAGITTARIUS, CAPRICORNUS, AQUARIUS, PISCES = list(range(0, 12))
+    NONE, CONIUNCTIO, SEXTIL, QUADRAT, TRIGON, OPPOSITIO, PARALLEL, CONTRAPARALLEL, RAPTPAR, RAPTCONTRAPAR, MIDPOINT = list(range(-1, 10))
+    DOMICIL, EXAL, PEREGRIN, CASUS, EXIL = list(range(0, 5))
     Aspects = [
      0.0, 60.0, 90.0, 120.0, 180.0]
     ASPECT_NUM = len(Aspects)
     Signboundaries = (
      (0.0, 30.0), (30.0, 60.0), (60.0, 90.0), (90.0, 120.0), (120.0, 150.0), (150.0, 180.0), (180.0, 210.0), (210.0, 240.0), (240.0, 270.0), (270.0, 300.0), (300.0, 330.0), (330.0, 360.0))
-    SHOWNONE, SHOWFIXEDSTARS, SHOWANTIS, SHOWLOTS, SHOWDODECATEMORIA = range(0, 5)
+    SHOWNONE, SHOWFIXEDSTARS, SHOWANTIS, SHOWLOTS, SHOWDODECATEMORIA = list(range(0, 5))
 
     def __init__(self, name, male, time, place, htype, notes, opts, full=True, nolat=False):
         self.name = name
@@ -619,7 +619,7 @@ class Chart:
         if pid < planets.Planets.PLANETS_NUM:
             isdom = self.options.dignities[pid][0][sign]
             isexal = self.options.dignities[pid][1][sign]
-            oppsign = sign + Chart.SIGN_NUM / 2
+            oppsign = sign + Chart.SIGN_NUM // 2
             if oppsign >= Chart.SIGN_NUM:
                 oppsign -= Chart.SIGN_NUM
             isexil = self.options.dignities[pid][0][oppsign]
@@ -717,8 +717,8 @@ class Chart:
 
     def printAspMatrices(self):
         partxt = ('none', 'parallel', 'contrap')
-        print ''
-        print 'Aspects:'
+        print('')
+        print('Aspects:')
         for i in range(planets.Planets.BODIES_NUM):
             for j in range(planets.Planets.BODIES_NUM):
                 if j > i:
@@ -734,9 +734,9 @@ class Chart:
                         appltxt = 'sepa'
                         if self.aspmatrix[j][i].appl:
                             appltxt = 'appl'
-                        print '%s - %s: type=%d diff=%f %s par=%s %s' % (self.planets.planets[i].name, self.planets.planets[j].name, self.aspmatrix[j][i].typ, self.aspmatrix[j][i].dif, appltxt, partxt[plel], extxt)
+                        print('%s - %s: type=%d diff=%f %s par=%s %s' % (self.planets.planets[i].name, self.planets.planets[j].name, self.aspmatrix[j][i].typ, self.aspmatrix[j][i].dif, appltxt, partxt[plel], extxt))
 
-        print ''
+        print('')
         ascmcname = ('Asc', 'MC')
         num = len(self.aspmatrixAscMC)
         for i in range(planets.Planets.PLANETS_NUM):
@@ -748,9 +748,9 @@ class Chart:
                     appltxt = 'sepa'
                     if self.aspmatrixAscMC[j][i].appl:
                         appltxt = 'appl'
-                    print '%s - %s: type=%d %s diff=%f  %s' % (self.planets.planets[i].name, ascmcname[j], self.aspmatrixAscMC[j][i].typ, appltxt, self.aspmatrixAscMC[j][i].dif, extxt)
+                    print('%s - %s: type=%d %s diff=%f  %s' % (self.planets.planets[i].name, ascmcname[j], self.aspmatrixAscMC[j][i].typ, appltxt, self.aspmatrixAscMC[j][i].dif, extxt))
 
-        print ''
+        print('')
         hname = ('1', '2', '3', '10', '11', '12')
         hnum = 6
         for i in range(planets.Planets.PLANETS_NUM):
@@ -762,9 +762,9 @@ class Chart:
                     appltxt = 'sepa'
                     if self.aspmatrixH[j][i].appl:
                         appltxt = 'appl'
-                    print '%s - %s: type=%d %s diff=%f  %s' % (self.planets.planets[i].name, hname[j], self.aspmatrixH[j][i].typ, appltxt, self.aspmatrixH[j][i].dif, extxt)
+                    print('%s - %s: type=%d %s diff=%f  %s' % (self.planets.planets[i].name, hname[j], self.aspmatrixH[j][i].typ, appltxt, self.aspmatrixH[j][i].dif, extxt))
 
-        print ''
+        print('')
         for i in range(planets.Planets.PLANETS_NUM):
             if self.aspmatrixLoF[i].typ != Chart.NONE:
                 extxt = ''
@@ -773,11 +773,11 @@ class Chart:
                 appltxt = 'sepa'
                 if self.aspmatrixLoF[i].appl:
                     appltxt = 'appl'
-                print '%s - %s: type=%d %s diff=%f  %s' % (self.planets.planets[i].name, 'LoF', self.aspmatrixLoF[i].typ, appltxt, self.aspmatrixLoF[i].dif, extxt)
+                print('%s - %s: type=%d %s diff=%f  %s' % (self.planets.planets[i].name, 'LoF', self.aspmatrixLoF[i].typ, appltxt, self.aspmatrixLoF[i].dif, extxt))
 
     def printFixedStarAspMatrices(self):
-        print ''
-        print 'FixedStars aspects:'
+        print('')
+        print('FixedStars aspects:')
         leng = len(self.fsaspmatrix)
         for i in range(leng):
             subleng = len(self.fsaspmatrix[i][1])
@@ -787,9 +787,9 @@ class Chart:
                     txt += ' '
                 txt += self.planets.planets[self.fsaspmatrix[i][1][j]].name
 
-            print '%s %s' % (self.fixedstars.data[self.fsaspmatrix[i][0]][fixedstars.FixedStars.NAME], txt)
+            print('%s %s' % (self.fixedstars.data[self.fsaspmatrix[i][0]][fixedstars.FixedStars.NAME], txt))
 
-        print ''
+        print('')
         angles = ('Asc', 'Desc', 'MC', 'IC')
         leng = len(self.fsaspmatrixAngles)
         for i in range(leng):
@@ -800,9 +800,9 @@ class Chart:
                     txt += ' '
                 txt += angles[self.fsaspmatrixAngles[i][1][j]]
 
-            print '%s %s' % (self.fixedstars.data[self.fsaspmatrixAngles[i][0]][fixedstars.FixedStars.NAME], txt)
+            print('%s %s' % (self.fixedstars.data[self.fsaspmatrixAngles[i][0]][fixedstars.FixedStars.NAME], txt))
 
-        print ''
+        print('')
         hcs = ('HC1', 'HC2', 'HC3', 'HC4', 'HC5', 'HC6', 'HC7', 'HC8', 'HC9', 'HC10',
                'HC11', 'HC12')
         leng = len(self.fsaspmatrixHCs)
@@ -814,9 +814,9 @@ class Chart:
                     txt += ' '
                 txt += hcs[self.fsaspmatrixHCs[i][1][j]]
 
-            print '%s %s' % (self.fixedstars.data[self.fsaspmatrixHCs[i][0]][fixedstars.FixedStars.NAME], txt)
+            print('%s %s' % (self.fixedstars.data[self.fsaspmatrixHCs[i][0]][fixedstars.FixedStars.NAME], txt))
 
-        print ''
+        print('')
         leng = len(self.fsaspmatrixLoF)
         txt = ''
         for i in range(leng):
@@ -824,4 +824,4 @@ class Chart:
                 txt += ' '
             txt += self.fixedstars.data[i][fixedstars.FixedStars.NAME]
 
-        print '%s %s' % ('LoF: ', txt)
+        print('%s %s' % ('LoF: ', txt))

@@ -1,8 +1,8 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
-import wx, chart, positionswnd, positionswnd2, transitwnd, squarechartwnd, primdirs, placidiansapd, placidianutppd, regiomontanpd, primdirsrevlistframe, wx.lib.newevent, thread, mtexts
+import wx, chart, positionswnd, positionswnd2, transitwnd, squarechartwnd, primdirs, placidiansapd, placidianutppd, regiomontanpd, primdirsrevlistframe, wx.lib.newevent, _thread, mtexts
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
-pdlock = thread.allocate_lock()
+pdlock = _thread.allocate_lock()
 
 class TransitFrame(wx.Frame):
     XSIZE = 512
@@ -128,7 +128,7 @@ class TransitFrame(wx.Frame):
         self.pds = None
         self.pdready = False
         self.abort = primdirs.AbortPD()
-        thId = thread.start_new_thread(self.calcPDs, (pdrange, direction, self))
+        thId = _thread.start_new_thread(self.calcPDs, (pdrange, direction, self))
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.OnTimer)
         self.timer.Start(500)

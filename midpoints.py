@@ -90,9 +90,9 @@ class MidPoints:
                     self.midslat.append(Mid(i, j, 0.0, 0.0))
 
     def printMidPoints(self, mids, pls):
-        print ''
-        print 'Midpoints:'
+        print('')
+        print('Midpoints:')
         for x in mids:
             d, m, s = util.decToDeg(x.m)
             dl, ml, sl = util.decToDeg(x.lat)
-            print '%s-%s: %d %d\'%d"  %d %d\'%d"' % (pls.planets[x.p1].name, pls.planets[x.p2].name, d, m, s, dl, ml, sl)
+            print('%s-%s: %d %d\'%d"  %d %d\'%d"' % (pls.planets[x.p1].name, pls.planets[x.p2].name, d, m, s, dl, ml, sl))
