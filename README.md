@@ -54,24 +54,38 @@ Swiss Ephemeris through `swe_compat.py`.
 
 ## Install
 
+### Windows
+
+Download `MorinusTraditional-…-setup.exe` from the
+[latest release](https://github.com/Cybergnostic/morinus_traditional_python3/releases/latest)
+and run it. It installs for the current user (no administrator rights needed)
+into `%LOCALAPPDATA%\Programs\Morinus Traditional`, where your settings,
+charts and places are kept; updating or uninstalling leaves them in place.
+The `.zip` in the same release is the same program to run from any folder.
+
+### Linux
+
 You need Python 3.10 or newer, wxPython 4.2, Pillow, and a C compiler with the
-Python headers for the Swiss Ephemeris module. Automatic time zones also need
-the `timezonefinder` package (`pip install timezonefinder`); the time-zone
-data itself comes with Linux.
+Python headers for the Swiss Ephemeris module:
 
 | Distribution    | Command |
 |-----------------|---------|
-| Debian / Ubuntu | `sudo apt install python3-wxgtk4.0 python3-pil python3-dev python3-setuptools gcc` |
+| Debian / Ubuntu | `sudo apt install python3-wxgtk4.0 python3-pil python3-dev python3-setuptools python3-venv gcc` |
 | Fedora          | `sudo dnf install python3-wxpython4 python3-pillow python3-devel python3-setuptools gcc` |
 | Arch            | `sudo pacman -S python-wxpython python-pillow python-setuptools gcc` |
 
-Then:
+Then, in the Morinus folder:
 
 ```sh
-./build.sh            # compiles the Swiss Ephemeris module (once)
-python3 morinus.py
-./install-desktop.sh  # optional: adds "Morinus Traditional" to the application menu
+./install.sh
 ```
+
+This sets up a Python environment in `.venv/` inside the folder (it uses the
+distribution's wxPython and Pillow and adds `timezonefinder` for automatic
+time zones, so nothing is installed into the system Python), compiles the
+Swiss Ephemeris module and adds "Morinus Traditional" to the application
+menu. Start it from the menu or with `./morinus`. Run `./install.sh` again
+after updating.
 
 Morinus runs from its folder, which must be writable: settings are kept in
 `Opts/`, charts in `Hors/`, and your place list in `Res/placedb.dat` (the
@@ -135,7 +149,7 @@ folder, since it saves options).
 
 ## Automatic time zones (birth data)
 
-Install dependencies with `pip install -r requirements.txt`. In **New Chart**
+The Windows build and `install.sh` include what this needs. In **New Chart**
 or **Edit Data**, enter the civil birth date/time and select a location
 (or enter longitude/latitude). Click **Auto time zone (date + location)**,
 review the IANA zone, standard GMT offset and daylight-saving flag, and

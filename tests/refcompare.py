@@ -25,6 +25,27 @@ def isnum(v):
 IGNORE = [r'/fixedstars/mixed\[']
 
 
+# Primary directions are sorted by arc; two directions whose arcs agree to the
+# last bits of a double are ordered by rounding noise, which differs between C
+# compilers (gcc and MSVC). Such ties are compared without regard to order.
+def align_ties(a, b, tol):
+	if len(a) != len(b) or not all(isinstance(x, dict) and isnum(x.get('arc')) for x in a + b):
+		return b
+	ident = lambda x: tuple((k, v) for k, v in sorted(x.items()) if not isinstance(v, float))
+	b = list(b)
+	i = 0
+	while i < len(b):
+		j = i + 1
+		while j < len(b) and abs(b[j]['arc'] - b[i]['arc']) <= tol:
+			j += 1
+		order = [ident(x) for x in a[i:j]]
+		run = b[i:j]
+		if sorted(order) == sorted(ident(y) for y in run):
+			b[i:j] = sorted(run, key=lambda y: order.index(ident(y)))
+		i = j
+	return b
+
+
 def compare(a, b, path, diffs, rtol, atol):
 	if any(re.search(p, path) for p in IGNORE):
 		return
@@ -40,6 +61,7 @@ def compare(a, b, path, diffs, rtol, atol):
 	elif isinstance(a, list) and isinstance(b, list):
 		if len(a) != len(b):
 			diffs.append((path+'#len', len(a), len(b)))
+		b = align_ties(a, b, atol)
 		for i, (x, y) in enumerate(zip(a, b)):
 			compare(x, y, '%s[%d]' % (path, i), diffs, rtol, atol)
 	elif a != b:

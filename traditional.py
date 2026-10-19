@@ -6,6 +6,7 @@ them on the chart, which never changes after it is created.
 """
 
 import os
+import sys
 import datetime
 
 import astrology
@@ -19,7 +20,9 @@ from hor_tools.models import ChartInput	# noqa: E402
 from hor_tools.analysis import build_reports	# noqa: E402
 from hor_tools.analysis.technical import build_natal_technical_report	# noqa: E402
 
-astro_engine.set_ephe_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'SWEP', 'Ephem'))
+# the program folder (in a packaged Windows build, the folder of Morinus.exe)
+PROGDIR = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
+astro_engine.set_ephe_path(os.path.join(PROGDIR, 'SWEP', 'Ephem'))
 
 
 class NotAvailable(Exception):
