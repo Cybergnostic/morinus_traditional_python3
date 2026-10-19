@@ -2,6 +2,7 @@
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import wx
 import wx.adv
+import traditionalwnd
 import os
 import pickle
 import datetime
@@ -238,6 +239,15 @@ class MFrame(wx.Frame):
             if self.options.menusels[MFrame.MTABLES][(self.ID_PrimaryDirs - self.tabbase - 1)]:
                 self.mtables.Append(self.ID_PrimaryDirs, mtexts.menutxts['TMPrimaryDirs'], mtexts.menutxts['TMPrimaryDirsDoc'])
                 self.Bind(wx.EVT_MENU, self.onPrimaryDirs, id=self.ID_PrimaryDirs)
+            # traditional analysis tables (always shown, not part of the menu selection settings)
+            self.ID_TradConditions, self.ID_TradRelationships, self.ID_TradTemperament = list(range(143, 146))
+            self.mtables.AppendSeparator()
+            self.mtables.Append(self.ID_TradConditions, 'Planetary conditions', 'Sect, hayz, synodic phase, stations, joys, latitude, Via Combusta, void of course')
+            self.mtables.Append(self.ID_TradRelationships, 'Reception, generosity, repulsion', 'Reception, generosity and repulsion (odbojnost)')
+            self.mtables.Append(self.ID_TradTemperament, 'Temperament', 'Temperament worksheet')
+            self.Bind(wx.EVT_MENU, lambda e: self.onTraditional(traditionalwnd.CONDITIONS), id=self.ID_TradConditions)
+            self.Bind(wx.EVT_MENU, lambda e: self.onTraditional(traditionalwnd.RELATIONSHIPS), id=self.ID_TradRelationships)
+            self.Bind(wx.EVT_MENU, lambda e: self.onTraditional(traditionalwnd.TEMPERAMENT), id=self.ID_TradTemperament)
             menubar.Append(self.mtables, mtexts.menutxts['MTable'])
         self.ID_Transits, self.ID_Revolutions, self.ID_SunTransits, self.ID_SecondaryDirs, self.ID_Elections, self.ID_SquareChart, self.ID_SyzygyChart, self.ID_SyzygyChart2, self.ID_ProfectionsChart, self.ID_HelioChart = list(range(150, 160))
         self.chartsbase = 150
@@ -862,6 +872,12 @@ class MFrame(wx.Frame):
             self.pdrangedlg.Destroy()
             self.pdrangedlg = None
         return
+
+    def onTraditional(self, kind):
+        if not self.splash:
+            wait = wx.BusyCursor()
+            frame = traditionalwnd.TraditionalFrame(self, self.title, self.horoscope, kind)
+            frame.Show(True)
 
     def onPositions(self, event):
         if not self.splash:
