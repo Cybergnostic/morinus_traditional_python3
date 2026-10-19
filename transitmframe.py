@@ -1,0 +1,12 @@
+# Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
+# bytecode; verified against the original bytecode. Original comments are not recoverable.
+import wx, transitmwnd
+
+class TransitMonthFrame(wx.Frame):
+    XSIZE = 482
+    YSIZE = 512
+
+    def __init__(self, parent, title, trans, year, month, chrt, options):
+        wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(TransitMonthFrame.XSIZE, TransitMonthFrame.YSIZE))
+        w = transitmwnd.TransitMonthWnd(self, trans, year, month, chrt, options, parent)
+        self.SetMinSize((200, 200))

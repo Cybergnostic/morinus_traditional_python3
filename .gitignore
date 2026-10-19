@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+/sweastrology*.so
+build/
+*.egg-info/
+# personal data stays out of git
+/Opts/*
+/Hors/*
+!/Hors/Morinus.hor
