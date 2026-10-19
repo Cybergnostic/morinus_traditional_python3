@@ -43,7 +43,27 @@ class LotsWnd(commonwnd.CommonWnd):
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.lordtxt = '!'
+        # lots as computed for the chart's sect; setNight() shows them for the other sect
+        self.night = LotsWnd.isNightChart(chrt)
+        self.lotsobj = chrt.lots
         self.drawBkg()
+
+    @staticmethod
+    def isNightChart(chrt):
+        """Day/night as the lot calculation decides it (chart.Chart)"""
+        if chrt.options.usedaynightorb:
+            return not chrt.abovehorizonwithorb
+        return not chrt.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
+
+    def setNight(self, night):
+        self.night = night
+        if night == LotsWnd.isNightChart(self.chart):
+            self.lotsobj = self.chart.lots
+        else:
+            c = self.chart
+            self.lotsobj = lots.Lots(self.options.lots, c.houses.ascmc, c.planets, c.houses, c.houses.cusps, c.syzygy, c.time.ph.planetaryhour, self.options, not night, c.ayanamsha)
+        self.drawBkg()
+        self.Refresh()
 
     def getExt(self):
         return mtexts.txtsabbrevs['Lot']
@@ -71,14 +91,14 @@ class LotsWnd(commonwnd.CommonWnd):
 
         x = BOR
         y = BOR + self.TITLE_HEIGHT + self.SPACE_TITLEY
-        if self.chart.lots.lots != None:
-            num = len(self.chart.lots.lots)
+        if self.lotsobj.lots != None:
+            num = len(self.lotsobj.lots)
             x = BOR
             l = 0
             for i in range(num):
                 if self.options.lotsvisible[i]:
                     y = BOR + self.TITLE_HEIGHT + self.SPACE_TITLEY + self.LINE_HEIGHT * l
-                    self.drawline(draw, x, y, self.chart.lots.lots, tableclr, i, l)
+                    self.drawline(draw, x, y, self.lotsobj.lots, tableclr, i, l)
                     l += 1
 
         wxImg = wx.Image(img.size[0], img.size[1])
@@ -158,12 +178,8 @@ class LotsWnd(commonwnd.CommonWnd):
                             lordtxt = ''
                             if data[idx][lots.Lots.FORMULA][f] == lots.Lots.LTILORD:
                                 lordtxt = self.lordtxt
-                            abovehorizonSun = self.chart.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
-                            if self.chart.options.usedaynightorb:
-                                abovehorizonSun = self.chart.abovehorizonwithorb
-                            idLTI = planets.Planets.MOON
-                            if not abovehorizonSun:
-                                idLTI = planets.Planets.SUN
+                            # Sun by day, Moon by night, as lots.Lots computes it (the original table showed them reversed)
+                            idLTI = planets.Planets.MOON if self.night else planets.Planets.SUN
                             ar[f][0][0] = common.common.planets[idLTI]
                             ar[f][0][1] = self.fntMorinus
                             ar[f][1][0] = lordtxt
@@ -188,7 +204,7 @@ class LotsWnd(commonwnd.CommonWnd):
                     ww, hh = draw.textbbox((0, 0), delimtxts[f], self.fntText)[2:]
                     wall += ww
 
-                if data[idx][lots.Lots.DIURNAL] and not self.chart.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon:
+                if data[idx][lots.Lots.DIURNAL] and self.night:
                     tmp = ar[1]
                     ar[1] = ar[2]
                     ar[2] = tmp
