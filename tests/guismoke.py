@@ -199,7 +199,13 @@ def main():
 					if not sample:
 						continue
 					need = c.GetSizeFromTextSize(c.GetTextExtent(sample))
-				elif isinstance(c, (wx.SpinCtrl, wx.Choice, wx.ComboBox, wx.Button, wx.CheckBox, wx.RadioButton, wx.StaticText, wx.Slider)):
+				elif isinstance(c, wx.Button):
+					# GTK's best size has a minimum width; what matters is the label
+					tw, th = c.GetTextExtent(c.GetLabel())
+					need = wx.Size(tw + 8, th)
+				elif isinstance(c, (wx.SpinCtrl, wx.Choice, wx.ComboBox, wx.CheckBox, wx.RadioButton, wx.StaticText, wx.Slider)):
+					if c.GetSize().height == 0:
+						continue	# on a page that is not shown
 					need = c.GetBestSize()
 				else:
 					continue
@@ -288,6 +294,11 @@ def main():
 			state['filepath'] = horpath
 		return wx.ID_OK
 
+	try:
+		import gtkfit	# as morinus.py does at start
+		gtkfit.install()
+	except ImportError:
+		pass
 	wx.Dialog.ShowModal = dialog_modal
 	wx.MessageDialog.ShowModal = message_modal
 	# wx.MessageBox opens a native dialog that the patches above do not reach

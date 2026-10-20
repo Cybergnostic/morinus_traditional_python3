@@ -55,7 +55,7 @@ def _onDestroy(event):
 	event.Skip()
 
 
-_show = wx.Frame.Show
+_show = None
 
 
 def _showRemembered(self, show=True):
@@ -67,4 +67,6 @@ def _showRemembered(self, show=True):
 
 
 def install():
+	global _show
+	_show = wx.Frame.Show	# as it is now (gtkfit may have replaced it)
 	wx.Frame.Show = _showRemembered
