@@ -3,6 +3,13 @@
 import os
 import wx
 import mtexts
+from PIL import ImageDraw
+
+# Morinus.ttf letters as Unicode, for copying tables as text
+SYMBOLS = dict(zip('ABCDEFGHI', '\u2644\u2643\u2642\u2609\u2640\u263f\u263d\u260a\u260b'))
+SYMBOLS.update(zip('abcdefghijkl', '\u2648\u2649\u264a\u264b\u264c\u264d\u264e\u264f\u2650\u2651\u2652\u2653'))
+SYMBOLS.update(zip('LMNOP', '\u260c\u26b9\u25a1\u25b3\u260d'))
+SYMBOLS.update({'R': '\u2225', 'S': '-\u2225', 'J': '\u2297', 'T': '\u211e', '0': 'Asc', '1': 'MC'})
 
 class CommonWnd(wx.ScrolledWindow):
     SCROLL_RATE = 20
@@ -21,6 +28,9 @@ class CommonWnd(wx.ScrolledWindow):
         self.ID_BlackAndWhite = wx.NewId()
         self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveTable'])
         mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['TableBW'], wx.ITEM_CHECK)
+        self.ID_CopyAsText = wx.NewIdRef()
+        self.pmenu.Append(self.ID_CopyAsText, 'Copy as text', 'Copy the table to the clipboard as text (tab-separated)')
+        self.Bind(wx.EVT_MENU, self.onCopyAsText, id=self.ID_CopyAsText)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_RIGHT_UP, self.onPopupMenu)
         self.Bind(wx.EVT_MENU, self.onSaveAsBitmap, id=self.ID_SaveAsBitmap)
@@ -62,3 +72,52 @@ class CommonWnd(wx.ScrolledWindow):
 
     def OnPaint(self, event):
         dc = wx.BufferedPaintDC(self, self.buffer, wx.BUFFER_VIRTUAL_AREA)
+
+    def tableText(self):
+        """The table as tab-separated text, rebuilt from what drawBkg draws:
+        texts on one line form a row, gaps wider than a space separate cells."""
+        calls = []
+        text = ImageDraw.ImageDraw.text
+
+        def record(draw, xy, txt, *args, **kwargs):
+            font = kwargs.get('font', args[1] if len(args) > 1 else None)
+            calls.append((xy[0], xy[1], txt, font))
+            return text(draw, xy, txt, *args, **kwargs)
+        ImageDraw.ImageDraw.text = record
+        try:
+            self.drawBkg()
+        finally:
+            ImageDraw.ImageDraw.text = text
+        items = []
+        for x, y, txt, font in calls:
+            if not txt.strip() or font is None:
+                continue
+            size = getattr(font, 'size', 10)
+            width = font.getlength(txt)
+            if getattr(font, 'path', '').endswith('Morinus.ttf'):
+                txt = ''.join(SYMBOLS.get(c, c) for c in txt)
+            items.append((y + size / 2.0, x, x + width, txt, size))
+        rows = []
+        for cy, x0, x1, txt, size in sorted(items):
+            if rows and abs(cy - rows[-1][0]) < size * 0.6:
+                rows[-1][1].append((x0, x1, txt, size))
+            else:
+                rows.append((cy, [(x0, x1, txt, size)]))
+        lines = []
+        for cy, cells in rows:
+            line = ''
+            end = None
+            for x0, x1, txt, size in sorted(cells):
+                if end is not None:
+                    line += ' ' if x0 - end < size * 0.8 else '\t'
+                line += txt.strip()
+                end = x1
+            lines.append(line)
+        return '\n'.join(lines) + '\n'
+
+    def onCopyAsText(self, event):
+        txt = self.tableText()
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.TextDataObject(txt))
+            wx.TheClipboard.Flush()	# keep it after Morinus closes
+            wx.TheClipboard.Close()

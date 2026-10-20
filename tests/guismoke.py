@@ -10,6 +10,8 @@
 # --trace-div rewrites every '/' in the program at import time to record
 # which division sites see two ints (Py2 floor division semantics), and
 # every str()/'%s' formatting that sees a float (Py2 printed 12 digits).
+# guismoke.json also lists controls drawn smaller than their contents need
+# ("clipped"), e.g. fixed sizes that fit on Windows but not on GTK.
 
 import os
 import sys
@@ -58,6 +60,7 @@ class DivTracer(ast.NodeTransformer):
 
 
 DIVSITES = {}
+CLIPPED = []
 
 
 def div_trace(a, b, site):
@@ -179,6 +182,37 @@ def main():
 			for cc in all_children(c):
 				yield cc
 
+	clipped = CLIPPED
+
+	def check_clipping(win):
+		# controls smaller than their contents need on this platform (fixed sizes
+		# chosen for Windows); number fields are measured with their largest value
+		for c in all_children(win):
+			try:
+				if not c.IsShown():
+					continue
+				if isinstance(c, wx.TextCtrl) and not c.IsMultiLine():
+					sample = c.GetValue()
+					maxim = getattr(c.GetValidator(), 'maxim', None)
+					if maxim is not None and len(str(maxim)) > len(sample):
+						sample = str(maxim)
+					if not sample:
+						continue
+					need = c.GetSizeFromTextSize(c.GetTextExtent(sample))
+				elif isinstance(c, (wx.SpinCtrl, wx.Choice, wx.ComboBox, wx.Button, wx.CheckBox, wx.RadioButton, wx.StaticText, wx.Slider)):
+					need = c.GetBestSize()
+				else:
+					continue
+				size = c.GetSize()
+				if size.width + 1 < need.width or size.height + 1 < need.height:
+					item = {'window': type(win).__name__, 'control': type(c).__name__,
+						'text': c.GetValue() if isinstance(c, wx.TextCtrl) else c.GetLabel(),
+						'size': list(size), 'needs': list(need)}
+					if item not in clipped:
+						clipped.append(item)
+			except Exception:
+				pass
+
 	def fire(ctrl, evtype):
 		evt = wx.CommandEvent(evtype, ctrl.GetId())
 		evt.SetEventObject(ctrl)
@@ -227,6 +261,7 @@ def main():
 			dlg.Show()
 			for i in range(5):
 				wx.SafeYield()
+			check_clipping(dlg)
 			shot('dlg-'+type(dlg).__name__)
 			if '--exercise' in sys.argv and state.get('depth', 0) == 0:
 				state['depth'] = 1
@@ -335,6 +370,9 @@ def main():
 			except Exception:
 				record('paint')
 		settle(0.3)
+		for w in wx.GetTopLevelWindows():
+			if w.IsShown():
+				check_clipping(w)
 		shot('wnd')
 		popups(name)
 		if name == 'onExit':
@@ -396,7 +434,7 @@ def main():
 
 
 def write_results(out, errors, quiet=False):
-	res = {'errors': errors}
+	res = {'errors': errors, 'clipped': CLIPPED}
 	if DIVSITES:
 		res['divsites'] = dict((k, sorted(v)) for k, v in DIVSITES.items())
 	if STRSITES:
