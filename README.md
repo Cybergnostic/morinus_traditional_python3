@@ -20,7 +20,6 @@ Added in this version:
   hayz/halb, synodic phase (combust, under the beams, cazimi), oriental /
   occidental, stations, motion, joys, latitude, Via Combusta, void-of-course
   Moon.
-- **Tables → Reception, generosity, repulsion** (odbojnost).
 - **Tables → Temperament** — the temperament worksheet with every factor and
   its points.
 - **Charts → Lunar returns of the year** — the lunar returns covering a solar
@@ -50,7 +49,7 @@ Added in this version:
 - **Offline atlas** — the place search (New Chart → Place → Search) looks up
   236,000 places worldwide without internet; see [below](#offline-atlas).
 
-The planetary conditions, relationships and temperament come from
+The planetary conditions and the temperament come from
 [hor-tools](hor_tools/VENDORED.txt) (vendored in `hor_tools/`), run on Morinus's own
 Swiss Ephemeris through `swe_compat.py`.
 
