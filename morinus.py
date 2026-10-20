@@ -26,6 +26,7 @@ import mtexts
 import morin
 import errorreport
 import windowmemory
+import gtkfit
 
 
 class Morinus(wx.App):
@@ -36,6 +37,7 @@ class Morinus(wx.App):
 		except:
 			pass
 		errorreport.install()
+		gtkfit.install()
 		windowmemory.install()
 
 		opts = options.Options()
