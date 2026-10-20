@@ -47,6 +47,8 @@ Added in this version:
 - **Automatic time zones** — a button in New Chart / Edit Data looks up the
   time zone and daylight saving for the birth date and place (offline);
   see [below](#automatic-time-zones-birth-data).
+- **Offline atlas** — the place search (New Chart → Place → Search) looks up
+  236,000 places worldwide without internet; see [below](#offline-atlas).
 
 The planetary conditions, relationships and temperament come from
 [hor-tools](hor_tools/VENDORED.txt) (vendored in `hor_tools/`), run on Morinus's own
@@ -83,9 +85,10 @@ Then, in the Morinus folder:
 This sets up a Python environment in `.venv/` inside the folder (it uses the
 distribution's wxPython and Pillow and adds `timezonefinder` for automatic
 time zones, so nothing is installed into the system Python), compiles the
-Swiss Ephemeris module and adds "Morinus Traditional" to the application
-menu. Start it from the menu or with `./morinus`. Run `./install.sh` again
-after updating.
+Swiss Ephemeris module, downloads the offline atlas (about 14 MB, built into
+`Res/atlas.db`) and adds "Morinus Traditional" to the application menu.
+Start it from the menu or with `./morinus`. Run `./install.sh` again after
+updating; `./install.sh --update-atlas` also gets the latest atlas.
 
 Morinus runs from its folder, which must be writable: settings are kept in
 `Opts/`, charts in `Hors/`, and your place list in `Res/placedb.dat` (the
@@ -153,8 +156,9 @@ The Windows build and `install.sh` include what this needs. In **New Chart**
 or **Edit Data**, enter the civil birth date/time and select a location
 (or enter longitude/latitude). Click **Auto time zone (date + location)**,
 review the IANA zone, standard GMT offset and daylight-saving flag, and
-confirm. This works offline once `timezonefinder` and IANA `tzdata` are
-installed. Place-name *search* still uses the existing GeoNames service.
+confirm. This works offline: the zone comes from `timezonefinder`'s zone
+borders, or without it from the nearest place in the offline atlas (within
+30 km).
 
 Morinus stores a standard GMT offset and a separate one-hour daylight-saving
 flag. The automatic lookup deliberately splits those values to avoid
@@ -173,8 +177,25 @@ Morinus's underlying .hor file format.
 Run the isolated time-zone tests with
 `python3 -m unittest discover -s tests -p 'test_auto_timezone.py'`.
 
+## Offline atlas
+
+**Search** in the Places dialog (the **Place** button in New Chart / Edit
+Data) looks in the offline atlas first: every place in the world with 500 or
+more inhabitants (about 236,000), from [GeoNames](https://www.geonames.org).
+Names can be typed without diacritics (*Nis* finds Niš) or in other spellings
+and scripts (*Nisch*, *Ниш*); add a region or country after a comma to narrow
+it down (*Springfield, Illinois*, *Nis, RS*). The results window searches again
+as you type. Choosing a place fills its coordinates, altitude and present-day
+standard time zone and adds it to your places list; for the birth date's own
+offset and daylight saving, use **Auto time zone** in the chart data. A place
+that is not in the atlas is looked up online as before.
+
+Without `Res/atlas.db` the search is online only; build it with
+`python3 tools/build_atlas.py` (or `./install.sh`).
+
 ## Credits and licences
 
 - Morinus — Robert Nagy, GNU GPL v3 (`LICENSE`).
 - Swiss Ephemeris 1.76 — Astrodienst AG (`SWEP/src/LICENSE`).
 - hor-tools — Cybergnostic (`hor_tools/`).
+- Atlas — [GeoNames](https://www.geonames.org), CC BY 4.0.

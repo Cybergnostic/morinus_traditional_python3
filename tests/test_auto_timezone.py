@@ -62,6 +62,15 @@ class AutoTimezoneTests(unittest.TestCase):
             self.assertEqual((minutes, dst), (-120, False))
             self.assertIn("at sea", warning)
 
+    def test_atlas_without_timezonefinder(self):
+        # an entry of None makes the import fail, as if not installed
+        with patch.dict(sys.modules, {"timezonefinder": None}), \
+                patch("atlas.zone_at", return_value="Europe/Belgrade"):
+            self.assertEqual(resolve_timezone(1988, 6, 8, 19, 15, 0, 43.32, 21.9)[:3], ("Europe/Belgrade", 60, True))
+        with patch.dict(sys.modules, {"timezonefinder": None}), patch("atlas.zone_at", return_value=None):
+            with self.assertRaises(TimezoneLookupError):
+                resolve_timezone(2000, 1, 1, 12, 0, 0, 0.0, -30.0)
+
 
 @unittest.skipUnless(importlib.util.find_spec("timezonefinder"), "timezonefinder not installed")
 class RealLookupTests(unittest.TestCase):

@@ -2,9 +2,33 @@
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+import atlas
+
 
 class TimezoneLookupError(ValueError):
     pass
+
+
+def zone_name(latitude, longitude):
+    """IANA zone at the coordinates: from the zone borders of timezonefinder,
+    or without it, from the nearest place in the offline atlas."""
+    try:
+        from timezonefinder import TimezoneFinder
+    except ImportError:
+        name = atlas.zone_at(latitude, longitude)
+        if name is None:
+            raise TimezoneLookupError(
+                "No place in the atlas near these coordinates. Install "
+                "timezonefinder (pip install -r requirements.txt) to look up any place."
+            )
+        return name
+    try:
+        name = TimezoneFinder(in_memory=True).timezone_at(lat=latitude, lng=longitude)
+    except (ValueError, TypeError) as exc:
+        raise TimezoneLookupError("Invalid latitude/longitude.") from exc
+    if not name:
+        raise TimezoneLookupError("No IANA time zone for these coordinates.")
+    return name
 
 
 def resolve_timezone(year, month, day, hour, minute, second, latitude, longitude):
@@ -14,18 +38,7 @@ def resolve_timezone(year, month, day, hour, minute, second, latitude, longitude
     full summer UTC offset in its GMT fields. DST that is not one hour is
     folded into the standard offset with the flag off.
     """
-    try:
-        from timezonefinder import TimezoneFinder
-    except ImportError as exc:
-        raise TimezoneLookupError(
-            "Install timezonefinder (pip install -r requirements.txt)."
-        ) from exc
-    try:
-        name = TimezoneFinder(in_memory=True).timezone_at(lat=latitude, lng=longitude)
-    except (ValueError, TypeError) as exc:
-        raise TimezoneLookupError("Invalid latitude/longitude.") from exc
-    if not name:
-        raise TimezoneLookupError("No IANA time zone for these coordinates.")
+    name = zone_name(latitude, longitude)
     try:
         zone = ZoneInfo(name)
     except ZoneInfoNotFoundError as exc:
