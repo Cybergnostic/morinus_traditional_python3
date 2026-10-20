@@ -28,7 +28,9 @@ class ReturnStepperDlg(wx.Dialog):
         self.SetSizerAndFit(sizer)
         prev.Bind(wx.EVT_BUTTON, lambda e: self.step(False))
         nxt.Bind(wx.EVT_BUTTON, lambda e: self.step(True))
-        close.Bind(wx.EVT_BUTTON, lambda e: self.Close())
+        # modeless: Close() would only emulate a button, so the dialog is destroyed
+        close.Bind(wx.EVT_BUTTON, lambda e: self.Destroy())
+        self.Bind(wx.EVT_CLOSE, lambda e: self.Destroy())
         self.updateLabel()
 
     def updateLabel(self):
