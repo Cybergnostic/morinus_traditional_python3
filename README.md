@@ -27,6 +27,8 @@ Added in this version:
   the signs: levels 1 and 2 for a lifetime with the loosing of the bond, the
   places from the lot (angles and the peak) and the present period; click a
   level 2 period for levels 3 and 4. The method follows shin10567's Morinus.
+- **Tables → Decennials** — Valens's periods of 10 years 9 months from the sect
+  light, with levels 2-4 (click a level 2 period), after shin10567's Morinus.
 - **Copy as text** in the popup menu of every table, **arrow keys** to step
   return and transit charts, windows reopen at their last size and position,
   and unexpected errors are shown and written to `morinus-error.log`.
@@ -207,4 +209,4 @@ Without `Res/atlas.db` the search is online only; build it with
 - Swiss Ephemeris 1.76 — Astrodienst AG (`SWEP/src/LICENSE`).
 - hor-tools — Cybergnostic (`hor_tools/`).
 - Atlas — [GeoNames](https://www.geonames.org), CC BY 4.0.
-- Zodiacal releasing after [Morinus by shin10567](https://github.com/shin10567/Morinus-Source-Codes), GNU GPL v3.
+- Zodiacal releasing and decennials after [Morinus by shin10567](https://github.com/shin10567/Morinus-Source-Codes), GNU GPL v3.
