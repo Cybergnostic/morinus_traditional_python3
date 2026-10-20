@@ -54,15 +54,15 @@ def install():
 	if wx.Platform != '__WXGTK__':
 		return
 	showmodal = wx.Dialog.ShowModal
-	show = wx.TopLevelWindow.Show
 
 	def showModalFitted(self):
 		_once(self)
 		return showmodal(self)
-
-	def showFitted(self, show_=True):
-		if show_:
-			_once(self)
-		return show(self, show_)
 	wx.Dialog.ShowModal = showModalFitted
-	wx.TopLevelWindow.Show = showFitted
+	# Dialog and Frame each have their own Show
+	for cls in (wx.Dialog, wx.Frame):
+		def showFitted(self, show_=True, _show=cls.Show):
+			if show_:
+				_once(self)
+			return _show(self, show_)
+		cls.Show = showFitted
