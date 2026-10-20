@@ -3,6 +3,14 @@
 from datetime import datetime, timedelta
 import mtexts
 
+def addyears(date, years):
+    """The same day years later; 29 February becomes 28 February in common years."""
+    try:
+        return datetime(date.year + years, date.month, date.day)
+    except ValueError:
+        return datetime(date.year + years, date.month, 28)
+
+
 class Firdaria:
     """Firdaria (3 types): 1.Diurnal chart, 2.Nocturnal(Al Biruni) 3.Nocturnal(Bonatti)"""
     TIME_FORMAT = '%Y.%m.%d'
@@ -67,7 +75,7 @@ class Firdaria:
         for index in range(len(planetaryyears) + 3):
             aindex = index % len(planetaryyears)
             planet, years = planetaryyears[aindex]
-            ending = datetime(starting.year + years, starting.month, starting.day)
+            ending = addyears(starting, years)
             print(('{0}: {1} - {2} ({3} years)').format(pltxts[planet], starting.strftime(Firdaria.TIME_FORMAT), (ending + timedelta(days=-1)).strftime(Firdaria.TIME_FORMAT), years))
             self.displaySubPeriods(planetaryyears, aindex, starting, ending, pltxts)
             print('')
