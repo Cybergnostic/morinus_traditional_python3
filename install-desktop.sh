@@ -6,19 +6,21 @@ set -e
 
 DIR=$(cd "$(dirname "$0")" && pwd)
 APPS=${XDG_DATA_HOME:-$HOME/.local/share}/applications
-FILE=$APPS/morinus-traditional.desktop
+FILE=$APPS/morinus.desktop
+OLD=$APPS/morinus-traditional.desktop	# the name of earlier versions
 
 if [ "$1" = "--uninstall" ]; then
-	rm -f "$FILE"
+	rm -f "$FILE" "$OLD"
 	echo "Removed $FILE"
 	exit 0
 fi
 
 mkdir -p "$APPS"
+rm -f "$OLD"
 cat > "$FILE" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Morinus Traditional
+Name=Morinus
 Comment=Traditional astrology (Morinus 6.2 with added traditional tools)
 Exec="$DIR/morinus"
 Path=$DIR

@@ -116,7 +116,7 @@ This sets up a Python environment in `.venv/` inside the folder (it uses the
 distribution's wxPython and Pillow and adds `timezonefinder` for automatic
 time zones, so nothing is installed into the system Python), compiles the
 Swiss Ephemeris module, downloads the offline atlas (about 14 MB, built into
-`Res/atlas.db`) and adds "Morinus Traditional" to the application menu.
+`Res/atlas.db`) and adds "Morinus" to the application menu.
 Start it from the menu or with `./morinus`. Run `./install.sh` again after
 updating; `./install.sh --update-atlas` also gets the latest atlas.
 
