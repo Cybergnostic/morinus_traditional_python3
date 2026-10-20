@@ -301,6 +301,8 @@ def main():
 		pass
 	wx.Dialog.ShowModal = dialog_modal
 	wx.MessageDialog.ShowModal = message_modal
+	# on Windows the About box is native and modal, out of reach of the patches
+	wx.adv.AboutBox = lambda info, parent=None: None
 	# wx.MessageBox opens a native dialog that the patches above do not reach
 	wx.MessageBox = lambda message, caption='', style=wx.OK, parent=None, *a: wx.YES if style & wx.YES_NO else wx.OK
 	wx.FileDialog.ShowModal = file_modal
