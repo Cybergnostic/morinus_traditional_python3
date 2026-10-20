@@ -105,6 +105,12 @@ class Time:
             self.calcPHs(place)
         return
 
+    def localoffset(self):
+        """Days from UT to the chart's own time, as entered (zone, LMT, ...)."""
+        calflag = astrology.SE_GREG_CAL if self.cal == Time.GREGORIAN else astrology.SE_JUL_CAL
+        year = 1 - self.origyear if self.bc else self.origyear
+        return astrology.swe_julday(year, self.origmonth, self.origday, self.hour + self.minute / 60.0 + self.second / 3600.0, calflag) - self.jd
+
     def calcPHs(self, place):
         weekday = datetime.datetime(self.dyear, self.dmonth, self.dday, self.dhour, self.dmin, self.dsec).weekday()
         lon = place.deglon + place.minlon / 60.0
