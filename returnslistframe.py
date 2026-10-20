@@ -27,7 +27,7 @@ class ReturnsListFrame(wx.Frame):
         panel = wx.Panel(self)
         top = wx.BoxSizer(wx.HORIZONTAL)
         top.Add(wx.StaticText(panel, -1, 'Solar year:'), 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-        self.year = wx.SpinCtrl(panel, -1, '', size=(100, -1), min=1, max=9999, initial=self.currentSolarYear())
+        self.year = wx.SpinCtrl(panel, -1, '', min=1, max=9999, initial=self.currentSolarYear())
         top.Add(self.year, 0, wx.ALL, 5)
         btn = wx.Button(panel, -1, 'Compute')
         top.Add(btn, 0, wx.ALL, 5)
