@@ -34,6 +34,24 @@ class PlaceListCtrl(wx.ListCtrl):
         self.InsertColumn(PlaceListCtrl.LAT, mtexts.txtsplacesdlg['Lat'] + '.')
         self.InsertColumn(PlaceListCtrl.ZONE, mtexts.txtsplacesdlg['Zone'])
         self.InsertColumn(PlaceListCtrl.ALT, mtexts.txtsplacesdlg['Alt'] + '.')
+        self.fillRows()
+        self.SetColumnWidth(PlaceListCtrl.PLACE, 200)
+        self.SetColumnWidth(PlaceListCtrl.COUNTRY, 180)
+        self.SetColumnWidth(PlaceListCtrl.LON, 60)
+        self.SetColumnWidth(PlaceListCtrl.LAT, 60)
+        self.SetColumnWidth(PlaceListCtrl.ZONE, 60)
+        self.SetColumnWidth(PlaceListCtrl.ALT, 60)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
+        self.Bind(wx.EVT_LIST_COL_CLICK, self.OnColClick)
+
+    def reload(self, li):
+        """Shows another list of places (the atlas search as you type)."""
+        self.DeleteAllItems()
+        self.placedata = {}
+        self.load(li)
+        self.fillRows()
+
+    def fillRows(self):
         items = list(self.placedata.items())
         for key, data in items:
             index = self.InsertItem(sys.maxsize, data[0])
@@ -45,18 +63,10 @@ class PlaceListCtrl(wx.ListCtrl):
             self.SetItem(index, PlaceListCtrl.ALT, data[5])
             self.SetItemData(index, key)
 
-        self.SetColumnWidth(PlaceListCtrl.PLACE, 200)
-        self.SetColumnWidth(PlaceListCtrl.COUNTRY, 100)
-        self.SetColumnWidth(PlaceListCtrl.LON, 60)
-        self.SetColumnWidth(PlaceListCtrl.LAT, 60)
-        self.SetColumnWidth(PlaceListCtrl.ZONE, 60)
-        self.SetColumnWidth(PlaceListCtrl.ALT, 60)
         self.currentItem = -1
         if len(self.placedata):
             self.currentItem = 0
             self.SetItemState(self.currentItem, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
-        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
-        self.Bind(wx.EVT_LIST_COL_CLICK, self.OnColClick)
 
     def GetListCtrl(self):
         return self
@@ -103,16 +113,29 @@ class PlaceListCtrl(wx.ListCtrl):
 
 class PlacesListDlg(wx.Dialog):
 
-    def __init__(self, parent, li):
+    def __init__(self, parent, li, search=None, query=''):
+        """With search (the atlas search), a field above the list searches
+        again as you type; self.places is the list shown."""
         wx.Dialog.__init__(self)
         self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
         self.Create(parent, -1, mtexts.txtsplacesdlg['Places'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
+        self.places = li
+        self.search = search
         mvsizer = wx.BoxSizer(wx.VERTICAL)
+        if search is not None:
+            hsizer = wx.BoxSizer(wx.HORIZONTAL)
+            hsizer.Add(wx.StaticText(self, -1, mtexts.txtsplacesdlg['Place'] + ':'), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+            self.query = wx.TextCtrl(self, -1, query, size=(300, -1))
+            self.query.SetHelpText('Name, or name, region or country (e.g. Springfield, Illinois)')
+            hsizer.Add(self.query, 1, wx.ALL, 5)
+            hsizer.Add(wx.StaticText(self, -1, 'Atlas: GeoNames (CC BY 4.0)'), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+            mvsizer.Add(hsizer, 0, wx.GROW | wx.LEFT | wx.RIGHT | wx.TOP, 5)
+            self.query.Bind(wx.EVT_TEXT, self.onQuery)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         splaces = wx.StaticBox(self, label='')
         placessizer = wx.StaticBoxSizer(splaces, wx.VERTICAL)
         ID_Places = wx.NewId()
-        self.li = PlaceListCtrl(self, li, ID_Places, size=(570, 230), style=wx.LC_VRULES | wx.LC_REPORT | wx.LC_SINGLE_SEL)
+        self.li = PlaceListCtrl(self, li, ID_Places, size=(650, 300), style=wx.LC_VRULES | wx.LC_REPORT | wx.LC_SINGLE_SEL)
         placessizer.Add(self.li, 1, wx.GROW | wx.ALL, 5)
         mhsizer.Add(placessizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.ALL, 0)
         mvsizer.Add(mhsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -124,12 +147,20 @@ class PlacesListDlg(wx.Dialog):
         btnOk.SetHelpText(mtexts.txtscommon['HelpOk'])
         btnOk.SetDefault()
         btnsizer.AddButton(btnOk)
+        btn = wx.Button(self, wx.ID_CANCEL, mtexts.txtscommon['Cancel'])
+        btnsizer.AddButton(btn)
         btnsizer.Realize()
         mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()
         self.li.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onActivated)
+
+    def onQuery(self, event):
+        txt = self.query.GetValue()
+        if len(txt.strip()) >= 2:
+            self.places = self.search(txt)
+            self.li.reload(self.places)
 
     def onActivated(self, event):
         # double-click (or Enter) on a place chooses it

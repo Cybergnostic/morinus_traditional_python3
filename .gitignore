@@ -10,6 +10,9 @@ build/
 !/Hors/Morinus.hor
 # your own place database (the shipped list is Res/placedb-default.dat)
 /Res/placedb.dat
+# the offline atlas, made by tools/build_atlas.py
+/Res/atlas.db
+/Res/atlas.db.tmp
 /Images/
 # install.sh's virtual environment and the Windows build
 /.venv/

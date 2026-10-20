@@ -25,10 +25,14 @@ pyinstaller --noconfirm --clean --windowed --name Morinus --icon "$root\build\mo
     --distpath dist --workpath build\pyinstaller --specpath build morinus.py
 if ($LASTEXITCODE) { throw "pyinstaller failed" }
 
+# the offline atlas, downloaded from GeoNames
+python tools\build_atlas.py
+if ($LASTEXITCODE) { throw "building the atlas failed" }
+
 # Morinus reads and writes these relative to the folder of Morinus.exe
 $app = "dist\Morinus"
 New-Item -ItemType Directory -Force "$app\Res", "$app\SWEP\Ephem", "$app\Hors", "$app\Opts" | Out-Null
-Copy-Item Res\* "$app\Res" -Recurse -Exclude placedb.dat
+Copy-Item Res\* "$app\Res" -Recurse -Exclude placedb.dat, atlas.db.tmp
 Copy-Item SWEP\Ephem\* "$app\SWEP\Ephem"
 Copy-Item Hors\Morinus.hor "$app\Hors"
 Copy-Item LICENSE, README.md $app

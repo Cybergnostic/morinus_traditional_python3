@@ -6,6 +6,7 @@ import intvalidator
 import placedb
 import placeslistdlg
 import geonames
+import atlas
 import mtexts
 import util
 provider = wx.SimpleHelpProvider()
@@ -322,6 +323,16 @@ class PlacesDlg(wx.Dialog):
             dlg.ShowModal()
             dlg.Destroy()
             return
+        if atlas.available():
+            # the offline atlas first; the online search if it has no such place
+            li = atlas.search(txt)
+            if li:
+                pldlg = placeslistdlg.PlacesListDlg(self, li, atlas.search, txt)
+                if pldlg.ShowModal() == wx.ID_OK and pldlg.li.currentItem != -1:
+                    self.fillFields(pldlg.places[pldlg.li.currentItem])
+                    self.OnAdd(None)
+                pldlg.Destroy()
+                return
         wait = wx.BusyCursor()
         maxnum = self.sizeslider.GetValue()
         geo = geonames.Geonames(self.birthplace.GetValue(), maxnum, self.langid)
