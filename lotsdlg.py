@@ -41,7 +41,7 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
         cnt = 0
         for key, data in items:
             cnt += 1
-            index = self.InsertStringItem(sys.maxsize, data[0])
+            index = self.InsertStringItem(self.GetItemCount(), data[0])
             self.SetItem(index, LotsListCtrl.NUM, str(cnt) + '.')
             self.SetItem(index, LotsListCtrl.NAME, data[0])
             self.SetItem(index, LotsListCtrl.FORMULA, data[1])

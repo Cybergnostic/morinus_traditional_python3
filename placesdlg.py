@@ -35,7 +35,7 @@ class PlaceListCtrl(wx.ListCtrl):
         self.InsertColumn(PlaceListCtrl.ALT, mtexts.txtsplacesdlg['Alt'] + '.')
         items = list(self.placedata.items())
         for key, data in items:
-            index = self.InsertItem(sys.maxsize, data[0])
+            index = self.InsertItem(self.GetItemCount(), data[0])
             self.SetItem(index, PlaceListCtrl.PLACE, data[0])
             self.SetItem(index, PlaceListCtrl.LON, data[1])
             self.SetItem(index, PlaceListCtrl.LAT, data[2])
