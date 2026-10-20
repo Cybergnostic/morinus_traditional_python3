@@ -21,7 +21,8 @@ Added in this version:
   occidental, stations, motion, joys, latitude, Via Combusta, void-of-course
   Moon.
 - **Tables → Antiscia** — two more columns show the planets standing on each
-  antiscion and contraantiscion, with the distance (conjunction orbs).
+  antiscion and contraantiscion: in its sign, the whole degrees of the two
+  adding up to 29 (10° Aries with 19° Virgo, or 19° Pisces).
 - **Tables → Temperament** — the temperament worksheet with every factor and
   its points.
 - **Charts → Lunar returns of the year** — the lunar returns covering a solar

@@ -10,9 +10,11 @@ from PIL import ImageDraw
 from PIL import ImageFont
 import util
 import mtexts
+import fortune
+import houses
 
 PLANETS_ON = 'Planets on it'
-NOTE = 'Planets on it: within the orb of a conjunction (Options > Orbs), with the distance'
+NOTE = 'Planets on it: in its sign, the whole degrees adding up to 29 (minutes not counted); distance from the exact point'
 
 class AntisciaWnd(commonwnd.CommonWnd):
 
@@ -53,25 +55,29 @@ class AntisciaWnd(commonwnd.CommonWnd):
 
     def planetsOnAntiscia(self):
         """For each row (planets, nodes, LoF, Asc, MC): the planets standing on its
-        antiscion and on its contraantiscion, as (planet, distance) nearest first.
-        The orb is that of a conjunction in Morinus: half of each planet's orb
-        (Options > Orbs) added together."""
+        antiscion and on its contraantiscion, as (planet, distance from the exact
+        point) nearest first. A planet is on it when it is in the antiscion's
+        (or contraantiscion's) sign and the whole degrees of the two add up to
+        29, minutes not counted: 10 Aries is in antiscion with 19 Virgo and in
+        contraantiscion with 19 Pisces."""
         ants = self.ants
-        rows = [(ants.plantiscia[i].lon, ants.plcontraant[i].lon, i) for i in range(planets.Planets.BODIES_NUM)]
-        rows.append((ants.lofant.lon, ants.lofcontraant.lon, None))
-        rows += [(ants.ascmcant[i].lon, ants.ascmccontraant[i].lon, None) for i in range(2)]
+        pls = self.chart.planets.planets
+        rows = [(pls[i].data[planets.Planet.LON], ants.plantiscia[i].lon, ants.plcontraant[i].lon, i) for i in range(planets.Planets.BODIES_NUM)]
+        rows.append((self.chart.fortune.fortune[fortune.Fortune.LON], ants.lofant.lon, ants.lofcontraant.lon, None))
+        for i, h in enumerate((houses.Houses.ASC, houses.Houses.MC)):
+            rows.append((self.chart.houses.ascmc[h], ants.ascmcant[i].lon, ants.ascmccontraant[i].lon, None))
         hits = []
-        for ant, cant, obj in rows:
-            own = self.options.orbs[obj] / 2.0 if obj is not None else 0.0
+        for lon, ant, cant, obj in rows:
+            sign, deg = int(lon // 30.0) % 12, int(lon % 30.0)
+            antsign = (5 - sign) % 12	# mirrored in the Cancer-Capricorn axis
             row = []
-            for lon in (ant, cant):
+            for target, point in ((antsign, ant), ((antsign + 6) % 12, cant)):
                 found = []
                 for pl in range(planets.Planets.PLANETS_NUM):
-                    if pl == obj:
+                    plon = pls[pl].data[planets.Planet.LON]
+                    if pl == obj or int(plon // 30.0) % 12 != target or deg + int(plon % 30.0) != 29:
                         continue
-                    dist = abs(util.normalize(lon - self.chart.planets.planets[pl].data[planets.Planet.LON] + 180.0) - 180.0)
-                    if dist <= own + self.options.orbs[pl] / 2.0:
-                        found.append((pl, dist))
+                    found.append((pl, abs(util.normalize(point - plon + 180.0) - 180.0)))
                 row.append(sorted(found, key=lambda h: h[1]))
             hits.append(row)
         return hits
