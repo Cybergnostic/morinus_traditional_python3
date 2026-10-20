@@ -81,19 +81,10 @@ def drill(period):
 	return out
 
 
-def localoffset(chrt):
-	"""Days to add to a UT Julian day for the chart's civil time."""
-	t = chrt.time
-	calflag = astrology.SE_GREG_CAL if t.cal == chart.Time.GREGORIAN else astrology.SE_JUL_CAL
-	year = 1 - t.origyear if t.bc else t.origyear
-	local = astrology.swe_julday(year, t.origmonth, t.origday, t.hour + t.minute / 60.0 + t.second / 3600.0, calflag)
-	return local - t.jd
-
-
 def datestr(chrt, jd, hours=False):
 	t = chrt.time
 	calflag = astrology.SE_GREG_CAL if t.cal == chart.Time.GREGORIAN else astrology.SE_JUL_CAL
-	y, m, d, h = astrology.swe_revjul(jd + localoffset(chrt), calflag)
+	y, m, d, h = astrology.swe_revjul(jd + t.localoffset(), calflag)
 	txt = '%s%04d.%02d.%02d' % ('-' if y < 0 else '', abs(y), m, d)
 	if hours:
 		txt += ' %02d:%02d' % divmod(min(int(round(h * 60.0)), 24 * 60 - 1), 60)

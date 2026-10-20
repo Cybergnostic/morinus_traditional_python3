@@ -106,7 +106,8 @@ class RiseSetWnd(commonwnd.CommonWnd):
                 w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
                 draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntMorinus)
             elif i != 0:
-                h, m, s = util.decToDeg(self.chart.riseset.times[idx][(i - 2)])
+                # in the chart's own time (the calculation gives UT)
+                h, m, s = util.decToDeg((self.chart.riseset.times[idx][(i - 2)] + self.chart.time.localoffset() * 24.0) % 24.0)
                 txt = str(h).zfill(2) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
                 w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
                 draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntText)

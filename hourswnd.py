@@ -56,19 +56,17 @@ class HoursWnd(commonwnd.CommonWnd):
         if not self.bw:
             txtclr = self.options.clrtexts
         draw.rectangle(((BOR, BOR), (BOR + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
-        lon = self.chart.place.deglon + self.chart.place.minlon / 60.0
-        if not self.chart.place.east:
-            lon *= -1
-        offs = lon * 4.0 / 1440.0
-        jdlocal = self.chart.time.jd + offs
+        # times in the chart's own time (they were UT, beside a local mean birth time)
+        self.offs = self.chart.time.localoffset()
+        jdlocal = self.chart.time.jd + self.offs
         jy, jm, jd, jh = astrology.swe_revjul(jdlocal, 1)
         hh, mm, ss = util.decToDeg(jh)
         txt = mtexts.txtshours['LocalBirthTime'] + ': ' + str(hh) + ':' + str(mm).zfill(2) + ':' + str(ss).zfill(2)
         w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
         draw.text((BOR + (self.TITLE_WIDTH - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
         if self.chart.time.ph != None:
-            rh, rm, rs = self.chart.time.ph.revTime(self.chart.time.ph.risetime, self.chart.time.cal)
-            sh, sm, ss = self.chart.time.ph.revTime(self.chart.time.ph.settime, self.chart.time.cal)
+            rh, rm, rs = self.chart.time.ph.revTime(self.chart.time.ph.risetime + self.offs, self.chart.time.cal)
+            sh, sm, ss = self.chart.time.ph.revTime(self.chart.time.ph.settime + self.offs, self.chart.time.cal)
             if self.chart.time.ph.daytime:
                 txt1 = mtexts.txtshours['RiseTime'] + ': ' + str(rh) + ':' + str(rm).zfill(2) + ':' + str(rs).zfill(2)
                 txt2 = mtexts.txtshours['SetTime'] + ': ' + str(sh) + ':' + str(sm).zfill(2) + ':' + str(ss).zfill(2)
@@ -125,9 +123,9 @@ class HoursWnd(commonwnd.CommonWnd):
             elif i > 1:
                 h, m, s = (0, 0, 0)
                 if i == 2:
-                    h, m, s = self.chart.time.ph.revTime(self.begtime, self.chart.time.cal)
+                    h, m, s = self.chart.time.ph.revTime(self.begtime + self.offs, self.chart.time.cal)
                 else:
-                    h, m, s = self.chart.time.ph.revTime(endtime, self.chart.time.cal)
+                    h, m, s = self.chart.time.ph.revTime(endtime + self.offs, self.chart.time.cal)
                 txt = str(h) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
                 w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
                 draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
