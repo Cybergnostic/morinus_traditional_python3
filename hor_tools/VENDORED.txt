@@ -1,2 +1,6 @@
 Vendored from the astro_data repository (hor-tools), commit fe6fd93.
 Keep this copy unchanged so it can be updated from upstream; Morinus-specific glue lives in traditional.py and swe_compat.py.
+
+Local change (not yet upstream): analysis/solar.py and almuten.py handle polar day and night,
+when the Sun does not rise or set: sunrise/sunset are None and there is no
+planetary hour ruler (before, the analysis failed for such charts).

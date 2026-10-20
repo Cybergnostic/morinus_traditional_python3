@@ -44,7 +44,7 @@ class HouseStructure:
 class NatalTechnicalReport:
     solar: SolarFrame
     day_ruler: str
-    hour_ruler: str
+    hour_ruler: str | None
     almuten: AlmutenResult
     lots: LotsReport
     duads: list[NamedDuad]
