@@ -15,9 +15,16 @@ import astrology
 import chart
 import fortune
 import houses
+import tradoptions
 
 YEARS = (15, 8, 20, 25, 19, 20, 8, 15, 12, 27, 30, 12)	# Aries..Pisces
-UNIT_DAYS = {1: 360.0, 2: 30.0, 3: 2.5, 4: 5.0 / 24.0}
+UNIT_DAYS = {1: 360.0, 2: 30.0, 3: 2.5, 4: 5.0 / 24.0}	# with years of 360 days
+
+
+def unit(level):
+	"""Days of a level's unit with the year length of the options (a year of
+	365.25 days lengthens every level in proportion)."""
+	return UNIT_DAYS[level] * tradoptions.get('zr_yeardays') / 360.0
 FORTUNE, SPIRIT = 0, 1
 LOTNAMES = ('Fortune', 'Spirit')
 
@@ -46,7 +53,7 @@ def sublevel(level, start, end, first):
 	t, sign, loosed = start, first, False
 	leap = False
 	while t < end:
-		e = min(t + YEARS[sign] * UNIT_DAYS[level], end)
+		e = min(t + YEARS[sign] * unit(level), end)
 		out.append(Period(level, sign, t, e, leap))
 		t, leap = e, False
 		nxt = (sign + 1) % 12
@@ -57,15 +64,16 @@ def sublevel(level, start, end, first):
 	return out
 
 
-def releasing(chrt, lot, years=110):
+def releasing(chrt, lot, years=None):
 	"""Level 1 periods and the level 2 periods within them, for years after birth."""
+	years = years or tradoptions.get('zr_years')
 	start = chrt.time.jd
 	end = start + years * 365.25
 	first = int(lot_longitude(chrt, lot) // chart.Chart.SIGN_DEG) % 12
 	out = []
 	t, sign = start, first
 	while t < end:
-		e = t + YEARS[sign] * UNIT_DAYS[1]
+		e = t + YEARS[sign] * unit(1)
 		out.append(Period(1, sign, t, e))
 		out.extend(sublevel(2, t, e, sign))
 		t, sign = e, (sign + 1) % 12
@@ -93,10 +101,11 @@ def datestr(chrt, jd, hours=False):
 
 def lengthstr(p):
 	days = p.end - p.start
+	year = tradoptions.get('zr_yeardays')
 	if p.level == 1:
-		return '%g years' % round(days / 360.0, 2)
+		return '%g years' % round(days / year, 2)
 	if p.level == 2:
-		return '%g months' % round(days / 30.0, 2)
+		return '%g months' % round(days * 12.0 / year, 2)
 	if days >= 1.0:
 		return '%.1f days' % days
 	return '%.1f hours' % (days * 24.0)

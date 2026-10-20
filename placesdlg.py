@@ -7,6 +7,7 @@ import placedb
 import placeslistdlg
 import geonames
 import atlas
+import tradoptions
 import mtexts
 import util
 provider = wx.SimpleHelpProvider()
@@ -323,7 +324,7 @@ class PlacesDlg(wx.Dialog):
             dlg.ShowModal()
             dlg.Destroy()
             return
-        if atlas.available():
+        if tradoptions.get('place_atlas') and atlas.available():
             # the offline atlas first; the online search if it has no such place
             li = atlas.search(txt)
             if li:
@@ -333,6 +334,12 @@ class PlacesDlg(wx.Dialog):
                     self.OnAdd(None)
                 pldlg.Destroy()
                 return
+        if not tradoptions.get('place_online'):
+            dlg = wx.MessageDialog(self, mtexts.txtsplacesdlg['NotFound'], '', wx.OK | wx.ICON_EXCLAMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
+            return
+        geonames.Geonames.username = tradoptions.get('place_username') or 'morinastro'
         wait = wx.BusyCursor()
         maxnum = self.sizeslider.GetValue()
         geo = geonames.Geonames(self.birthplace.GetValue(), maxnum, self.langid)

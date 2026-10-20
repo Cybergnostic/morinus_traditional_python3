@@ -6,7 +6,7 @@ import tablewnd
 import zodiacalreleasing as zr
 
 HEADERS = ('Level', 'Sign', 'From the lot', 'Starts', 'Ends', 'Length', '')
-NOTE = 'Places from the lot: 1, 4 and 7 are angles, 10 the peak. Dates in the time of the chart; years of 360 days.'
+NOTE = 'Places from the lot: 1, 4 and 7 are angles, 10 the peak. Dates in the time of the chart; years of %g days (Options > Zodiacal releasing).'
 
 
 def place(sign, lotsign):
@@ -39,7 +39,7 @@ class ReleasingWnd(tablewnd.TableWnd):
 				zr.datestr(chrt, p.start, hours), zr.datestr(chrt, p.end, hours), zr.lengthstr(p), ', '.join(notes)])
 			colours.append(self.options.clrLoF if p.level in (1, 3) else None)
 		self.sections = [tablewnd.Section(rows, HEADERS, colours)]
-		self.notes = [title or 'Zodiacal releasing from the Lot of %s' % zr.LOTNAMES[lot], NOTE]
+		self.notes = [title or 'Zodiacal releasing from the Lot of %s' % zr.LOTNAMES[lot], NOTE % zr.tradoptions.get('zr_yeardays')]
 		if self.drillable:
 			self.notes.append('Click a level 2 period for its levels 3 and 4.')
 			self.Bind(wx.EVT_LEFT_UP, self.onClick)

@@ -40,6 +40,11 @@ Added in this version:
   birth, and the paranatellonta of the birth day: a planet and a star on
   angles within 4 minutes.
 - **Tables → Dodecatemoria calculator** — the dodecatemorion of any degree.
+- **Options for the added techniques** — Options → Zodiacal releasing,
+  Decennials, Circumambulation, Heliacal phenomena, Fixed stars on the angles,
+  Antiscia, Places and time zones, Windows and errors (kept in
+  `Opts/traditional.json`); every option has a help text, and these and
+  Morinus's own options dialogs have a **Defaults** button.
 - **Copy as text** in the popup menu of every table, **arrow keys** to step
   return and transit charts, windows reopen at their last size and position,
   and unexpected errors are shown and written to `morinus-error.log`.

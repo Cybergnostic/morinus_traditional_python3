@@ -7,7 +7,7 @@ import heliacal
 import zodiacalreleasing as zr
 
 HEADERS = ('', 'Phenomenon', 'Before the birth', 'After the birth', '')
-NOTE = 'Visibility from the Swiss Ephemeris (standard atmosphere); phasis: within %d days of the birth.' % heliacal.PHASIS_DAYS
+NOTE = 'Visibility from the Swiss Ephemeris; phasis: within %d days of the birth (Options > Heliacal phenomena).'
 
 
 class HeliacalWnd(tablewnd.TableWnd):
@@ -24,11 +24,11 @@ class HeliacalWnd(tablewnd.TableWnd):
 		rows, colours = [], []
 		for planet, name, before, after in heliacal.phenomena(chrt):
 			near = [abs(t - jd) for t in (before, after) if t is not None]
-			phasis = 'phasis' if near and min(near) <= heliacal.PHASIS_DAYS else ''
+			phasis = 'phasis' if near and min(near) <= heliacal.tradoptions.get('hel_phasisdays') else ''
 			rows.append([(tablewnd.GLYPH, common.common.planets[planet]), name, when(before), when(after), phasis])
 			colours.append(self.options.clrplanets[planet])
 		self.sections = [tablewnd.Section(rows, HEADERS, colours)]
-		self.notes = ['Heliacal phenomena and phasis', NOTE]
+		self.notes = ['Heliacal phenomena and phasis', NOTE % heliacal.tradoptions.get('hel_phasisdays')]
 		self.layout()
 
 	def getExt(self):

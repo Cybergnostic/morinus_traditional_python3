@@ -12,6 +12,9 @@ import heliacalwnd
 import fixedstaranglewnd
 import dodecacalcdlg
 import starnames
+import tradoptions
+import tradoptsdlg
+import defaultsbtn
 import returnslistframe
 import os
 import pickle
@@ -411,6 +414,12 @@ class MFrame(wx.Frame):
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_FirdariaOpt - self.optsbase - 2)]:
                 self.moptions.Append(self.ID_FirdariaOpt, mtexts.menutxts['OMFirdariaOpt'], mtexts.menutxts['OMFirdariaOptDoc'])
                 self.Bind(wx.EVT_MENU, self.onFirdariaOpt, id=self.ID_FirdariaOpt)
+            # options of the added techniques (tradoptsdlg), always shown
+            self.moptions.AppendSeparator()
+            for i, (title, fields) in enumerate(tradoptsdlg.DIALOGS):
+                item = self.moptions.Append(wx.NewIdRef(), title + '...', 'Options of ' + title.lower())
+                self.Bind(wx.EVT_MENU, lambda e, i=i: self.onTradOpts(i), id=item.GetId())
+            self.moptions.AppendSeparator()
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_DefLocationOpt - self.optsbase - 2)]:
                 self.moptions.Append(self.ID_DefLocationOpt, mtexts.menutxts['OMDefLocationOpt'], mtexts.menutxts['OMDefLocationOptDoc'])
                 self.Bind(wx.EVT_MENU, self.onDefLocationOpt, id=self.ID_DefLocationOpt)
@@ -1590,6 +1599,7 @@ class MFrame(wx.Frame):
         dlg = appearance1dlg.Appearance1Dlg(self)
         dlg.CenterOnParent()
         wx.EndBusyCursor()
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         topocentric = self.options.topocentric
         val = dlg.ShowModal()
@@ -1614,6 +1624,7 @@ class MFrame(wx.Frame):
         dlg = appearance2dlg.Appearance2Dlg(self)
         dlg.CenterOnParent()
         wx.EndBusyCursor()
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         val = dlg.ShowModal()
         if val == wx.ID_OK:
@@ -1708,6 +1719,7 @@ class MFrame(wx.Frame):
     def onChartAlmuten(self, event):
         wx.BeginBusyCursor()
         dlg = almutenchartdlg.AlmutenChartDlg(self)
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         dlg.CenterOnParent()
         wx.EndBusyCursor()
@@ -1748,6 +1760,7 @@ class MFrame(wx.Frame):
     def onAyanamsha(self, event):
         dlg = ayanamshadlg.AyanamshaDlg(self)
         dlg.CenterOnParent()
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         ayan = self.options.ayanamsha
         val = dlg.ShowModal()
@@ -1768,6 +1781,7 @@ class MFrame(wx.Frame):
     def onColors(self, event):
         dlg = colorsdlg.ColorsDlg(self)
         dlg.CenterOnParent()
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         val = dlg.ShowModal()
         if val == wx.ID_OK:
@@ -1831,6 +1845,7 @@ class MFrame(wx.Frame):
             nofs = True
         dlg = orbsdlg.OrbsDlg(self, self.options, nofs)
         dlg.CenterOnParent()
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         val = dlg.ShowModal()
         if val == wx.ID_OK:
@@ -1860,6 +1875,7 @@ class MFrame(wx.Frame):
             dlg = primarydirsdlg.PrimDirsDlg(self, self.options, common.common.ephepath)
         dlg.CenterOnParent()
         wx.EndBusyCursor()
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         val = dlg.ShowModal()
         if val == wx.ID_OK:
@@ -1889,6 +1905,7 @@ class MFrame(wx.Frame):
     def onPrimaryKeys(self, event):
         dlg = primarykeysdlg.PrimaryKeysDlg(self, self.options)
         dlg.CenterOnParent()
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         val = dlg.ShowModal()
         if val == wx.ID_OK:
@@ -1905,6 +1922,7 @@ class MFrame(wx.Frame):
 
     def onPDsInChartOpt(self, event):
         dlg = pdsinchartdlgopts.PDsInChartsDlgOpts(self)
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         dlg.CenterOnParent()
         val = dlg.ShowModal()
@@ -1923,6 +1941,7 @@ class MFrame(wx.Frame):
     def onSyzygy(self, event):
         dlg = syzygydlg.SyzygyDlg(self)
         dlg.CenterOnParent()
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         val = dlg.ShowModal()
         if val == wx.ID_OK:
@@ -1997,6 +2016,7 @@ class MFrame(wx.Frame):
 
     def onProfectionsOpt(self, event):
         dlg = profdlgopts.ProfDlgOpts(self)
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         dlg.CenterOnParent()
         val = dlg.ShowModal()
@@ -2014,6 +2034,7 @@ class MFrame(wx.Frame):
 
     def onFirdariaOpt(self, event):
         dlg = firdariadlg.FirdariaDlg(self)
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         dlg.CenterOnParent()
         val = dlg.ShowModal()
@@ -2031,6 +2052,7 @@ class MFrame(wx.Frame):
 
     def onDefLocationOpt(self, event):
         dlg = defaultlocdlg.DefaultLocDlg(self, self.options.langid, self.options.netbook)
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         dlg.CenterOnParent()
         val = dlg.ShowModal()
@@ -2048,6 +2070,7 @@ class MFrame(wx.Frame):
 
     def onMenuSelFirst(self, event):
         dlg = menuseldlg.MenuSelDlg(self)
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         dlg.CenterOnParent()
         val = dlg.ShowModal()
@@ -2061,6 +2084,7 @@ class MFrame(wx.Frame):
 
     def onMenuSelSecond(self, event):
         dlg = menuseldlg2.MenuSelDlg(self)
+        defaultsbtn.add(dlg, self.options)
         dlg.fill(self.options)
         dlg.CenterOnParent()
         val = dlg.ShowModal()
@@ -2084,13 +2108,20 @@ class MFrame(wx.Frame):
                         self.moptions.Enable(self.ID_SaveOpts, False)
         dlg.Destroy()
 
+    def onTradOpts(self, index):
+        if tradoptsdlg.show(self, index, self.options.autosave):
+            if not self.options.autosave:
+                self.enableOptMenus(True)
+
     def onAutoSaveOpts(self, event):
         self.options.autosave = self.autosave.IsChecked()
         if self.options.autosave:
+            tradoptions.save()
             if self.options.save():
                 self.moptions.Enable(self.ID_SaveOpts, False)
 
     def onSaveOpts(self, event):
+        tradoptions.save()
         if self.options.save():
             self.moptions.Enable(self.ID_SaveOpts, False)
 
@@ -2101,6 +2132,9 @@ class MFrame(wx.Frame):
             if self.options.checkOptsFiles():
                 self.options.removeOptsFiles()
             self.options.reload()
+            if os.path.exists(tradoptions.FILENAME):
+                os.remove(tradoptions.FILENAME)
+            tradoptions.load()
             self.enableOptMenus(False)
             self.setHouse()
             self.setNode()

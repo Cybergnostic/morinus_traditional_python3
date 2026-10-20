@@ -10,11 +10,10 @@ import astrology
 import planets
 import util
 import starnames
+import tradoptions
 
 ANGLES = ((astrology.SE_CALC_RISE, 'Asc', 'rising'), (astrology.SE_CALC_MTRANSIT, 'MC', 'culminating'),
 	(astrology.SE_CALC_SET, 'Dsc', 'setting'), (astrology.SE_CALC_ITRANSIT, 'IC', 'anticulminating'))
-AT_BIRTH_MINUTES = 30.0
-PARAN_MINUTES = 4.0
 
 
 def events(jd0, jd1, place, ipl=0, star=''):
@@ -44,9 +43,10 @@ def localday(chrt):
 
 
 def at_birth(chrt):
-	"""(star name, angle index, UT Julian day) within AT_BIRTH_MINUTES of the birth, nearest first."""
+	"""(star name, angle index, UT Julian day) near the birth (Options > Fixed stars on
+	the angles), nearest first."""
 	jd = chrt.time.jd
-	window = AT_BIRTH_MINUTES / 1440.0
+	window = tradoptions.get('fsa_minutes') / 1440.0
 	out = []
 	for nom in chrt.options.fixedstars:
 		for ai, t in events(jd - 0.5, jd + 0.5, chrt.place, star=',' + starnames.ALIASES.get(nom, nom)):
@@ -58,7 +58,7 @@ def at_birth(chrt):
 def parans(chrt):
 	"""(planet, planet's angle, star name, star's angle, planet's time, star's time) on the birth day."""
 	jd0, jd1 = localday(chrt)
-	orb = PARAN_MINUTES / 1440.0
+	orb = tradoptions.get('fsa_paranminutes') / 1440.0
 	plevents = [(pl, ai, t) for pl in range(planets.Planets.PLANETS_NUM)
 		for ai, t in events(jd0, jd1, chrt.place, ipl=util.mapChaldeanToModern(pl))]
 	out = []

@@ -8,6 +8,7 @@ import placesdlg
 import mtexts
 import util
 from auto_timezone import resolve_timezone, TimezoneLookupError
+import tradoptions
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
@@ -403,7 +404,8 @@ class DataDlg(wx.Dialog):
                 self.zminute.SetValue(zone[idx:])
                 self.alt.SetValue(alt)
                 # the place's zone is today's; offer the one in force on the birth date
-                self.onAutoTimezone(None, quiet=True)
+                if tradoptions.get('place_timezone'):
+                    self.onAutoTimezone(None, quiet=True)
         pdlg.Destroy()
 
     def initialize(self):

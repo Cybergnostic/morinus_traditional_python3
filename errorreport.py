@@ -53,7 +53,8 @@ def report(exc_type, exc, tb, where=''):
 		_shown.add(key)
 	try:
 		import wx
-		if wx.GetApp() is None:
+		import tradoptions
+		if wx.GetApp() is None or not tradoptions.get('err_show'):
 			return
 		message = 'Something went wrong:\n\n%s\n' % traceback.format_exception_only(exc_type, exc)[-1].strip()
 		if path:

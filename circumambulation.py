@@ -12,9 +12,11 @@ import math
 import planets
 import houses
 import util
+import tradoptions
 
 ASPECTS = ((0, 'L'), (60, 'M'), (90, 'N'), (120, 'O'), (180, 'P'))	# with their Morinus.ttf letters
 YEAR = 365.2421897
+NAIBOD = 0.98564733	# degrees of right ascension of the Sun's mean daily motion: a year
 
 
 class NotAvailable(Exception):
@@ -28,6 +30,11 @@ class Event:
 		self.distributor = distributor	# planet: the Ascendant enters its bound
 		self.participant = participant	# planet whose body/ray the Ascendant meets
 		self.aspect = aspect		# index into ASPECTS
+
+
+def right_ascension(lon, obl):
+	l, e = math.radians(lon), math.radians(obl)
+	return math.degrees(math.atan2(math.sin(l) * math.cos(e), math.cos(l))) % 360.0
 
 
 def oblique_ascension(lon, obl, lat):
@@ -54,17 +61,28 @@ def bounds(options, ayanamsha):
 	return out
 
 
-def circumambulation(chrt, years=100):
-	"""Events in order of time: bounds entered and rays met."""
+def circumambulation(chrt, years=None):
+	"""Events in order of time: bounds entered and rays met, for the point,
+	key and rays of the options (Options > Circumambulation)."""
+	years = years or tradoptions.get('ca_years')
+	key = NAIBOD if tradoptions.get('ca_key') == 'naibod' else 1.0
+	rays = tradoptions.get('ca_rays')
 	obl = chrt.obl[0]
 	lat = chrt.place.lat
-	if abs(lat) >= 90.0 - obl:
-		raise NotAvailable('the ecliptic does not rise and set at this latitude')
-	asc = chrt.houses.ascmc[houses.Houses.ASC]
-	oa0 = (chrt.houses.ascmc[houses.Houses.ARMC] + 90.0) % 360.0
+	if tradoptions.get('ca_point') == 'mc':
+		asc = chrt.houses.ascmc[houses.Houses.MC]
+		ra0 = chrt.houses.ascmc[houses.Houses.ARMC]
 
-	def arc(lon):
-		return (oblique_ascension(lon, obl, lat) - oa0) % 360.0
+		def arc(lon):
+			return (right_ascension(lon, obl) - ra0) % 360.0 / key
+	else:
+		if abs(lat) >= 90.0 - obl:
+			raise NotAvailable('the ecliptic does not rise and set at this latitude')
+		asc = chrt.houses.ascmc[houses.Houses.ASC]
+		oa0 = (chrt.houses.ascmc[houses.Houses.ARMC] + 90.0) % 360.0
+
+		def arc(lon):
+			return (oblique_ascension(lon, obl, lat) - oa0) % 360.0 / key
 
 	events = []
 	bnds = bounds(chrt.options, chrt.ayanamsha)
@@ -77,6 +95,8 @@ def circumambulation(chrt, years=100):
 	for pl in range(planets.Planets.PLANETS_NUM):
 		plon = chrt.planets.planets[pl].data[planets.Planet.LON]
 		for i, (angle, letter) in enumerate(ASPECTS):
+			if not rays[i]:
+				continue
 			for sign in ((1,) if angle in (0, 180) else (1, -1)):
 				point = util.normalize(plon + sign * angle)
 				events.append(Event(arc(point), point, participant=pl, aspect=i))

@@ -12,9 +12,11 @@ import util
 import mtexts
 import fortune
 import houses
+import tradoptions
 
 PLANETS_ON = 'Planets on it'
-NOTE = 'Planets on it: in its sign, the whole degrees adding up to 29 (minutes not counted); distance from the exact point'
+NOTES = {'degrees': 'Planets on it: in its sign, the whole degrees adding up to 29 (minutes not counted); distance from the exact point',
+	'orb': 'Planets on it: within the orb of a conjunction (Options > Orbs); distance from the exact point'}
 
 class AntisciaWnd(commonwnd.CommonWnd):
 
@@ -45,7 +47,7 @@ class AntisciaWnd(commonwnd.CommonWnd):
         self.LINE_NUM = 12
         self.TABLE_HEIGHT = self.TITLE_HEIGHT + self.SPACE_TITLEY + self.LINE_NUM * self.LINE_HEIGHT
         self.TABLE_WIDTH = self.SMALL_CELL_WIDTH + self.TITLE_WIDTH
-        self.WIDTH = commonwnd.CommonWnd.BORDER + max(self.TABLE_WIDTH, measure.textbbox((0, 0), NOTE, self.fntText)[2]) + commonwnd.CommonWnd.BORDER
+        self.WIDTH = commonwnd.CommonWnd.BORDER + max(self.TABLE_WIDTH, measure.textbbox((0, 0), NOTES[tradoptions.get('ant_rule')], self.fntText)[2]) + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + self.LINE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
         self.drawBkg()
@@ -66,18 +68,27 @@ class AntisciaWnd(commonwnd.CommonWnd):
         rows.append((self.chart.fortune.fortune[fortune.Fortune.LON], ants.lofant.lon, ants.lofcontraant.lon, None))
         for i, h in enumerate((houses.Houses.ASC, houses.Houses.MC)):
             rows.append((self.chart.houses.ascmc[h], ants.ascmcant[i].lon, ants.ascmccontraant[i].lon, None))
+        byorb = tradoptions.get('ant_rule') == 'orb'
         hits = []
         for lon, ant, cant, obj in rows:
             sign, deg = int(lon // 30.0) % 12, int(lon % 30.0)
             antsign = (5 - sign) % 12	# mirrored in the Cancer-Capricorn axis
+            own = self.options.orbs[obj] / 2.0 if obj is not None else 0.0
             row = []
             for target, point in ((antsign, ant), ((antsign + 6) % 12, cant)):
                 found = []
                 for pl in range(planets.Planets.PLANETS_NUM):
                     plon = pls[pl].data[planets.Planet.LON]
-                    if pl == obj or int(plon // 30.0) % 12 != target or deg + int(plon % 30.0) != 29:
+                    dist = abs(util.normalize(point - plon + 180.0) - 180.0)
+                    if pl == obj:
                         continue
-                    found.append((pl, abs(util.normalize(point - plon + 180.0) - 180.0)))
+                    if byorb:
+                        # within the conjunction orb: half of each planet's orb (Options > Orbs)
+                        if dist > own + self.options.orbs[pl] / 2.0:
+                            continue
+                    elif int(plon // 30.0) % 12 != target or deg + int(plon % 30.0) != 29:
+                        continue
+                    found.append((pl, dist))
                 row.append(sorted(found, key=lambda h: h[1]))
             hits.append(row)
         return hits
@@ -152,8 +163,8 @@ class AntisciaWnd(commonwnd.CommonWnd):
             self.drawline(draw, x, y + i * self.LINE_HEIGHT, txts[j], tableclr, data[j], j, ascmc)
             i += 1
 
-        w, h = draw.textbbox((0, 0), NOTE, self.fntText)[2:]
-        draw.text((x, y + i * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), NOTE, fill=txtclr, font=self.fntText)
+        w, h = draw.textbbox((0, 0), NOTES[tradoptions.get('ant_rule')], self.fntText)[2:]
+        draw.text((x, y + i * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), NOTES[tradoptions.get('ant_rule')], fill=txtclr, font=self.fntText)
         wxImg = wx.Image(img.size[0], img.size[1])
         wxImg.SetData(img.tobytes())
         self.buffer = wx.Bitmap(wxImg)

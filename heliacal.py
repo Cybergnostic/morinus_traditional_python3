@@ -1,13 +1,15 @@
 """Heliacal phenomena and phasis: for each planet the visibility events nearest
 the birth (morning first and evening last, and for Venus, Mercury and the Moon
 evening first and morning last) and the stations, from the Swiss Ephemeris
-(swe_heliacal_ut: arcus visionis, standard atmosphere, observer of 36 years).
-A planet makes its phasis when such an event falls within 7 days of the birth.
+(swe_heliacal_ut: arcus visionis, with the atmosphere and observer of the options).
+A planet makes its phasis when such an event falls within some days of the
+birth (Options > Heliacal phenomena: 7 in the Hellenistic texts).
 
 Times are Julian days (UT)."""
 
 import astrology
 import planets
+import tradoptions
 
 P = planets.Planets
 NAMES = {P.SATURN: 'saturn', P.JUPITER: 'jupiter', P.MARS: 'mars', P.VENUS: 'venus', P.MERCURY: 'mercury', P.MOON: 'moon'}
@@ -16,14 +18,15 @@ MORNING_FIRST, EVENING_LAST, EVENING_FIRST, MORNING_LAST = 1, 2, 3, 4
 EVENTNAMES = {MORNING_FIRST: 'morning first (heliacal rising)', EVENING_LAST: 'evening last (heliacal setting)',
 	EVENING_FIRST: 'evening first', MORNING_LAST: 'morning last'}
 EVENTS = {P.SATURN: (1, 2), P.JUPITER: (1, 2), P.MARS: (1, 2), P.VENUS: (1, 2, 3, 4), P.MERCURY: (1, 2, 3, 4), P.MOON: (3, 4)}
-PHASIS_DAYS = 7.0
-STATION_DAYS = 30
 
 
 def event(planet, eventtype, start, place):
 	"""The first such event after start (UT Julian day), or None."""
-	ret, dret, serr = astrology.swe_heliacal_ut(start, place.lon, place.lat, float(place.altitude), 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, 0.0, NAMES[planet], eventtype, astrology.SEFLG_SWIEPH)
+	o = tradoptions.get
+	# atmosphere: pressure, temperature, humidity, extinction (0: from the others); observer: age, Snellen ratio
+	ret, dret, serr = astrology.swe_heliacal_ut(start, place.lon, place.lat, float(place.altitude),
+		float(o('hel_pressure')), float(o('hel_temperature')), float(o('hel_humidity')), 0.0,
+		float(o('hel_age')), 1.0, 0.0, 0.0, 0.0, 0.0, NAMES[planet], eventtype, astrology.SEFLG_SWIEPH)
 	if ret[0] < 0 or dret[0] <= 0.0:
 		return None
 	return dret[0]
@@ -46,9 +49,10 @@ def around(planet, eventtype, jd, place):
 
 
 def stations(planet, jd):
-	"""Stations within STATION_DAYS of jd: (UT Julian day, turning retrograde?)."""
+	"""Stations within the days of the options of jd: (UT Julian day, turning retrograde?)."""
 	if planet == P.MOON:
 		return []
+	STATION_DAYS = int(tradoptions.get('hel_stationdays'))
 	out = []
 	speed = lambda t: astrology.swe_calc_ut(t, SWE[planet], astrology.SEFLG_SWIEPH | astrology.SEFLG_SPEED)[1][3]
 	prev = speed(jd - STATION_DAYS)

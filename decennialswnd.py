@@ -8,7 +8,17 @@ import decennials
 import zodiacalreleasing as zr
 
 HEADERS = ('Level', 'Planet', 'Starts', 'Ends', 'Length', '')
-NOTE = 'From the sect light, then in zodiacal order; dates in the time of the chart, months of 30 days.'
+NOTE = 'In zodiacal order from the starting planet; dates in the time of the chart (Options > Decennials).'
+
+
+def lengthstr(p):
+	days = p.end - p.start
+	m = decennials.month()
+	if p.level == 1:
+		return '%g years' % round(days / (12.0 * m), 2)
+	if p.level == 2:
+		return '%g months' % round(days / m, 2)
+	return '%.1f days' % days
 
 
 class DecennialsWnd(tablewnd.TableWnd):
@@ -27,7 +37,7 @@ class DecennialsWnd(tablewnd.TableWnd):
 		for p in periods:
 			hours = p.level >= 3
 			rows.append(['L%d' % p.level, (tablewnd.GLYPH, common.common.planets[p.planet]),
-				zr.datestr(chrt, p.start, hours), zr.datestr(chrt, p.end, hours), zr.lengthstr(p),
+				zr.datestr(chrt, p.start, hours), zr.datestr(chrt, p.end, hours), lengthstr(p),
 				'now' if p.start <= now < p.end else ''])
 			colours.append(self.options.clrplanets[p.planet])
 		self.sections = [tablewnd.Section(rows, HEADERS, colours)]

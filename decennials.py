@@ -10,11 +10,13 @@ Times are Julian days (UT), as in zodiacalreleasing."""
 
 import planets
 import lotswnd
+import fortune
+import houses
+import tradoptions
 
 P = planets.Planets
 MINOR = {P.SATURN: 30, P.JUPITER: 12, P.MARS: 15, P.SUN: 19, P.VENUS: 8, P.MERCURY: 20, P.MOON: 25}
 TOTAL = 129
-MONTH = 30.0
 
 
 class Period:
@@ -25,11 +27,24 @@ class Period:
 		self.end = end
 
 
+def month():
+	return tradoptions.get('dec_monthdays')
+
+
 def order(chrt):
-	"""The seven planets in zodiacal order, from the sect light (Morinus's sect,
-	as used for the lots)."""
-	pls = sorted(MINOR, key=lambda p: chrt.planets.planets[p].data[planets.Planet.LON])
-	first = P.MOON if lotswnd.LotsWnd.isNightChart(chrt) else P.SUN
+	"""The seven planets in zodiacal order, from the starting planet of the options:
+	the sect light (Morinus's sect, as used for the lots), the Sun, the Moon, or the
+	first planet after the Ascendant or the Lot of Fortune."""
+	lon = lambda p: chrt.planets.planets[p].data[planets.Planet.LON]
+	pls = sorted(MINOR, key=lon)
+	start = tradoptions.get('dec_start')
+	if start in ('asc', 'fortune'):
+		deg = chrt.houses.ascmc[houses.Houses.ASC] if start == 'asc' else chrt.fortune.fortune[fortune.Fortune.LON]
+		first = min(pls, key=lambda p: (lon(p) - deg) % 360.0)
+	elif start in ('sun', 'moon'):
+		first = P.SUN if start == 'sun' else P.MOON
+	else:
+		first = P.MOON if lotswnd.LotsWnd.isNightChart(chrt) else P.SUN
 	i = pls.index(first)
 	return pls[i:] + pls[:i]
 
@@ -39,8 +54,10 @@ def rotated(seq, first):
 	return seq[i:] + seq[:i]
 
 
-def decennials(chrt, years=110):
+def decennials(chrt, years=None):
 	"""Level 1 periods and the level 2 periods within them, for years after birth."""
+	years = years or tradoptions.get('dec_years')
+	MONTH = month()
 	seq = order(chrt)
 	out = []
 	t = chrt.time.jd

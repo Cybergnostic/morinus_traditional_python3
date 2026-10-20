@@ -4,6 +4,7 @@ window (main window, each table, chart windows), kept in Opts/windows.json."""
 import os
 import json
 import wx
+import tradoptions
 
 FILENAME = os.path.join('Opts', 'windows.json')
 
@@ -22,6 +23,8 @@ def _load():
 
 
 def _store(frame):
+	if not tradoptions.get('win_remember'):
+		return
 	if frame.IsMaximized() or frame.IsIconized() or frame.IsFullScreen():
 		return
 	saved = _load()
@@ -34,6 +37,8 @@ def _store(frame):
 
 
 def _restore(frame):
+	if not tradoptions.get('win_remember'):
+		return
 	geometry = _load().get(type(frame).__name__)
 	if not geometry or len(geometry) != 4:
 		return
