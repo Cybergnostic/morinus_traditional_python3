@@ -50,7 +50,8 @@ def standard_offset(zone):
 def search(query, limit=100):
 	"""Places whose name, in any spelling GeoNames knows, starts with the query:
 	exact names first, then by population. 'Name, region or country' narrows the
-	search (e.g. 'Springfield, Illinois' or 'Nis, RS').
+	search (e.g. 'Springfield, Illinois'); two letters are a country code or,
+	in the US and Canada, a state or province code ('Nis, RS', 'Paris, TX').
 
 	Returns tuples in the order of geonames.Geonames: name, longitude, latitude,
 	country code, 'region, country', altitude, standard GMT offset (hours)."""
@@ -61,18 +62,22 @@ def search(query, limit=100):
 	key = normalize(name)
 	if not key:
 		return []
-	sql = '''SELECT p.name, p.lon, p.lat, p.cc, p.country, p.admin1, p.alt, p.tz, MAX(n.key = :key) AS exact
+	# rank: the exact own name, an exact other name, own name starting so,
+	# another name starting so; then whole towns before sections, by population
+	sql = '''SELECT p.name, p.lon, p.lat, p.cc, p.country, p.admin1, p.alt, p.tz, MAX(2*(n.key = :key) + n.main) AS rank
 		FROM names n JOIN places p ON p.id = n.id
 		WHERE n.key >= :key AND n.key < :end'''
 	args = {'key': key, 'end': key+'\U0010ffff', 'limit': limit}
 	where = normalize(where)
-	if where:
-		sql += ' AND (p.ckey LIKE :where OR p.akey LIKE :where OR lower(p.cc) = :cc)'
+	if len(where) == 2:
+		sql += " AND (lower(p.cc) = :where OR (p.cc IN ('US', 'CA') AND lower(p.a1code) = :where))"
+		args['where'] = where
+	elif where:
+		sql += ' AND (p.ckey LIKE :where OR p.akey LIKE :where)'
 		args['where'] = where+'%'
-		args['cc'] = where
-	sql += ' GROUP BY p.id ORDER BY exact DESC, p.pop DESC LIMIT :limit'
+	sql += ' GROUP BY p.id ORDER BY rank DESC, p.section, p.pop DESC LIMIT :limit'
 	places = []
-	for name, lon, lat, cc, country, admin1, alt, tz, exact in db.execute(sql, args):
+	for name, lon, lat, cc, country, admin1, alt, tz, rank in db.execute(sql, args):
 		region = admin1+', '+country if admin1 else country
 		places.append((name, lon, lat, cc, region, alt, standard_offset(tz)))
 	return places

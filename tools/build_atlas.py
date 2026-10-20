@@ -52,22 +52,25 @@ def build(src, out):
 	db = sqlite3.connect(tmp)
 	db.executescript('''
 		CREATE TABLE places (id INTEGER PRIMARY KEY, name TEXT, lat REAL, lon REAL, cc TEXT,
-			country TEXT, admin1 TEXT, ckey TEXT, akey TEXT, alt INTEGER, tz TEXT, pop INTEGER);
-		CREATE TABLE names (key TEXT, id INTEGER, PRIMARY KEY (key, id)) WITHOUT ROWID;
+			country TEXT, admin1 TEXT, a1code TEXT, ckey TEXT, akey TEXT, alt INTEGER, tz TEXT, pop INTEGER, section INTEGER);
+		CREATE TABLE names (key TEXT, id INTEGER, main INTEGER, PRIMARY KEY (key, id)) WITHOUT ROWID;
 		CREATE TABLE info (key TEXT PRIMARY KEY, value TEXT);''')
 	num = 0
 	for f in lines(cities):
-		gid, name, ascii, alternates, lat, lon = f[0], f[1], f[2], f[3], float(f[4]), float(f[5])
+		gid, name, ascii, alternates, lat, lon, fcode = f[0], f[1], f[2], f[3], float(f[4]), float(f[5]), f[7]
 		cc, admin1, pop, elev, dem, tz = f[8], f[10], int(f[14] or 0), f[15], f[16], f[17]
 		if not tz:
 			continue
 		alt = int(elev) if elev else (int(dem) if dem and int(dem) > -9999 else 0)
 		country = countries.get(cc, cc)
 		region = regions.get(cc+'.'+admin1, '')
-		db.execute('INSERT INTO places VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-			(int(gid), name, lat, lon, cc, country, region, atlas.normalize(country), atlas.normalize(region), alt, tz, pop))
-		keys = {atlas.normalize(n) for n in [name, ascii]+alternates.split(',') if n and len(n) <= 60}
-		db.executemany('INSERT INTO names VALUES (?,?)', [(k, int(gid)) for k in keys if k])
+		# a section of a town (PPLX, e.g. a district of Paris) is listed after whole towns
+		db.execute('INSERT INTO places VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+			(int(gid), name, lat, lon, cc, country, region, admin1, atlas.normalize(country), atlas.normalize(region), alt, tz, pop, int(fcode == 'PPLX')))
+		# main: the place's own name (not one of its other names), listed first
+		keys = {atlas.normalize(n): 0 for n in alternates.split(',') if n and len(n) <= 60}
+		keys.update({atlas.normalize(n): 1 for n in (name, ascii) if n})
+		db.executemany('INSERT INTO names VALUES (?,?,?)', [(k, int(gid), main) for k, main in keys.items() if k])
 		num += 1
 	db.execute('CREATE INDEX places_lat ON places (lat)')
 	db.executemany('INSERT INTO info VALUES (?,?)', [
