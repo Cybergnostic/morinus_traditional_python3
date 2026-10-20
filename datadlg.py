@@ -295,13 +295,18 @@ class DataDlg(wx.Dialog):
                 dlgm.Destroy()
         return
 
-    def onAutoTimezone(self, event):
-        """Explicit lookup; existing charts/manual edits are never changed silently."""
+    def onAutoTimezone(self, event, quiet=False):
+        """Explicit lookup; existing charts/manual edits are never changed silently.
+        quiet (after choosing a place): no messages when no zone can be given."""
         if self.timeckb.GetValue():
+            if quiet:
+                return
             wx.MessageBox('Automatic time zones require an AD/CE date. Use manual settings for BC dates.',
                           'Automatic time zone', wx.OK | wx.ICON_WARNING, self)
             return
         if self.calcb.GetCurrentSelection() != chart.Time.GREGORIAN:
+            if quiet:
+                return
             wx.MessageBox('Automatic time zones require a Gregorian calendar date. Use manual settings for Julian dates.',
                           'Automatic time zone', wx.OK | wx.ICON_WARNING, self)
             return
@@ -317,6 +322,8 @@ class DataDlg(wx.Dialog):
                 int(self.day.GetValue()), int(self.hour.GetValue()),
                 int(self.minute.GetValue()), int(self.sec.GetValue()), lat, lon)
         except (TimezoneLookupError, ValueError) as exc:
+            if quiet:
+                return
             wx.MessageBox(str(exc), 'Automatic time zone',
                           wx.OK | wx.ICON_WARNING, self)
             return
@@ -395,6 +402,8 @@ class DataDlg(wx.Dialog):
                     idx += 1
                 self.zminute.SetValue(zone[idx:])
                 self.alt.SetValue(alt)
+                # the place's zone is today's; offer the one in force on the birth date
+                self.onAutoTimezone(None, quiet=True)
         pdlg.Destroy()
 
     def initialize(self):
