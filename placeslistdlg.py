@@ -54,7 +54,7 @@ class PlaceListCtrl(wx.ListCtrl):
     def fillRows(self):
         items = list(self.placedata.items())
         for key, data in items:
-            index = self.InsertItem(sys.maxsize, data[0])
+            index = self.InsertItem(self.GetItemCount(), data[0])
             self.SetItem(index, PlaceListCtrl.PLACE, data[0])
             self.SetItem(index, PlaceListCtrl.COUNTRY, data[1])
             self.SetItem(index, PlaceListCtrl.LON, data[2])

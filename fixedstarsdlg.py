@@ -111,7 +111,7 @@ class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl
         cnt = 0
         for key, data in items:
             cnt += 1
-            index = self.InsertStringItem(sys.maxsize, data[0])
+            index = self.InsertStringItem(self.GetItemCount(), data[0])
             self.SetItem(index, FixedStarListCtrl.NUM, str(cnt) + '.')
             self.SetItem(index, FixedStarListCtrl.NAME, data[0])
             self.SetItem(index, FixedStarListCtrl.NOMNAME, data[1])

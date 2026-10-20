@@ -32,7 +32,7 @@ class RowsListCtrl(wx.ListCtrl):
             self.InsertColumn(RowsListCtrl.RULERSHIP, mtexts.txtsalmutentopicalsdlg['Rulership'])
         items = list(self.rowsdata.items())
         for key, data in items:
-            index = self.InsertItem(sys.maxsize, data[0])
+            index = self.InsertItem(self.GetItemCount(), data[0])
             self.SetItem(index, RowsListCtrl.TYPE, data[0])
             self.SetItem(index, RowsListCtrl.VALUE, data[1])
             self.SetItem(index, RowsListCtrl.RULERSHIP, data[2])
