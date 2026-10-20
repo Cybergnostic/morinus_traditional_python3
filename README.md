@@ -35,6 +35,10 @@ Added in this version:
 - **Tables → Heliacal phenomena and phasis** — for each planet the morning
   and evening first and last appearances nearest the birth (Swiss Ephemeris
   visibility) and the stations, with phasis within 7 days of the birth.
+- **Tables → Fixed stars on the angles** — the stars (Options → Fixed stars)
+  rising, culminating, setting or anticulminating within 30 minutes of the
+  birth, and the paranatellonta of the birth day: a planet and a star on
+  angles within 4 minutes.
 - **Copy as text** in the popup menu of every table, **arrow keys** to step
   return and transit charts, windows reopen at their last size and position,
   and unexpected errors are shown and written to `morinus-error.log`.

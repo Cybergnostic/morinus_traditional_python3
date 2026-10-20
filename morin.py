@@ -9,6 +9,7 @@ import zodiacalreleasingwnd
 import decennialswnd
 import circumambulationwnd
 import heliacalwnd
+import fixedstaranglewnd
 import returnslistframe
 import os
 import pickle
@@ -265,6 +266,9 @@ class MFrame(wx.Frame):
             self.ID_Heliacal = wx.NewIdRef()
             self.mtables.Append(self.ID_Heliacal, 'Heliacal phenomena and phasis', 'Visibility of the planets and stations around the birth')
             self.Bind(wx.EVT_MENU, self.onHeliacal, id=self.ID_Heliacal)
+            self.ID_StarAngles = wx.NewIdRef()
+            self.mtables.Append(self.ID_StarAngles, 'Fixed stars on the angles', 'Stars on the angles at the birth and the paranatellonta of the birth day')
+            self.Bind(wx.EVT_MENU, self.onStarAngles, id=self.ID_StarAngles)
             menubar.Append(self.mtables, mtexts.menutxts['MTable'])
         self.ID_Transits, self.ID_Revolutions, self.ID_SunTransits, self.ID_SecondaryDirs, self.ID_Elections, self.ID_SquareChart, self.ID_SyzygyChart, self.ID_SyzygyChart2, self.ID_ProfectionsChart, self.ID_HelioChart = list(range(150, 160))
         self.chartsbase = 150
@@ -936,6 +940,12 @@ class MFrame(wx.Frame):
         if not self.splash:
             wait = wx.BusyCursor()
             frame = heliacalwnd.HeliacalFrame(self, self.title, self.horoscope, self.options)
+            frame.Show(True)
+
+    def onStarAngles(self, event):
+        if not self.splash:
+            wait = wx.BusyCursor()
+            frame = fixedstaranglewnd.FixedStarAnglesFrame(self, self.title, self.horoscope, self.options)
             frame.Show(True)
 
     def showReleasing(self, lot):
@@ -2228,7 +2238,7 @@ class MFrame(wx.Frame):
         if self.options.menusels[MFrame.MCHARTS][(self.ID_HelioChart - self.chartsbase)]:
             self.mcharts.Enable(self.ID_HelioChart, bEnable)
         if hasattr(self, 'ID_TradConditions'):
-            for i in (self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal):
+            for i in (self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles):
                 self.mtables.Enable(i, bEnable)
         if hasattr(self, 'ID_ReturnsList'):
             self.mcharts.Enable(self.ID_ReturnsList, bEnable)
