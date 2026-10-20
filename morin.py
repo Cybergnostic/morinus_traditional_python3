@@ -2,7 +2,7 @@
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import wx
 import wx.adv
-import traditionalwnd
+import conditionswnd
 import temperamentwnd
 import returnslistframe
 import os
@@ -242,14 +242,12 @@ class MFrame(wx.Frame):
                 self.mtables.Append(self.ID_PrimaryDirs, mtexts.menutxts['TMPrimaryDirs'], mtexts.menutxts['TMPrimaryDirsDoc'])
                 self.Bind(wx.EVT_MENU, self.onPrimaryDirs, id=self.ID_PrimaryDirs)
             # traditional analysis tables (always shown, not part of the menu selection settings)
-            self.ID_TradConditions, self.ID_TradRelationships, self.ID_TradTemperament = list(range(143, 146))
+            self.ID_TradConditions, self.ID_TradTemperament = 143, 145
             self.mtables.AppendSeparator()
             self.mtables.Append(self.ID_TradConditions, 'Planetary conditions', 'Sect, hayz, synodic phase, stations, joys, latitude, Via Combusta, void of course')
-            self.mtables.Append(self.ID_TradRelationships, 'Reception, generosity, repulsion', 'Reception, generosity and repulsion (odbojnost)')
             self.mtables.Append(self.ID_TradTemperament, 'Temperament', 'Temperament worksheet')
-            self.Bind(wx.EVT_MENU, lambda e: self.onTraditional(traditionalwnd.CONDITIONS), id=self.ID_TradConditions)
-            self.Bind(wx.EVT_MENU, lambda e: self.onTraditional(traditionalwnd.RELATIONSHIPS), id=self.ID_TradRelationships)
-            self.Bind(wx.EVT_MENU, lambda e: self.onTraditional(traditionalwnd.TEMPERAMENT), id=self.ID_TradTemperament)
+            self.Bind(wx.EVT_MENU, self.onConditions, id=self.ID_TradConditions)
+            self.Bind(wx.EVT_MENU, self.onTemperament, id=self.ID_TradTemperament)
             menubar.Append(self.mtables, mtexts.menutxts['MTable'])
         self.ID_Transits, self.ID_Revolutions, self.ID_SunTransits, self.ID_SecondaryDirs, self.ID_Elections, self.ID_SquareChart, self.ID_SyzygyChart, self.ID_SyzygyChart2, self.ID_ProfectionsChart, self.ID_HelioChart = list(range(150, 160))
         self.chartsbase = 150
@@ -893,13 +891,16 @@ class MFrame(wx.Frame):
         frame = returnslistframe.ReturnsListFrame(self, self.title, self.horoscope, self.options)
         frame.Show(True)
 
-    def onTraditional(self, kind):
+    def onConditions(self, event):
         if not self.splash:
             wait = wx.BusyCursor()
-            if kind == traditionalwnd.TEMPERAMENT:
-                frame = temperamentwnd.TemperamentFrame(self, self.title, self.horoscope, self.options)
-            else:
-                frame = traditionalwnd.TraditionalFrame(self, self.title, self.horoscope, kind)
+            frame = conditionswnd.ConditionsFrame(self, self.title, self.horoscope, self.options)
+            frame.Show(True)
+
+    def onTemperament(self, event):
+        if not self.splash:
+            wait = wx.BusyCursor()
+            frame = temperamentwnd.TemperamentFrame(self, self.title, self.horoscope, self.options)
             frame.Show(True)
 
     def onPositions(self, event):
@@ -2174,7 +2175,7 @@ class MFrame(wx.Frame):
         if self.options.menusels[MFrame.MCHARTS][(self.ID_HelioChart - self.chartsbase)]:
             self.mcharts.Enable(self.ID_HelioChart, bEnable)
         if hasattr(self, 'ID_TradConditions'):
-            for i in (self.ID_TradConditions, self.ID_TradRelationships, self.ID_TradTemperament):
+            for i in (self.ID_TradConditions, self.ID_TradTemperament):
                 self.mtables.Enable(i, bEnable)
         if hasattr(self, 'ID_ReturnsList'):
             self.mcharts.Enable(self.ID_ReturnsList, bEnable)
