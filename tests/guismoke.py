@@ -15,6 +15,7 @@
 
 import os
 import sys
+import faulthandler
 import ast
 import json
 import time
@@ -61,6 +62,7 @@ class DivTracer(ast.NodeTransformer):
 
 DIVSITES = {}
 CLIPPED = []
+STATE = {}	# the step reached and whether the run finished, for guismoke.json
 
 
 def div_trace(a, b, site):
@@ -153,6 +155,9 @@ def main():
 	shots = '--shots' in sys.argv
 	if not os.path.isdir(out):
 		os.makedirs(out)
+	# a crash of wx itself ends Python without a traceback: this writes where it was
+	crashlog = open(os.path.join(out, 'crash.txt'), 'w')
+	faulthandler.enable(crashlog)
 
 	sys.path.insert(0, mdir)
 	os.chdir(mdir)
@@ -314,7 +319,8 @@ def main():
 	# the native GTK about box is not a wx window and cannot be closed from here
 	wx.adv.AboutBox = lambda info, parent=None: wx.adv.GenericAboutBox(info, parent)
 
-	state = {'step': 'startup', 'filepath': horpath}
+	state = STATE
+	state.update({'step': 'startup', 'filepath': horpath})
 
 	def shot(name):
 		if shots:
@@ -395,6 +401,8 @@ def main():
 		shot('wnd')
 		popups(name)
 		if name == 'onExit':
+			state['finished'] = True
+			write_results(out, errors, quiet=True)
 			wx.CallLater(2000, app.ExitMainLoop)
 			return
 		wx.CallLater(50, next_step)
@@ -453,7 +461,7 @@ def main():
 
 
 def write_results(out, errors, quiet=False):
-	res = {'errors': errors, 'clipped': CLIPPED}
+	res = {'errors': errors, 'clipped': CLIPPED, 'laststep': STATE.get('step'), 'finished': STATE.get('finished', False)}
 	if DIVSITES:
 		res['divsites'] = dict((k, sorted(v)) for k, v in DIVSITES.items())
 	if STRSITES:

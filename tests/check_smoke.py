@@ -30,7 +30,10 @@ def main():
 		print('::error::%s / %s' % (e['step'], e['where']))
 		print(e['traceback'])
 	print('%d errors (%d known), %d clipped controls' % (len(res.get('errors', [])), len(res.get('errors', [])) - len(new), len(res.get('clipped', []))))
-	sys.exit(1 if new else 0)
+	finished = res.get('finished', True)
+	if not finished:
+		print('::error::the test did not finish: it stopped at %s (see crash.txt beside guismoke.json)' % res.get('laststep'))
+	sys.exit(1 if new or not finished else 0)
 
 
 if __name__ == '__main__':

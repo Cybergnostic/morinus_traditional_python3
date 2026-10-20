@@ -63,7 +63,7 @@ class TransitFrame(wx.Frame):
             self.pdtoradix.Enable(False)
         # stepping: previous/next return for solar and lunar returns, time steps otherwise
         self.ID_Step = wx.NewIdRef()
-        steptxt = {chart.Chart.SOLAR: 'Step solar returns...\t(Left/Right)', chart.Chart.LUNAR: 'Step lunar returns...\t(Left/Right)', chart.Chart.TRANSIT: 'Step time...\t(Left/Right)'}.get(self.chart.htype)
+        steptxt = {chart.Chart.SOLAR: 'Step solar returns... (arrow keys)', chart.Chart.LUNAR: 'Step lunar returns... (arrow keys)', chart.Chart.TRANSIT: 'Step time... (arrow keys)'}.get(self.chart.htype)
         if steptxt is not None:
             self.pmenu.Append(self.ID_Step, steptxt, 'Move the chart forward or backward in time')
             self.Bind(wx.EVT_MENU, self.onStep, id=self.ID_Step)
