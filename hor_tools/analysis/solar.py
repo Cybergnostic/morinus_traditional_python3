@@ -33,10 +33,10 @@ class SolarFrame:
     """True sect state plus apparent local rise/set boundaries."""
 
     is_day: bool
-    sunrise_jd: float
-    sunset_jd: float
-    sunrise_local: datetime
-    sunset_local: datetime
+    sunrise_jd: float | None
+    sunset_jd: float | None
+    sunrise_local: datetime | None
+    sunset_local: datetime | None
     sun_true_altitude: float
     method: str = "true_horizon_sect_apparent_rise_set_hours"
 
@@ -82,34 +82,27 @@ def _local_midnight_jd(chart: ChartInput, day_offset: int = 0) -> float:
     )
 
 
-def rise_set_for_local_day(chart: ChartInput, day_offset: int = 0) -> tuple[float, float]:
-    """Return apparent sunrise and sunset UT Julian days for a local date."""
+def _sun_event(base_jd: float, rsmi: int, geopos: tuple[float, float, float]) -> float | None:
+    """UT Julian day of the Sun's next rise or set, or None when the Sun does
+    not rise or set (polar day or night: Swiss Ephemeris returns -2)."""
+
+    try:
+        flag, tret = swe.rise_trans(base_jd, swe.SUN, rsmi=rsmi, geopos=geopos)
+    except swe.Error:
+        return None
+    if flag < 0 or not tret or tret[0] <= 0.0:
+        return None
+    return float(tret[0])
+
+
+def rise_set_for_local_day(chart: ChartInput, day_offset: int = 0) -> tuple[float | None, float | None]:
+    """Return apparent sunrise and sunset UT Julian days for a local date
+    (None for each that does not happen, in polar day or night)."""
 
     ensure_ephe_path()
     base_jd = _local_midnight_jd(chart, day_offset)
     geopos = (chart.longitude, chart.latitude, chart.altitude_m or 0.0)
-
-    rise_flag, rise_tret = swe.rise_trans(
-        base_jd,
-        swe.SUN,
-        rsmi=swe.CALC_RISE,
-        geopos=geopos,
-    )
-    set_flag, set_tret = swe.rise_trans(
-        base_jd,
-        swe.SUN,
-        rsmi=swe.CALC_SET,
-        geopos=geopos,
-    )
-    if rise_flag < 0 or not rise_tret:
-        raise RuntimeError(
-            f"Swiss Ephemeris could not determine sunrise at {chart.latitude}, {chart.longitude}."
-        )
-    if set_flag < 0 or not set_tret:
-        raise RuntimeError(
-            f"Swiss Ephemeris could not determine sunset at {chart.latitude}, {chart.longitude}."
-        )
-    return float(rise_tret[0]), float(set_tret[0])
+    return _sun_event(base_jd, swe.CALC_RISE, geopos), _sun_event(base_jd, swe.CALC_SET, geopos)
 
 
 def _sun_true_altitude(chart: ChartInput) -> float:
@@ -135,8 +128,8 @@ def solar_frame_for_chart(chart: ChartInput) -> SolarFrame:
     is_day = sun_true_altitude > 0.0
 
     offset = timedelta(hours=chart.tz_offset_hours)
-    sunrise_local = (_jd_to_utc_datetime(sunrise_jd) + offset).replace(tzinfo=None)
-    sunset_local = (_jd_to_utc_datetime(sunset_jd) + offset).replace(tzinfo=None)
+    sunrise_local = None if sunrise_jd is None else (_jd_to_utc_datetime(sunrise_jd) + offset).replace(tzinfo=None)
+    sunset_local = None if sunset_jd is None else (_jd_to_utc_datetime(sunset_jd) + offset).replace(tzinfo=None)
     return SolarFrame(
         is_day=is_day,
         sunrise_jd=sunrise_jd,
@@ -147,13 +140,16 @@ def solar_frame_for_chart(chart: ChartInput) -> SolarFrame:
     )
 
 
-def planetary_day_hour_rulers(chart: ChartInput) -> tuple[str, str]:
-    """Return planetary day/hour rulers from apparent sunrise/sunset divisions."""
+def planetary_day_hour_rulers(chart: ChartInput) -> tuple[str, str | None]:
+    """Return planetary day/hour rulers from apparent sunrise/sunset divisions
+    (no hour ruler in polar day or night, which have no planetary hours)."""
 
     birth_jd = julian_day_from_chart(chart)
     dt_utc = _naive_utc(chart.datetime_utc)
     dt_local = dt_utc + timedelta(hours=chart.tz_offset_hours)
     sunrise_today, sunset_today = rise_set_for_local_day(chart, 0)
+    if sunrise_today is None or sunset_today is None:
+        return DAY_RULERS[dt_local.weekday()], None
 
     if sunrise_today <= birth_jd < sunset_today:
         planetary_weekday = dt_local.weekday()
@@ -162,6 +158,8 @@ def planetary_day_hour_rulers(chart: ChartInput) -> tuple[str, str]:
         hour_number = int((birth_jd - sunrise_today) / hour_len)
     elif birth_jd >= sunset_today:
         sunrise_next, _ = rise_set_for_local_day(chart, 1)
+        if sunrise_next is None:
+            return DAY_RULERS[dt_local.weekday()], None
         planetary_weekday = dt_local.weekday()
         day_ruler = DAY_RULERS[planetary_weekday]
         hour_len = (sunrise_next - sunset_today) / 12.0
@@ -169,6 +167,8 @@ def planetary_day_hour_rulers(chart: ChartInput) -> tuple[str, str]:
     else:
         _, sunset_prev = rise_set_for_local_day(chart, -1)
         prev_local = dt_local - timedelta(days=1)
+        if sunset_prev is None:
+            return DAY_RULERS[prev_local.weekday()], None
         planetary_weekday = prev_local.weekday()
         day_ruler = DAY_RULERS[planetary_weekday]
         hour_len = (sunrise_today - sunset_prev) / 12.0

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta, timezone
 import math
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import swisseph as swe
 
@@ -265,36 +265,32 @@ def build_essential_rows(chart: ChartInput, planets: List[PlanetPosition], house
     return rows, total_shares, total_scores
 
 
-def _sunrise_sunset(jd: float, lat: float, lon: float, tz_offset_hours: float = 0.0) -> Tuple[float, float]:
-    """Return UT Julian days for geographic sunrise and sunset.
+def _sunrise_sunset(jd: float, lat: float, lon: float, tz_offset_hours: float = 0.0) -> Tuple[Optional[float], Optional[float]]:
+    """Return UT Julian days for geographic sunrise and sunset (None for each
+    that does not happen, in polar day or night).
 
     The timezone offset is deliberately NOT used as a substitute longitude.
     It belongs only to civil-time/date conversion. Sunrise/sunset must use the
     chart's real geographic longitude.
     """
     ensure_ephe_path()
-    rise_flag, rise_tret = swe.rise_trans(
-        jd,
-        swe.SUN,
-        rsmi=swe.CALC_RISE | swe.BIT_DISC_CENTER,
-        geopos=(lon, lat, 0.0),
-    )
-    set_flag, set_tret = swe.rise_trans(
-        jd,
-        swe.SUN,
-        rsmi=swe.CALC_SET | swe.BIT_DISC_CENTER,
-        geopos=(lon, lat, 0.0),
-    )
 
-    if rise_flag < 0 or not rise_tret:
-        raise RuntimeError(f"Failed to compute sunrise for jd={jd}, lat={lat}, lon={lon}")
-    if set_flag < 0 or not set_tret:
-        raise RuntimeError(f"Failed to compute sunset for jd={jd}, lat={lat}, lon={lon}")
-    return float(rise_tret[0]), float(set_tret[0])
+    def event(rsmi: int) -> Optional[float]:
+        try:
+            flag, tret = swe.rise_trans(jd, swe.SUN, rsmi=rsmi | swe.BIT_DISC_CENTER, geopos=(lon, lat, 0.0))
+        except swe.Error:
+            return None
+        # -2: the Sun does not rise or set
+        if flag < 0 or not tret or tret[0] <= 0.0:
+            return None
+        return float(tret[0])
+
+    return event(swe.CALC_RISE), event(swe.CALC_SET)
 
 
-def planetary_day_hour_rulers(chart: ChartInput) -> Tuple[str, str]:
-    """Return (day_ruler, hour_ruler) from local geographic sunrise to sunrise."""
+def planetary_day_hour_rulers(chart: ChartInput) -> Tuple[str, Optional[str]]:
+    """Return (day_ruler, hour_ruler) from local geographic sunrise to sunrise
+    (no hour ruler in polar day or night, which have no planetary hours)."""
     dt_utc = chart.datetime_utc
     if dt_utc.tzinfo is not None:
         dt_utc = dt_utc.astimezone(timezone.utc).replace(tzinfo=None)
@@ -315,6 +311,8 @@ def planetary_day_hour_rulers(chart: ChartInput) -> Tuple[str, str]:
     sunrise_today, sunset_today = _sunrise_sunset(base_jd, chart.latitude, chart.longitude)
     _sunrise_prev, sunset_prev = _sunrise_sunset(base_jd - 1, chart.latitude, chart.longitude)
     sunrise_next, _sunset_next = _sunrise_sunset(base_jd + 1, chart.latitude, chart.longitude)
+    if None in (sunrise_today, sunset_today, sunset_prev, sunrise_next):
+        return DAY_RULERS[dt_local.weekday()], None
 
     if sunrise_today <= birth_jd <= sunset_today:
         planetary_weekday = dt_local.weekday()

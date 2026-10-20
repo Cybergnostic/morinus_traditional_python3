@@ -56,8 +56,8 @@ class ConditionsWnd(commonwnd.CommonWnd):
 		self.summary = [
 			('Sect', 'Day' if solar.is_day else 'Night'),
 			("Sun's true altitude", '%+.4f\xb0' % solar.sun_true_altitude),
-			('Apparent sunrise / sunset', '%s / %s' % (solar.sunrise_local.strftime('%H:%M:%S'), solar.sunset_local.strftime('%H:%M:%S'))),
-			('Planetary day / hour ruler', '%s / %s' % (a.technical.day_ruler, a.technical.hour_ruler)),
+			('Apparent sunrise / sunset', '%s / %s' % tuple(t.strftime('%H:%M:%S') if t else 'none' for t in (solar.sunrise_local, solar.sunset_local))),
+			('Planetary day / hour ruler', '%s / %s' % (a.technical.day_ruler, a.technical.hour_ruler or '- (no sunrise or sunset)')),
 			('Moon void of course', 'yes' if moon is not None and moon.is_void_of_course else 'no')]
 		for r in a.reports:
 			p = r.planet
