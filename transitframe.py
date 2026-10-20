@@ -16,6 +16,8 @@ import _thread
 import mtexts
 import electionstepperdlg
 import returnstepperdlg
+import returnslist
+import util
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
 pdlock = _thread.allocate_lock()
 
@@ -61,10 +63,11 @@ class TransitFrame(wx.Frame):
             self.pdtoradix.Enable(False)
         # stepping: previous/next return for solar and lunar returns, time steps otherwise
         self.ID_Step = wx.NewIdRef()
-        steptxt = {chart.Chart.SOLAR: 'Step solar returns...', chart.Chart.LUNAR: 'Step lunar returns...', chart.Chart.TRANSIT: 'Step time...'}.get(self.chart.htype)
+        steptxt = {chart.Chart.SOLAR: 'Step solar returns...\t(Left/Right)', chart.Chart.LUNAR: 'Step lunar returns...\t(Left/Right)', chart.Chart.TRANSIT: 'Step time...\t(Left/Right)'}.get(self.chart.htype)
         if steptxt is not None:
             self.pmenu.Append(self.ID_Step, steptxt, 'Move the chart forward or backward in time')
             self.Bind(wx.EVT_MENU, self.onStep, id=self.ID_Step)
+            self.Bind(wx.EVT_CHAR_HOOK, self.onKey)
         self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveChart'])
         self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['ChartBW'], wx.ITEM_CHECK)
         self.SetMinSize((200, 200))
@@ -128,6 +131,35 @@ class TransitFrame(wx.Frame):
             dlg = electionstepperdlg.ElectionStepperDlg(self, self.chart, self.options, self.title)
         dlg.CenterOnParent()
         dlg.Show(True)
+
+    def onKey(self, event):
+        """Left/Right: previous/next return; for transits a day (Shift: an hour,
+        Ctrl: a month, Ctrl+Shift: a year)."""
+        key = event.GetKeyCode()
+        if key not in (wx.WXK_LEFT, wx.WXK_RIGHT) or event.AltDown():
+            event.Skip()
+            return
+        forward = key == wx.WXK_RIGHT
+        wait = wx.BusyCursor()
+        if self.chart.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR):
+            chrt = returnslist.step_return(self.radix, self.chart, forward)
+            if chrt is not None:
+                self.change(chrt)
+            return
+        t = self.chart.time
+        y, m, d, h = t.origyear, t.origmonth, t.origday, t.hour
+        if event.ControlDown() and event.ShiftDown():
+            y += 1 if forward else -1
+        elif event.ControlDown():
+            y, m = util.incrMonth(y, m) if forward else util.decrMonth(y, m)
+        elif event.ShiftDown():
+            y, m, d, h = util.addHour(y, m, d, h) if forward else util.subtractHour(y, m, d, h)
+        else:
+            y, m, d = util.incrDay(y, m, d) if forward else util.decrDay(y, m, d)
+        while d > 28 and not util.checkDate(y, m, d):	# e.g. a month after 31 January
+            d -= 1
+        time = chart.Time(y, m, d, h, t.minute, t.second, t.bc, t.cal, t.zt, t.plus, t.zh, t.zm, t.daylightsaving, self.chart.place)
+        self.change(chart.Chart(self.chart.name, self.chart.male, time, self.chart.place, chart.Chart.TRANSIT, '', self.options, False))
 
     def change(self, chrt, title=None):
         """Shows another chart (used by the steppers), keeping the current view."""
