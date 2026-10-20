@@ -7,6 +7,7 @@ import temperamentwnd
 import zodiacalreleasing
 import zodiacalreleasingwnd
 import decennialswnd
+import circumambulationwnd
 import returnslistframe
 import os
 import pickle
@@ -257,6 +258,9 @@ class MFrame(wx.Frame):
             self.Bind(wx.EVT_MENU, self.onZRSpirit, id=self.ID_ZRSpirit)
             self.mtables.Append(self.ID_Decennials, 'Decennials', 'Periods of 10 years 9 months of the planets (Valens)')
             self.Bind(wx.EVT_MENU, self.onDecennials, id=self.ID_Decennials)
+            self.ID_Circumambulation = wx.NewIdRef()
+            self.mtables.Append(self.ID_Circumambulation, 'Circumambulation', 'The Ascendant directed through the bounds (Ptolemy)')
+            self.Bind(wx.EVT_MENU, self.onCircumambulation, id=self.ID_Circumambulation)
             menubar.Append(self.mtables, mtexts.menutxts['MTable'])
         self.ID_Transits, self.ID_Revolutions, self.ID_SunTransits, self.ID_SecondaryDirs, self.ID_Elections, self.ID_SquareChart, self.ID_SyzygyChart, self.ID_SyzygyChart2, self.ID_ProfectionsChart, self.ID_HelioChart = list(range(150, 160))
         self.chartsbase = 150
@@ -916,6 +920,12 @@ class MFrame(wx.Frame):
         if not self.splash:
             wait = wx.BusyCursor()
             frame = decennialswnd.DecennialsFrame(self, self.title, self.horoscope, self.options)
+            frame.Show(True)
+
+    def onCircumambulation(self, event):
+        if not self.splash:
+            wait = wx.BusyCursor()
+            frame = circumambulationwnd.CircumambulationFrame(self, self.title, self.horoscope, self.options)
             frame.Show(True)
 
     def showReleasing(self, lot):
@@ -2202,7 +2212,7 @@ class MFrame(wx.Frame):
         if self.options.menusels[MFrame.MCHARTS][(self.ID_HelioChart - self.chartsbase)]:
             self.mcharts.Enable(self.ID_HelioChart, bEnable)
         if hasattr(self, 'ID_TradConditions'):
-            for i in (self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials):
+            for i in (self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation):
                 self.mtables.Enable(i, bEnable)
         if hasattr(self, 'ID_ReturnsList'):
             self.mcharts.Enable(self.ID_ReturnsList, bEnable)
