@@ -10,6 +10,7 @@ import decennialswnd
 import circumambulationwnd
 import heliacalwnd
 import fixedstaranglewnd
+import dodecacalcdlg
 import returnslistframe
 import os
 import pickle
@@ -269,6 +270,9 @@ class MFrame(wx.Frame):
             self.ID_StarAngles = wx.NewIdRef()
             self.mtables.Append(self.ID_StarAngles, 'Fixed stars on the angles', 'Stars on the angles at the birth and the paranatellonta of the birth day')
             self.Bind(wx.EVT_MENU, self.onStarAngles, id=self.ID_StarAngles)
+            self.ID_DodecaCalc = wx.NewIdRef()
+            self.mtables.Append(self.ID_DodecaCalc, 'Dodecatemoria calculator...', 'The dodecatemorion of any degree')
+            self.Bind(wx.EVT_MENU, self.onDodecaCalc, id=self.ID_DodecaCalc)
             menubar.Append(self.mtables, mtexts.menutxts['MTable'])
         self.ID_Transits, self.ID_Revolutions, self.ID_SunTransits, self.ID_SecondaryDirs, self.ID_Elections, self.ID_SquareChart, self.ID_SyzygyChart, self.ID_SyzygyChart2, self.ID_ProfectionsChart, self.ID_HelioChart = list(range(150, 160))
         self.chartsbase = 150
@@ -947,6 +951,12 @@ class MFrame(wx.Frame):
             wait = wx.BusyCursor()
             frame = fixedstaranglewnd.FixedStarAnglesFrame(self, self.title, self.horoscope, self.options)
             frame.Show(True)
+
+    def onDodecaCalc(self, event):
+        dlg = dodecacalcdlg.DodecaCalcDlg(self)
+        dlg.CenterOnParent()
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def showReleasing(self, lot):
         if not self.splash:

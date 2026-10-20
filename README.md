@@ -39,6 +39,7 @@ Added in this version:
   rising, culminating, setting or anticulminating within 30 minutes of the
   birth, and the paranatellonta of the birth day: a planet and a star on
   angles within 4 minutes.
+- **Tables → Dodecatemoria calculator** — the dodecatemorion of any degree.
 - **Copy as text** in the popup menu of every table, **arrow keys** to step
   return and transit charts, windows reopen at their last size and position,
   and unexpected errors are shown and written to `morinus-error.log`.
