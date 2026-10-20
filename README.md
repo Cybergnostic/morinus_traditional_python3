@@ -32,6 +32,9 @@ Added in this version:
 - **Tables → Circumambulation** — the Ascendant directed through the bounds
   (Options → Terms) under the oblique ascensions of the birth latitude, a year
   per degree: distributors and the participants' bodies and rays, by age and date.
+- **Tables → Heliacal phenomena and phasis** — for each planet the morning
+  and evening first and last appearances nearest the birth (Swiss Ephemeris
+  visibility) and the stations, with phasis within 7 days of the birth.
 - **Copy as text** in the popup menu of every table, **arrow keys** to step
   return and transit charts, windows reopen at their last size and position,
   and unexpected errors are shown and written to `morinus-error.log`.

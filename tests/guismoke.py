@@ -111,7 +111,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 HANDLERS = ['onLoad', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
-	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
+	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
 	'onProfectionsChart', 'onHelioChart', 'onEphemeris', 'onFindTime', 'onSynastry', 'onSaveAsBitmap', 'onSave', 'onHereAndNow',
 	'onNew', 'onData', 'onLoad',
 	'onAppearance1', 'onAppearance2', 'onDignities', 'onTriplicities', 'onTerms', 'onDecans', 'onChartAlmuten', 'onTopicals',
