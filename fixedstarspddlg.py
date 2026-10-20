@@ -7,6 +7,7 @@ import limchecklistctrlmixin
 import chart
 import mtexts
 import astrology
+import starnames
 import util
 
 class FixedStars:
@@ -23,18 +24,12 @@ class FixedStars:
         self.ephepath = ephepath
         self.jd = astrology.swe_julday(1950, 1, 1, 0.0, astrology.SE_GREG_CAL)
         self.data = []
-        self.fname = os.path.join(self.ephepath, 'fixstars.cat')
+        self.fname = os.path.join(self.ephepath, starnames.CATALOGUE)
 
     def read(self, names):
         for n in names:
-            ret, name, dat, serr = astrology.swe_fixstar_ut(',' + n, self.jd, 0)
-            nam = name[0].strip()
-            nomnam = ''
-            DELIMITER = ','
-            if nam.find(DELIMITER) != -1:
-                snam = nam.split(DELIMITER)
-                nam = snam[0].strip()
-                nomnam = snam[1].strip()
+            star = starnames.lookup(n, self.jd, 0)
+            nam, nomnam = star[:2] if star else (n + ' (not in the catalogue)', n)
             self.data.append(FixedStars.FixedStar(nam, nomnam))
 
         return True

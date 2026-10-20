@@ -239,7 +239,7 @@ static PyObject* astrology_swe_get_ayanamsa_name(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "i", &isidmode))
 		return NULL;
 
-	char* name = swe_get_ayanamsa_name(isidmode);
+	const char* name = swe_get_ayanamsa_name(isidmode);
 
 	return Py_BuildValue("s", name);
 }

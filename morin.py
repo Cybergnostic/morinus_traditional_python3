@@ -11,6 +11,7 @@ import circumambulationwnd
 import heliacalwnd
 import fixedstaranglewnd
 import dodecacalcdlg
+import starnames
 import returnslistframe
 import os
 import pickle
@@ -2150,7 +2151,7 @@ class MFrame(wx.Frame):
 
     def checkFixedStars(self):
         res = True
-        fname = os.path.join(common.common.ephepath, 'fixstars.cat')
+        fname = os.path.join(common.common.ephepath, starnames.CATALOGUE)
         if not os.path.exists(fname):
             txt = fname + ' ' + mtexts.txtsfiles['NotFound']
             dlgm = wx.MessageDialog(self, txt, mtexts.txtsfiles['Error'], wx.OK | wx.ICON_INFORMATION)

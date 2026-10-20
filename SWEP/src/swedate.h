@@ -1,9 +1,8 @@
 /*********************************************************
-  $Header: /home/dieter/sweph/RCS/swedate.h,v 1.74 2008/06/16 10:07:20 dieter Exp $
-  version 15-feb-89 16:30
+  version 21-apr-2021
 *********************************************************/
 
-/* Copyright (C) 1997 - 2008 Astrodienst AG, Switzerland.  All rights reserved.
+/* Copyright (C) 1997 - 2021 Astrodienst AG, Switzerland.  All rights reserved.
 
   License conditions
   ------------------
@@ -19,17 +18,17 @@
   system. The software developer, who uses any part of Swiss Ephemeris
   in his or her software, must choose between one of the two license models,
   which are
-  a) GNU public license version 2 or later
+  a) GNU Affero General Public License (AGPL)
   b) Swiss Ephemeris Professional License
 
   The choice must be made before the software developer distributes software
   containing parts of Swiss Ephemeris to others, and before any public
   service using the developed software is activated.
 
-  If the developer choses the GNU GPL software license, he or she must fulfill
+  If the developer choses the AGPL software license, he or she must fulfill
   the conditions of that license, which includes the obligation to place his
-  or her whole software project under the GNU GPL or a compatible license.
-  See http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+  or her whole software project under the AGPL or a compatible license.
+  See https://www.gnu.org/licenses/agpl-3.0.html
 
   If the developer choses the Swiss Ephemeris Professional license,
   he must follow the instructions as found in http://www.astro.com/swisseph/ 
@@ -62,21 +61,21 @@ extern "C" {
 #endif
 
 #ifndef _SWEDLL_H
-extern EXP32 int FAR PASCAL_CONV EXP16 swe_date_conversion (
+extern EXP32 int swe_date_conversion (
 	int y , int m , int d ,		/* year, month, day */
      	double utime, 	/* universal time in hours (decimal) */
      	char c,  	/* calendar g[regorian]|j[ulian]|a[stro = greg] */
  	double *tgmt);
 
-extern EXP32 double *FAR PASCAL_CONV EXP16 swe_julday(
+extern EXP32 double *swe_julday(
 	int year, int month, int day, double hour, 
 	int gregflag);
 
-extern EXP32 void FAR PASCAL_CONV EXP16 swe_revjul (
+extern EXP32 void swe_revjul (
 	double jd, 
 	int gregflag,
      	int *jyear, int *jmon, int *jday, double *jut);
 #endif
 #ifdef __cplusplus
-}
+} /* extern C */
 #endif

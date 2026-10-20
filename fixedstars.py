@@ -3,6 +3,7 @@
 import astrology
 import chart
 import util
+import starnames
 
 class FixedStars:
     """Calculates the positions of the fixedstars"""
@@ -18,14 +19,12 @@ class FixedStars:
         i = 0
         for k in names.keys():
             self.data.append(['', '', 0.0, 0.0, 0.0, 0.0])
-            ret, name, dat, serr = astrology.swe_fixstar_ut(',' + k, tjd_ut, flag)
-            nam = name[0].strip()
-            nomnam = ''
-            DELIMITER = ','
-            if nam.find(DELIMITER) != -1:
-                snam = nam.split(DELIMITER)
-                nam = snam[0].strip()
-                nomnam = snam[1].strip()
+            star = starnames.lookup(k, tjd_ut, flag)
+            if star is None:
+                # no longer in the catalogue: kept in place, so the selection lists stay aligned
+                nam, nomnam, dat = k + ' (not in the catalogue)', k, (0.0, 0.0)
+            else:
+                nam, nomnam, dat = star
             self.data[i][FixedStars.NAME] = nam
             self.data[i][FixedStars.NOMNAME] = nomnam
             self.data[i][FixedStars.LON] = dat[0]

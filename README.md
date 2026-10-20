@@ -115,8 +115,13 @@ Morinus runs from its folder, which must be writable: settings are kept in
 `Opts/`, charts in `Hors/`, and your place list in `Res/placedb.dat` (the
 shipped list is `Res/placedb-default.dat`). None of these are tracked by git.
 
-The Swiss Ephemeris data files in `SWEP/Ephem/` give full precision from
-5400 BC to 5400 AD.
+Positions come from Swiss Ephemeris 2.10 (JPL DE431 data, current ΔT); the
+data files in `SWEP/Ephem/` give full precision from 5400 BC to 5400 AD.
+Compared with Morinus 6.2 (Swiss Ephemeris 1.76), modern charts differ by less
+than 0.2" for the planets and 2" for the angles; charts of earlier centuries by
+up to about a minute of arc, from the newer ΔT. The `main` branch keeps 1.76.
+Fixed stars come from the 2.10 catalogue (`sefstars.txt`), each listed once and
+with the names Morinus 6.2 used (Bungula, Gemma, Asellus Australis, ...).
 
 ### Coming from the Windows version
 
@@ -147,6 +152,9 @@ The first commit is the recovered Python 2 program.
 
 ## Known issues
 
+- A selected fixed star that the 2.10 catalogue no longer has (the solar apex,
+  Barnard's star, kappa Ceti, kappa Coronae Borealis) is listed as not in the
+  catalogue.
 - Saving primary directions as text fails for the Campanian method: the
   export has no name for it. This is in the original program and is left
   as is.
@@ -161,13 +169,15 @@ buffers in the Swiss Ephemeris module.
 
 ```sh
 python3 tests/refdump.py . /tmp/py3.json                         # with default settings (empty Opts/)
-python3 tests/refcompare.py tests/reference/py2.json.gz /tmp/py3.json
+python3 tests/refcompare.py tests/reference/se210.json.gz /tmp/py3.json
 python3 tests/check_arp_lots.py parts.arp                        # Solar Fire conversion
 xvfb-run python3 tests/guismoke.py /path/to/copy /tmp/smoke [--variant 1|2|3]
 ```
 
 `refdump.py` computes a set of charts and dumps every value; `refcompare.py`
-compares them with the Python 2 reference. `guismoke.py` opens a chart and
+compares them with a reference: `se210.json.gz` is this version's (Swiss
+Ephemeris 2.10), `py2.json.gz` the recovered Python 2 program's, which the port
+matched exactly with Swiss Ephemeris 1.76 (the `main` branch). `guismoke.py` opens a chart and
 triggers every menu command and popup-menu item (run it on a copy of the
 folder, since it saves options).
 
@@ -217,7 +227,10 @@ Without `Res/atlas.db` the search is online only; build it with
 ## Credits and licences
 
 - Morinus — Robert Nagy, GNU GPL v3 (`LICENSE`).
-- Swiss Ephemeris 1.76 — Astrodienst AG (`SWEP/src/LICENSE`).
+- Swiss Ephemeris 2.10 — Astrodienst AG, GNU AGPL v3 (`SWEP/src/LICENSE`,
+  `SWEP/src/agpl-3.0.txt`); with it the program as distributed falls under the
+  AGPL v3, which adds to the GPL that whoever offers it as a network service
+  must offer its source too.
 - hor-tools — Cybergnostic (`hor_tools/`).
 - Atlas — [GeoNames](https://www.geonames.org), CC BY 4.0.
 - Zodiacal releasing and decennials after [Morinus by shin10567](https://github.com/shin10567/Morinus-Source-Codes), GNU GPL v3.

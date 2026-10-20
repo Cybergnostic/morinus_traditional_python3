@@ -34,10 +34,10 @@ jobs:
       - name: Build
         run: powershell -ExecutionPolicy Bypass -File packaging\windows\build.ps1 -Version $env:VERSION
 
-      - name: Calculations match the Python 2 reference
+      - name: Calculations match the reference
         run: |
           python tests/refdump.py . build/py3.json
-          python tests/refcompare.py tests/reference/py2.json.gz build/py3.json
+          python tests/refcompare.py tests/reference/se210.json.gz build/py3.json
 
       - name: Time-zone tests
         run: python -m unittest discover -s tests -p test_auto_timezone.py

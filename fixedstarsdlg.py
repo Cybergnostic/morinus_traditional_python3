@@ -7,6 +7,7 @@ import limchecklistctrlmixin
 import chart
 import mtexts
 import astrology
+import starnames
 import util
 
 class FixedStars:
@@ -31,23 +32,17 @@ class FixedStars:
         self.ephepath = ephepath
         self.jd = astrology.swe_julday(1950, 1, 1, 0.0, astrology.SE_GREG_CAL)
         self.data = []
-        self.fname = os.path.join(self.ephepath, 'fixstars.cat')
+        self.fname = os.path.join(self.ephepath, starnames.CATALOGUE)
 
     def read(self):
         res = True
         try:
-            f = open(self.fname, 'r')
-            lines = f.readlines()
-            f.close()
-            cnt = 0
-            for ln in lines:
-                if ln[0] == FixedStars.COMMENT and ln.find('example') != -1:
-                    break
-                if ln[0] != FixedStars.COMMENT:
-                    cnt += 1
-
-            for i in range(1, cnt + 1):
-                ret, name, dat, serr = astrology.swe_fixstar_ut(str(i), self.jd, 0)
+            # each star once, with the names Morinus has (starnames)
+            for nom in [n for name, n in starnames.catalogue(self.ephepath)]:
+                star = starnames.lookup(nom, self.jd, 0)
+                if star is None:
+                    continue
+                nam, nomnam, dat = star
                 d, m, s = util.decToDeg(dat[0])
                 sign = d // chart.Chart.SIGN_DEG
                 lon = d % chart.Chart.SIGN_DEG
@@ -57,13 +52,6 @@ class FixedStars:
                 if dat[1] < 0.0:
                     si = '-'
                 lattxt = si + str(d) + ' ' + str(m).zfill(2) + "' " + str(s).zfill(2) + '"'
-                nam = name[0].strip()
-                nomnam = ''
-                DELIMITER = ','
-                if nam.find(DELIMITER) != -1:
-                    snam = nam.split(DELIMITER)
-                    nam = snam[0].strip()
-                    nomnam = snam[1].strip()
                 self.data.append(FixedStars.FixedStar(nam, nomnam, lontxt, lattxt))
 
         except IOError:

@@ -1,11 +1,10 @@
 
 /************************************************************
-   $Header: /home/dieter/sweph/RCS/swephlib.h,v 1.74 2008/06/16 10:07:20 dieter Exp $
 
-  Authors: Dieter Koch and Alois Treindl, Astrodienst Zürich
+  Authors: Dieter Koch and Alois Treindl, Astrodienst Zurich
 
 ************************************************************/
-/* Copyright (C) 1997 - 2008 Astrodienst AG, Switzerland.  All rights reserved.
+/* Copyright (C) 1997 - 2021 Astrodienst AG, Switzerland.  All rights reserved.
 
   License conditions
   ------------------
@@ -21,17 +20,17 @@
   system. The software developer, who uses any part of Swiss Ephemeris
   in his or her software, must choose between one of the two license models,
   which are
-  a) GNU public license version 2 or later
+  a) GNU Affero General Public License (AGPL)
   b) Swiss Ephemeris Professional License
 
   The choice must be made before the software developer distributes software
   containing parts of Swiss Ephemeris to others, and before any public
   service using the developed software is activated.
 
-  If the developer choses the GNU GPL software license, he or she must fulfill
+  If the developer choses the AGPL software license, he or she must fulfill
   the conditions of that license, which includes the obligation to place his
-  or her whole software project under the GNU GPL or a compatible license.
-  See http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+  or her whole software project under the AGPL or a compatible license.
+  See https://www.gnu.org/licenses/agpl-3.0.html
 
   If the developer choses the Swiss Ephemeris Professional license,
   he must follow the instructions as found in http://www.astro.com/swisseph/ 
@@ -59,31 +58,38 @@
   for promoting such software, products or services.
 */
 
-
-/* Set TRUE, to include Herring's (1987) corrections to IAU 1980 
- * nutation series. AA (1996) neglects them.  */
-#define NUT_CORR_1987    	FALSE
-
-/* Precession coefficients for remote past and future.
- * One of the following four defines must be true.
- */
-#define PREC_WILLIAMS_1994	TRUE	/* used by Moshier for DE404 */
-#define PREC_SIMON_1994 	FALSE
-#define PREC_LASKAR_1986 	FALSE
-#define PREC_BRETAGNON_2003	FALSE	
-/* IAU precession 1976 or 2003 for recent centuries.
- * only one of the following two defines may be TRUE */
-#define PREC_IAU_1976		FALSE 	
-#define PREC_IAU_2003		TRUE  /* precession model P03 */	
 #define PREC_IAU_1976_CTIES          2.0 	/* J2000 +/- two centuries */
+#define PREC_IAU_2000_CTIES          2.0 	/* J2000 +/- two centuries */
 /* we use P03 for whole ephemeris */
-#define PREC_IAU_2003_CTIES          75.0 	/* J2000 +/- 75 centuries */
+#define PREC_IAU_2006_CTIES          75.0 	/* J2000 +/- 75 centuries */
 
-/* choose between the following nutation models */
-#define NUT_IAU_1980          FALSE
-#define NUT_IAU_2000A         FALSE   /* very time consuming ! */
-#define NUT_IAU_2000B         TRUE  /* fast, but precision of milli-arcsec */
-					 
+/* For reproducing JPL Horizons to 2 mas (SEFLG_JPLHOR): 
+ * The user has to keep the following files up to date which contain
+ * the earth orientation parameters related to the IAU 1980 nutation
+ * theory. 
+ * Download the file 
+ * datacenter.iers.org/eop/-/somos/5Rgv/document/tx13iers.u24/eopc04_08.62-now
+ * and rename it as eop_1962_today.txt. For current data and estimations for
+ * the near future, also download maia.usno.navy.mil/ser7/finals.all and 
+ * rename it as eop_finals.txt */
+#define DPSI_DEPS_IAU1980_FILE_EOPC04   "eop_1962_today.txt"
+#define DPSI_DEPS_IAU1980_FILE_FINALS   "eop_finals.txt"
+#define DPSI_DEPS_IAU1980_TJD0_HORIZONS  2437684.5 
+#define HORIZONS_TJD0_DPSI_DEPS_IAU1980  2437684.5 
+#define DPSI_IAU1980_TJD0	(64.284 / 1000.0)  // arcsec
+#define DEPS_IAU1980_TJD0	(6.151 / 1000.0)   // arcsec
+
+/* The above files must be available in order to reproduce JPL Horizons 
+ * in agreement with IERS Conventions 1996 (1992), p. 22. 
+ * Call swe_calc_ut() with iflag|SEFLG_JPLHOR.  
+ * This options works only, if the files DPSI_DEPS_IAU1980_FILE_EOPC04 
+ * and DPSI_DEPS_IAU1980_FILE_FINALS are in the ephemeris path.
+ *
+ * If the software does not find the earth orientation files 
+ * in the ephemeris path, then SEFLG_JPLHOR will run as 
+ * SEFLG_JPLHOR_APPROX.
+ */
+
 /* coordinate transformation */
 extern void swi_coortrf(double *xpo, double *xpn, double eps);
 
@@ -101,31 +107,35 @@ extern void swi_polcart_sp(double *l, double *x);
 extern void swi_polcart(double *l, double *x);
 
 /* GCRS to J2000 */
-extern void swi_bias(double *x, int32 iflag, AS_BOOL backward);
+extern void swi_bias(double *x, double tjd, int32 iflag, AS_BOOL backward);
+extern void swi_get_eop_time_range(void);
 /* GCRS to FK5 */
 extern void swi_icrs2fk5(double *x, int32 iflag, AS_BOOL backward);
 
 /* precession */
-extern int swi_precess(double *R, double J, int direction );
-extern void swi_precess_speed(double *xx, double t, int direction);
+extern int swi_precess(double *R, double J, int32 iflag, int direction );
+extern void swi_precess_speed(double *xx, double t, int32 iflag, int direction);
+
+extern int32 swi_guess_ephe_flag(void);
 
 /* from sweph.c, light deflection, aberration, etc. */
 extern void swi_deflect_light(double *xx, double dt, int32 iflag);
 extern void swi_aberr_light(double *xx, double *xe, int32 iflag);
 extern int swi_plan_for_osc_elem(int32 iflag, double tjd, double *xx);
-extern int swi_trop_ra2sid_lon(double *xin, double *xout, double *xoutr, int32 iflag, char *serr);
-extern int swi_trop_ra2sid_lon_sosy(double *xin, double *xout, double *xoutr, int32 iflag, char *serr);
+extern int swi_trop_ra2sid_lon(double *xin, double *xout, double *xoutr, int32 iflag);
+extern int swi_trop_ra2sid_lon_sosy(double *xin, double *xout, int32 iflag);
 extern int swi_get_observer(double tjd, int32 iflag, 
 	AS_BOOL do_save, double *xobs, char *serr);
-extern void swi_force_app_pos_etc();
+extern void swi_force_app_pos_etc(void);
 
 /* obliquity of ecliptic */
-extern void swi_check_ecliptic(double tjd);
-extern double swi_epsiln(double J);
+extern void swi_check_ecliptic(double tjd, int32 iflag);
+extern double swi_epsiln(double J, int32 iflag);
+extern void swi_ldp_peps(double J, double *dpre, double *deps);
 
 /* nutation */
 extern void swi_check_nutation(double tjd, int32 iflag);
-extern int swi_nutation(double J, double *nutlo);
+extern int swi_nutation(double J, int32 iflag, double *nutlo);
 extern void swi_nutate(double *xx, int32 iflag, AS_BOOL backward);
 
 extern void swi_mean_lunar_elements(double tjd, 
@@ -140,6 +150,8 @@ extern double swi_edcheb(double x, double *coef, int ncf);
 
 /* cross product of vectors */
 extern void swi_cross_prod(double *a, double *b, double *x);
+/* dot product of vecotrs */
+extern double swi_dot_prod_unit(double *x, double *y);
 
 extern double swi_angnorm(double x);
 
@@ -158,15 +170,20 @@ extern char *swi_get_fict_name(int32 ipl, char *s);
 
 extern void swi_FK4_FK5(double *xp, double tjd);
 
+extern char *swi_strcpy(char *to, char *from);
+extern char *swi_strncpy(char *to, char *from, size_t n);
+
+extern double swi_deltat_ephe(double tjd_ut, int32 epheflag);
+
 #ifdef TRACE
 #  define TRACE_COUNT_MAX         10000
-  extern FILE *swi_fp_trace_c;
-  extern FILE *swi_fp_trace_out;
+  extern TLS FILE *swi_fp_trace_c;
+  extern TLS FILE *swi_fp_trace_out;
+  extern TLS int32 swi_trace_count;
   extern void swi_open_trace(char *serr);
-  extern int32 swi_trace_count;
-  static char *fname_trace_c = "swetrace.c";
-  static char *fname_trace_out = "swetrace.txt";
+  static const char *fname_trace_c = "swetrace.c";
+  static const char *fname_trace_out = "swetrace.txt";
 #ifdef FORCE_IFLAG
-  static char *fname_force_flg = "force.flg";
+  static const char *fname_force_flg = "force.flg";
 #endif
 #endif /* TRACE */

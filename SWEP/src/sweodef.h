@@ -1,5 +1,4 @@
 /************************************************************
-   $Header: /home/dieter/sweph/RCS/sweodef.h,v 1.74 2008/06/16 10:07:20 dieter Exp $
    definitions and constants for all Swiss Ephemeris source files,
    only required for compiling the libraries, not for the external
    interface of the libraries.
@@ -14,7 +13,7 @@
    
 ************************************************************/
 
-/* Copyright (C) 1997 - 2008 Astrodienst AG, Switzerland.  All rights reserved.
+/* Copyright (C) 1997 - 2021 Astrodienst AG, Switzerland.  All rights reserved.
 
   License conditions
   ------------------
@@ -30,17 +29,17 @@
   system. The software developer, who uses any part of Swiss Ephemeris
   in his or her software, must choose between one of the two license models,
   which are
-  a) GNU public license version 2 or later
+  a) GNU Affero General Public License (AGPL)
   b) Swiss Ephemeris Professional License
 
   The choice must be made before the software developer distributes software
   containing parts of Swiss Ephemeris to others, and before any public
   service using the developed software is activated.
 
-  If the developer choses the GNU GPL software license, he or she must fulfill
+  If the developer choses the AGPL software license, he or she must fulfill
   the conditions of that license, which includes the obligation to place his
-  or her whole software project under the GNU GPL or a compatible license.
-  See http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+  or her whole software project under the AGPL or a compatible license.
+  See https://www.gnu.org/licenses/agpl-3.0.html
 
   If the developer choses the Swiss Ephemeris Professional license,
   he must follow the instructions as found in http://www.astro.com/swisseph/ 
@@ -75,10 +74,30 @@
 # define MY_TRUE 1	/* for use in other defines, before TRUE is defined */
 # define MY_FALSE 0	/* for use in other defines, before TRUE is defined */
 
+#ifdef __CYGWIN__	// following T. Mack Jan/July 2021
+# undef __GNUC__
+#endif
+
+/* TLS support
+ *
+ * Sun Studio C/C++, IBM XL C/C++, GNU C and Intel C/C++ (Linux systems) -> __thread
+ * Borland, VC++ -> __declspec(thread)
+ */
+#if !defined(TLSOFF) && !defined( __APPLE__ ) && !defined(WIN32) && !defined(DOS32)
+#if defined( __GNUC__ ) || defined( __CYGWIN__ ) 
+#define TLS     __thread
+#else
+#define TLS     __declspec(thread)
+#endif
+#else
+#define TLS
+#endif
 
 #ifdef _WIN32		/* Microsoft VC 5.0 does not define MSDOS anymore */
 # undef MSDOS
 # define MSDOS MY_TRUE
+# undef _WINDOWS
+# define _WINDOWS
 #include <wtypes.h>
 #include <objbase.h>
 #include <wincon.h>
@@ -122,35 +141,21 @@
 # define WATCOMC
 #endif
 
-#ifdef __MWERKS__	/* defined on Macintosh CodeWarrior */
-# if macintosh && powerc
-#  define MACOS MY_TRUE		/* let it undefined otherwise */
-#  define MSDOS MY_FALSE	/* in case one above fired falsely */
-# endif
-#endif
 
-#if MSDOS
+#ifdef MSDOS
 #  define HPUNIX MY_FALSE
 #  define INTEL_BYTE_ORDER 1
 #  ifndef TURBO_C
 #    define MS_C	/* assume Microsoft C compiler */
 #  endif
-# define MYFAR far
 # define UNIX_FS MY_FALSE
 #else
-# ifdef MACOS
-#  define HPUNIX MY_FALSE
-#  define MYFAR
-#  define UNIX_FS MY_FALSE
-# else
 #  define MSDOS MY_FALSE
 #  define HPUNIX MY_TRUE
 #  ifndef _HPUX_SOURCE
 #    define _HPUX_SOURCE
 #  endif
-#  define MYFAR
 #  define UNIX_FS MY_TRUE
-# endif
 #endif
 
 #include <math.h>
@@ -240,17 +245,7 @@ typedef unsigned char UCHAR;
 #define UCP	(UCHAR*)
 #define SCP	(char*)
 
-# define CHARSET_ISO_LATIN_1 TRUE	/* used by ctype256 */
-
-#ifdef DOS_DEGREE		/* use compiler switch to get DOS character! */
-# define ODEGREE_CHAR	248	/* DOS degree character */
-#else
-# ifdef MACOS
-#  define ODEGREE_CHAR	161	/* Macintosh degree character */
-# else
-#  define ODEGREE_CHAR	176	/* Latin1 degree character */
-# endif
-#endif
+# define ODEGREE_STRING "°"	/* degree as string, utf8 encoding */
  
 
 
@@ -261,12 +256,16 @@ typedef unsigned char UCHAR;
 #  define M_PI 3.14159265358979323846
 #endif
  
-#define forward static
+/* #define forward static  obsolete */
 
 #define AS_MAXCH 256    /* used for string declarations, allowing 255 char+\0 */
  
+/*
 #define DEGTORAD 0.0174532925199433
 #define RADTODEG 57.2957795130823
+*/
+#define RADTODEG (180.0 / M_PI)
+#define DEGTORAD (M_PI / 180.0)
  
 typedef int32    centisec;       /* centiseconds used for angles and times */
 #define CS	(centisec)	/* use for casting */
@@ -285,8 +284,10 @@ typedef int32    centisec;       /* centiseconds used for angles and times */
 #define DEG270  (270 * DEG)
 #define DEG360  (360 * DEG)
  
-#define CSTORAD  4.84813681109536E-08 /* centisec to rad: pi / 180 /3600/100 */
-#define RADTOCS  2.06264806247096E+07 /* rad to centisec 180*3600*100/pi */
+/* #define CSTORAD  4.84813681109536E-08  centisec to rad: pi / 180 /3600/100 */
+/* #define RADTOCS  2.06264806247096E+07  rad to centisec 180*3600*100/pi */
+#define CSTORAD	(DEGTORAD / 360000.0)
+#define RADTOCS (RADTODEG * 360000.0)
  
 #define CS2DEG	(1.0/360000.0)	/* centisec to degree */
 
@@ -311,13 +312,6 @@ typedef int32    centisec;       /* centiseconds used for angles and times */
 #  define BFILE_A_ACCESS "a+b"	/* create/open binary file for append*/
 #  define PATH_SEPARATOR ";"	/* semicolon as PATH separator */
 #  define OPEN_MODE 0666	/* default file creation mode */
-# ifdef MACOS
-#  define FILE_R_ACCESS "r"	/* open text file for reading */
-#  define FILE_RW_ACCESS "r+"	/* open text file for writing and reading */
-#  define FILE_W_CREATE "w"	/* create/open text file for write*/
-#  define FILE_A_ACCESS "a+"	/* create/open text file for append*/
-#  define DIR_GLUE ":"		/* glue string for directory/file */
-# else
 #  define FILE_R_ACCESS "rt"	/* open text file for reading */
 #  define FILE_RW_ACCESS "r+t"	/* open text file for writing and reading */
 #  define FILE_W_CREATE "wt"	/* create/open text file for write*/
@@ -325,7 +319,6 @@ typedef int32    centisec;       /* centiseconds used for angles and times */
 /* attention, all backslashes for msdos directry names must be written as \\,
    because it is the C escape character */
 #  define DIR_GLUE "\\"		/* glue string for directory/file */
-# endif
 #endif
 
 #include <string.h>

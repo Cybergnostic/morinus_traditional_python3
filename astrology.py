@@ -204,7 +204,7 @@ SE_FNAME_DE404  = "de404.eph"
 SE_FNAME_DE405  = "de405.eph"
 SE_FNAME_DE406  = "de406.eph"
 SE_FNAME_DFT    = SE_FNAME_DE406
-SE_STARFILE     = "fixstars.cat"
+SE_STARFILE     = "sefstars.txt"
 SE_ASTNAMFILE   = "seasnam.txt"
 SE_FICTFILE     = "seorbel.txt"
 

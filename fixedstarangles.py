@@ -9,6 +9,7 @@ Times are Julian days (UT)."""
 import astrology
 import planets
 import util
+import starnames
 
 ANGLES = ((astrology.SE_CALC_RISE, 'Asc', 'rising'), (astrology.SE_CALC_MTRANSIT, 'MC', 'culminating'),
 	(astrology.SE_CALC_SET, 'Dsc', 'setting'), (astrology.SE_CALC_ITRANSIT, 'IC', 'anticulminating'))
@@ -31,9 +32,8 @@ def events(jd0, jd1, place, ipl=0, star=''):
 
 
 def starname(nom, jd):
-	ret, name, dat, serr = astrology.swe_fixstar_ut(',' + nom, jd, astrology.SEFLG_SWIEPH)
-	name = name[0] if isinstance(name, tuple) else name
-	return name.split(',')[0] if name else nom
+	star = starnames.lookup(nom, jd, astrology.SEFLG_SWIEPH)
+	return star[0] if star else nom
 
 
 def localday(chrt):
@@ -49,7 +49,7 @@ def at_birth(chrt):
 	window = AT_BIRTH_MINUTES / 1440.0
 	out = []
 	for nom in chrt.options.fixedstars:
-		for ai, t in events(jd - 0.5, jd + 0.5, chrt.place, star=',' + nom):
+		for ai, t in events(jd - 0.5, jd + 0.5, chrt.place, star=',' + starnames.ALIASES.get(nom, nom)):
 			if abs(t - jd) <= window:
 				out.append((starname(nom, jd), ai, t))
 	return sorted(out, key=lambda e: abs(e[2] - jd))
@@ -64,7 +64,7 @@ def parans(chrt):
 	out = []
 	for nom in chrt.options.fixedstars:
 		name = None
-		for sai, st in events(jd0 - orb, jd1 + orb, chrt.place, star=',' + nom):
+		for sai, st in events(jd0 - orb, jd1 + orb, chrt.place, star=',' + starnames.ALIASES.get(nom, nom)):
 			for pl, pai, pt in plevents:
 				if abs(pt - st) <= orb:
 					name = name or starname(nom, chrt.time.jd)

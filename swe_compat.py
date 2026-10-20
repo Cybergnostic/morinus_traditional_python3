@@ -86,8 +86,20 @@ def rise_trans(tjdut, body, rsmi=0, geopos=(0.0, 0.0, 0.0), atpress=0.0, attemp=
     return ret, (tret,)+(0.0,)*9
 
 
+def _traditional(star):
+    """A star name of the old catalogue (starnames.TRADITIONAL) as its designation,
+    e.g. Deneb Okab, which Swiss Ephemeris 2.10 calls Delta Aquilae."""
+    import starnames
+    for nom, name in starnames.TRADITIONAL.items():
+        if name.lower() == star.strip().lower():
+            return ',' + nom
+    return None
+
+
 def fixstar_ut(star, jd_ut, flags=FLG_SWIEPH):
     (ret,), (name,), xx, (serr,) = astrology.swe_fixstar_ut(star, float(jd_ut), int(flags))
+    if ret < 0 and _traditional(star):
+        (ret,), (name,), xx, (serr,) = astrology.swe_fixstar_ut(_traditional(star), float(jd_ut), int(flags))
     if ret < 0:
         raise Error(serr)
     return tuple(xx), name, ret
@@ -95,6 +107,8 @@ def fixstar_ut(star, jd_ut, flags=FLG_SWIEPH):
 
 def fixstar_mag(star):
     (ret,), (name,), (mag,), (serr,) = astrology.swe_fixstar_mag(star)
+    if ret < 0 and _traditional(star):
+        (ret,), (name,), (mag,), (serr,) = astrology.swe_fixstar_mag(_traditional(star))
     if ret < 0:
         raise Error(serr)
     return mag, name
