@@ -186,7 +186,7 @@ def compute_inferior_synodic_phase(planet: PlanetPosition, sun_long: float) -> S
     is_direct, is_retro, is_station = motion_flags(planet.speed_long, planet.station)
 
     if elong <= CAZIMI_ORB_DEG:
-        # The inferior and superior conjunctions differently,
+        # The reference numbers the inferior and superior conjunctions differently,
         # but both are cazimi. With position alone we use phase 1 as cycle start.
         return _phase("inferior", "cazimi", 1, "Cazimi")
 
