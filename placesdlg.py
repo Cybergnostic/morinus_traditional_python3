@@ -324,16 +324,18 @@ class PlacesDlg(wx.Dialog):
             return
         wait = wx.BusyCursor()
         maxnum = self.sizeslider.GetValue()
-        geo = geonames.Geonames(self.birthplace.GetValue().encode('utf-8'), maxnum, self.langid)
-        if geo.get_location_info():
+        geo = geonames.Geonames(self.birthplace.GetValue(), maxnum, self.langid)
+        if geo.get_location_info() and geo.li:
             if len(geo.li) == 1:
                 self.fillFields(geo.li[0])
+                self.OnAdd(None)
             else:
                 pldlg = placeslistdlg.PlacesListDlg(self, geo.li)
                 val = pldlg.ShowModal()
                 if val == wx.ID_OK:
                     if pldlg.li.currentItem != -1:
                         self.fillFields(geo.li[pldlg.li.currentItem])
+                        self.OnAdd(None)
                 pldlg.Destroy()
         else:
             dlg = wx.MessageDialog(self, mtexts.txtsplacesdlg['NotFound'], '', wx.OK | wx.ICON_EXCLAMATION)
@@ -404,6 +406,13 @@ class PlacesDlg(wx.Dialog):
             item.append(zone)
             alt = self.alt.GetValue()
             item.append(alt)
+            # a place already in the list is selected instead of added again
+            for i in range(self.li.GetItemCount()):
+                if [self.li.getColumnText(i, col) for col in range(PlaceListCtrl.COLNUM)] == item:
+                    self.li.currentItem = i
+                    self.li.EnsureVisible(i)
+                    self.li.SetItemState(i, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+                    return
             self.li.OnAdd(item)
 
     def OnRemove(self, event):
