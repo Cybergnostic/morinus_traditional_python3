@@ -29,6 +29,9 @@ Added in this version:
   level 2 period for levels 3 and 4. The method follows shin10567's Morinus.
 - **Tables → Decennials** — Valens's periods of 10 years 9 months from the sect
   light, with levels 2-4 (click a level 2 period), after shin10567's Morinus.
+- **Tables → Circumambulation** — the Ascendant directed through the bounds
+  (Options → Terms) under the oblique ascensions of the birth latitude, a year
+  per degree: distributors and the participants' bodies and rays, by age and date.
 - **Copy as text** in the popup menu of every table, **arrow keys** to step
   return and transit charts, windows reopen at their last size and position,
   and unexpected errors are shown and written to `morinus-error.log`.

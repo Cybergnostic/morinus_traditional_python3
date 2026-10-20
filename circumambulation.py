@@ -1,0 +1,87 @@
+"""Circumambulation of the Ascendant through the bounds (Ptolemy, Tetrabiblos III;
+Valens): the Ascendant is directed under the oblique ascensions of the birth
+latitude, one year for each degree (Ptolemy's key). The lord of each bound it
+enters is the distributor; the planets whose bodies or rays (sextile, square,
+trine, opposition) it meets are the participants.
+
+The bounds are those chosen in Options > Terms. Oblique ascensions are
+calculated directly (OA = RA - ascensional difference) for points on the
+ecliptic."""
+
+import math
+import planets
+import houses
+import util
+
+ASPECTS = ((0, 'L'), (60, 'M'), (90, 'N'), (120, 'O'), (180, 'P'))	# with their Morinus.ttf letters
+YEAR = 365.2421897
+
+
+class NotAvailable(Exception):
+	pass
+
+
+class Event:
+	def __init__(self, years, lon, distributor=None, participant=None, aspect=None):
+		self.years = years
+		self.lon = lon			# tropical longitude reached
+		self.distributor = distributor	# planet: the Ascendant enters its bound
+		self.participant = participant	# planet whose body/ray the Ascendant meets
+		self.aspect = aspect		# index into ASPECTS
+
+
+def oblique_ascension(lon, obl, lat):
+	"""OA of a point on the ecliptic (degrees) under geographic latitude lat."""
+	l, e, phi = math.radians(lon), math.radians(obl), math.radians(lat)
+	ra = math.degrees(math.atan2(math.sin(l) * math.cos(e), math.cos(l))) % 360.0
+	decl = math.asin(math.sin(e) * math.sin(l))
+	x = math.tan(phi) * math.tan(decl)
+	if abs(x) >= 1.0:
+		raise NotAvailable('the ecliptic does not rise and set at this latitude')
+	return (ra - math.degrees(math.asin(x))) % 360.0
+
+
+def bounds(options, ayanamsha):
+	"""(tropical start longitude, lord) of every bound of the zodiac."""
+	table = options.terms[options.selterm]
+	out = []
+	for sign in range(12):
+		start = sign * 30.0
+		for lord, length in table[sign]:
+			lon = start + (ayanamsha if options.ayanamsha != 0 else 0.0)
+			out.append((util.normalize(lon), lord))
+			start += length
+	return out
+
+
+def circumambulation(chrt, years=100):
+	"""Events in order of time: bounds entered and rays met."""
+	obl = chrt.obl[0]
+	lat = chrt.place.lat
+	if abs(lat) >= 90.0 - obl:
+		raise NotAvailable('the ecliptic does not rise and set at this latitude')
+	asc = chrt.houses.ascmc[houses.Houses.ASC]
+	oa0 = (chrt.houses.ascmc[houses.Houses.ARMC] + 90.0) % 360.0
+
+	def arc(lon):
+		return (oblique_ascension(lon, obl, lat) - oa0) % 360.0
+
+	events = []
+	bnds = bounds(chrt.options, chrt.ayanamsha)
+	# the bound the Ascendant is in at birth: the nearest bound start before it
+	current = min(bnds, key=lambda b: util.normalize(asc - b[0]))
+	events.append(Event(0.0, asc, distributor=current[1]))
+	for lon, lord in bnds:
+		if lon != current[0]:
+			events.append(Event(arc(lon), lon, distributor=lord))
+	for pl in range(planets.Planets.PLANETS_NUM):
+		plon = chrt.planets.planets[pl].data[planets.Planet.LON]
+		for i, (angle, letter) in enumerate(ASPECTS):
+			for sign in ((1,) if angle in (0, 180) else (1, -1)):
+				point = util.normalize(plon + sign * angle)
+				events.append(Event(arc(point), point, participant=pl, aspect=i))
+	return sorted((e for e in events if e.years <= years), key=lambda e: e.years)
+
+
+def date(chrt, years):
+	return chrt.time.jd + years * YEAR
