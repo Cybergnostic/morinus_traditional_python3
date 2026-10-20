@@ -6,10 +6,12 @@ Nothing is added: this is the program as it was, on a modern Python.
 
 Morinus was written by Robert Nagy and is free software under the GNU GPL v3.
 
-Additional traditional-astrology tools (planetary conditions, reception,
-temperament, lunar returns of the solar year, steppers, duads on bi-wheels,
-unlimited lots with a Day/Night selector, automatic time zones) are on the
-[`traditional`](../../tree/traditional) branch.
+This is the `clean-port` branch: the 2014 program with nothing added, only
+bug fixes. The [`main`](../../tree/main) branch is the same program with
+additional tools for traditional astrology (planetary conditions,
+temperament, zodiacal releasing, decennials, circumambulation, heliacal
+phenomena, an offline atlas, automatic time zones and more) and Swiss
+Ephemeris 2.10.
 
 ## What's in it
 
