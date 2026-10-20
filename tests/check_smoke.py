@@ -10,7 +10,7 @@ import json
 
 # bugs of the original program that are kept (README, Known issues)
 KNOWN = [
-	('print2file', 'saving Campanian primary directions as text'),
+	(('print2file', 'IndexError'), 'saving Campanian primary directions as text'),
 ]
 
 
@@ -19,7 +19,7 @@ def main():
 		res = json.load(f)
 	new = []
 	for e in res.get('errors', []):
-		known = next((why for text, why in KNOWN if text in e['traceback']), None)
+		known = next((why for texts, why in KNOWN if all(t in e['traceback'] for t in texts)), None)
 		if known:
 			print('known: %s (%s)' % (e['step'], known))
 		else:

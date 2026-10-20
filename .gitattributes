@@ -1,0 +1,9 @@
+# Morinus keeps charts (.hor), settings (.opt) and the place list (.dat) as
+# Python pickles; the older ones are plain text with LF line ends, and git on
+# Windows would add a CR to every line (a chart named "Morinus" became
+# "Morinus\r"). They, and the ephemeris data, are kept byte for byte.
+*.hor binary
+*.opt binary
+*.dat binary
+*.gz binary
+SWEP/Ephem/** -text
