@@ -20,6 +20,8 @@ Added in this version:
   hayz/halb, synodic phase (combust, under the beams, cazimi), oriental /
   occidental, stations, motion, joys, latitude, Via Combusta, void-of-course
   Moon.
+- **Tables → Antiscia** — two more columns show the planets standing on each
+  antiscion and contraantiscion, with the distance (conjunction orbs).
 - **Tables → Temperament** — the temperament worksheet with every factor and
   its points.
 - **Charts → Lunar returns of the year** — the lunar returns covering a solar

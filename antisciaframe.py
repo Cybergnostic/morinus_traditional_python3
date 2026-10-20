@@ -10,4 +10,6 @@ class AntisciaFrame(wx.Frame):
     def __init__(self, parent, title, chrt, options):
         wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(AntisciaFrame.XSIZE, AntisciaFrame.YSIZE))
         self.w = antisciawnd.AntisciaWnd(self, chrt, options, parent)
+        # wide enough for the columns of planets on the antiscia
+        self.SetSize((min(self.w.WIDTH + 30, 1600), AntisciaFrame.YSIZE))
         self.SetMinSize((200, 200))

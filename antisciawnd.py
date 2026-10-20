@@ -11,6 +11,9 @@ from PIL import ImageFont
 import util
 import mtexts
 
+PLANETS_ON = 'Planets on it'
+NOTE = 'Planets on it: within the orb of a conjunction (Options > Orbs), with the distance'
+
 class AntisciaWnd(commonwnd.CommonWnd):
 
     def __init__(self, parent, chrt, options, mainfr, id=-1, size=wx.DefaultSize):
@@ -26,24 +29,74 @@ class AntisciaWnd(commonwnd.CommonWnd):
         self.LINE_HEIGHT = self.SPACE + self.FONT_SIZE + self.SPACE
         self.SMALL_CELL_WIDTH = 3 * self.FONT_SIZE
         self.CELL_WIDTH = 8 * self.FONT_SIZE
-        self.TITLE_HEIGHT = 2 * self.LINE_HEIGHT
-        self.TITLE_WIDTH = self.COLUMN_NUM * self.CELL_WIDTH
-        self.SPACE_TITLEY = 0
-        self.LINE_NUM = 12
-        self.TABLE_HEIGHT = self.TITLE_HEIGHT + self.SPACE_TITLEY + self.LINE_NUM * self.LINE_HEIGHT
-        self.TABLE_WIDTH = self.SMALL_CELL_WIDTH + self.COLUMN_NUM * self.CELL_WIDTH
-        self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
-        self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
-        self.SetVirtualSize((self.WIDTH, self.HEIGHT))
         self.fntMorinus = util.truetype(common.common.symbols, self.FONT_SIZE)
         self.fntSymbol = util.truetype(common.common.symbols, 3 * self.FONT_SIZE // 2)
         self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
+        self.hits = self.planetsOnAntiscia()
+        measure = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+        self.HITS_WIDTH = max([self.hitsWidth(measure, h) for row in self.hits for h in row] + [measure.textbbox((0, 0), PLANETS_ON, self.fntText)[2], 3 * self.FONT_SIZE]) + 2 * self.SPACE
+        self.TITLE_HEIGHT = 2 * self.LINE_HEIGHT
+        self.TITLE_WIDTH = self.COLUMN_NUM * self.CELL_WIDTH + 2 * self.HITS_WIDTH
+        self.SPACE_TITLEY = 0
+        self.LINE_NUM = 12
+        self.TABLE_HEIGHT = self.TITLE_HEIGHT + self.SPACE_TITLEY + self.LINE_NUM * self.LINE_HEIGHT
+        self.TABLE_WIDTH = self.SMALL_CELL_WIDTH + self.TITLE_WIDTH
+        self.WIDTH = commonwnd.CommonWnd.BORDER + max(self.TABLE_WIDTH, measure.textbbox((0, 0), NOTE, self.fntText)[2]) + commonwnd.CommonWnd.BORDER
+        self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + self.LINE_HEIGHT + commonwnd.CommonWnd.BORDER
+        self.SetVirtualSize((self.WIDTH, self.HEIGHT))
         self.drawBkg()
 
     def getExt(self):
         return mtexts.txtsabbrevs['Ant']
+
+    def planetsOnAntiscia(self):
+        """For each row (planets, nodes, LoF, Asc, MC): the planets standing on its
+        antiscion and on its contraantiscion, as (planet, distance) nearest first.
+        The orb is that of a conjunction in Morinus: half of each planet's orb
+        (Options > Orbs) added together."""
+        ants = self.ants
+        rows = [(ants.plantiscia[i].lon, ants.plcontraant[i].lon, i) for i in range(planets.Planets.BODIES_NUM)]
+        rows.append((ants.lofant.lon, ants.lofcontraant.lon, None))
+        rows += [(ants.ascmcant[i].lon, ants.ascmccontraant[i].lon, None) for i in range(2)]
+        hits = []
+        for ant, cant, obj in rows:
+            own = self.options.orbs[obj] / 2.0 if obj is not None else 0.0
+            row = []
+            for lon in (ant, cant):
+                found = []
+                for pl in range(planets.Planets.PLANETS_NUM):
+                    if pl == obj:
+                        continue
+                    dist = abs(util.normalize(lon - self.chart.planets.planets[pl].data[planets.Planet.LON] + 180.0) - 180.0)
+                    if dist <= own + self.options.orbs[pl] / 2.0:
+                        found.append((pl, dist))
+                row.append(sorted(found, key=lambda h: h[1]))
+            hits.append(row)
+        return hits
+
+    def hitText(self, dist):
+        d, m, s = util.decToDeg(dist)
+        return str(d) + self.deg_symbol + str(m).zfill(2) + "'"
+
+    def hitsWidth(self, draw, hits):
+        wsp = draw.textbbox((0, 0), '  ', self.fntText)[2]
+        return sum(draw.textbbox((0, 0), common.common.planets[pl], self.fntMorinus)[2] + draw.textbbox((0, 0), self.hitText(dist), self.fntText)[2] + wsp for pl, dist in hits)
+
+    def drawHits(self, draw, x, y, hits):
+        """The planets on an antiscion, each in its colour with its distance."""
+        x += (self.HITS_WIDTH - self.hitsWidth(draw, hits)) // 2
+        wsp = draw.textbbox((0, 0), '  ', self.fntText)[2]
+        for pl, dist in hits:
+            clr = (0, 0, 0) if self.bw else self.options.clrplanets[pl]
+            w, h = draw.textbbox((0, 0), common.common.planets[pl], self.fntMorinus)[2:]
+            draw.text((x, y + (self.LINE_HEIGHT - h) // 2), common.common.planets[pl], fill=clr, font=self.fntMorinus)
+            x += w
+            txt = self.hitText(dist)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((x, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntText)
+            x += w + wsp
 
     def drawBkg(self):
         if self.bw:
@@ -66,17 +119,18 @@ class AntisciaWnd(commonwnd.CommonWnd):
             txtclr = self.options.clrtexts
         txt = (
          mtexts.txtsantiscia['Antiscion'], mtexts.txtsantiscia['Contraantiscion'])
+        group = 2 * self.CELL_WIDTH + self.HITS_WIDTH
         for i in range(len(txt)):
             w, h = draw.textbbox((0, 0), txt[i], self.fntText)[2:]
-            offs = 0
-            if i == 1:
-                offs = self.CELL_WIDTH
-            draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH // 2 + offs + self.CELL_WIDTH * i + (self.CELL_WIDTH - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2), txt[i], fill=txtclr, font=self.fntText)
+            draw.text((BOR + self.SMALL_CELL_WIDTH + group * i + (group - w) // 2, BOR + (self.LINE_HEIGHT - h) // 2), txt[i], fill=txtclr, font=self.fntText)
 
-        txt = (mtexts.txtsantiscia['Longitude'], mtexts.txtsantiscia['Latitude'], mtexts.txtsantiscia['Longitude'], mtexts.txtsantiscia['Latitude'])
+        txt = (mtexts.txtsantiscia['Longitude'], mtexts.txtsantiscia['Latitude'], PLANETS_ON, mtexts.txtsantiscia['Longitude'], mtexts.txtsantiscia['Latitude'], PLANETS_ON)
+        x = BOR + self.SMALL_CELL_WIDTH
         for i in range(len(txt)):
+            cw = self.HITS_WIDTH if i % 3 == 2 else self.CELL_WIDTH
             w, h = draw.textbbox((0, 0), txt[i], self.fntText)[2:]
-            draw.text((BOR + self.SMALL_CELL_WIDTH + self.CELL_WIDTH * i + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt[i], fill=txtclr, font=self.fntText)
+            draw.text((x + (cw - w) // 2, BOR + self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), txt[i], fill=txtclr, font=self.fntText)
+            x += cw
 
         x = BOR
         y = BOR + self.TITLE_HEIGHT + self.SPACE_TITLEY
@@ -92,6 +146,8 @@ class AntisciaWnd(commonwnd.CommonWnd):
             self.drawline(draw, x, y + i * self.LINE_HEIGHT, txts[j], tableclr, data[j], j, ascmc)
             i += 1
 
+        w, h = draw.textbbox((0, 0), NOTE, self.fntText)[2:]
+        draw.text((x, y + i * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), NOTE, fill=txtclr, font=self.fntText)
         wxImg = wx.Image(img.size[0], img.size[1])
         wxImg.SetData(img.tobytes())
         self.buffer = wx.Bitmap(wxImg)
@@ -99,9 +155,9 @@ class AntisciaWnd(commonwnd.CommonWnd):
     def drawline(self, draw, x, y, txt, clr, data, idx, AscMC):
         draw.line((x, y + self.LINE_HEIGHT, x + self.TABLE_WIDTH, y + self.LINE_HEIGHT), fill=clr)
         offs = (
-         0, self.SMALL_CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH)
+         0, self.SMALL_CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.HITS_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.HITS_WIDTH)
         summa = 0
-        for i in range(self.COLUMN_NUM + 1 + 1):
+        for i in range(len(offs)):
             draw.line((x + summa + offs[i], y, x + summa + offs[i], y + self.LINE_HEIGHT), fill=clr)
             summa += offs[i]
 
@@ -127,6 +183,10 @@ class AntisciaWnd(commonwnd.CommonWnd):
          self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH)
         summa = 0
         for i in range(len(data)):
+            if i == 2:
+                # after the antiscion: the planets on it
+                self.drawHits(draw, x + self.SMALL_CELL_WIDTH + summa, y, self.hits[idx][0])
+                summa += self.HITS_WIDTH
             d, m, s = util.decToDeg(data[i])
             if i == 0 or i == 2:
                 if self.options.ayanamsha != 0:
@@ -151,3 +211,6 @@ class AntisciaWnd(commonwnd.CommonWnd):
                 offset = (offs[i] - w) // 2
                 draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntText)
             summa += offs[i]
+
+        # after the contraantiscion: the planets on it
+        self.drawHits(draw, x + self.SMALL_CELL_WIDTH + summa, y, self.hits[idx][1])
