@@ -129,3 +129,9 @@ class PlacesListDlg(wx.Dialog):
         self.SetSizer(mvsizer)
         mvsizer.Fit(self)
         btnOk.SetFocus()
+        self.li.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onActivated)
+
+    def onActivated(self, event):
+        # double-click (or Enter) on a place chooses it
+        self.li.currentItem = event.GetIndex()
+        self.EndModal(wx.ID_OK)
