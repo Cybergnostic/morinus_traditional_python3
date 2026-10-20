@@ -1,7 +1,8 @@
-"""On GTK (Linux) controls need more room than on Windows, for which Morinus's
-fixed sizes were chosen: when a dialog or window is first shown, lists, number
-fields and spin controls narrower than their contents are widened and the
-dialog is laid out again."""
+"""Morinus's fixed control sizes were chosen for Windows XP; on GTK (Linux) and
+current Windows some controls need more room: when a dialog or window is first
+shown, lists, number fields and spin controls narrower than their contents are
+widened and the dialog is laid out again (on any platform; nothing is made
+smaller)."""
 
 import wx
 
@@ -51,8 +52,6 @@ def _once(win):
 
 
 def install():
-	if wx.Platform != '__WXGTK__':
-		return
 	showmodal = wx.Dialog.ShowModal
 
 	def showModalFitted(self):
