@@ -1092,6 +1092,12 @@ class MFrame(wx.Frame):
         return
 
     def onFirdaria(self, event):
+        if not self.splash and self.horoscope.time.bc:
+            # the periods are dated with Python dates, which have no BC years
+            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm.ShowModal()
+            dlgm.Destroy()
+            return
         if not self.splash:
             wait = wx.BusyCursor()
             firdfr = firdariaframe.FirdariaFrame(self, self.title, self.horoscope, self.options)

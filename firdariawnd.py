@@ -9,6 +9,7 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 import mtexts
+import firdaria
 import util
 
 class FirdariaWnd(commonwnd.CommonWnd):
@@ -84,7 +85,7 @@ class FirdariaWnd(commonwnd.CommonWnd):
         for index in range(len(planetaryyears) + self.EXTRA_PERIODS):
             aindex = index % len(planetaryyears)
             planet, years = planetaryyears[aindex]
-            ending = datetime(starting.year + years, starting.month, starting.day)
+            ending = firdaria.addyears(starting, years)
             txt = plstxts[planet]
             w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
             clr = (0, 0, 0)
