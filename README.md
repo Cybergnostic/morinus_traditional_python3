@@ -39,8 +39,7 @@ Added in this version:
   Day/Night selector in Tables → Lots and in Options → Lots shows each lot as
   it applies to day or night charts (both open on the chart's sect).
   `tools/arp_lots.py` converts Solar Fire `.arp` Arabic-parts files, and
-  `tools/merge_lots.py` merges them, into your
-  lots:
+  `tools/merge_lots.py` merges them into your lots:
 
   ```sh
   python3 tools/merge_lots.py --arp parts.arp --dry-run
@@ -53,8 +52,8 @@ Added in this version:
   236,000 places worldwide without internet; see [below](#offline-atlas).
 
 The planetary conditions and the temperament come from
-[hor-tools](hor_tools/VENDORED.txt) (vendored in `hor_tools/`), run on Morinus's own
-Swiss Ephemeris through `swe_compat.py`.
+[hor-tools](hor_tools/VENDORED.txt) (vendored in `hor_tools/`), run on
+Morinus's own Swiss Ephemeris through `swe_compat.py`.
 
 ## Install
 

@@ -4,3 +4,7 @@ Keep this copy unchanged so it can be updated from upstream; Morinus-specific gl
 Local change (not yet upstream): analysis/solar.py and almuten.py handle polar day and night,
 when the Sun does not rise or set: sunrise/sunset are None and there is no
 planetary hour ruler (before, the analysis failed for such charts).
+
+Also local: comments, docstrings and a few printed texts are reworded to name
+no source material, and two star-table constants are renamed CATALOGUE_STARS
+and FIRST_MAGNITUDE_PRIMARY_NATURE (no change in behaviour).
