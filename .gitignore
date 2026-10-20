@@ -17,3 +17,5 @@ build/
 # install.sh's virtual environment and the Windows build
 /.venv/
 /dist/
+# unexpected errors (errorreport.py)
+/morinus-error.log

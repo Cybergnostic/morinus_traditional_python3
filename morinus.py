@@ -24,6 +24,7 @@ import wx
 import options
 import mtexts
 import morin
+import errorreport
 
 
 class Morinus(wx.App):
@@ -33,6 +34,7 @@ class Morinus(wx.App):
 			os.chdir(progPath)
 		except:
 			pass
+		errorreport.install()
 
 		opts = options.Options()
 		mtexts.setLang(opts.langid)
