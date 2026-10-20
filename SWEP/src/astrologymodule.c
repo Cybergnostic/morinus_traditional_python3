@@ -1,10 +1,19 @@
 #include <Python.h>
+#include <string.h>
 #include "swephexp.h"
 
 
 /**************************** 
  * exports from sweph.c 
  ****************************/
+
+/* The Swiss Ephemeris writes the full name of a star back into the name it is
+   given, so it gets a copy, never the memory of the Python string. */
+static void copyname(char *dst, const char *src)
+{
+	strncpy(dst, src ? src : "", AS_MAXCH - 1);
+	dst[AS_MAXCH - 1] = '\0';
+}
 
 static PyObject* astrology_swe_version(PyObject *self, PyObject *args)
 {
@@ -252,7 +261,9 @@ static PyObject* astrology_swe_heliacal_ut(PyObject *self, PyObject *args)
 
 	double dret[50];
 	char serr[AS_MAXCH] = "";
-	int ret = swe_heliacal_ut(tjd_start, geopos, atm, obs, objname, eventtype, helflag, dret, serr);
+	char name[AS_MAXCH];
+	copyname(name, objname);
+	int ret = swe_heliacal_ut(tjd_start, geopos, atm, obs, name, eventtype, helflag, dret, serr);
 
 	return Py_BuildValue("(i)(dddddddddddddddddddddddddddddddddddddddddddddddddd)(s)", ret, dret[0], dret[1], dret[2], dret[3], dret[4], dret[5], dret[6], dret[7], dret[8], dret[9], dret[10], dret[11], dret[12], dret[13], dret[14], dret[15], dret[16], dret[17], dret[18], dret[19], dret[20], dret[21], dret[22], dret[23], dret[24], dret[25], dret[26], dret[27], dret[28], dret[29], dret[30], dret[32], dret[32], dret[33], dret[34], dret[35], dret[36], dret[37], dret[38], dret[39], dret[40], dret[41], dret[42], dret[43], dret[44], dret[45], dret[46], dret[47], dret[48], dret[49], serr);
 }
@@ -446,7 +457,9 @@ static PyObject* astrology_swe_gauquelin_sector(PyObject *self, PyObject *args)
 
 	double dgsect;
 	char serr[AS_MAXCH] = "";
-	double ret = swe_gauquelin_sector(tjd_ut, ipl, starname, iflag, imeth, geopos, atpress, attemp, &dgsect, serr);
+	char star[AS_MAXCH];
+	copyname(star, starname);
+	double ret = swe_gauquelin_sector(tjd_ut, ipl, star, iflag, imeth, geopos, atpress, attemp, &dgsect, serr);
 
 	return Py_BuildValue("dds", ret, dgsect, serr);
 }
@@ -481,7 +494,9 @@ static PyObject* astrology_swe_lun_occult_where(PyObject *self, PyObject *args)
 
 	double geopos[2], attr[20];
 	char serr[AS_MAXCH] = "";
-	int ret = swe_lun_occult_where(tjd, ipl, starname, ifl, geopos, attr, serr);
+	char star[AS_MAXCH];
+	copyname(star, starname);
+	int ret = swe_lun_occult_where(tjd, ipl, star, ifl, geopos, attr, serr);
 
 	return Py_BuildValue("(i)(dd)(dddddddddddddddddddd)(s)", ret, geopos[0], geopos[1], attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7], attr[8], attr[9], attr[10], attr[11], attr[12], attr[13], attr[14], attr[15], attr[16], attr[17], attr[18], attr[19], serr);
 }
@@ -534,7 +549,9 @@ static PyObject* astrology_swe_lun_occult_when_loc(PyObject *self, PyObject *arg
 
 	double tret[10], attr[20];
 	char serr[AS_MAXCH] = "";
-	int ret = swe_lun_occult_when_loc(tjd_start, ipl, starname, ifl, geopos, tret, attr, backward, serr);
+	char star[AS_MAXCH];
+	copyname(star, starname);
+	int ret = swe_lun_occult_when_loc(tjd_start, ipl, star, ifl, geopos, tret, attr, backward, serr);
 
 	return Py_BuildValue("(i)(dddddddddd)(dddddddddddddddddddd)(s)", ret, tret[0], tret[1], tret[2], tret[3], tret[4], tret[5], tret[6], tret[7], tret[8], tret[9], attr[0], attr[1], attr[2], attr[3], attr[4], attr[5], attr[6], attr[7], attr[8], attr[9], attr[10], attr[11], attr[12], attr[13], attr[14], attr[15], attr[16], attr[17], attr[18], attr[19], serr);
 }
@@ -566,12 +583,14 @@ static PyObject* astrology_swe_lun_occult_when_glob(PyObject *self, PyObject *ar
 	char* starname;
 	int backward;
 
-	if (!PyArg_ParseTuple(args, "didiii", &tjd_start, &ipl, &starname, &ifl, &ifltype, &backward))
+	if (!PyArg_ParseTuple(args, "disiii", &tjd_start, &ipl, &starname, &ifl, &ifltype, &backward))
 		return NULL;
 
 	double tret[10];
 	char serr[AS_MAXCH] = "";
-	int ret = swe_lun_occult_when_glob(tjd_start, ipl, starname, ifl, ifltype, tret, backward, serr);
+	char star[AS_MAXCH];
+	copyname(star, starname);
+	int ret = swe_lun_occult_when_glob(tjd_start, ipl, star, ifl, ifltype, tret, backward, serr);
 
 	return Py_BuildValue("(i)(dddddddddddddddddddd)(s)", ret, tret[0], tret[1], tret[2], tret[3], tret[4], tret[5], tret[6], tret[7], tret[8], tret[9], serr);
 }
@@ -728,7 +747,9 @@ static PyObject* astrology_swe_rise_trans(PyObject *self, PyObject *args)
 
 	double tret;
 	char serr[AS_MAXCH] = "";
-	int ret = swe_rise_trans(tjd_ut, ipl, starname, epheflag, rsmi, geopos, atpress, attemp, &tret, serr);
+	char star[AS_MAXCH];
+	copyname(star, starname);
+	int ret = swe_rise_trans(tjd_ut, ipl, star, epheflag, rsmi, geopos, atpress, attemp, &tret, serr);
 
 	return Py_BuildValue("ids", ret, tret, serr);
 }
