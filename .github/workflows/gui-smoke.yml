@@ -1,0 +1,70 @@
+# Kept on main (the default branch) so that GitHub registers the workflow; it
+# runs for the traditional branch and its tags only.
+# Opens every menu command, popup menu and dialog of Morinus (tests/guismoke.py)
+# on Linux and Windows on every push, and fails on any new error.
+name: GUI smoke test
+
+on:
+  push:
+    branches: [traditional]
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install wxPython and Pillow
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q python3-wxgtk4.0 python3-pil python3-dev python3-setuptools gcc xvfb xauth
+
+      - name: Build
+        run: |
+          ./build.sh
+          python3 tools/build_atlas.py
+
+      - name: Smoke test
+        run: |
+          cp -r . "$RUNNER_TEMP/copy"
+          xvfb-run -a -s "-screen 0 1600x1000x24" python3 tests/guismoke.py "$RUNNER_TEMP/copy" "$RUNNER_TEMP/out" --exercise
+          python3 tests/check_smoke.py "$RUNNER_TEMP/out/guismoke.json"
+
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: guismoke-linux
+          path: ${{ runner.temp }}/out/guismoke.json
+
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install wxPython and Pillow
+        run: python -m pip install wxPython Pillow setuptools
+
+      - name: Build
+        working-directory: SWEP/src
+        run: python setup.py -q build_ext --build-lib ../.. --build-temp ../../build/swe
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          python tools/build_atlas.py
+          Copy-Item . "$env:RUNNER_TEMP\copy" -Recurse
+          python tests/guismoke.py "$env:RUNNER_TEMP\copy" "$env:RUNNER_TEMP\out" --exercise
+          python tests/check_smoke.py "$env:RUNNER_TEMP\out\guismoke.json"
+
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: guismoke-windows
+          path: ${{ runner.temp }}/out/guismoke.json
