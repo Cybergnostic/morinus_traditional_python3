@@ -68,7 +68,12 @@ class Geonames:
                 country_name = it.get('countryName', '')
                 gmt_offset = self.get_gmt_offset(longitude, latitude)
                 elevation = self.get_elevation(longitude, latitude)
-                self.li.append((placename.encode('utf-8'), float(longitude), float(latitude),
-                 country_code.encode('utf-8'), country_name.encode('utf-8'), elevation, gmt_offset))
+                # the service leaves these out for some places
+                if gmt_offset is None:
+                    gmt_offset = 0.0
+                if elevation is None:
+                    elevation = 0
+                self.li.append((placename, float(longitude), float(latitude),
+                 country_code, country_name, elevation, gmt_offset))
 
             return True
