@@ -290,6 +290,8 @@ def main():
 
 	wx.Dialog.ShowModal = dialog_modal
 	wx.MessageDialog.ShowModal = message_modal
+	# wx.MessageBox opens a native dialog that the patches above do not reach
+	wx.MessageBox = lambda message, caption='', style=wx.OK, parent=None, *a: wx.YES if style & wx.YES_NO else wx.OK
 	wx.FileDialog.ShowModal = file_modal
 	wx.FileDialog.GetPath = lambda self: state['filepath']
 	wx.FileDialog.GetDirectory = lambda self: os.path.dirname(state['filepath'])
