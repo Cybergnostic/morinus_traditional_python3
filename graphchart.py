@@ -42,8 +42,11 @@ class GraphChart:
         self.arrowlen = 0.04
         self.retrdiff = 0.01
         self.deg01510len = 0.01
+        # the ring of objects outside the zodiac; duads need only the planets, so
+        # charts made without fixed stars and lots (returns, transits) show them too
+        self.objring = self.options.showobject != chart.Chart.SHOWNONE and (self.chart.full or self.options.showobject == chart.Chart.SHOWDODECATEMORIA)
         if chart2 == None:
-            if self.chart.full and self.options.showobject != 0:
+            if self.objring:
                 if self.options.showobject == chart.Chart.SHOWFIXEDSTARS or self.options.showobject == chart.Chart.SHOWLOTS:
                     self.symbolSize = self.maxradius // 18
                     self.signSize = self.maxradius // 18
@@ -402,7 +405,7 @@ class GraphChart:
             idorder2 = self.getIdOrder(lons2)
             self.pshift2 = self.arrangeObjs(objs2, lons2, fnts2, idorder2, self.rOuterPlanet)
             self.drawObjLines(self.pshift2, lons2, self.r30, self.rOuterLine)
-        if self.chart2 == None and self.chart.full and self.options.showobject != chart.Chart.SHOWNONE:
+        if self.chart2 == None and self.objring:
             if self.options.showobject == chart.Chart.SHOWFIXEDSTARS:
                 self.showfss = self.mergefsaspmatrices()
                 lonsfs = []
@@ -532,7 +535,7 @@ class GraphChart:
             self.drawTerms()
         if self.options.showdecans:
             self.drawDecans()
-        if self.chart2 == None and self.chart.full and self.options.showobject != chart.Chart.SHOWNONE:
+        if self.chart2 == None and self.objring:
             if self.options.showobject == chart.Chart.SHOWFIXEDSTARS:
                 pass
             elif self.options.showobject == chart.Chart.SHOWANTIS:
@@ -643,7 +646,7 @@ class GraphChart:
             self.bdc.SetPen(pen)
             self.bdc.DrawCircle(int(cx), int(cy), int(self.rOuterMax))
             self.bdc.DrawCircle(int(cx), int(cy), int(self.rOuterHouse))
-        if self.chart2 != None or self.chart.full and self.options.showobject != chart.Chart.SHOWNONE:
+        if self.chart2 != None or self.objring:
             w = 3
             if self.chartsize <= GraphChart.SMALL_SIZE:
                 w = 1
@@ -733,7 +736,7 @@ class GraphChart:
         pen = wx.Pen(clr, 1)
         self.bdc.SetPen(pen)
         self.drawLines(GraphChart.DEG1, asclon, self.r0, self.r1)
-        if self.chart2 != None or self.chart.full and self.options.showobject != chart.Chart.SHOWNONE:
+        if self.chart2 != None or self.objring:
             clr = self.options.clrframe
             if self.bw:
                 clr = (0, 0, 0)
