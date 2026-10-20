@@ -1,11 +1,11 @@
-# Builds and tests the Windows program on every push to traditional; a tag
-# traditional-v<version> also publishes the installer and a zip as a release.
+# Builds and tests the Windows program on every push to main; a tag v<version>
+# (or traditional-v<version>) also publishes the installer and a zip as a release.
 name: Windows build
 
 on:
   push:
-    branches: [traditional]
-    tags: ['traditional-v*']
+    branches: [main]
+    tags: ['v*', 'traditional-v*']
   workflow_dispatch:
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
       - name: Version
         shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/traditional-v* ]]; then v=${GITHUB_REF#refs/tags/traditional-v}; else v=0.0.0-${GITHUB_SHA::7}; fi
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then v=${GITHUB_REF##*/}; v=${v#traditional-}; v=${v#v}; else v=0.0.0-${GITHUB_SHA::7}; fi
           echo "VERSION=$v" >> "$GITHUB_ENV"
 
       - name: Build
@@ -74,7 +74,7 @@ jobs:
             dist/MorinusTraditional-*-windows.zip
 
       - name: Release
-        if: startsWith(github.ref, 'refs/tags/traditional-v')
+        if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

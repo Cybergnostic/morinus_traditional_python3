@@ -6,6 +6,10 @@ with additional tools for traditional astrology.
 
 Morinus was written by Robert Nagy and is free software under the GNU GPL v3.
 
+This branch, `main`, is the program with the additions below. The
+[`clean-port`](../../tree/clean-port) branch is the 2014 program ported as it
+was, with nothing added (Swiss Ephemeris 1.76).
+
 ## What's in it
 
 Everything from the 2014 program: charts with clickable planets showing their
@@ -124,7 +128,7 @@ Positions come from Swiss Ephemeris 2.10 (JPL DE431 data, current ΔT); the
 data files in `SWEP/Ephem/` give full precision from 5400 BC to 5400 AD.
 Compared with Morinus 6.2 (Swiss Ephemeris 1.76), modern charts differ by less
 than 0.2" for the planets and 2" for the angles; charts of earlier centuries by
-up to about a minute of arc, from the newer ΔT. The `main` branch keeps 1.76.
+up to about a minute of arc, from the newer ΔT. The `clean-port` branch keeps 1.76.
 Fixed stars come from the 2.10 catalogue (`sefstars.txt`), each listed once and
 with the names Morinus 6.2 used (Bungula, Gemma, Asellus Australis, ...).
 
@@ -182,7 +186,7 @@ xvfb-run python3 tests/guismoke.py /path/to/copy /tmp/smoke [--variant 1|2|3]
 `refdump.py` computes a set of charts and dumps every value; `refcompare.py`
 compares them with a reference: `se210.json.gz` is this version's (Swiss
 Ephemeris 2.10), `py2.json.gz` the recovered Python 2 program's, which the port
-matched exactly with Swiss Ephemeris 1.76 (the `main` branch). `guismoke.py` opens a chart and
+matched exactly with Swiss Ephemeris 1.76 (the `clean-port` branch). `guismoke.py` opens a chart and
 triggers every menu command and popup-menu item (run it on a copy of the
 folder, since it saves options).
 

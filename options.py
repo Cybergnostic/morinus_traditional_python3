@@ -13,14 +13,16 @@ class Options:
         self.def_houses = self.houses = True
         self.def_bw = self.bw = False
         self.def_tablesize = self.tablesize = 0.75
-        self.def_showterms = self.showterms = False
-        self.def_showdecans = self.showdecans = False
-        self.def_showobject = self.showobject = 0
+        # the look of this version (Appearance I and II, Colors): white, black planets,
+        # terms, decans and duads shown, every speculum column
+        self.def_showterms = self.showterms = True
+        self.def_showdecans = self.showdecans = True
+        self.def_showobject = self.showobject = 4
         self.def_showfixedstarsnodes = self.showfixedstarsnodes = False
         self.def_showfixedstarshcs = self.showfixedstarshcs = False
         self.def_showfixedstarslof = self.showfixedstarslof = False
         self.def_showfixedstarsoutoforb = self.showfixedstarsoutoforb = False
-        self.def_maxascmcsize = self.maxascmcsize = 3
+        self.def_maxascmcsize = self.maxascmcsize = 2
         self.def_housesystem = self.housesystem = True
         self.def_topocentric = self.topocentric = False
         self.def_enableclick = self.enableclick = True
@@ -28,7 +30,7 @@ class Options:
         self.def_netbook = self.netbook = False
         self.speculums = [
          [
-          True, True, True, True, False, False, False, False, False, False, False, False, False, False], [True, True, True, True, False, False, False, False, False, False, False]]
+          True, True, True, True, True, True, True, True, True, True, True, True, True, True], [True, True, True, True, True, True, True, True, True, True, True]]
         self.def_speculums = copy.deepcopy(self.speculums)
         self.intime = False
         self.def_intime = self.intime
@@ -233,20 +235,20 @@ class Options:
         self.def_lotsvisible = self.lotsvisible[:]
         self.def_lotsusehouses = self.lotsusehouses = False
         self.def_ayanamsha = self.ayanamsha = 0
-        self.def_clrframe = self.clrframe = (0, 0, 255)
-        self.def_clrsigns = self.clrsigns = (0, 0, 255)
-        self.def_clrAscMC = self.clrAscMC = (0, 0, 0)
-        self.def_clrhouses = self.clrhouses = (0, 0, 255)
-        self.def_clrhousenumbers = self.clrhousenumbers = (0, 0, 255)
+        self.def_clrframe = self.clrframe = (0, 0, 0)
+        self.def_clrsigns = self.clrsigns = (0, 0, 0)
+        self.def_clrAscMC = self.clrAscMC = (0, 128, 192)
+        self.def_clrhouses = self.clrhouses = (0, 0, 0)
+        self.def_clrhousenumbers = self.clrhousenumbers = (0, 0, 0)
         self.def_clraux = self.clraux = (0, 0, 128)
         self.clraspect = [
-         (0, 0, 128), (0, 128, 0), (128, 0, 0), (0, 128, 0), (128, 0, 0)]
+         (213, 0, 0), (62, 133, 198), (213, 0, 0), (0, 128, 0), (213, 0, 0)]
         self.def_clraspect = self.clraspect[:]
         self.clrplanets = [
-         (0, 0, 0), (0, 0, 255), (178, 34, 34), (255, 215, 0), (0, 128, 0), (138, 43, 226), (0, 191, 255), (139, 54, 38)]
+         (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)]
         self.def_clrplanets = self.clrplanets[:]
-        self.clrLoF = self.def_clrLoF = (205, 96, 144)
-        self.def_clrbackground = self.clrbackground = (192, 192, 192)
+        self.clrLoF = self.def_clrLoF = (0, 128, 192)
+        self.def_clrbackground = self.clrbackground = (255, 255, 255)
         self.def_clrtable = self.clrtable = (0, 0, 0)
         self.def_clrtexts = self.clrtexts = (0, 0, 0)
         self.def_hsys = self.hsys = 0
