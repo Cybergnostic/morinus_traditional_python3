@@ -577,6 +577,7 @@ class FindTimeDlg(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnStart, id=self.btnStart.GetId())
         self.Bind(wx.EVT_BUTTON, self.OnShow, id=self.btnShow.GetId())
         self.Bind(wx.EVT_BUTTON, self.onOK, id=btnOk.GetId())
+        self.Bind(wx.EVT_CLOSE, self.onOK)
         self.Bind(EVT_FTREADY, self.OnFTReady)
         self.Bind(EVT_FTDATAREADY, self.OnFTDataReady)
         self.Bind(EVT_FTYEAR, self.OnFTYear)
@@ -853,8 +854,9 @@ class FindTimeDlg(wx.Dialog):
         return res
 
     def onOK(self, event):
-        self.Close()
-        self.SetReturnCode(wx.ID_OK)
+        # the dialog is modeless: Close() here would only click this button
+        # again (wxPython 4), so the dialog is destroyed instead
+        self.Destroy()
 
     def fill(self):
         self.saturndeg.SetValue(str(0))
