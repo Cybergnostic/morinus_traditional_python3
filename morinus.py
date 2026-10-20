@@ -25,6 +25,7 @@ import options
 import mtexts
 import morin
 import errorreport
+import windowmemory
 
 
 class Morinus(wx.App):
@@ -35,6 +36,7 @@ class Morinus(wx.App):
 		except:
 			pass
 		errorreport.install()
+		windowmemory.install()
 
 		opts = options.Options()
 		mtexts.setLang(opts.langid)
