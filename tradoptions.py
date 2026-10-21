@@ -37,6 +37,9 @@ DEFAULTS = {
 	'place_online': True,
 	'place_username': 'morinastro',
 	'place_timezone': True,		# offer the birth date's time zone after choosing a place
+	# chart drawing
+	'chart_smooth': True,		# antialiased lines and circles
+	'chart_lines': 'fine',		# fine, or morinus (the weights of Morinus 6)
 	# windows and errors
 	'win_remember': True,
 	'err_show': True,

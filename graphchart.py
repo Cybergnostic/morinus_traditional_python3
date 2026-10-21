@@ -8,6 +8,8 @@ import math
 import astrology
 import chart
 import dodecatemoria
+import tradoptions
+import chartstyle
 import houses
 import planets
 import fortune
@@ -35,7 +37,7 @@ class GraphChart:
         self.chart2 = chart2
         self.bw = bw
         self.buffer = wx.Bitmap(self.w, self.h)
-        self.bdc = wx.BufferedDC(None, self.buffer)
+        self.openDC()
         self.chartsize = min(self.w, self.h)
         self.maxradius = self.chartsize // 2
         self.center = wx.Point(size[0] // 2, size[1] // 2)
@@ -337,6 +339,8 @@ class GraphChart:
 
     def drawChart(self):
         self.drawCircles()
+        # terms and decans dividers
+        self.bdc.SetPen(chartstyle.frame_pen(self.options, self.bw, self.chartsize, 'divider'))
         if self.options.showterms:
             self.drawTermsLines()
         if self.options.showdecans:
@@ -345,6 +349,7 @@ class GraphChart:
             self.drawHouses(self.chart.houses, self.rBase, self.rInner)
             if self.chart2 != None:
                 self.drawHouses(self.chart2.houses, self.r30, self.rOuterMax)
+        self.closeDC()
         wxImag = self.buffer.ConvertToImage()
         self.img = Image.new('RGB', (wxImag.GetWidth(), wxImag.GetHeight()))
         self.img.frombytes(wxImag.GetData())
@@ -357,7 +362,7 @@ class GraphChart:
         wxImg = wx.Image(self.img.size[0], self.img.size[1])
         wxImg.SetData(self.img.tobytes())
         self.buffer = wx.Bitmap(wxImg)
-        self.bdc = wx.BufferedDC(None, self.buffer)
+        self.openDC()
         self.drawAscMC(self.chart.houses.ascmc, self.rBase, self.rASCMC, self.rArrow)
         if self.chart2 != None:
             self.drawAscMC(self.chart2.houses.ascmc, self.rOuterMin, self.rOuterASCMC, self.rOuterArrow)
@@ -518,6 +523,7 @@ class GraphChart:
             lonsdodec2, objsdodec2, fntsdodec2 = self.dodecObjs(self.chart2)
             self.dodecshift2 = self.arrangeObjs(objsdodec2, lonsdodec2, fntsdodec2, self.getIdOrder(lonsdodec2), self.rDodec)
             self.drawObjLines(self.dodecshift2, lonsdodec2, self.rOuterMax, self.rDodecLines)
+        self.closeDC()
         wxImag = self.buffer.ConvertToImage()
         self.img = Image.new('RGB', (wxImag.GetWidth(), wxImag.GetHeight()))
         self.img.frombytes(wxImag.GetData())
@@ -552,6 +558,18 @@ class GraphChart:
         wxImg.SetData(self.img.tobytes())
         self.buffer = wx.Bitmap(wxImg)
         return self.buffer
+
+    def openDC(self):
+        """The DC that draws the lines and circles of the chart into the buffer;
+        through a graphics context (wx.GCDC) they are antialiased."""
+        self.bufferdc = wx.BufferedDC(None, self.buffer)
+        self.bdc = wx.GCDC(self.bufferdc) if tradoptions.get('chart_smooth') else self.bufferdc
+
+    def closeDC(self):
+        """Ends the antialiased drawing, so that the buffer holds it all (the
+        graphics context writes on being destroyed); the plain DC stays for the
+        settings made while the text is drawn."""
+        self.bdc = self.bufferdc
 
     def drawOrbs(self, draw, chrt):
         wait = wx.BusyCursor()
@@ -638,61 +656,33 @@ class GraphChart:
         self.bdc.Clear()
         self.bdc.SetBrush(wx.Brush(bkgclr))
         cx, cy = self.center.Get()
-        clr = self.options.clrframe
-        if self.bw:
-            clr = (0, 0, 0)
+        # the weight and colour of each line by its role (chartstyle)
+        pen = lambda role: self.bdc.SetPen(chartstyle.frame_pen(self.options, self.bw, self.chartsize, role))
         if self.chart2 != None and self.options.houses:
-            pen = wx.Pen(clr, 1)
-            self.bdc.SetPen(pen)
+            pen('circle')
             self.bdc.DrawCircle(int(cx), int(cy), int(self.rOuterMax))
             self.bdc.DrawCircle(int(cx), int(cy), int(self.rOuterHouse))
         if self.chart2 != None or self.objring:
-            w = 3
-            if self.chartsize <= GraphChart.SMALL_SIZE:
-                w = 1
-            elif self.chartsize <= GraphChart.MEDIUM_SIZE:
-                w = 2
-            pen = wx.Pen(clr, w)
-            self.bdc.SetPen(pen)
+            pen('major')
             self.bdc.DrawCircle(int(cx), int(cy), int(self.r30))
-            pen = wx.Pen(clr, 1)
-            self.bdc.SetPen(pen)
+            pen('circle')
             self.bdc.DrawCircle(int(cx), int(cy), int(self.rOuter10))
         else:
-            pen = wx.Pen(clr, 1)
-            self.bdc.SetPen(pen)
+            pen('circle')
             self.bdc.DrawCircle(int(cx), int(cy), int(self.r30))
-        pen = wx.Pen(clr, 1)
-        self.bdc.SetPen(pen)
+        pen('circle')
         self.bdc.DrawCircle(int(cx), int(cy), int(self.r10))
-        clr = self.options.clrframe
-        if self.bw:
-            clr = (0, 0, 0)
         if self.options.showterms or self.options.showdecans:
-            pen = wx.Pen(clr, 1)
-            self.bdc.SetPen(pen)
             self.bdc.DrawCircle(int(cx), int(cy), int(self.r0))
             if self.options.showterms:
-                clr = self.options.clrframe
-                if self.bw:
-                    clr = (0, 0, 0)
-                pen = wx.Pen(clr, 1)
-                self.bdc.SetPen(pen)
                 self.bdc.DrawCircle(int(cx), int(cy), int(self.rDecans))
-        w = 3
-        if self.chartsize <= GraphChart.SMALL_SIZE:
-            w = 1
-        elif self.chartsize <= GraphChart.MEDIUM_SIZE:
-            w = 2
-        pen = wx.Pen(clr, w)
-        self.bdc.SetPen(pen)
+        pen('major')
         self.bdc.DrawCircle(int(cx), int(cy), int(self.rInner))
         if self.options.houses:
             clr = self.options.clrhouses
             if self.bw:
                 clr = (0, 0, 0)
-            pen = wx.Pen(clr, 1)
-            self.bdc.SetPen(pen)
+            self.bdc.SetPen(wx.Pen(clr, 1))
             self.bdc.DrawCircle(int(cx), int(cy), int(self.rHouse))
         clr = self.options.clrAscMC
         if self.bw:
@@ -702,56 +692,24 @@ class GraphChart:
             w = 2
         elif self.chartsize <= GraphChart.MEDIUM_SIZE and (w == 5 or w == 4):
             w = 3
-        pen = wx.Pen(clr, w)
-        self.bdc.SetPen(pen)
+        self.bdc.SetPen(wx.Pen(clr, w))
         self.bdc.DrawCircle(int(cx), int(cy), int(self.rBase))
         asclon = self.chart.houses.ascmc[houses.Houses.ASC]
         if self.options.ayanamsha != 0:
             asclon -= self.chart.ayanamsha
             asclon = util.normalize(asclon)
-        clr = self.options.clrframe
-        if self.bw:
-            clr = (0, 0, 0)
-        w = 3
-        if self.chartsize <= GraphChart.SMALL_SIZE:
-            w = 1
-        elif self.chartsize <= GraphChart.MEDIUM_SIZE:
-            w = 2
-        pen = wx.Pen(clr, w)
-        self.bdc.SetPen(pen)
+        pen('major')
         self.drawLines(GraphChart.DEG30, asclon, self.rInner, self.r30)
-        clr = self.options.clrframe
-        if self.bw:
-            clr = (0, 0, 0)
-        w = 2
-        if self.chartsize <= GraphChart.MEDIUM_SIZE:
-            w = 1
-        pen = wx.Pen(clr, w)
-        self.bdc.SetPen(pen)
+        pen('tick10')
         self.drawLines(GraphChart.DEG10, asclon, self.r0, self.r10)
         self.drawLines(GraphChart.DEG5, asclon, self.r0, self.r5)
-        clr = self.options.clrframe
-        if self.bw:
-            clr = (0, 0, 0)
-        pen = wx.Pen(clr, 1)
-        self.bdc.SetPen(pen)
+        pen('tick1')
         self.drawLines(GraphChart.DEG1, asclon, self.r0, self.r1)
         if self.chart2 != None or self.objring:
-            clr = self.options.clrframe
-            if self.bw:
-                clr = (0, 0, 0)
-            w = 2
-            if self.chartsize <= GraphChart.MEDIUM_SIZE:
-                w = 1
-            pen = wx.Pen(clr, w)
-            self.bdc.SetPen(pen)
+            pen('tick10')
             self.drawLines(GraphChart.DEG10, asclon, self.rOuter0, self.rOuter10)
             self.drawLines(GraphChart.DEG5, asclon, self.rOuter0, self.rOuter5)
-            clr = self.options.clrframe
-            if self.bw:
-                clr = (0, 0, 0)
-            pen = wx.Pen(clr, 1)
-            self.bdc.SetPen(pen)
+            pen('tick1')
             self.drawLines(GraphChart.DEG1, asclon, self.rOuter0, self.rOuter1)
         return
 
@@ -1172,14 +1130,7 @@ class GraphChart:
         return lonsdodec, objsdodec, fntsdodec
 
     def drawObjLines(self, objshift, lons, r1, r2):
-        clr = (0, 0, 0)
-        if not self.bw:
-            clr = self.options.clrframe
-        w = 2
-        if self.chartsize <= GraphChart.MEDIUM_SIZE:
-            w = 1
-        pen = wx.Pen(clr, w)
-        self.bdc.SetPen(pen)
+        self.bdc.SetPen(chartstyle.frame_pen(self.options, self.bw, self.chartsize, 'pointer'))
         num = len(lons)
         for i in range(num):
             self.drawPlanetLine(objshift, lons[i], i, r1, r2)

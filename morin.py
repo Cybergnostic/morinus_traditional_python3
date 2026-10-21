@@ -14,6 +14,7 @@ import dodecacalcdlg
 import starnames
 import tradoptions
 import tradoptsdlg
+import chartlookdlg
 import defaultsbtn
 import returnslistframe
 import os
@@ -363,6 +364,8 @@ class MFrame(wx.Frame):
             if self.options.menusels[MFrame.MOPTIONS][(self.ID_Colors - self.optsbase - 2)]:
                 self.moptions.Append(self.ID_Colors, mtexts.menutxts['OMColors'], mtexts.menutxts['OMColorsDoc'])
                 self.Bind(wx.EVT_MENU, self.onColors, id=self.ID_Colors)
+            item = self.moptions.Append(wx.NewIdRef(), 'Chart look...', 'Colour theme and line weight of the chart')
+            self.Bind(wx.EVT_MENU, self.onChartLook, id=item.GetId())
             self.mhousesystem = wx.Menu()
             self.itplac = self.mhousesystem.Append(self.ID_Housesystem1, mtexts.menutxts['OMHSPlacidus'], '', wx.ITEM_RADIO)
             self.itkoch = self.mhousesystem.Append(self.ID_Housesystem2, mtexts.menutxts['OMHSKoch'], '', wx.ITEM_RADIO)
@@ -1797,6 +1800,20 @@ class MFrame(wx.Frame):
                     self.Refresh()
         dlg.Destroy()
         return
+
+    def onChartLook(self, event):
+        colours, look = chartlookdlg.show(self, self.options, None if self.splash else self.horoscope)
+        if colours or look:
+            self.enableOptMenus(True)
+            if self.options.autosave:
+                tradoptions.save()
+                if self.options.saveColors():
+                    self.moptions.Enable(self.ID_SaveOpts, False)
+            if not self.splash:
+                self.closeChildWnds()
+                self.clickedPlId = None
+                self.drawBkg()
+                self.Refresh()
 
     def onHouseSystem(self, event):
         hs = event.GetId() - self.hsbase
