@@ -25,6 +25,8 @@ class EphemerisDataTests(unittest.TestCase):
 
     def test_station_vs_exact_speed(self):
         self.assertTrue(e.station_crossing(-0.1, 0.1))
+        self.assertTrue(e.station_crossing(-0.1, 0))
+        self.assertTrue(e.station_crossing(0.1, 0))
         self.assertFalse(e.station_crossing(0, 0.1))
         self.assertFalse(e.station_crossing(0.1, 0.1))
 

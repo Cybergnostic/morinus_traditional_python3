@@ -150,3 +150,32 @@ saving image/CSV for each available tab, resizing, and Open separately.
 - Pure tests: tests/test_lunationnav.py. GUI smoke: lunationNavigator.
 - Test chart date around a new/full Moon, earlier/later windows, zoom,
   event chart, ephemeris tolerance, and original prenatal syzygy stability.
+
+## B5: Graphical and tabular ephemeris, stations and ingresses
+
+- Starts at B4 commit 0883c9ef794d5b170be2d2976e5640fe0423bced.
+- Branch feature/ui-ephemeris-workspace is independent and stacked on B4.
+- Tools > Ephemeris now opens coordinated Graph / Daily positions /
+  Stations & ingresses tabs, plus year navigation.
+- A single Swiss Ephemeris geocentric data source drives the plot and tables.
+  Daily positions are sampled at 00:00 UT, with true 365/366-day Gregorian
+  years and all seven traditional visible planets (no outer planets).
+- Existing Morinus graphical ephemeris drawing is reused. The original six
+  planet view is the default; Show Moon adds the Moon. Graph click selects a
+  day, and choosing a tabular day marks it in the graph.
+- Ingress boundaries include direct, retrograde and the 0/360 Aries wrap.
+  Station times are roots of longitude speed, refined within daily brackets
+  to around one second; events have UTC timestamps and a chart-opening action.
+- Zodiacal positions respect options.ayanamsha calculated for the actual date
+  (rather than only 1 January); displayed station speeds are geocentric
+  tropical speeds, the conventional sign-change criterion for station events.
+- Structured daily CSV has date, numeric longitude columns and numeric
+  speed columns; events CSV has date/time UT, planet, type and details.
+- Open classic graph keeps the original stand-alone presentation.
+- This does NOT alter the chart, lots, returns, fixed-star algorithms, the
+  original ephemcalc module or stored settings.
+- Unit tests: tests/test_ephemerisdata.py; GUI smoke: ephemerisWorkspace.
+- Manual review: 2024 leap day, a station retrograde/direct pair, a retrograde
+  sign ingress, Moon on/off, precise event charts, B&W, CSV, year navigation,
+  sidereal day-of-date values and mouse selection. No claims of historical
+  BC support; UI years are AD 1–5000.

@@ -110,7 +110,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -466,6 +466,38 @@ def main():
 					wnd.shift(55)
 					assert frame.horoscope.syzygy is syz
 					wnd.Close()
+			elif name == 'ephemerisWorkspace':
+				# B5: the table, graph and events must share one 366-day leap
+				# series; test real Swiss ingresses/stations and CSV column counts.
+				import ephemerisworkspace, ephemerisdata
+				wnd = ephemerisworkspace.show(frame, 2024)
+				settle(0.3)
+				assert wnd.data.year == 2024
+				assert len(wnd.data.dates) == 366
+				assert len(wnd.data.longitudes) == 7
+				assert len(wnd.data.longitudes[0]) == 366
+				assert len(wnd.dailyRows()) == 367
+				assert len(wnd.dailyRows()[0]) == 15
+				assert wnd.data.events, 'No Swiss stations or ingresses in 2024'
+				wnd.month.SetSelection(2)
+				wnd.fillDays()
+				assert wnd.days.GetItemCount() == 29, 'Leap-year February must have 29 days'
+				wnd.month.SetSelection(0)
+				wnd.fillDays()
+				wnd.book.SetSelection(0)
+				settle(0.2)
+				wnd.mountGraph()
+				assert wnd.graph is not None, 'Graph must be sized/visible after Show'
+				assert len(wnd.graph.posArr[0]) == 366
+				wnd.selectDay(59)
+				assert wnd.selected_day == 59 and wnd.graph.focus_day == 59
+				wnd.graph.setShowMoon(True)
+				assert wnd.graph.numberOfPlanets() == 7
+				for record in wnd.data.events[:6]:
+					if record.kind == 'Station':
+						assert abs(ephemerisdata.swiss_sampler(frame.options)(
+							record.jd, record.planet)[1]) < 0.001
+				wnd.Close()
 			elif name == 'clickWheel':
 				w, h = frame.GetClientSize()
 				for fx in range(1, 10):
