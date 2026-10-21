@@ -4,6 +4,7 @@ once; the dialogs of Morinus 6 open from their entries ("Edit...")."""
 
 import copy
 import wx
+import wx.lib.scrolledpanel as scrolledpanel
 import mtexts
 import tradoptions
 import tradoptsdlg
@@ -96,9 +97,8 @@ class SettingsWnd(wx.Dialog):
 		self.result_count.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
 		self.book = wx.Simplebook(self)
 		for category_index, (name, entries) in enumerate(CATEGORIES):
-			page = wx.ScrolledWindow(self.book, -1, style=wx.VSCROLL)
+			page = scrolledpanel.ScrolledPanel(self.book, -1)
 			self.pages.append(page)
-			page.SetScrollRate(0, 12)
 			vsizer = wx.BoxSizer(wx.VERTICAL)
 			head = wx.StaticText(page, -1, name)
 			head.SetFont(head.GetFont().Bold().Scaled(1.4))
@@ -106,6 +106,7 @@ class SettingsWnd(wx.Dialog):
 			for e in entries:
 				self.addEntry(page, vsizer, e, name, category_index)
 			page.SetSizer(vsizer)
+			page.SetupScrolling(scroll_x=False, scroll_y=True, rate_y=12)
 			self.book.AddPage(page, name)
 
 		left = wx.BoxSizer(wx.VERTICAL)
