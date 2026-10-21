@@ -74,3 +74,29 @@ A4 branch: feature/ui-chart-quality, stacked on A3.
 - No changed astrological values, speculum columns, original .opt files or base bitmap export size.
 - Pure tests: tests/test_tablepresentation.py; GUI smoke: tablePresentation.
 - See docs/A5-TABLES.md for manual regression checklist and known limitations.
+
+## B1: Comprehensive Positions workspace
+
+- Starting SHA: 3323baaf715fb4a5422534bda972b750c3b50a08.
+- Feature branch: feature/ui-positions-workspace (stacked on A5).
+- Added Tables > Positions workspace (Ctrl+Shift+P) with four pages:
+  Zodiacal/speculum, Mundane, Motion, Chart data.
+- Existing Tables > Positions, Mundane positions, Speeds, Miscellaneous are
+  retained and now open the corresponding workspace page as compatibility aliases.
+- "Open separately" from any workspace tab creates the corresponding original
+  independent table window.
+- Zodiacal selector chooses Placidian or Regiomontanian speculum, independent
+  of the current primary-direction calculation method; retains the original
+  Appearance II configured columns and precision.
+- Original windows, functions, algorithms and exported table formatting are
+  reused without editing the numeric calculations.
+- If a speculum has zero selected columns, show a clear prompt and offer
+  Configure columns rather than constructing a malformed table.
+- Pure test: tests/test_positionscatalog.py. GUI smoke: positionsWorkspace.
+- User Speculum remains a separate specialist feature for arbitrary points.
+- Do not merge to ui-next or main until Linux and Windows GUI regression checks.
+
+Manual review: open one chart, invoke each of the four legacy Table menu items,
+check it selects the correct notebook page, switch both specula, and verify
+all columns and values against original individual windows. Test B&W,
+saving image/CSV for each available tab, resizing, and Open separately.

@@ -110,7 +110,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -407,6 +407,26 @@ def main():
 					assert table.zoom == 1.0
 				finally:
 					fr.Destroy()
+			elif name == 'positionsWorkspace':
+				# B1: exercise all four embedded, original Morinus tables.
+				# The speculum selector must not alter primary-directions settings.
+				import positionsworkspace, positionscatalog
+				pdir = frame.options.primarydir
+				wnd = positionsworkspace.show(frame, 0)
+				assert wnd.notebook.GetPageCount() == len(positionscatalog.TABS)
+				for method in (0, 1):
+					wnd.choice.SetSelection(method)
+					wnd.onMethodChanged(None)
+					if positionsworkspace.has_columns(frame.options, method):
+						assert wnd.activeView().speculum == method
+				assert frame.options.primarydir == pdir
+				for index in range(4):
+					wnd.selectTab(index)
+					assert wnd.notebook.GetSelection() == index
+					view = wnd.activeView()
+					if hasattr(view, 'chart'):
+						assert view.chart is frame.horoscope
+				wnd.Close()
 			elif name == 'clickWheel':
 				w, h = frame.GetClientSize()
 				for fx in range(1, 10):
