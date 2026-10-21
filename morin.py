@@ -428,9 +428,9 @@ class MFrame(wx.Frame):
             if shown(iid) and keys and entry.FromString(keys):
                 entry.Set(entry.GetFlags(), entry.GetKeyCode(), iid)
                 accels.append(entry)
-        # Ctrl+K: the command search of the toolbar
+        # Ctrl+K opens the same command palette whether or not the toolbar is shown.
         self.ID_CommandSearch = wx.NewIdRef()
-        self.Bind(wx.EVT_MENU, lambda e: self.cmdsearch.start() if self.toolbar.IsShown() else None, id=self.ID_CommandSearch)
+        self.Bind(wx.EVT_MENU, self.onCommandSearch, id=self.ID_CommandSearch)
         accels.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('K'), self.ID_CommandSearch))
         self.SetAcceleratorTable(wx.AcceleratorTable(accels))
 
@@ -469,10 +469,16 @@ class MFrame(wx.Frame):
         self.tbhouses.Bind(wx.EVT_CHOICE, self.onToolHouse)
         tb.AddControl(self.tbhouses)
         tb.AddStretchableSpace()
-        self.cmdsearch = commandsearch.CommandSearch(tb, self)
-        tb.AddControl(self.cmdsearch)
+        self.command_button = wx.Button(tb, -1, 'Find command...  Ctrl+K')
+        self.command_button.SetToolTip('Search menus and settings by name or description (Ctrl+K)')
+        self.command_button.Bind(wx.EVT_BUTTON, self.onCommandSearch)
+        tb.AddControl(self.command_button)
         tb.Realize()
         tb.Show(tradoptions.get('show_toolbar'))
+
+    def onCommandSearch(self, event):
+        """Use one searchable palette regardless of toolbar visibility."""
+        commandsearch.show(self)
 
     def onToolHouse(self, event):
         self.onHouseSystem(wx.CommandEvent(wx.wxEVT_MENU, self.hsbase + self.tbhouses.GetSelection()))
