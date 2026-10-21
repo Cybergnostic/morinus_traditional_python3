@@ -30,7 +30,7 @@ def delta(longitude_a, longitude_b):
 
 def station_crossing(a, b):
     """Strict signed-speed reversal, excluding ambiguous exact-zero endpoints."""
-    return a * b < 0
+    return (a > 0.0 and b <= 0.0) or (a < 0.0 and b >= 0.0)
 
 
 def ingress_crossing(a, b):
