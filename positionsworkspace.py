@@ -54,7 +54,6 @@ class PositionsWorkspace(wx.Frame):
         self.configureMenu()
 
         self.notebook = wx.Notebook(self)
-        self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onTabChanged)
 
         # Pages have their own parent to retain the original table window's
         # parent.mbw and parent.onPopupMenu compatibility.
@@ -89,6 +88,7 @@ class PositionsWorkspace(wx.Frame):
         outer.Add(self.notebook, 1, wx.EXPAND)
         outer.Add(bottom, 0, wx.EXPAND | wx.ALL, 10)
         self.SetSizer(outer)
+        self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onTabChanged)
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
         self.selectTab(tab)
@@ -145,6 +145,10 @@ class PositionsWorkspace(wx.Frame):
         container = wx.BoxSizer(wx.VERTICAL)
         container.Add(selector, 0, wx.EXPAND | wx.ALL, 10)
         self.spec_area = wx.Panel(page)
+        # Set these BEFORE constructing PositionsWnd: its constructor
+        # immediately reads parent.mbw to synchronize black/white mode.
+        self.spec_area.mbw = self.mbw
+        self.spec_area.onPopupMenu = self.onPositionsPopup
         self.spec_stack = wx.BoxSizer(wx.VERTICAL)
         for method in range(2):
             if has_columns(self.options, method):
@@ -160,8 +164,6 @@ class PositionsWorkspace(wx.Frame):
             view.Show(method == self.spec_method)
         self.spec_area.SetSizer(self.spec_stack)
         # PositionsWnd's direct parent is spec_area, not the Notebook page.
-        self.spec_area.mbw = self.mbw
-        self.spec_area.onPopupMenu = self.onPositionsPopup
         container.Add(self.spec_area, 1, wx.EXPAND)
         page.SetSizer(container)
 
