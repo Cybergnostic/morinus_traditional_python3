@@ -19,6 +19,15 @@ class LunationNavigatorTests(unittest.TestCase):
         self.assertFalse(n.crossing(-179, 179))
         self.assertFalse(n.crossing(5, -5))
 
+    def test_exact_sample_boundary_is_counted_once(self):
+        # A phase at an exact sample boundary must belong to only one step.
+        self.assertFalse(n.crossing(-1.0, 0.0))
+        self.assertTrue(n.crossing(0.0, 1.0))
+        events = n.find_events(30.0, synthetic, half_window=36)
+        self.assertEqual([name for _, name, _, _ in events],
+                         ['New Moon', 'Full Moon', 'New Moon', 'Full Moon', 'New Moon'])
+        self.assertEqual([round(jd) for jd, _, _, _ in events], [0, 15, 30, 45, 60])
+
     def test_bisection(self):
         jd = n.refine(-1.0, 1.0, 0, synthetic)
         self.assertLess(abs(jd), 1e-6)
