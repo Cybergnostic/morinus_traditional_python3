@@ -203,3 +203,6 @@ saving image/CSV for each available tab, resizing, and Open separately.
 Before implementation, decide whether presentation means full-screen,
 printing or a report builder; the default titles, legends and annotations;
 which page sizes, aspect tables, and PDF/SVG export formats are needed.
+
+- Same-orientation toggle was intentionally omitted: GraphChart fixes each
+  single wheel to its own Ascendant, and the brief prohibits changing it.

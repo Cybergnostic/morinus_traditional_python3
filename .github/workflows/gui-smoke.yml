@@ -30,6 +30,7 @@ jobs:
           xvfb-run -a -s "-screen 0 1600x1000x24" python3 -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Smoke test
+        if: ${{ always() }}
         run: |
           cp -r . "$RUNNER_TEMP/copy"
           xvfb-run -a -s "-screen 0 1600x1000x24" python3 tests/guismoke.py "$RUNNER_TEMP/copy" "$RUNNER_TEMP/out" --exercise
@@ -63,6 +64,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Smoke test
+        if: ${{ always() }}
         shell: pwsh
         run: |
           python tools/build_atlas.py
