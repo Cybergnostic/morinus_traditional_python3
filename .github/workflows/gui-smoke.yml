@@ -25,6 +25,9 @@ jobs:
           ./build.sh
           python3 tools/build_atlas.py
 
+      - name: Command search unit tests
+        run: python3 -m unittest discover -s tests -p 'test_commandindex.py'
+
       - name: Smoke test
         run: |
           cp -r . "$RUNNER_TEMP/copy"
@@ -53,6 +56,9 @@ jobs:
       - name: Build
         working-directory: SWEP/src
         run: python setup.py -q build_ext --build-lib ../.. --build-temp ../../build/swe
+
+      - name: Command search unit tests
+        run: python -m unittest discover -s tests -p 'test_commandindex.py'
 
       - name: Smoke test
         shell: pwsh
