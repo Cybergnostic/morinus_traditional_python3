@@ -106,6 +106,7 @@ import primarydirsdlgsmall
 import primarykeysdlg
 import pdsinchartdlgopts
 import syzygydlg
+import lunationnavigator
 import lotsdlg
 import fixedstarsdlg
 import profdlgopts
@@ -396,6 +397,9 @@ class MFrame(wx.Frame):
         sep(self.mcharts)
         add(self.mcharts, self.ID_SyzygyChart, 'PMSyzygy', self.onSyzygyChart)
         add(self.mcharts, self.ID_SyzygyChart2, 'PMSyzygy2', self.onSyzygyChart2, 'PMSyzygyDoc2')
+        self.ID_LunationNavigator = new(self.mcharts, 'New and Full Moon navigator...',
+            'Browse lunations without changing the prenatal syzygy',
+            self.onLunationNavigator).GetId()
         sep(self.mcharts)
         add(self.mcharts, self.ID_Elections, 'PMElections', self.onElections)
         add(self.mcharts, self.ID_SquareChart, 'PMSquareChart', self.onSquareChart)
@@ -1544,6 +1548,9 @@ class MFrame(wx.Frame):
         ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options)
         ef.Show(True)
 
+    def onLunationNavigator(self, event):
+        lunationnavigator.show(self)
+
     def onSyzygyChart2(self, event):
         if self.horoscope.time.bc:
             dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
@@ -2234,7 +2241,7 @@ class MFrame(wx.Frame):
                 menubar.Enable(iid, not bEnable)
         ids = [self.ID_Data, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_Close, self.ID_TAlmutens] + list(range(self.ID_Positions, self.ID_PrimaryDirs + 1))
         ids += list(range(self.ID_Transits, self.ID_HelioChart + 1)) + self.returnids
-        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace]
+        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace, self.ID_LunationNavigator]
         for iid in ids:
             if menubar.FindItemById(iid):
                 menubar.Enable(iid, bEnable)
