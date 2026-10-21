@@ -39,3 +39,25 @@ GUI review: Ctrl+K with toolbar on/off, Escape, arrows, Enter, mouse double-clic
 
 Review: search Egyptian terms, Regiomontanus, Years shown, GeoNames user name.
 Also try Ctrl+K for Length of a year and Phasis within (days).
+
+## A4: Optional high-quality rendering of the Morinus chart wheel
+
+- New Chart look > Rendering choice: Standard (original) or High quality.
+- High draws the entire natal/bi-wheel at twice the resolution (both wx lines and
+  Pillow glyphs), then Lanczos-reduces to the original on-screen dimensions.
+- Both pen widths and small/medium chart thresholds retain their original
+  *display-space* interpretation; the wheel's identity and layout are retained.
+- Every planet hit test converts display clicks back to internal raster
+  coordinates, avoiding a regression in chart interaction.
+- Extremely small or huge canvases fall back to standard for performance.
+- The standard path remains the default until high-quality rendering has
+  passed local visual/GUI validation (the setting is separate in traditional.json).
+- This stage intentionally does not rewrite the separate primary-directions,
+  square, or heliocentric chart renderers; those require separate regression work.
+
+Tests: tests/test_chartquality.py (pure functions), and the chartQuality
+step in tests/guismoke.py (bitmap dimensions, hit testing for both modes).
+Manual review: switch both modes in Chart look on natal and transit
+bi-wheels; compare symbols, circular ticks, exact click selection, resize
+behavior and CPU/memory. Check large charts and Windows high-DPI scaling.
+A4 branch: feature/ui-chart-quality, stacked on A3.

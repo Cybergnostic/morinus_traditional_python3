@@ -110,7 +110,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'chartQuality', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -367,7 +367,29 @@ def main():
 		state['n'] += 1
 		sys.stderr.write('== %s\n' % name)
 		try:
-			if name == 'clickWheel':
+			if name == 'chartQuality':
+				# Check both render modes on the same wheel. Scaling must never
+				# enlarge the on-screen bitmap or change click coordinates.
+				import graphchart, tradoptions, planets, houses, math
+				old_quality = tradoptions.get('chart_quality')
+				try:
+					for quality, factor in (('standard', 1), ('high', 2)):
+						tradoptions.set({'chart_quality': quality})
+						g = graphchart.GraphChart(frame.horoscope, (640, 480),
+							frame.options, frame.options.bw)
+						bmp = g.drawChart()
+						assert g.render_scale == factor, (quality, g.render_scale)
+						assert (bmp.GetWidth(), bmp.GetHeight()) == (640, 480)
+						i = planets.Planets.SUN
+						lon = g.chart.planets.planets[i].data[planets.Planet.LON]
+						asc = g.chart.houses.ascmc[houses.Houses.ASC]
+						angle = math.pi + math.radians(asc - lon - g.pshift[i])
+						x = (g.center.x + math.cos(angle) * g.rPlanet) / factor
+						y = (g.center.y + math.sin(angle) * g.rPlanet) / factor
+						assert g.onClick((x, y)) == i, 'Planet hit test: ' + quality
+				finally:
+					tradoptions.set({'chart_quality': old_quality})
+			elif name == 'clickWheel':
 				w, h = frame.GetClientSize()
 				for fx in range(1, 10):
 					for fy in range(1, 10):
