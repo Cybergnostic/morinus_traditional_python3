@@ -68,6 +68,21 @@ def compare(a, b, path, diffs, rtol, atol):
 		diffs.append((path, a, b))
 
 
+# Differences that are deliberate fixes of Morinus 6.2 bugs, so the reference
+# (made with Morinus 6.2) is kept as it was: (case prefix, path suffix, value
+# in the reference, accepted values now, the fix)
+FIXES = (
+	('transits/', '/pltretr', '-1', ('0', '1'), 'retrograde transits were never marked (commit 139c2c6)'),
+)
+
+
+def fixed(case, path, a, b):
+	for prefix, suffix, old, new, why in FIXES:
+		if case.startswith(prefix) and path.endswith(suffix) and str(a) == old and str(b) in new:
+			return why
+	return None
+
+
 def main():
 	ap = argparse.ArgumentParser()
 	ap.add_argument('reference')
@@ -82,6 +97,11 @@ def main():
 	for case in sorted(set(ref) | set(port)):
 		diffs = []
 		compare(ref.get(case, '<missing>'), port.get(case, '<missing>'), '', diffs, args.rtol, args.atol)
+		fixes = [(p, a, b, fixed(case, p, a, b)) for p, a, b in diffs]
+		for p, a, b, why in fixes:
+			if why:
+				print('fixed %s%s: %r -> %r (%s)' % (case, p, a, b, why))
+		diffs = [(p, a, b) for p, a, b, why in fixes if not why]
 		if diffs:
 			failed += 1
 			print('FAIL %s (%d differences)' % (case, len(diffs)))
