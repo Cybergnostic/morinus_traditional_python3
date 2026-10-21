@@ -16,7 +16,7 @@ class GraphEphemWnd(wx.Window):
     INTERMEDIATE_SIZE = 500
     MEDIUM_SIZE = 600
 
-    def __init__(self, parent, year, posArr, opts, mainfr, id=-1, size=wx.DefaultSize):
+    def __init__(self, parent, year, posArr, opts, mainfr, id=-1, size=wx.DefaultSize, show_moon=False):
         wx.Window.__init__(self, parent, id, wx.DefaultPosition, size=size)
         self.parent = parent
         self.year = year
@@ -24,12 +24,40 @@ class GraphEphemWnd(wx.Window):
         self.options = opts
         self.mainfr = mainfr
         self.bw = self.options.bw
+        self.show_moon = show_moon
+        self.focus_day = None
+        self.on_select_day = None
         self.parent.mbw.Check(self.bw)
         self.SetBackgroundColour(self.options.clrbackground)
         self.drawBkg()
         self.Bind(wx.EVT_RIGHT_UP, self.onPopupMenu)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_SIZE, self.onSize)
+        self.Bind(wx.EVT_LEFT_UP, self.onChooseDay)
+
+    def numberOfPlanets(self):
+        # The original graph omitted the Moon; B5 can optionally include it.
+        return min(len(self.posArr), planets.Planets.PLANETS_NUM if self.show_moon
+                   else planets.Planets.PLANETS_NUM - 1)
+
+    def setFocusDay(self, day):
+        self.focus_day = day
+        if self.GetClientSize().width > 100:
+            self.drawBkg()
+
+    def setShowMoon(self, enabled):
+        self.show_moon = bool(enabled)
+        if self.GetClientSize().width > 100:
+            self.drawBkg()
+
+    def onChooseDay(self, event):
+        width = max(1, self.monthSize * 12)
+        start = 2 * self.BORDER + self.signSymbolSize + self.spaceSize + self.monthSize
+        if self.on_select_day and self.posArr and self.posArr[0]:
+            index = round((event.GetX() - start) / width * (len(self.posArr[0]) - 1))
+            if 0 <= index < len(self.posArr[0]):
+                self.on_select_day(index)
+        event.Skip()
 
     def drawBkg(self):
         size = self.GetClientSize()
@@ -124,10 +152,10 @@ class GraphEphemWnd(wx.Window):
         pixelsPer360 = self.signSize * chart.Chart.SIGN_NUM
         pixelsPer365 = self.monthSize * 12
         scale360 = pixelsPer360 / 360.0
-        scale365 = pixelsPer365 / 365.0
-        plnum = len(self.posArr)
         posnum = len(self.posArr[0])
-        for pl in range(planets.Planets.PLANETS_NUM - 1):
+        scale365 = pixelsPer365 / max(1, posnum - 1)
+        plnum = self.numberOfPlanets()
+        for pl in range(plnum):
             prevx = prevy = 0.0
             for i in range(posnum):
                 x = xOrig + i * scale365
@@ -168,7 +196,7 @@ class GraphEphemWnd(wx.Window):
             bshiftbottom = self.arrange(plsbottom, plbottompixelpos, xOrig, xOrig2)
         x1 = 2 * self.BORDER + self.signSymbolSize + self.spaceSize + self.monthSize - 3 * self.spaceSize
         x2 = 2 * self.BORDER + self.signSymbolSize + self.spaceSize + self.monthSize
-        for pl in range(planets.Planets.PLANETS_NUM - 1):
+        for pl in range(plnum):
             y = plpixelpos[pl]
             if not self.bw:
                 plsclr = self.options.clrplanets[pl]
@@ -232,7 +260,7 @@ class GraphEphemWnd(wx.Window):
             draw.text((x + i * self.monthSize + offs, y), txt, fill=tableclr, font=self.fntTxt)
 
         x = 2 * self.BORDER + self.signSymbolSize + self.spaceSize + self.monthSize - 2 * self.spaceSize
-        for pl in range(planets.Planets.PLANETS_NUM - 1):
+        for pl in range(plnum):
             y = plpixelpos[pl]
             if not self.bw:
                 plsclr = self.options.clrplanets[pl]
@@ -267,6 +295,12 @@ class GraphEphemWnd(wx.Window):
                     draw.text((x - wsym // 2 + bshiftbottom[pl], y + yoffs), plsbottom[pl], fill=plsclr, font=self.fntPlanets)
                 else:
                     draw.text((x - wsym // 2, y + yoffs), plsbottom[pl], fill=plsclr, font=self.fntPlanets)
+
+        if self.focus_day is not None and posnum > 1:
+            selected_x = xOrig + self.focus_day * scale365
+            if 0 <= self.focus_day < posnum:
+                draw.line((selected_x, self.BORDER, selected_x,
+                           self.h - 4 * self.BORDER), fill=(120, 120, 120), width=1)
 
         wxImg = wx.Image(img.size[0], img.size[1])
         wxImg.SetData(img.tobytes())
