@@ -70,7 +70,7 @@ class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl
     LON = 3
     LAT = 4
     COLNUM = LAT + 1
-    MAX_SEL_NUM = 40
+    MAX_SEL_NUM = 100000	# no limit (Morinus 6 allowed 40)
 
     def __init__(self, parent, ephepath, ID, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_VRULES):
         wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
@@ -177,12 +177,12 @@ class FixedStarsDlg(wx.Dialog):
         btnDeselectAll = wx.Button(self, ID_DeselectAll, mtexts.txtsfixedstarsdlg['DeselectAll'])
         fgsizer.Add(btnDeselectAll, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         hsubsizer = wx.BoxSizer(wx.HORIZONTAL)
-        label = wx.StaticText(self, -1, mtexts.txtsfixedstarsdlg['LeftToSelect'] + ':')
+        label = wx.StaticText(self, -1, 'Selected:')
         hsubsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
-        self.val = wx.TextCtrl(self, -1, '', size=(40, -1), style=wx.TE_READONLY)
+        self.val = wx.TextCtrl(self, -1, '', size=(60, -1), style=wx.TE_READONLY)
         num = FixedStarListCtrl.MAX_SEL_NUM - len(names)
         self.num = num
-        self.val.SetValue(str(num))
+        self.val.SetValue(str(FixedStarListCtrl.MAX_SEL_NUM - num))
         hsubsizer.Add(self.val, 0, wx.RIGHT | wx.ALL, 5)
         fgsizer.Add(hsubsizer, 0, wx.LEFT, 100)
         starssizer.Add(fgsizer, 0)
@@ -231,7 +231,7 @@ class FixedStarsDlg(wx.Dialog):
     def OnDeselectAll(self, event):
         self.li.OnDeselectAll()
         self.num = FixedStarListCtrl.MAX_SEL_NUM
-        self.val.SetValue(str(self.num))
+        self.val.SetValue('0')
 
     def OnKeyUp(self, evnt):
         nametxt = self.searchname.GetValue()
@@ -264,7 +264,7 @@ class FixedStarsDlg(wx.Dialog):
             self.num -= 1
         else:
             self.num += 1
-        self.val.SetValue(str(self.num))
+        self.val.SetValue(str(FixedStarListCtrl.MAX_SEL_NUM - self.num))
 
     def check(self, names, opts):
         changed = False

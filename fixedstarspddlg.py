@@ -42,7 +42,7 @@ class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl
     NUM = 0
     NAME = 1
     NOMNAME = 2
-    MAX_SEL_NUM = 40
+    MAX_SEL_NUM = 100000	# no limit (Morinus 6 allowed 40)
 
     def __init__(self, parent, ephepath, ID, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_VRULES):
         wx.ListCtrl.__init__(self, parent, ID, pos, size, style)
