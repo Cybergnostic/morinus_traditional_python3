@@ -36,14 +36,24 @@ class LunationNavigator(wx.Frame):
         self.later = wx.Button(self, -1, 'Later')
         self.reset = wx.Button(self, -1, 'Birth date')
         self.open = wx.Button(self, -1, 'Open event chart')
+        self.prenatal = wx.Button(self, -1, 'Prenatal syzygy chart')
+        self.other_prenatal = wx.Button(self, -1, 'Other prenatal lunation chart')
         self.close = wx.Button(self, wx.ID_CLOSE, 'Close')
         self.earlier.Bind(wx.EVT_BUTTON, lambda e: self.shift(-55))
         self.later.Bind(wx.EVT_BUTTON, lambda e: self.shift(55))
         self.reset.Bind(wx.EVT_BUTTON, lambda e: self.resetDate())
         self.open.Bind(wx.EVT_BUTTON, self.onOpenChart)
+        # These retain the original configured prenatal-chart calculations.
+        self.prenatal.Bind(wx.EVT_BUTTON, self.mainfr.onSyzygyChart)
+        self.other_prenatal.Bind(wx.EVT_BUTTON, self.mainfr.onSyzygyChart2)
         self.close.Bind(wx.EVT_BUTTON, lambda e: self.Close())
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
+        traditional = wx.BoxSizer(wx.HORIZONTAL)
+        traditional.Add(wx.StaticText(self, -1, 'Traditional syzygies:'), 0,
+                        wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
+        traditional.Add(self.prenatal, 0, wx.RIGHT, 8)
+        traditional.Add(self.other_prenatal, 0)
         nav = wx.BoxSizer(wx.HORIZONTAL)
         for b in (self.earlier, self.reset, self.later):
             nav.Add(b, 0, wx.RIGHT, 7)
@@ -54,6 +64,7 @@ class LunationNavigator(wx.Frame):
         layout.Add(self.heading, 0, wx.ALL, 12)
         layout.Add(self.list, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 12)
         layout.Add(self.note, 0, wx.EXPAND | wx.ALL, 12)
+        layout.Add(traditional, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
         layout.Add(nav, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
         self.SetSizer(layout)
         self.populate()

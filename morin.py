@@ -321,16 +321,12 @@ class MFrame(wx.Frame):
         # Tables, grouped: positions; dignities; aspects and points; fixed stars; time lords; directions and transits; hours and visibility
         self.mtables = wx.Menu()
         self.ID_PositionsWorkspace = wx.NewIdRef()
-        new(self.mtables, 'Positions workspace...\tCtrl+Shift+P',
+        new(self.mtables, 'Positions and data...\tCtrl+Shift+P',
             'Browse zodiacal specula, mundane positions, motion and chart data in one window',
             self.onPositionsWorkspace, self.ID_PositionsWorkspace)
         sep(self.mtables)
-        add(self.mtables, self.ID_Positions, 'TMPositions', self.onPositions)
-        add(self.mtables, self.ID_MunPos, 'TMMunPos', self.onMunPos)
-        add(self.mtables, self.ID_Speeds, 'TMSpeeds', self.onSpeeds)
         add(self.mtables, self.ID_ZodPars, 'TMZodPars', self.onZodPars)
         add(self.mtables, self.ID_Midpoints, 'TMMidpoints', self.onMidpoints)
-        add(self.mtables, self.ID_Misc, 'TMMisc', self.onMisc)
         add(self.mtables, self.ID_UserSpeculum, 'TMUserSpeculum', self.onUserSpeculum)
         add(self.mtables, self.ID_Strip, 'TMStrip', self.onStrip)
         sep(self.mtables)
@@ -348,12 +344,9 @@ class MFrame(wx.Frame):
         add(self.mtables, self.ID_Antiscia, 'TMAntiscia', self.onAntiscia)
         add(self.mtables, self.ID_Lots, 'TMLots', self.onLots)
         sep(self.mtables)
-        self.ID_FixedStarsWorkspace = new(self.mtables, 'Fixed Stars workspace...',
+        self.ID_FixedStarsWorkspace = new(self.mtables, 'Fixed Stars...',
             'Catalogue, conjunctions and aspects, birth angles and paranatellonta',
             self.onFixedStarsWorkspace).GetId()
-        add(self.mtables, self.ID_FixedStars, 'TMFixStars', self.onFixedStars)
-        add(self.mtables, self.ID_FixedStarsAsps, 'TMFixStarsAsps', self.onFixedStarsAsps)
-        self.ID_StarAngles = new(self.mtables, 'Fixed stars on the angles', 'Stars on the angles at the birth and the paranatellonta of the birth day', self.onStarAngles).GetId()
         sep(self.mtables)
         add(self.mtables, self.ID_Profections, 'TMProfections', self.onProfections)
         add(self.mtables, self.ID_Firdaria, 'TMFirdaria', self.onFirdaria)
@@ -365,11 +358,10 @@ class MFrame(wx.Frame):
         add(self.mtables, self.ID_PrimaryDirs, 'TMPrimaryDirs', self.onPrimaryDirs)
         add(self.mtables, self.ID_ExactTransits, 'TMExactTransits', self.onExactTransits)
         sep(self.mtables)
-        self.ID_HoursRiseSetWorkspace = new(self.mtables, 'Planetary hours and Rise/Set...',
+        self.ID_HoursRiseSetWorkspace = new(self.mtables, 'Planetary hours and rise/set...',
             'Planetary hours, daylight boundaries, rise/set and culmination times',
             self.onHoursRiseSetWorkspace).GetId()
-        add(self.mtables, self.ID_PlanetaryHours, 'TMPlanetaryHours', self.onPlanetaryHours)
-        add(self.mtables, self.ID_RiseSet, 'TMRiseSet', self.onRiseSet)
+        sep(self.mtables)
         self.ID_Heliacal = new(self.mtables, 'Heliacal phenomena and phasis', 'Visibility of the planets and stations around the birth', self.onHeliacal).GetId()
         finish(self.mtables, mtexts.menutxts['MTable'])
 
@@ -396,9 +388,7 @@ class MFrame(wx.Frame):
         add(self.mcharts, self.ID_SecondaryDirs, 'PMSecondaryDirs', self.onSecondaryDirs)
         add(self.mcharts, self.ID_ProfectionsChart, 'PMProfections', self.onProfectionsChart)
         sep(self.mcharts)
-        add(self.mcharts, self.ID_SyzygyChart, 'PMSyzygy', self.onSyzygyChart)
-        add(self.mcharts, self.ID_SyzygyChart2, 'PMSyzygy2', self.onSyzygyChart2, 'PMSyzygyDoc2')
-        self.ID_LunationNavigator = new(self.mcharts, 'New and Full Moon navigator...',
+        self.ID_LunationNavigator = new(self.mcharts, 'Syzygies and lunar phases...',
             'Browse lunations without changing the prenatal syzygy',
             self.onLunationNavigator).GetId()
         sep(self.mcharts)
@@ -2235,7 +2225,7 @@ class MFrame(wx.Frame):
                 menubar.Enable(iid, not bEnable)
         ids = [self.ID_Data, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_Close, self.ID_TAlmutens] + list(range(self.ID_Positions, self.ID_PrimaryDirs + 1))
         ids += list(range(self.ID_Transits, self.ID_HelioChart + 1)) + self.returnids
-        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace, self.ID_LunationNavigator]
+        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace, self.ID_LunationNavigator]
         for iid in ids:
             if menubar.FindItemById(iid):
                 menubar.Enable(iid, bEnable)
