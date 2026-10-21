@@ -86,6 +86,8 @@ class WheelCell(wx.Panel):
         self.mainfr = mainfr
         self.buffer = None
         self.pending = None
+        self._alive = True
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.heading = wx.StaticText(self, label='')
         self.picker = ChartPicker(self, mainfr, self.queue_draw)
@@ -104,13 +106,28 @@ class WheelCell(wx.Panel):
         self.queue_draw()
         event.Skip()
 
+    def on_destroy(self, event):
+        if event.GetEventObject() is self:
+            self._alive = False
+            if self.pending is not None:
+                self.pending.Stop()
+                self.pending = None
+        event.Skip()
+
     def queue_draw(self):
-        if self.pending is None:
+        if self._alive and self.pending is None:
             self.pending = wx.CallLater(90, self.redraw)
 
     def redraw(self):
         self.pending = None
-        if self.IsBeingDeleted() or not self.IsShown():
+        if not self._alive:
+            return
+        try:
+            if self.IsBeingDeleted() or not self.IsShown():
+                return
+        except RuntimeError:
+            # A native window can disappear between the timer firing and
+            # the wrapped wx object being inspected.
             return
         w, h = self.canvas.GetClientSize()
         if w < 100 or h < 100:

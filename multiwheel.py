@@ -270,6 +270,8 @@ class MultiWheelFrame(wx.Frame):
         self.buffer = None
         self.renderer = None
         self.pending = None
+        self._alive = True
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
         self.SetMinSize((650, 660))
         outer = wx.BoxSizer(wx.VERTICAL)
         row = wx.BoxSizer(wx.HORIZONTAL)
@@ -325,13 +327,26 @@ class MultiWheelFrame(wx.Frame):
         self.queue_draw()
         event.Skip()
 
+    def on_destroy(self, event):
+        if event.GetEventObject() is self:
+            self._alive = False
+            if self.pending is not None:
+                self.pending.Stop()
+                self.pending = None
+        event.Skip()
+
     def queue_draw(self, event=None):
-        if self.pending is None:
+        if self._alive and self.pending is None:
             self.pending = wx.CallLater(100, self.redraw)
 
     def redraw(self):
         self.pending = None
-        if self.IsBeingDeleted() or not self.IsShown():
+        if not self._alive:
+            return
+        try:
+            if self.IsBeingDeleted() or not self.IsShown():
+                return
+        except RuntimeError:
             return
         w, h = self.canvas.GetClientSize()
         if w < 100 or h < 100:
