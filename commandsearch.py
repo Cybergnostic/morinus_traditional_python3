@@ -38,9 +38,19 @@ def commands(frame):
                 res.append((title, where, entry[3],
                             lambda handler=entry[2]: getattr(frame, handler)(wx.CommandEvent())))
             elif entry[0] == 'trad':
-                title = settingswnd.tradoptsdlg.DIALOGS[entry[1]][0]
+                title, fields = settingswnd.tradoptsdlg.DIALOGS[entry[1]]
                 res.append((title + ' options', where, '',
                             lambda cat=category: settingswnd.show(frame, cat)))
+                # Individual added-technique controls are directly searchable.
+                for field in fields:
+                    if field[0] == settingswnd.tradoptsdlg.SECTION:
+                        continue
+                    description = title + '. ' + field[-1]
+                    if field[0] == settingswnd.tradoptsdlg.CHOICE:
+                        description += ' ' + ' '.join(str(label) for value, label in field[3])
+                    res.append((field[2], where + ' › ' + title, description,
+                                lambda cat=category, group=title, label=field[2]:
+                                    settingswnd.show(frame, cat, setting=(group, label))))
         res.append((category, 'Settings', 'Open the ' + category.lower() + ' settings',
                     lambda cat=category: settingswnd.show(frame, cat)))
     return res

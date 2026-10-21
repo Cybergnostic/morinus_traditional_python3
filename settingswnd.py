@@ -346,8 +346,8 @@ class SettingsWnd(wx.Dialog):
 		self.Destroy()
 
 
-def show(frame, category=None):
-	"""Shows the Settings window of frame (one at a time), at a category."""
+def show(frame, category=None, setting=None):
+	"""Show category or a specific (group, field-title) within the Settings window."""
 	wnd = getattr(frame, 'settingswnd', None)
 	if not wnd:
 		wnd = frame.settingswnd = SettingsWnd(frame)
@@ -355,8 +355,18 @@ def show(frame, category=None):
 	if category is not None:
 		names = [c[0] for c in CATEGORIES]
 		wnd.search.SetValue('')
+		wnd.onSearch(None)
 		wnd.list.SetSelection(names.index(category))
 		wnd.book.SetSelection(names.index(category))
 	wnd.Show()
 	wnd.Raise()
+	if setting is not None:
+		group, title = setting
+		wnd.search.SetValue(' '.join((group, title)))
+		wnd.onSearch(None)
+		for index, item in enumerate(wnd.shown):
+			if item['title'] == title and item['group'] == group and item['category'] == category:
+				wnd.list.SetSelection(index)
+				wnd.showEntry(item, True)
+				break
 	return wnd
