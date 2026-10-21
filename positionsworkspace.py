@@ -1,20 +1,15 @@
 """Tabbed Positions workspace using Morinus's unchanged specialist table views.
 
-The underlying zodiacal speculum, mundane positions, motion and miscellaneous
-calculations remain in their original modules. The window is the shared
-legacytabworkspace.TableWorkspace; the speculum tab adds the choice between the
-Placidian and Regiomontanian speculum (without changing the primary-directions
-settings) and the columns of Appearance II.
+The Overview (positionsoverview) replaces Morinus's Mundane positions, Speeds
+and Misc; the Speculum tab is Morinus's Positions table with the choice between
+the Placidian and Regiomontanian speculum (without changing the primary-directions
+settings) and the columns of Appearance II. The window is the shared
+legacytabworkspace.TableWorkspace.
 """
 import wx
 import positionswnd
 import positionsframe
-import munposwnd
-import munposframe
-import speedswnd
-import speedsframe
-import miscwnd
-import miscframe
+import positionsoverview
 import mtexts
 import primdirs
 import positionscatalog
@@ -165,14 +160,10 @@ def show(mainfr, tab=0):
     else:
         chart, options = mainfr.horoscope, mainfr.options
         specs = (
-            (TABS[0], DESCRIPTIONS[0], lambda page: SpeculumPanel(page, chart, options, mainfr),
+            (TABS[0], DESCRIPTIONS[0], lambda page: positionsoverview.OverviewWnd(page, chart, options, mainfr),
+             lambda view: _open(positionsoverview.OverviewFrame, mainfr, chart, options)),
+            (TABS[1], DESCRIPTIONS[1], lambda page: SpeculumPanel(page, chart, options, mainfr),
              lambda view: _open_speculum(mainfr, chart, options, view)),
-            (TABS[1], DESCRIPTIONS[1], lambda page: munposwnd.MunPosWnd(page, chart, options, mainfr),
-             lambda view: _open(munposframe.MunPosFrame, mainfr, chart, options)),
-            (TABS[2], DESCRIPTIONS[2], lambda page: speedswnd.SpeedsWnd(page, chart, options, mainfr),
-             lambda view: _open(speedsframe.SpeedsFrame, mainfr, chart, options)),
-            (TABS[3], DESCRIPTIONS[3], lambda page: miscwnd.MiscWnd(page, chart, options, mainfr),
-             lambda view: _open(miscframe.MiscFrame, mainfr, chart, options)),
         )
         wnd = legacytabworkspace.TableWorkspace(mainfr, 'Positions and data — ' + chart.name, specs, tab,
                                                 size=(1110, 730), attribute='positions_workspace')

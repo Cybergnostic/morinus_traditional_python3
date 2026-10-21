@@ -48,6 +48,7 @@ import regiomontanpd
 import campanianpd
 import positionsframe
 import positionsworkspace
+import positionscatalog
 import almutenchartframe
 import almutentopicalsframe
 import almutenzodsframe
@@ -1028,7 +1029,7 @@ class MFrame(wx.Frame):
         self.showPositionsWorkspace(0)
 
     def onPositions(self, event):
-        self.showPositionsWorkspace(0)
+        self.showPositionsWorkspace(positionscatalog.MENU_TABS['onPositions'])
 
     def onAlmutenZodiacal(self, event):
         if not self.splash:
@@ -1061,10 +1062,10 @@ class MFrame(wx.Frame):
             antisciafr.Show(True)
 
     def onMisc(self, event):
-        self.showPositionsWorkspace(3)
+        self.showPositionsWorkspace(positionscatalog.MENU_TABS['onMisc'])
 
     def onMunPos(self, event):
-        self.showPositionsWorkspace(1)
+        self.showPositionsWorkspace(positionscatalog.MENU_TABS['onMunPos'])
 
     def onAspects(self, event):
         if not self.splash:
@@ -1082,7 +1083,7 @@ class MFrame(wx.Frame):
         hoursrisesetworkspace.show(self, 1)
 
     def onSpeeds(self, event):
-        self.showPositionsWorkspace(2)
+        self.showPositionsWorkspace(positionscatalog.MENU_TABS['onSpeeds'])
 
     def onZodPars(self, event):
         if not self.splash:
@@ -1543,7 +1544,8 @@ class MFrame(wx.Frame):
             dlgm.Destroy()
             return
         syzygychart = chart.Chart(self.horoscope.name, self.horoscope.male, self.horoscope.syzygy.time, self.horoscope.place, chart.Chart.TRANSIT, '', self.options, False)
-        ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options)
+        # Left/Right (or its menu): the lunations before and after
+        ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options, stepper=lunationnavigator.stepper(self.horoscope, self.options))
         ef.Show(True)
 
     def onLunationNavigator(self, event):
@@ -1556,7 +1558,8 @@ class MFrame(wx.Frame):
             dlgm.Destroy()
             return
         syzygychart = chart.Chart(self.horoscope.name, self.horoscope.male, self.horoscope.syzygy.time2, self.horoscope.place, chart.Chart.TRANSIT, '', self.options, False)
-        ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options)
+        # Left/Right (or its menu): the lunations before and after
+        ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options, stepper=lunationnavigator.stepper(self.horoscope, self.options))
         ef.Show(True)
 
     def onProfectionsChart(self, event):

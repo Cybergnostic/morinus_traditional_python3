@@ -33,7 +33,7 @@ class TransitFrame(wx.Frame):
     POSITIONS = 2
     SQUARE = 3
 
-    def __init__(self, parent, title, chrt, radix, options, sel=0):
+    def __init__(self, parent, title, chrt, radix, options, sel=0, stepper=None):
         wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(TransitFrame.XSIZE, TransitFrame.YSIZE))
         self.chart = chrt
         self.radix = radix
@@ -68,8 +68,15 @@ class TransitFrame(wx.Frame):
             self.pdtoradix.Enable(False)
         # stepping: previous/next return for solar and lunar returns, time steps otherwise
         self.ID_Step = wx.NewIdRef()
+        # stepper(chart, forward) -> the chart before or after (e.g. the lunations)
+        self.stepper = stepper
         steptxt = {chart.Chart.SOLAR: 'Step solar returns... (arrow keys)', chart.Chart.LUNAR: 'Step lunar returns... (arrow keys)', chart.Chart.TRANSIT: 'Step time... (arrow keys)'}.get(self.chart.htype)
-        if steptxt is not None:
+        if stepper is not None:
+            for label, forward in (('Previous lunation (Left)', False), ('Next lunation (Right)', True)):
+                item = self.pmenu.Append(wx.NewIdRef(), label, 'The New or Full Moon before or after this one')
+                self.Bind(wx.EVT_MENU, lambda e, f=forward: self.stepTo(f), id=item.GetId())
+            self.Bind(wx.EVT_CHAR_HOOK, self.onKey)
+        elif steptxt is not None:
             self.pmenu.Append(self.ID_Step, steptxt, 'Move the chart forward or backward in time')
             self.Bind(wx.EVT_MENU, self.onStep, id=self.ID_Step)
             self.Bind(wx.EVT_CHAR_HOOK, self.onKey)
@@ -199,6 +206,9 @@ class TransitFrame(wx.Frame):
         if key not in (wx.WXK_LEFT, wx.WXK_RIGHT) or event.AltDown():
             event.Skip()
             return
+        if self.stepper is not None:
+            self.stepTo(key == wx.WXK_RIGHT)
+            return
         forward = key == wx.WXK_RIGHT
         wait = wx.BusyCursor()
         if self.chart.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR):
@@ -220,6 +230,14 @@ class TransitFrame(wx.Frame):
             d -= 1
         time = chart.Time(y, m, d, h, t.minute, t.second, t.bc, t.cal, t.zt, t.plus, t.zh, t.zm, t.daylightsaving, self.chart.place)
         self.change(chart.Chart(self.chart.name, self.chart.male, time, self.chart.place, chart.Chart.TRANSIT, '', self.options, False))
+
+    def stepTo(self, forward):
+        wait = wx.BusyCursor()
+        chrt = self.stepper(self.chart, forward)
+        if chrt is not None:
+            self.change(chrt)
+            if chrt.notes:	# e.g. 'Full Moon'
+                self.SetTitle(self.title + ' \u2014 ' + chrt.notes)
 
     def change(self, chrt, title=None):
         """Shows another chart (used by the steppers), keeping the current view."""

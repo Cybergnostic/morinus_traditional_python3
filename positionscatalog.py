@@ -4,15 +4,15 @@ Pure Python so menu aliases, displayed categories, and independent speculum
 selection can be tested without opening wxPython windows.
 """
 
-TABS = ('Zodiacal / speculum', 'Mundane', 'Motion', 'Chart data')
+TABS = ('Overview', 'Speculum')
 DESCRIPTIONS = (
-    'Zodiacal positions and the full Placidus or Regiomontanus speculum. '
-    'The chosen columns are controlled by Appearance II.',
-    'Mundane house positions and the mundane Lot of Fortune.',
-    'Longitude and latitude speeds of the planets.',
-    'Sidereal time, obliquity of the ecliptic, and Julian day.',
+    'Zodiacal and equatorial positions, motion, houses and mundane positions, '
+    'the angles and lots, and the data of the chart.',
+    'The full Placidus or Regiomontanus speculum; Appearance II chooses its columns.',
 )
-MENU_TABS = {'onPositions': 0, 'onMunPos': 1, 'onSpeeds': 2, 'onMisc': 3}
+# Morinus's Positions (F1) is the speculum; Mundane positions (F6), Speeds (F11)
+# and Misc (F5) are all in the overview.
+MENU_TABS = {'onPositions': 1, 'onMunPos': 0, 'onSpeeds': 0, 'onMisc': 0}
 
 
 def initial_speculum(primarydir, regiomontan):

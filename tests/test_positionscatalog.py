@@ -7,10 +7,10 @@ import positionscatalog
 class PositionsCatalogTests(unittest.TestCase):
     def test_all_legacy_commands_have_independent_tab(self):
         self.assertEqual(positionscatalog.MENU_TABS,
-                         {'onPositions': 0, 'onMunPos': 1, 'onSpeeds': 2, 'onMisc': 3})
-        self.assertEqual(len(positionscatalog.TABS), 4)
-        self.assertEqual(len(positionscatalog.DESCRIPTIONS), 4)
-        self.assertEqual(set(positionscatalog.MENU_TABS.values()), set(range(4)))
+                         {'onPositions': 1, 'onMunPos': 0, 'onSpeeds': 0, 'onMisc': 0})
+        self.assertEqual(len(positionscatalog.TABS), 2)
+        self.assertEqual(len(positionscatalog.DESCRIPTIONS), 2)
+        self.assertEqual(set(positionscatalog.MENU_TABS.values()), set(range(2)))
 
     def test_speculum_default_follows_primary_directions(self):
         self.assertEqual(positionscatalog.initial_speculum(2, 2), 1)

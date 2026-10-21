@@ -7,6 +7,39 @@ import lunationnav
 import zodiacalreleasing
 
 
+
+def event_chart(radix, jd, kind, options):
+    """The chart of a lunation at UT jd, at the place of radix (None before AD 1)."""
+    calflag = (astrology.SE_GREG_CAL if radix.time.cal == chart.Time.GREGORIAN
+               else astrology.SE_JUL_CAL)
+    # Round through the Julian-day conversion to avoid a spurious :60.
+    y, m, d, fraction = astrology.swe_revjul(jd + 0.5 / 86400.0, calflag)
+    if y <= 0:
+        return None
+    hour, remainder = divmod(int(fraction * 3600), 3600)
+    minute, second = divmod(remainder, 60)
+    tim = chart.Time(y, m, d, hour, minute, second, False, radix.time.cal,
+                     chart.Time.GREENWICH, True, 0, 0, False, radix.place)
+    return chart.Chart(radix.name, radix.male, tim, radix.place, chart.Chart.TRANSIT, kind, options, False)
+
+
+def stepper(radix, options):
+    """For a chart window: the New or Full Moon before or after a chart."""
+    sampler = lunationnav.ephemeris_sampler()
+
+    def step(chrt, forward):
+        jd = chrt.time.jd
+        events = lunationnav.find_events(jd + (8 if forward else -8), sampler, 20)
+        if forward:
+            found = [e for e in events if e[0] > jd + 0.001]
+            event = found[0] if found else None
+        else:
+            found = [e for e in events if e[0] < jd - 0.001]
+            event = found[-1] if found else None
+        return event_chart(radix, event[0], event[1], options) if event else None
+    return step
+
+
 class LunationNavigator(wx.Frame):
     def __init__(self, mainfr):
         super().__init__(mainfr, -1, 'Syzygies and lunar phases — ' + mainfr.horoscope.name,
@@ -107,26 +140,14 @@ class LunationNavigator(wx.Frame):
         if selection == -1:
             return
         jd, kind, sun, moon = self.events[selection]
-        calflag = (astrology.SE_GREG_CAL if self.radix.time.cal == chart.Time.GREGORIAN
-                   else astrology.SE_JUL_CAL)
-        # Round through the Julian-day conversion to avoid a spurious :60.
-        y, m, d, fraction = astrology.swe_revjul(jd + 0.5 / 86400.0, calflag)
-        total_seconds = int(fraction * 3600)
-        hour, remainder = divmod(total_seconds, 3600)
-        minute, second = divmod(remainder, 60)
-        if y <= 0:
+        eventchart = event_chart(self.radix, jd, kind, self.mainfr.options)
+        if eventchart is None:
             wx.MessageBox('Event charts before AD 1 are not supported here.',
-                          'New and Full Moons', wx.OK | wx.ICON_INFORMATION, self)
+                          'Syzygies and lunar phases', wx.OK | wx.ICON_INFORMATION, self)
             return
-        place = self.radix.place
-        tim = chart.Time(y, m, d, hour, minute, second, False,
-                         self.radix.time.cal, chart.Time.GREENWICH,
-                         True, 0, 0, False, place)
-        eventchart = chart.Chart(self.radix.name, self.radix.male, tim, place,
-                                 chart.Chart.TRANSIT, kind, self.mainfr.options, False)
         frame = transitframe.TransitFrame(self.mainfr,
                  self.mainfr.title + ' — ' + kind, eventchart,
-                 self.radix, self.mainfr.options)
+                 self.radix, self.mainfr.options, stepper=stepper(self.radix, self.mainfr.options))
         frame.Show(True)
 
     def onClose(self, event):

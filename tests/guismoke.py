@@ -412,7 +412,7 @@ def main():
 				# The speculum selector must not alter primary-directions settings.
 				import positionsworkspace, positionscatalog
 				pdir = frame.options.primarydir
-				wnd = positionsworkspace.show(frame, 0)
+				wnd = positionsworkspace.show(frame, 1)
 				assert wnd.book.GetPageCount() == len(positionscatalog.TABS)
 				for method in (0, 1):
 					wnd.activeView().setMethod(method)
@@ -423,12 +423,11 @@ def main():
 				# Configure columns must keep the workspace open (its own window)
 				wnd.activeView().onConfigure(None)
 				assert wnd and not wnd.IsBeingDeleted(), 'Configure columns closed the workspace'
-				for index in range(4):
-					wnd.selectTab(index)
-					assert wnd.book.GetSelection() == index
-					view = wnd.activeView()
-					if hasattr(view, 'chart'):
-						assert view.chart is frame.horoscope
+				# the overview: a row per planet and node, house positions as '12th, 22.0%'
+				wnd.selectTab(0)
+				rows = wnd.activeView().tableRows()
+				assert any('%' in cell for row in rows for cell in row), rows[:3]
+				assert wnd.activeView().chart is frame.horoscope
 				wnd.Close()
 			elif name == 'legacyShortcuts':
 				# F1, F5, F6, F10, F11, Ctrl+F1, Ctrl+F2, Ctrl+F5, Ctrl+Shift+F7/F8 of
