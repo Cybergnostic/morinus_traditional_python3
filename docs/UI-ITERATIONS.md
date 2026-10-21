@@ -2,7 +2,7 @@
 
 Baseline commit: 36cc569e1374bf54ea0523ad70aff901c2ef2019.
 Checkpoint branch: checkpoint/ui-2026-10-21.
-Integration branch: ui-next. Original ui and main stay untouched.
+Integration branch: integration/morinus-ui-a1-b5 (PR #14). Original ui and main stay untouched.
 
 ## A1: Resizable sidebar
 

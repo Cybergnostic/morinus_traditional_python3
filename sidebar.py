@@ -23,13 +23,14 @@ WIDTH = 310
 MIN_WIDTH = 250
 MAX_WIDTH = 560
 MIN_CHART_WIDTH = 300
+MIN_READABLE = 200	# never narrower than this, even in a narrow window
 GRIP_WIDTH = 7
 
 
 def fit_width(total, preferred):
 	"""Clamp width while preserving chart space in narrow windows."""
 	total = max(0, int(total))
-	return min(max(MIN_WIDTH, int(preferred)), MAX_WIDTH, max(80, total - MIN_CHART_WIDTH))
+	return min(max(MIN_WIDTH, int(preferred)), MAX_WIDTH, max(MIN_READABLE, total - MIN_CHART_WIDTH))
 
 
 P = planets.Planets

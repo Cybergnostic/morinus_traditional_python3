@@ -11,7 +11,7 @@ class TableWorkspace(wx.Frame):
                  attribute=None):
         super().__init__(mainfr, -1, heading, size=size)
         self.mainfr = mainfr
-        self.specs = specs   # (label, description, view factory, standalone factory)
+        self.specs = specs   # (label, description, view factory(page), standalone factory(view))
         self.attribute = attribute
         self.views = {}
         self.SetMinSize((600, 390))
@@ -25,13 +25,9 @@ class TableWorkspace(wx.Frame):
 
         self.explanation = wx.StaticText(self, -1, '')
         self.explanation.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
-        self.original = wx.Button(self, -1, 'Open separately')
-        self.original.SetToolTip('Open the original independent Morinus table window')
-        self.original.Bind(wx.EVT_BUTTON, self.onOpenSeparately)
 
         footer = wx.BoxSizer(wx.HORIZONTAL)
-        footer.Add(self.explanation, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 12)
-        footer.Add(self.original, 0, wx.ALIGN_CENTER_VERTICAL)
+        footer.Add(self.explanation, 1, wx.ALIGN_CENTER_VERTICAL)
         outer = wx.BoxSizer(wx.VERTICAL)
         outer.Add(self.book, 1, wx.EXPAND)
         outer.Add(footer, 0, wx.EXPAND | wx.ALL, 10)
@@ -57,7 +53,7 @@ class TableWorkspace(wx.Frame):
         menu.AppendSeparator()
         self.bw_item = menu.AppendCheckItem(self.bw_id, 'Black and white')
         menu.AppendSeparator()
-        menu.Append(self.separate_id, 'Open separately')
+        menu.Append(self.separate_id, 'Open in a separate window', 'The table of this tab in a window of its own, e.g. to compare two tables')
         menu.Append(self.close_id, 'Close workspace')
         bar.Append(menu, 'Table')
         self.SetMenuBar(bar)
@@ -119,7 +115,8 @@ class TableWorkspace(wx.Frame):
         self.updateMenu()
 
     def onOpenSeparately(self, event):
-        self.specs[self.book.GetSelection()][3]()
+        index = self.book.GetSelection()
+        self.specs[index][3](self.views.get(index))
 
     def onClose(self, event):
         if self.attribute and getattr(self.mainfr, self.attribute, None) is self:

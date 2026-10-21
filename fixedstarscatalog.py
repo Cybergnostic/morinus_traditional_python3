@@ -10,8 +10,3 @@ ALIASES = {'onFixedStars': 0, 'onFixedStarsAsps': 1, 'onStarAngles': 2}
 
 def is_selected(selected):
     return bool(selected)
-
-
-def limits(angle_minutes, paran_minutes):
-    """Never conflate proximity to the birth with simultaneous angular crossings."""
-    return {'birth_angle_minutes': angle_minutes, 'paranatellonta_minutes': paran_minutes}

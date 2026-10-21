@@ -30,11 +30,11 @@ def show(mainfr, tab=0):
         ('Planetary hours',
          'Planetary day, Sun rise and set, and planetary hours in chart-local time.',
          lambda page: hourswnd.HoursWnd(page, chart, options, mainfr),
-         lambda: _open_original(hoursframe.HoursFrame, mainfr)),
+         lambda view: _open_original(hoursframe.HoursFrame, mainfr)),
         ('Rise, set and culmination',
          'Existing planet rise/MC/set/IC times and rising times of zodiacal signs.',
          lambda page: risesetwnd.RiseSetWnd(page, chart, options, mainfr),
-         lambda: _open_original(risesetframe.RiseSetFrame, mainfr)),
+         lambda view: _open_original(risesetframe.RiseSetFrame, mainfr)),
     )
     wnd = legacytabworkspace.TableWorkspace(mainfr,
         'Planetary Hours and Rise/Set — ' + chart.name, specs, tab,

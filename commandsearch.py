@@ -29,12 +29,16 @@ def commands(frame):
     for i in range(bar.GetMenuCount()):
         walk(bar.GetMenu(i), bar.GetMenuLabelText(i).replace('&', ''))
 
+    # a dialog that is also a menu command (e.g. Chart look) is listed once
+    menu_labels = {commandindex.normalise(c[0]) for c in res}
     for category, entries in settingswnd.CATEGORIES:
         for entry in entries:
             where = 'Settings › ' + category
             if entry[0] == 'dialog':
                 title = (entry[4] if len(entry) > 4 else
                          settingswnd.menutext(entry[1])[0] if entry[1] in settingswnd.mtexts.menutxts else entry[1])
+                if commandindex.normalise(title) in menu_labels:
+                    continue
                 res.append((title, where, entry[3],
                             lambda handler=entry[2]: getattr(frame, handler)(wx.CommandEvent())))
             elif entry[0] == 'trad':

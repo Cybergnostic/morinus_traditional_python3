@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import wx
+import commonwnd
 import tablepresentation
 import os
 import chart
@@ -444,3 +445,11 @@ class PositionsWnd(wx.ScrolledWindow):
                 draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
             j += 1
             summa += offs[i]
+
+    def getExt(self):
+        return mtexts.txtsabbrevs['Pos']
+
+
+# copying as text or an image and CSV export, as in the other tables (commonwnd)
+for _name in ('tableText', 'tableRows', 'onCopyAsText', 'onCopyAsImage', 'onExportCSV'):
+    setattr(PositionsWnd, _name, getattr(commonwnd.CommonWnd, _name))

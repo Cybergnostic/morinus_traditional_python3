@@ -19,6 +19,8 @@ def mirror(frame, popup, target, label, skip=()):
 
 	def sync(event):
 		for c, item in links:
+			if c.GetItemLabel() != item.GetItemLabel():	# e.g. 'Zoom: 120%'
+				c.SetItemLabel(item.GetItemLabel())
 			if c.IsCheckable():
 				c.Check(item.IsChecked())
 			c.Enable(item.IsEnabled())

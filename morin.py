@@ -437,6 +437,20 @@ class MFrame(wx.Frame):
             if shown(iid) and keys and entry.FromString(keys):
                 entry.Set(entry.GetFlags(), entry.GetKeyCode(), iid)
                 accels.append(entry)
+        # The shortcuts of Morinus's own tables and charts that became tabs of the
+        # workspaces (their menu items were removed): F1, F5, F6, F10, F11,
+        # Ctrl+F1, Ctrl+F2, Ctrl+F5, Ctrl+Shift+F7 and Ctrl+Shift+F8.
+        for iid, key, handler in ((self.ID_Positions, 'TMPositions', self.onPositions), (self.ID_Misc, 'TMMisc', self.onMisc),
+                                  (self.ID_MunPos, 'TMMunPos', self.onMunPos), (self.ID_RiseSet, 'TMRiseSet', self.onRiseSet),
+                                  (self.ID_Speeds, 'TMSpeeds', self.onSpeeds), (self.ID_FixedStars, 'TMFixStars', self.onFixedStars),
+                                  (self.ID_FixedStarsAsps, 'TMFixStarsAsps', self.onFixedStarsAsps), (self.ID_PlanetaryHours, 'TMPlanetaryHours', self.onPlanetaryHours),
+                                  (self.ID_SyzygyChart, 'PMSyzygy', self.onSyzygyChart), (self.ID_SyzygyChart2, 'PMSyzygy2', self.onSyzygyChart2)):
+            self.Bind(wx.EVT_MENU, lambda e, h=handler: None if self.splash else h(e), id=iid)
+            keys = mtexts.menutxts[key].partition('\t')[2]
+            entry = wx.AcceleratorEntry()
+            if keys and entry.FromString(keys):
+                entry.Set(entry.GetFlags(), entry.GetKeyCode(), iid)
+                accels.append(entry)
         # Ctrl+K opens the same command palette whether or not the toolbar is shown.
         self.ID_CommandSearch = wx.NewIdRef()
         self.Bind(wx.EVT_MENU, self.onCommandSearch, id=self.ID_CommandSearch)
@@ -2214,7 +2228,7 @@ class MFrame(wx.Frame):
         li = self.GetChildren()
         for ch in li:
             x, y = ch.GetClientSize()
-            if ch.GetName() != 'status_line' and y > 50 and ch is not self.settingswnd and ch is not self.sidebar and not isinstance(ch, (wx.ToolBar, wx.PopupWindow)):
+            if ch.GetName() != 'status_line' and y > 50 and ch is not self.settingswnd and ch is not self.sidebar and ch not in getattr(self, 'keep_open', ()) and not isinstance(ch, (wx.ToolBar, wx.PopupWindow)):
                 ch.Destroy()
 
     def enableMenus(self, bEnable):

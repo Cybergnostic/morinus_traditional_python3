@@ -134,6 +134,10 @@ class TransitFrame(wx.Frame):
         if finished or now - self._sidebar_last_draw >= 0.08:
             self._sidebar_last_draw = now
             self.layout()
+        else:
+            # between redraws of the chart the panel still follows the mouse
+            w, h = self.GetClientSize()
+            self.sidebar.SetSize(w - width, 0, width, h)
 
     def onFrameSize(self, event):
         self.layout()

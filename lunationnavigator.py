@@ -9,7 +9,7 @@ import zodiacalreleasing
 
 class LunationNavigator(wx.Frame):
     def __init__(self, mainfr):
-        super().__init__(mainfr, -1, 'New and Full Moons — ' + mainfr.horoscope.name,
+        super().__init__(mainfr, -1, 'Syzygies and lunar phases — ' + mainfr.horoscope.name,
                          size=(850, 580))
         self.mainfr = mainfr
         self.radix = mainfr.horoscope
@@ -109,7 +109,6 @@ class LunationNavigator(wx.Frame):
         jd, kind, sun, moon = self.events[selection]
         calflag = (astrology.SE_GREG_CAL if self.radix.time.cal == chart.Time.GREGORIAN
                    else astrology.SE_JUL_CAL)
-        y, m, d, fraction = astrology.swe_revjul(jd, calflag)
         # Round through the Julian-day conversion to avoid a spurious :60.
         y, m, d, fraction = astrology.swe_revjul(jd + 0.5 / 86400.0, calflag)
         total_seconds = int(fraction * 3600)
