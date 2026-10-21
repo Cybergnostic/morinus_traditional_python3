@@ -10,10 +10,17 @@ import decennialswnd
 import circumambulationwnd
 import heliacalwnd
 import fixedstaranglewnd
+import fixedstarsworkspace
+import hoursrisesetworkspace
 import dodecacalcdlg
 import starnames
 import tradoptions
 import tradoptsdlg
+import chartlookdlg
+import settingswnd
+import commandsearch
+import sidebar
+import time as _time
 import defaultsbtn
 import returnslistframe
 import os
@@ -30,6 +37,7 @@ import findtimedlg
 import graphephemdlg
 import graphephemframe
 import ephemcalc
+import ephemerisworkspace
 import userpd
 import primdirs
 import mtexts
@@ -39,6 +47,8 @@ import placidianutppd
 import regiomontanpd
 import campanianpd
 import positionsframe
+import positionsworkspace
+import positionscatalog
 import almutenchartframe
 import almutentopicalsframe
 import almutenzodsframe
@@ -98,6 +108,8 @@ import primarydirsdlgsmall
 import primarykeysdlg
 import pdsinchartdlgopts
 import syzygydlg
+import lunationnavigator
+import transitsearch
 import lotsdlg
 import fixedstarsdlg
 import profdlgopts
@@ -117,8 +129,8 @@ PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
 pdlock = _thread.allocate_lock()
 
 class MFrame(wx.Frame):
-    XSIZE = 512
-    YSIZE = 512
+    XSIZE = 960
+    YSIZE = 720
     MHOROSCOPE, MTABLES, MCHARTS, MOPTIONS, MHELP = list(range(0, 5))
 
     def __init__(self, parent, id, title, opts):
@@ -135,332 +147,14 @@ class MFrame(wx.Frame):
         self.SetMinSize((200, 200))
         self.SetBackgroundColour(self.options.clrbackground)
         self.dirty = False
-        menubar = wx.MenuBar()
-        self.ID_New, self.ID_Data, self.ID_HereAndNow, self.ID_Load, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_FindTime, self.ID_Ephemeris, self.ID_Close, self.ID_Exit = list(range(100, 111))
-        self.horbase = 100
-        if True in self.options.menusels[MFrame.MHOROSCOPE]:
-            self.mhoros = wx.Menu()
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_New - self.horbase)]:
-                self.mhoros.Append(self.ID_New, mtexts.menutxts['HMNew'], mtexts.menutxts['HMNewDoc'])
-                self.Bind(wx.EVT_MENU, self.onNew, id=self.ID_New)
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Data - self.horbase)]:
-                self.mhoros.Append(self.ID_Data, mtexts.menutxts['HMData'], mtexts.menutxts['HMDataDoc'])
-                self.Bind(wx.EVT_MENU, self.onData, id=self.ID_Data)
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_HereAndNow - self.horbase)]:
-                self.mhoros.Append(self.ID_HereAndNow, mtexts.menutxts['HMHereAndNow'], mtexts.menutxts['HMHereAndNowDoc'])
-                self.Bind(wx.EVT_MENU, self.onHereAndNow, id=self.ID_HereAndNow)
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Load - self.horbase)]:
-                self.mhoros.Append(self.ID_Load, mtexts.menutxts['HMLoad'], mtexts.menutxts['HMLoadDoc'])
-                self.filehistory = wx.FileHistory()
-                self.filehistory.UseMenu(self.mhoros)
-                self.Bind(wx.EVT_MENU_RANGE, self.OnFileHistory, id=wx.ID_FILE1, id2=wx.ID_FILE9)
-                self.Bind(wx.EVT_MENU, self.onLoad, id=self.ID_Load)
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Save - self.horbase)]:
-                self.mhoros.Append(self.ID_Save, mtexts.menutxts['HMSave'], mtexts.menutxts['HMSaveDoc'])
-                self.Bind(wx.EVT_MENU, self.onSave, id=self.ID_Save)
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_SaveAsBitmap - self.horbase)]:
-                self.mhoros.Append(self.ID_SaveAsBitmap, mtexts.menutxts['HMSaveAsBmp'], mtexts.menutxts['HMSaveAsBmpDoc'])
-                self.Bind(wx.EVT_MENU, self.onSaveAsBitmap, id=self.ID_SaveAsBitmap)
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Synastry - self.horbase)]:
-                self.mhoros.Append(self.ID_Synastry, mtexts.menutxts['HMSynastry'], mtexts.menutxts['HMSynastryDoc'])
-                self.Bind(wx.EVT_MENU, self.onSynastry, id=self.ID_Synastry)
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_FindTime - self.horbase)]:
-                self.mhoros.Append(self.ID_FindTime, mtexts.menutxts['HMFindTime'], mtexts.menutxts['HMFindTimeDoc'])
-                self.Bind(wx.EVT_MENU, self.onFindTime, id=self.ID_FindTime)
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Ephemeris - self.horbase)]:
-                self.mhoros.Append(self.ID_Ephemeris, mtexts.menutxts['HMEphemeris'], mtexts.menutxts['HMEphemerisDoc'])
-                self.Bind(wx.EVT_MENU, self.onEphemeris, id=self.ID_Ephemeris)
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Close - self.horbase)]:
-                self.mhoros.AppendSeparator()
-                self.mhoros.Append(self.ID_Close, mtexts.menutxts['HMClose'], mtexts.menutxts['HMCloseDoc'])
-                self.Bind(wx.EVT_MENU, self.onClose, id=self.ID_Close)
-            if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Exit - self.horbase)]:
-                self.mhoros.AppendSeparator()
-                self.mhoros.Append(self.ID_Exit, mtexts.menutxts['HMExit'], mtexts.menutxts['HMExitDoc'])
-                self.Bind(wx.EVT_MENU, self.onExit, id=self.ID_Exit)
-            menubar.Append(self.mhoros, mtexts.menutxts['MHoroscope'])
-        self.ID_Positions, self.ID_TAlmutens, self.ID_AlmutenZodiacal, self.ID_AlmutenChart, self.ID_AlmutenTopical, self.ID_Misc, self.ID_MunPos, self.ID_Antiscia, self.ID_Aspects, self.ID_Midpoints, self.ID_RiseSet, self.ID_Speeds, self.ID_ZodPars, self.ID_FixedStars, self.ID_FixedStarsAsps, self.ID_Lots, self.ID_Strip, self.ID_PlanetaryHours, self.ID_ExactTransits, self.ID_Profections, self.ID_UserSpeculum, self.ID_Firdaria, self.ID_PrimaryDirs = list(range(120, 143))
-        self.tabbase = 120
-        if True in self.options.menusels[MFrame.MTABLES]:
-            self.mtables = wx.Menu()
-            if self.options.menusels[MFrame.MTABLES][(self.ID_Positions - self.tabbase)]:
-                self.mtables.Append(self.ID_Positions, mtexts.menutxts['TMPositions'], mtexts.menutxts['TMPositionsDoc'])
-                self.Bind(wx.EVT_MENU, self.onPositions, id=self.ID_Positions)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenZodiacal - self.tabbase - 1)] or self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenChart - self.tabbase - 1)] or self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenTopical - self.tabbase - 1)]:
-                self.talmutens = wx.Menu()
-                self.mtables.Append(wx.MenuItem(self.mtables, self.ID_TAlmutens, mtexts.menutxts['TMAlmutens'], subMenu=self.talmutens))
-            if self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenZodiacal - self.tabbase - 1)]:
-                self.talmutens.Append(self.ID_AlmutenZodiacal, mtexts.menutxts['TMAlmutenZodiacal'], mtexts.menutxts['TMAlmutenZodiacalDoc'])
-                self.Bind(wx.EVT_MENU, self.onAlmutenZodiacal, id=self.ID_AlmutenZodiacal)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenChart - self.tabbase - 1)]:
-                self.talmutens.Append(self.ID_AlmutenChart, mtexts.menutxts['TMAlmutenChart'], mtexts.menutxts['TMAlmutenChartDoc'])
-                self.Bind(wx.EVT_MENU, self.onAlmutenChart, id=self.ID_AlmutenChart)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenTopical - self.tabbase - 1)]:
-                self.talmutens.Append(self.ID_AlmutenTopical, mtexts.menutxts['TMAlmutenTopical'], mtexts.menutxts['TMAlmutenTopicalDoc'])
-                self.Bind(wx.EVT_MENU, self.onAlmutenTopical, id=self.ID_AlmutenTopical)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_Misc - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_Misc, mtexts.menutxts['TMMisc'], mtexts.menutxts['TMMiscDoc'])
-                self.Bind(wx.EVT_MENU, self.onMisc, id=self.ID_Misc)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_MunPos - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_MunPos, mtexts.menutxts['TMMunPos'], mtexts.menutxts['TMMunPosDoc'])
-                self.Bind(wx.EVT_MENU, self.onMunPos, id=self.ID_MunPos)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_Antiscia - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_Antiscia, mtexts.menutxts['TMAntiscia'], mtexts.menutxts['TMAntisciaDoc'])
-                self.Bind(wx.EVT_MENU, self.onAntiscia, id=self.ID_Antiscia)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_Aspects - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_Aspects, mtexts.menutxts['TMAspects'], mtexts.menutxts['TMAspectsDoc'])
-                self.Bind(wx.EVT_MENU, self.onAspects, id=self.ID_Aspects)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_Midpoints - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_Midpoints, mtexts.menutxts['TMMidpoints'], mtexts.menutxts['TMMidpointsDoc'])
-                self.Bind(wx.EVT_MENU, self.onMidpoints, id=self.ID_Midpoints)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_RiseSet - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_RiseSet, mtexts.menutxts['TMRiseSet'], mtexts.menutxts['TMRiseSetDoc'])
-                self.Bind(wx.EVT_MENU, self.onRiseSet, id=self.ID_RiseSet)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_Speeds - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_Speeds, mtexts.menutxts['TMSpeeds'], mtexts.menutxts['TMSpeedsDoc'])
-                self.Bind(wx.EVT_MENU, self.onSpeeds, id=self.ID_Speeds)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_ZodPars - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_ZodPars, mtexts.menutxts['TMZodPars'], mtexts.menutxts['TMZodParsDoc'])
-                self.Bind(wx.EVT_MENU, self.onZodPars, id=self.ID_ZodPars)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_FixedStars - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_FixedStars, mtexts.menutxts['TMFixStars'], mtexts.menutxts['TMFixStarsDoc'])
-                self.Bind(wx.EVT_MENU, self.onFixedStars, id=self.ID_FixedStars)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_FixedStarsAsps - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_FixedStarsAsps, mtexts.menutxts['TMFixStarsAsps'], mtexts.menutxts['TMFixStarsAspsDoc'])
-                self.Bind(wx.EVT_MENU, self.onFixedStarsAsps, id=self.ID_FixedStarsAsps)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_Lots - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_Lots, mtexts.menutxts['TMLots'], mtexts.menutxts['TMLotsDoc'])
-                self.Bind(wx.EVT_MENU, self.onLots, id=self.ID_Lots)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_Strip - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_Strip, mtexts.menutxts['TMStrip'], mtexts.menutxts['TMStripDoc'])
-                self.Bind(wx.EVT_MENU, self.onStrip, id=self.ID_Strip)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_PlanetaryHours - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_PlanetaryHours, mtexts.menutxts['TMPlanetaryHours'], mtexts.menutxts['TMPlanetaryHoursDoc'])
-                self.Bind(wx.EVT_MENU, self.onPlanetaryHours, id=self.ID_PlanetaryHours)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_ExactTransits - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_ExactTransits, mtexts.menutxts['TMExactTransits'], mtexts.menutxts['TMExactTransitsDoc'])
-                self.Bind(wx.EVT_MENU, self.onExactTransits, id=self.ID_ExactTransits)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_Profections - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_Profections, mtexts.menutxts['TMProfections'], mtexts.menutxts['TMProfectionsDoc'])
-                self.Bind(wx.EVT_MENU, self.onProfections, id=self.ID_Profections)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_UserSpeculum - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_UserSpeculum, mtexts.menutxts['TMUserSpeculum'], mtexts.menutxts['TMUserSpeculumDoc'])
-                self.Bind(wx.EVT_MENU, self.onUserSpeculum, id=self.ID_UserSpeculum)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_Firdaria - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_Firdaria, mtexts.menutxts['TMFirdaria'], mtexts.menutxts['TMFirdariaDoc'])
-                self.Bind(wx.EVT_MENU, self.onFirdaria, id=self.ID_Firdaria)
-            if self.options.menusels[MFrame.MTABLES][(self.ID_PrimaryDirs - self.tabbase - 1)]:
-                self.mtables.Append(self.ID_PrimaryDirs, mtexts.menutxts['TMPrimaryDirs'], mtexts.menutxts['TMPrimaryDirsDoc'])
-                self.Bind(wx.EVT_MENU, self.onPrimaryDirs, id=self.ID_PrimaryDirs)
-            # traditional analysis tables (always shown, not part of the menu selection settings)
-            self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials = 143, 145, 146, 147, 148
-            self.mtables.AppendSeparator()
-            self.mtables.Append(self.ID_TradConditions, 'Planetary conditions', 'Sect, hayz, synodic phase, stations, joys, latitude, Via Combusta, void of course')
-            self.mtables.Append(self.ID_TradTemperament, 'Temperament', 'Temperament worksheet')
-            self.Bind(wx.EVT_MENU, self.onConditions, id=self.ID_TradConditions)
-            self.Bind(wx.EVT_MENU, self.onTemperament, id=self.ID_TradTemperament)
-            self.mtables.Append(self.ID_ZRFortune, 'Zodiacal releasing from Fortune', 'Periods of the signs from the Lot of Fortune (Valens)')
-            self.mtables.Append(self.ID_ZRSpirit, 'Zodiacal releasing from Spirit', 'Periods of the signs from the Lot of Spirit (Valens)')
-            self.Bind(wx.EVT_MENU, self.onZRFortune, id=self.ID_ZRFortune)
-            self.Bind(wx.EVT_MENU, self.onZRSpirit, id=self.ID_ZRSpirit)
-            self.mtables.Append(self.ID_Decennials, 'Decennials', 'Periods of 10 years 9 months of the planets (Valens)')
-            self.Bind(wx.EVT_MENU, self.onDecennials, id=self.ID_Decennials)
-            self.ID_Circumambulation = wx.NewIdRef()
-            self.mtables.Append(self.ID_Circumambulation, 'Circumambulation', 'The Ascendant directed through the bounds (Ptolemy)')
-            self.Bind(wx.EVT_MENU, self.onCircumambulation, id=self.ID_Circumambulation)
-            self.ID_Heliacal = wx.NewIdRef()
-            self.mtables.Append(self.ID_Heliacal, 'Heliacal phenomena and phasis', 'Visibility of the planets and stations around the birth')
-            self.Bind(wx.EVT_MENU, self.onHeliacal, id=self.ID_Heliacal)
-            self.ID_StarAngles = wx.NewIdRef()
-            self.mtables.Append(self.ID_StarAngles, 'Fixed stars on the angles', 'Stars on the angles at the birth and the paranatellonta of the birth day')
-            self.Bind(wx.EVT_MENU, self.onStarAngles, id=self.ID_StarAngles)
-            self.ID_DodecaCalc = wx.NewIdRef()
-            self.mtables.Append(self.ID_DodecaCalc, 'Dodecatemoria calculator...', 'The dodecatemorion of any degree')
-            self.Bind(wx.EVT_MENU, self.onDodecaCalc, id=self.ID_DodecaCalc)
-            menubar.Append(self.mtables, mtexts.menutxts['MTable'])
-        self.ID_Transits, self.ID_Revolutions, self.ID_SunTransits, self.ID_SecondaryDirs, self.ID_Elections, self.ID_SquareChart, self.ID_SyzygyChart, self.ID_SyzygyChart2, self.ID_ProfectionsChart, self.ID_HelioChart = list(range(150, 160))
-        self.chartsbase = 150
-        if True in self.options.menusels[MFrame.MCHARTS]:
-            self.mcharts = wx.Menu()
-            if self.options.menusels[MFrame.MCHARTS][(self.ID_Transits - self.chartsbase)]:
-                self.mcharts.Append(self.ID_Transits, mtexts.menutxts['PMTransits'], mtexts.menutxts['PMTransitsDoc'])
-                self.Bind(wx.EVT_MENU, self.onTransits, id=self.ID_Transits)
-            if self.options.menusels[MFrame.MCHARTS][(self.ID_Revolutions - self.chartsbase)]:
-                self.mcharts.Append(self.ID_Revolutions, mtexts.menutxts['PMRevolutions'], mtexts.menutxts['PMRevolutionsDoc'])
-                self.Bind(wx.EVT_MENU, self.onRevolutions, id=self.ID_Revolutions)
-            if self.options.menusels[MFrame.MCHARTS][(self.ID_SunTransits - self.chartsbase)]:
-                self.mcharts.Append(self.ID_SunTransits, mtexts.menutxts['PMSunTransits'], mtexts.menutxts['PMSunTransitsDoc'])
-                self.Bind(wx.EVT_MENU, self.onSunTransits, id=self.ID_SunTransits)
-            if self.options.menusels[MFrame.MCHARTS][(self.ID_SecondaryDirs - self.chartsbase)]:
-                self.mcharts.Append(self.ID_SecondaryDirs, mtexts.menutxts['PMSecondaryDirs'], mtexts.menutxts['PMSecondaryDirsDoc'])
-                self.Bind(wx.EVT_MENU, self.onSecondaryDirs, id=self.ID_SecondaryDirs)
-            if self.options.menusels[MFrame.MCHARTS][(self.ID_Elections - self.chartsbase)]:
-                self.mcharts.Append(self.ID_Elections, mtexts.menutxts['PMElections'], mtexts.menutxts['PMElectionsDoc'])
-                self.Bind(wx.EVT_MENU, self.onElections, id=self.ID_Elections)
-            if self.options.menusels[MFrame.MCHARTS][(self.ID_SquareChart - self.chartsbase)]:
-                self.mcharts.Append(self.ID_SquareChart, mtexts.menutxts['PMSquareChart'], mtexts.menutxts['PMSquareChartDoc'])
-                self.Bind(wx.EVT_MENU, self.onSquareChart, id=self.ID_SquareChart)
-            if self.options.menusels[MFrame.MCHARTS][(self.ID_SyzygyChart - self.chartsbase)]:
-                self.mcharts.Append(self.ID_SyzygyChart, mtexts.menutxts['PMSyzygy'], mtexts.menutxts['PMSyzygyDoc'])
-                self.Bind(wx.EVT_MENU, self.onSyzygyChart, id=self.ID_SyzygyChart)
-            if self.options.menusels[MFrame.MCHARTS][(self.ID_SyzygyChart2 - self.chartsbase)]:
-                self.mcharts.Append(self.ID_SyzygyChart2, mtexts.menutxts['PMSyzygy2'], mtexts.menutxts['PMSyzygyDoc2'])
-                self.Bind(wx.EVT_MENU, self.onSyzygyChart2, id=self.ID_SyzygyChart2)
-            if self.options.menusels[MFrame.MCHARTS][(self.ID_ProfectionsChart - self.chartsbase)]:
-                self.mcharts.Append(self.ID_ProfectionsChart, mtexts.menutxts['PMProfections'], mtexts.menutxts['PMProfectionsDoc'])
-                self.Bind(wx.EVT_MENU, self.onProfectionsChart, id=self.ID_ProfectionsChart)
-            if self.options.menusels[MFrame.MCHARTS][(self.ID_HelioChart - self.chartsbase)]:
-                self.mcharts.Append(self.ID_HelioChart, mtexts.menutxts['PMHelioChart'], mtexts.menutxts['PMHelioChartDoc'])
-                self.Bind(wx.EVT_MENU, self.onHelioChart, id=self.ID_HelioChart)
-            # lists of returns (always shown, not part of the menu selection settings)
-            self.ID_ReturnsList = 160
-            self.mcharts.AppendSeparator()
-            self.mcharts.Append(self.ID_ReturnsList, 'Lunar returns of the year...', 'Lunar returns covering a solar year')
-            self.Bind(wx.EVT_MENU, self.onReturnsList, id=self.ID_ReturnsList)
-            menubar.Append(self.mcharts, mtexts.menutxts['MCharts'])
-        self.ID_Appearance1, self.ID_Appearance2, self.ID_Dignities, self.ID_MinorDignities, self.ID_Triplicities, self.ID_Terms, self.ID_Decans, self.ID_Almutens, self.ID_ChartAlmuten, self.ID_Topical, self.ID_Ayanamsha, self.ID_Colors, self.ID_HouseSystem, self.ID_Nodes, self.ID_Orbs, self.ID_PrimaryDirsOpt, self.ID_PrimaryKeys, self.ID_PDsInChartOpt, self.ID_LotsOpt, self.ID_Syzygy, self.ID_FixedStarsOpt, self.ID_ProfectionsOpt, self.ID_FirdariaOpt, self.ID_DefLocationOpt, self.ID_MenuSel, self.ID_MenuSelFirst, self.ID_MenuSelSecond, self.ID_Languages, self.ID_AutoSaveOpts, self.ID_SaveOpts, self.ID_Reload = list(range(170, 201))
-        self.optsbase = 170
-        if True in self.options.menusels[MFrame.MOPTIONS]:
-            self.ID_Housesystem1, self.ID_Housesystem2, self.ID_Housesystem3, self.ID_Housesystem4, self.ID_Housesystem5, self.ID_Housesystem6, self.ID_Housesystem7, self.ID_Housesystem8, self.ID_Housesystem9, self.ID_Housesystem10, self.ID_Housesystem11, self.ID_Housesystem12 = list(range(1050, 1062))
-            self.ID_NodeMean = 1070
-            self.ID_NodeTrue = 1071
-            self.hsbase = self.ID_Housesystem1
-            self.nodebase = self.ID_NodeMean
-            self.moptions = wx.Menu()
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Appearance1 - self.optsbase)]:
-                self.moptions.Append(self.ID_Appearance1, mtexts.menutxts['OMAppearance1'], mtexts.menutxts['OMAppearance1Doc'])
-                self.Bind(wx.EVT_MENU, self.onAppearance1, id=self.ID_Appearance1)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Appearance2 - self.optsbase)]:
-                self.moptions.Append(self.ID_Appearance2, mtexts.menutxts['OMAppearance2'], mtexts.menutxts['OMAppearance2Doc'])
-                self.Bind(wx.EVT_MENU, self.onAppearance2, id=self.ID_Appearance2)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Dignities - self.optsbase)]:
-                self.moptions.Append(self.ID_Dignities, mtexts.menutxts['OMDignities'], mtexts.menutxts['OMDignitiesDoc'])
-                self.Bind(wx.EVT_MENU, self.onDignities, id=self.ID_Dignities)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Triplicities - self.optsbase - 1)] or self.options.menusels[MFrame.MOPTIONS][(self.ID_Terms - self.optsbase - 1)] or self.options.menusels[MFrame.MOPTIONS][(self.ID_Decans - self.optsbase - 1)]:
-                self.mdignities = wx.Menu()
-                self.moptions.Append(wx.MenuItem(self.moptions, self.ID_MinorDignities, mtexts.menutxts['OMMinorDignities'], subMenu=self.mdignities))
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Triplicities - self.optsbase - 1)]:
-                self.mdignities.Append(self.ID_Triplicities, mtexts.menutxts['OMTriplicities'], mtexts.menutxts['OMTriplicitiesDoc'])
-                self.Bind(wx.EVT_MENU, self.onTriplicities, id=self.ID_Triplicities)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Terms - self.optsbase - 1)]:
-                self.mdignities.Append(self.ID_Terms, mtexts.menutxts['OMTerms'], mtexts.menutxts['OMTermsDoc'])
-                self.Bind(wx.EVT_MENU, self.onTerms, id=self.ID_Terms)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Decans - self.optsbase - 1)]:
-                self.mdignities.Append(self.ID_Decans, mtexts.menutxts['OMDecans'], mtexts.menutxts['OMDecansDoc'])
-                self.Bind(wx.EVT_MENU, self.onDecans, id=self.ID_Decans)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_ChartAlmuten - self.optsbase - 2)] or self.options.menusels[MFrame.MOPTIONS][(self.ID_Topical - self.optsbase - 2)]:
-                self.malmutens = wx.Menu()
-                self.moptions.Append(wx.MenuItem(self.moptions, self.ID_Almutens, mtexts.menutxts['OMAlmutens'], subMenu=self.malmutens))
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_ChartAlmuten - self.optsbase - 2)]:
-                self.malmutens.Append(self.ID_ChartAlmuten, mtexts.menutxts['OMChartAlmuten'], mtexts.menutxts['OMChartAlmutenDoc'])
-                self.Bind(wx.EVT_MENU, self.onChartAlmuten, id=self.ID_ChartAlmuten)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Topical - self.optsbase - 2)]:
-                self.malmutens.Append(self.ID_Topical, mtexts.menutxts['OMTopical'], mtexts.menutxts['OMTopicalDoc'])
-                self.Bind(wx.EVT_MENU, self.onTopicals, id=self.ID_Topical)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Ayanamsha - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_Ayanamsha, mtexts.menutxts['OMAyanamsha'], mtexts.menutxts['OMAyanamshaDoc'])
-                self.Bind(wx.EVT_MENU, self.onAyanamsha, id=self.ID_Ayanamsha)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Colors - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_Colors, mtexts.menutxts['OMColors'], mtexts.menutxts['OMColorsDoc'])
-                self.Bind(wx.EVT_MENU, self.onColors, id=self.ID_Colors)
-            self.mhousesystem = wx.Menu()
-            self.itplac = self.mhousesystem.Append(self.ID_Housesystem1, mtexts.menutxts['OMHSPlacidus'], '', wx.ITEM_RADIO)
-            self.itkoch = self.mhousesystem.Append(self.ID_Housesystem2, mtexts.menutxts['OMHSKoch'], '', wx.ITEM_RADIO)
-            self.itregio = self.mhousesystem.Append(self.ID_Housesystem3, mtexts.menutxts['OMHSRegiomontanus'], '', wx.ITEM_RADIO)
-            self.itcampa = self.mhousesystem.Append(self.ID_Housesystem4, mtexts.menutxts['OMHSCampanus'], '', wx.ITEM_RADIO)
-            self.itequal = self.mhousesystem.Append(self.ID_Housesystem5, mtexts.menutxts['OMHSEqual'], '', wx.ITEM_RADIO)
-            self.itwhole = self.mhousesystem.Append(self.ID_Housesystem6, mtexts.menutxts['OMHSWholeSign'], '', wx.ITEM_RADIO)
-            self.itaxial = self.mhousesystem.Append(self.ID_Housesystem7, mtexts.menutxts['OMHSAxial'], '', wx.ITEM_RADIO)
-            self.itmorin = self.mhousesystem.Append(self.ID_Housesystem8, mtexts.menutxts['OMHSMorinus'], '', wx.ITEM_RADIO)
-            self.ithoriz = self.mhousesystem.Append(self.ID_Housesystem9, mtexts.menutxts['OMHSHorizontal'], '', wx.ITEM_RADIO)
-            self.itpage = self.mhousesystem.Append(self.ID_Housesystem10, mtexts.menutxts['OMHSPagePolich'], '', wx.ITEM_RADIO)
-            self.italcab = self.mhousesystem.Append(self.ID_Housesystem11, mtexts.menutxts['OMHSAlcabitus'], '', wx.ITEM_RADIO)
-            self.itporph = self.mhousesystem.Append(self.ID_Housesystem12, mtexts.menutxts['OMHSPorphyrius'], '', wx.ITEM_RADIO)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_HouseSystem - self.optsbase - 2)]:
-                self.moptions.Append(wx.MenuItem(self.moptions, self.ID_HouseSystem, mtexts.menutxts['OMHouseSystem'], subMenu=self.mhousesystem))
-                self.setHouse()
-                self.Bind(wx.EVT_MENU_RANGE, self.onHouseSystem, id=self.ID_Housesystem1, id2=self.ID_Housesystem12)
-            self.mnodes = wx.Menu()
-            self.meanitem = self.mnodes.Append(self.ID_NodeMean, mtexts.menutxts['OMNMean'], '', wx.ITEM_RADIO)
-            self.trueitem = self.mnodes.Append(self.ID_NodeTrue, mtexts.menutxts['OMNTrue'], '', wx.ITEM_RADIO)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Nodes - self.optsbase - 2)]:
-                self.moptions.Append(wx.MenuItem(self.moptions, self.ID_Nodes, mtexts.menutxts['OMNodes'], subMenu=self.mnodes))
-                self.setNode()
-                self.Bind(wx.EVT_MENU_RANGE, self.onNodes, id=self.ID_NodeMean, id2=self.ID_NodeTrue)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Orbs - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_Orbs, mtexts.menutxts['OMOrbs'], mtexts.menutxts['OMOrbsDoc'])
-                self.Bind(wx.EVT_MENU, self.onOrbs, id=self.ID_Orbs)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_PrimaryDirsOpt - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_PrimaryDirsOpt, mtexts.menutxts['OMPrimaryDirs'], mtexts.menutxts['OMPrimaryDirsDoc'])
-                self.Bind(wx.EVT_MENU, self.onPrimaryDirsOpt, id=self.ID_PrimaryDirsOpt)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_PrimaryKeys - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_PrimaryKeys, mtexts.menutxts['OMPrimaryKeys'], mtexts.menutxts['OMPrimaryKeysDoc'])
-                self.Bind(wx.EVT_MENU, self.onPrimaryKeys, id=self.ID_PrimaryKeys)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_PDsInChartOpt - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_PDsInChartOpt, mtexts.menutxts['OMPDsInChartOpt'], mtexts.menutxts['OMPDsInChartOptDoc'])
-                self.Bind(wx.EVT_MENU, self.onPDsInChartOpt, id=self.ID_PDsInChartOpt)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_LotsOpt - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_LotsOpt, mtexts.menutxts['OMLots'], mtexts.menutxts['OMLotsDoc'])
-                self.Bind(wx.EVT_MENU, self.onLotsOpt, id=self.ID_LotsOpt)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Syzygy - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_Syzygy, mtexts.menutxts['OMSyzygy'], mtexts.menutxts['OMSyzygyDoc'])
-                self.Bind(wx.EVT_MENU, self.onSyzygy, id=self.ID_Syzygy)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_FixedStarsOpt - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_FixedStarsOpt, mtexts.menutxts['OMFixedStarsOpt'], mtexts.menutxts['OMFixedStarsOptDoc'])
-                self.Bind(wx.EVT_MENU, self.onFixedStarsOpt, id=self.ID_FixedStarsOpt)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_ProfectionsOpt - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_ProfectionsOpt, mtexts.menutxts['OMProfectionsOpt'], mtexts.menutxts['OMProfectionsOptDoc'])
-                self.Bind(wx.EVT_MENU, self.onProfectionsOpt, id=self.ID_ProfectionsOpt)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_FirdariaOpt - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_FirdariaOpt, mtexts.menutxts['OMFirdariaOpt'], mtexts.menutxts['OMFirdariaOptDoc'])
-                self.Bind(wx.EVT_MENU, self.onFirdariaOpt, id=self.ID_FirdariaOpt)
-            # options of the added techniques (tradoptsdlg), always shown
-            self.moptions.AppendSeparator()
-            for i, (title, fields) in enumerate(tradoptsdlg.DIALOGS):
-                item = self.moptions.Append(wx.NewIdRef(), title + '...', 'Options of ' + title.lower())
-                self.Bind(wx.EVT_MENU, lambda e, i=i: self.onTradOpts(i), id=item.GetId())
-            self.moptions.AppendSeparator()
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_DefLocationOpt - self.optsbase - 2)]:
-                self.moptions.Append(self.ID_DefLocationOpt, mtexts.menutxts['OMDefLocationOpt'], mtexts.menutxts['OMDefLocationOptDoc'])
-                self.Bind(wx.EVT_MENU, self.onDefLocationOpt, id=self.ID_DefLocationOpt)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_MenuSelFirst - self.optsbase - 3)] or self.options.menusels[MFrame.MOPTIONS][(self.ID_MenuSelSecond - self.optsbase - 3)]:
-                self.mmenusel = wx.Menu()
-                self.moptions.Append(wx.MenuItem(self.moptions, self.ID_MenuSel, mtexts.menutxts['OMMenuSel'], subMenu=self.mmenusel))
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_MenuSelFirst - self.optsbase - 3)]:
-                self.mmenusel.Append(self.ID_MenuSelFirst, mtexts.menutxts['OMMenuSelFirst'], mtexts.menutxts['OMMenuSelFirstDoc'])
-                self.Bind(wx.EVT_MENU, self.onMenuSelFirst, id=self.ID_MenuSelFirst)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_MenuSelSecond - self.optsbase - 3)]:
-                self.mmenusel.Append(self.ID_MenuSelSecond, mtexts.menutxts['OMMenuSelSecond'], mtexts.menutxts['OMMenuSelSecondDoc'])
-                self.Bind(wx.EVT_MENU, self.onMenuSelSecond, id=self.ID_MenuSelSecond)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Languages - self.optsbase - 3)]:
-                self.moptions.Append(self.ID_Languages, mtexts.menutxts['OMLanguages'], mtexts.menutxts['OMLanguagesDoc'])
-                self.Bind(wx.EVT_MENU, self.onLanguages, id=self.ID_Languages)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_AutoSaveOpts - self.optsbase - 3)] or self.options.menusels[MFrame.MOPTIONS][(self.ID_SaveOpts - self.optsbase - 3)] or self.options.menusels[MFrame.MOPTIONS][(self.ID_Reload - self.optsbase - 3)]:
-                self.moptions.AppendSeparator()
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_AutoSaveOpts - self.optsbase - 3)]:
-                self.autosave = self.moptions.Append(self.ID_AutoSaveOpts, mtexts.menutxts['OMAutoSave'], mtexts.menutxts['OMAutoSaveDoc'], wx.ITEM_CHECK)
-                self.setAutoSave()
-                self.Bind(wx.EVT_MENU, self.onAutoSaveOpts, id=self.ID_AutoSaveOpts)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_SaveOpts - self.optsbase - 3)]:
-                self.moptions.Append(self.ID_SaveOpts, mtexts.menutxts['OMSave'], mtexts.menutxts['OMSaveDoc'])
-                self.Bind(wx.EVT_MENU, self.onSaveOpts, id=self.ID_SaveOpts)
-            if self.options.menusels[MFrame.MOPTIONS][(self.ID_Reload - self.optsbase - 3)]:
-                self.moptions.Append(self.ID_Reload, mtexts.menutxts['OMReload'], mtexts.menutxts['OMReloadDoc'])
-                self.Bind(wx.EVT_MENU, self.onReload, id=self.ID_Reload)
-            menubar.Append(self.moptions, mtexts.menutxts['MOptions'])
-        self.ID_Help = 300
-        self.ID_About = 301
-        self.helpbase = 300
-        if True in self.options.menusels[MFrame.MHELP]:
-            self.mhelp = wx.Menu()
-            menubar.Append(self.mhelp, mtexts.menutxts['MHelp'])
-            if self.options.menusels[MFrame.MHELP][(self.ID_Help - self.helpbase)]:
-                self.mhelp.Append(self.ID_Help, mtexts.menutxts['HEMHelp'], mtexts.menutxts['HEMHelpDoc'])
-                self.Bind(wx.EVT_MENU, self.onHelp, id=self.ID_Help)
-            if self.options.menusels[MFrame.MHELP][(self.ID_About - self.helpbase)]:
-                self.mhelp.Append(self.ID_About, mtexts.menutxts['HEMAbout'], mtexts.menutxts['HEMAboutDoc'])
-                self.Bind(wx.EVT_MENU, self.onAbout, id=self.ID_About)
-        self.SetMenuBar(menubar)
+        self.buildMenus()
+        self.statusbar = self.CreateStatusBar(4, name='status_line')
+        self.statusbar.SetStatusWidths([-5, -2, -3, -4])
+        self.buildToolBar()
+        self.sidebar_width = tradoptions.get('sidebar_width')
+        self._sidebar_last_draw = 0.0
+        self.sidebar = sidebar.Sidebar(self, self.onSidebarResize)
+        self.sidebar.Hide()
         if os.name == 'mac' or os.name == 'posix':
             self.Bind(wx.EVT_PAINT, self.onPaint)
         else:
@@ -489,6 +183,365 @@ class MFrame(wx.Frame):
         self.clickedPlId = None
         self.Bind(EVT_PDREADY, self.OnPDReady)
         return
+
+    def buildMenus(self):
+        """File, View, Tables, Charts, Tools, Options, Help. The items of
+        Morinus 6 keep their ids and are shown as chosen in Options > Menu
+        selection (menusels, indexed by their original menus)."""
+        sels = self.options.menusels
+        menubar = wx.MenuBar()
+        self.ID_New, self.ID_Data, self.ID_HereAndNow, self.ID_Load, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_FindTime, self.ID_Ephemeris, self.ID_Close, self.ID_Exit = list(range(100, 111))
+        self.horbase = 100
+        self.ID_Positions, self.ID_TAlmutens, self.ID_AlmutenZodiacal, self.ID_AlmutenChart, self.ID_AlmutenTopical, self.ID_Misc, self.ID_MunPos, self.ID_Antiscia, self.ID_Aspects, self.ID_Midpoints, self.ID_RiseSet, self.ID_Speeds, self.ID_ZodPars, self.ID_FixedStars, self.ID_FixedStarsAsps, self.ID_Lots, self.ID_Strip, self.ID_PlanetaryHours, self.ID_ExactTransits, self.ID_Profections, self.ID_UserSpeculum, self.ID_Firdaria, self.ID_PrimaryDirs = list(range(120, 143))
+        self.tabbase = 120
+        self.ID_Transits, self.ID_Revolutions, self.ID_SunTransits, self.ID_SecondaryDirs, self.ID_Elections, self.ID_SquareChart, self.ID_SyzygyChart, self.ID_SyzygyChart2, self.ID_ProfectionsChart, self.ID_HelioChart = list(range(150, 160))
+        self.chartsbase = 150
+        self.ID_Appearance1, self.ID_Appearance2, self.ID_Dignities, self.ID_MinorDignities, self.ID_Triplicities, self.ID_Terms, self.ID_Decans, self.ID_Almutens, self.ID_ChartAlmuten, self.ID_Topical, self.ID_Ayanamsha, self.ID_Colors, self.ID_HouseSystem, self.ID_Nodes, self.ID_Orbs, self.ID_PrimaryDirsOpt, self.ID_PrimaryKeys, self.ID_PDsInChartOpt, self.ID_LotsOpt, self.ID_Syzygy, self.ID_FixedStarsOpt, self.ID_ProfectionsOpt, self.ID_FirdariaOpt, self.ID_DefLocationOpt, self.ID_MenuSel, self.ID_MenuSelFirst, self.ID_MenuSelSecond, self.ID_Languages, self.ID_AutoSaveOpts, self.ID_SaveOpts, self.ID_Reload = list(range(170, 201))
+        self.optsbase = 170
+        self.ID_Help = 300
+        self.ID_About = 301
+        self.helpbase = 300
+
+        def shown(iid):
+            # the submenu items (almutens, minor dignities, menu selection) have no slot of their own
+            if iid < 120:
+                return sels[MFrame.MHOROSCOPE][iid - self.horbase]
+            if iid < 150:
+                return sels[MFrame.MTABLES][iid - self.tabbase - (0 if iid == self.ID_Positions else 1)]
+            if iid < 170:
+                return sels[MFrame.MCHARTS][iid - self.chartsbase]
+            if iid < 300:
+                skip = 0 if iid <= self.ID_Dignities else 1 if iid <= self.ID_Decans else 2 if iid <= self.ID_DefLocationOpt else 3
+                return sels[MFrame.MOPTIONS][iid - self.optsbase - skip]
+            return sels[MFrame.MHELP][iid - self.helpbase]
+
+        def add(menu, iid, key, handler, doc=None):
+            # an item of Morinus 6
+            if shown(iid):
+                menu.Append(iid, mtexts.menutxts[key], mtexts.menutxts[doc or key + 'Doc'])
+                self.Bind(wx.EVT_MENU, handler, id=iid)
+
+        def new(menu, label, doc, handler, iid=None):
+            # an added item, always shown
+            item = menu.Append(iid if iid is not None else wx.NewIdRef(), label, doc)
+            self.Bind(wx.EVT_MENU, handler, id=item.GetId())
+            return item
+
+        def sep(menu):
+            n = menu.GetMenuItemCount()
+            if n and not menu.FindItemByPosition(n - 1).IsSeparator():
+                menu.AppendSeparator()
+
+        def finish(menu, label):
+            n = menu.GetMenuItemCount()
+            if n and menu.FindItemByPosition(n - 1).IsSeparator():
+                menu.Delete(menu.FindItemByPosition(n - 1))
+            if menu.GetMenuItemCount():
+                menubar.Append(menu, label)
+
+        # File
+        self.mhoros = wx.Menu()
+        add(self.mhoros, self.ID_New, 'HMNew', self.onNew)
+        add(self.mhoros, self.ID_HereAndNow, 'HMHereAndNow', self.onHereAndNow)
+        add(self.mhoros, self.ID_Load, 'HMLoad', self.onLoad)
+        if shown(self.ID_Load):
+            self.mrecent = wx.Menu()
+            self.mhoros.AppendSubMenu(self.mrecent, 'Recent charts')
+            self.filehistory = wx.FileHistory()
+            self.filehistory.UseMenu(self.mrecent)
+            self.Bind(wx.EVT_MENU_RANGE, self.OnFileHistory, id=wx.ID_FILE1, id2=wx.ID_FILE9)
+        sep(self.mhoros)
+        add(self.mhoros, self.ID_Save, 'HMSave', self.onSave)
+        add(self.mhoros, self.ID_SaveAsBitmap, 'HMSaveAsBmp', self.onSaveAsBitmap)
+        add(self.mhoros, self.ID_Data, 'HMData', self.onData)
+        sep(self.mhoros)
+        add(self.mhoros, self.ID_Close, 'HMClose', self.onClose)
+        sep(self.mhoros)
+        add(self.mhoros, self.ID_Exit, 'HMExit', self.onExit)
+        finish(self.mhoros, 'File' if mtexts.menutxts['MHoroscope'].replace('&', '') == 'Horoscope' else mtexts.menutxts['MHoroscope'])
+
+        # View: the switches of Options > Appearance I, the house system and the nodes
+        self.mview = wx.Menu()
+        self.viewchecks = {}
+        for attr, label, doc in (('houses', 'House cusps', 'Draw the house cusps on the chart'), ('showterms', 'Terms', 'Show the ring of the terms'),
+                                 ('showdecans', 'Decans', 'Show the ring of the decans'), ('showdata', 'Chart data', 'Write the data of the chart in its centre'),
+                                 ('enableclick', 'Click a planet for its aspects', 'Clicking a planet draws only its aspects')):
+            item = self.mview.AppendCheckItem(wx.NewIdRef(), label, doc)
+            self.Bind(wx.EVT_MENU, lambda e, a=attr: self.onViewOption(a, e.IsChecked()), id=item.GetId())
+            self.viewchecks[attr] = item
+        self.mring = wx.Menu()
+        self.ringitems = {}
+        for value, label in ((chart.Chart.SHOWNONE, 'None'), (chart.Chart.SHOWFIXEDSTARS, 'Fixed stars'), (chart.Chart.SHOWANTIS, 'Antiscia'),
+                             (chart.Chart.SHOWLOTS, 'Lots'), (chart.Chart.SHOWDODECATEMORIA, 'Dodecatemoria')):
+            item = self.mring.AppendRadioItem(wx.NewIdRef(), label, 'Show this in the outer ring of the chart')
+            self.Bind(wx.EVT_MENU, lambda e, v=value: self.onViewOption('showobject', v), id=item.GetId())
+            self.ringitems[value] = item
+        self.mview.AppendSubMenu(self.mring, 'Outer ring')
+        self.viewbw = self.mview.AppendCheckItem(wx.NewIdRef(), 'Black and white', 'Draw the chart and the tables in black and white')
+        self.Bind(wx.EVT_MENU, lambda e: self.onViewOption('bw', e.IsChecked()), id=self.viewbw.GetId())
+        self.viewsidebar = self.mview.AppendCheckItem(wx.NewIdRef(), 'Planet sidebar', 'Show the planet, chart and time lords beside the chart')
+        self.viewsidebar.Check(tradoptions.get('show_sidebar'))
+        self.Bind(wx.EVT_MENU, self.onViewSidebar, id=self.viewsidebar.GetId())
+        self.viewtoolbar = self.mview.AppendCheckItem(wx.NewIdRef(), 'Toolbar', 'Show the toolbar with the command search')
+        self.viewtoolbar.Check(tradoptions.get('show_toolbar'))
+        self.Bind(wx.EVT_MENU, self.onViewToolBar, id=self.viewtoolbar.GetId())
+        sep(self.mview)
+        self.ID_Housesystem1, self.ID_Housesystem2, self.ID_Housesystem3, self.ID_Housesystem4, self.ID_Housesystem5, self.ID_Housesystem6, self.ID_Housesystem7, self.ID_Housesystem8, self.ID_Housesystem9, self.ID_Housesystem10, self.ID_Housesystem11, self.ID_Housesystem12 = list(range(1050, 1062))
+        self.ID_NodeMean = 1070
+        self.ID_NodeTrue = 1071
+        self.hsbase = self.ID_Housesystem1
+        self.nodebase = self.ID_NodeMean
+        self.mhousesystem = wx.Menu()
+        self.itplac = self.mhousesystem.Append(self.ID_Housesystem1, mtexts.menutxts['OMHSPlacidus'], '', wx.ITEM_RADIO)
+        self.itkoch = self.mhousesystem.Append(self.ID_Housesystem2, mtexts.menutxts['OMHSKoch'], '', wx.ITEM_RADIO)
+        self.itregio = self.mhousesystem.Append(self.ID_Housesystem3, mtexts.menutxts['OMHSRegiomontanus'], '', wx.ITEM_RADIO)
+        self.itcampa = self.mhousesystem.Append(self.ID_Housesystem4, mtexts.menutxts['OMHSCampanus'], '', wx.ITEM_RADIO)
+        self.itequal = self.mhousesystem.Append(self.ID_Housesystem5, mtexts.menutxts['OMHSEqual'], '', wx.ITEM_RADIO)
+        self.itwhole = self.mhousesystem.Append(self.ID_Housesystem6, mtexts.menutxts['OMHSWholeSign'], '', wx.ITEM_RADIO)
+        self.itaxial = self.mhousesystem.Append(self.ID_Housesystem7, mtexts.menutxts['OMHSAxial'], '', wx.ITEM_RADIO)
+        self.itmorin = self.mhousesystem.Append(self.ID_Housesystem8, mtexts.menutxts['OMHSMorinus'], '', wx.ITEM_RADIO)
+        self.ithoriz = self.mhousesystem.Append(self.ID_Housesystem9, mtexts.menutxts['OMHSHorizontal'], '', wx.ITEM_RADIO)
+        self.itpage = self.mhousesystem.Append(self.ID_Housesystem10, mtexts.menutxts['OMHSPagePolich'], '', wx.ITEM_RADIO)
+        self.italcab = self.mhousesystem.Append(self.ID_Housesystem11, mtexts.menutxts['OMHSAlcabitus'], '', wx.ITEM_RADIO)
+        self.itporph = self.mhousesystem.Append(self.ID_Housesystem12, mtexts.menutxts['OMHSPorphyrius'], '', wx.ITEM_RADIO)
+        if shown(self.ID_HouseSystem):
+            self.mview.Append(wx.MenuItem(self.mview, self.ID_HouseSystem, mtexts.menutxts['OMHouseSystem'], subMenu=self.mhousesystem))
+            self.setHouse()
+            self.Bind(wx.EVT_MENU_RANGE, self.onHouseSystem, id=self.ID_Housesystem1, id2=self.ID_Housesystem12)
+        self.mnodes = wx.Menu()
+        self.meanitem = self.mnodes.Append(self.ID_NodeMean, mtexts.menutxts['OMNMean'], '', wx.ITEM_RADIO)
+        self.trueitem = self.mnodes.Append(self.ID_NodeTrue, mtexts.menutxts['OMNTrue'], '', wx.ITEM_RADIO)
+        if shown(self.ID_Nodes):
+            self.mview.Append(wx.MenuItem(self.mview, self.ID_Nodes, mtexts.menutxts['OMNodes'], subMenu=self.mnodes))
+            self.setNode()
+            self.Bind(wx.EVT_MENU_RANGE, self.onNodes, id=self.ID_NodeMean, id2=self.ID_NodeTrue)
+        sep(self.mview)
+        new(self.mview, 'Chart look...', 'Colour theme and line weight of the chart', self.onChartLook)
+        self.updateViewMenu()
+        finish(self.mview, 'View')
+
+        # Tables, grouped: positions; dignities; aspects and points; fixed stars; time lords; directions and transits; hours and visibility
+        self.mtables = wx.Menu()
+        self.ID_PositionsWorkspace = wx.NewIdRef()
+        new(self.mtables, 'Positions and data...\tCtrl+Shift+P',
+            'Browse zodiacal specula, mundane positions, motion and chart data in one window',
+            self.onPositionsWorkspace, self.ID_PositionsWorkspace)
+        sep(self.mtables)
+        add(self.mtables, self.ID_ZodPars, 'TMZodPars', self.onZodPars)
+        add(self.mtables, self.ID_Midpoints, 'TMMidpoints', self.onMidpoints)
+        add(self.mtables, self.ID_Strip, 'TMStrip', self.onStrip)
+        sep(self.mtables)
+        if shown(self.ID_AlmutenZodiacal) or shown(self.ID_AlmutenChart) or shown(self.ID_AlmutenTopical):
+            self.talmutens = wx.Menu()
+            self.mtables.Append(wx.MenuItem(self.mtables, self.ID_TAlmutens, mtexts.menutxts['TMAlmutens'], subMenu=self.talmutens))
+            add(self.talmutens, self.ID_AlmutenZodiacal, 'TMAlmutenZodiacal', self.onAlmutenZodiacal)
+            add(self.talmutens, self.ID_AlmutenChart, 'TMAlmutenChart', self.onAlmutenChart)
+            add(self.talmutens, self.ID_AlmutenTopical, 'TMAlmutenTopical', self.onAlmutenTopical)
+        self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials = 143, 145, 146, 147, 148
+        new(self.mtables, 'Planetary conditions', 'Sect, hayz, synodic phase, stations, joys, latitude, Via Combusta, void of course', self.onConditions, self.ID_TradConditions)
+        new(self.mtables, 'Temperament', 'Temperament worksheet', self.onTemperament, self.ID_TradTemperament)
+        sep(self.mtables)
+        add(self.mtables, self.ID_Aspects, 'TMAspects', self.onAspects)
+        add(self.mtables, self.ID_Antiscia, 'TMAntiscia', self.onAntiscia)
+        add(self.mtables, self.ID_Lots, 'TMLots', self.onLots)
+        sep(self.mtables)
+        self.ID_FixedStarsWorkspace = new(self.mtables, 'Fixed Stars...',
+            'Catalogue, conjunctions and aspects, birth angles and paranatellonta',
+            self.onFixedStarsWorkspace).GetId()
+        sep(self.mtables)
+        add(self.mtables, self.ID_Profections, 'TMProfections', self.onProfections)
+        add(self.mtables, self.ID_Firdaria, 'TMFirdaria', self.onFirdaria)
+        # the time lords of the Hellenistic astrologers in a submenu
+        self.mhellenistic = wx.Menu()
+        new(self.mhellenistic, 'Zodiacal releasing from Fortune', 'Periods of the signs from the Lot of Fortune (Valens)', self.onZRFortune, self.ID_ZRFortune)
+        new(self.mhellenistic, 'Zodiacal releasing from Spirit', 'Periods of the signs from the Lot of Spirit (Valens)', self.onZRSpirit, self.ID_ZRSpirit)
+        new(self.mhellenistic, 'Decennials', 'Periods of 10 years 9 months of the planets (Valens)', self.onDecennials, self.ID_Decennials)
+        self.ID_Circumambulation = new(self.mhellenistic, 'Circumambulation', 'The Ascendant directed through the bounds (Ptolemy)', self.onCircumambulation).GetId()
+        self.mtables.AppendSubMenu(self.mhellenistic, 'Hellenistic', 'Zodiacal releasing, decennials and circumambulation')
+        sep(self.mtables)
+        add(self.mtables, self.ID_PrimaryDirs, 'TMPrimaryDirs', self.onPrimaryDirs)
+        sep(self.mtables)
+        self.ID_HoursRiseSetWorkspace = new(self.mtables, 'Planetary hours and rise/set...',
+            'Planetary hours, daylight boundaries, rise/set and culmination times',
+            self.onHoursRiseSetWorkspace).GetId()
+        sep(self.mtables)
+        self.ID_Heliacal = new(self.mtables, 'Heliacal phenomena and phasis', 'Visibility of the planets and stations around the birth', self.onHeliacal).GetId()
+        finish(self.mtables, mtexts.menutxts['MTable'])
+
+        # Charts: returns (Solar and Lunar, the others grouped); transits and progressions; lunations; other charts
+        self.mcharts = wx.Menu()
+        self.ID_ReturnsList = 160
+        self.returnids = []
+        if shown(self.ID_Revolutions):
+            self.mcharts.Append(self.ID_Revolutions, 'Solar return...\tCtrl+Shift+F2', 'The return of the Sun to its place in the chart')
+            self.Bind(wx.EVT_MENU, lambda e: self.onRevolutions(e, revolutions.Revolutions.SUN), id=self.ID_Revolutions)
+            self.returnids.append(new(self.mcharts, 'Lunar return...', 'The return of the Moon to its place in the chart', lambda e: self.onRevolutions(e, revolutions.Revolutions.MOON)).GetId())
+        new(self.mcharts, 'Lunar returns of the year...', 'Lunar returns covering a solar year', self.onReturnsList, self.ID_ReturnsList)
+        if shown(self.ID_Revolutions):
+            mreturns = wx.Menu()
+            for pl, key in ((revolutions.Revolutions.MERCURY, 'Mercury'), (revolutions.Revolutions.VENUS, 'Venus'), (revolutions.Revolutions.MARS, 'Mars'),
+                            (revolutions.Revolutions.JUPITER, 'Jupiter'), (revolutions.Revolutions.SATURN, 'Saturn')):
+                self.returnids.append(new(mreturns, mtexts.txtscommon[key] + ' return...', 'The return of ' + key + ' to its place in the chart', lambda e, pl=pl: self.onRevolutions(e, pl)).GetId())
+            self.ID_OtherReturns = wx.NewIdRef()
+            self.mcharts.Append(wx.MenuItem(self.mcharts, self.ID_OtherReturns, 'Other planetary returns', subMenu=mreturns))
+            self.returnids.append(self.ID_OtherReturns)
+        sep(self.mcharts)
+        add(self.mcharts, self.ID_Transits, 'PMTransits', self.onTransits)
+        # Exact transits (Tables) and Sun transits are one search
+        self.ID_TransitSearch = new(self.mcharts, 'Transit search...', 'Exact transits over months or years, by planet, aspect and natal point',
+                                    self.onTransitSearch).GetId()
+        add(self.mcharts, self.ID_SecondaryDirs, 'PMSecondaryDirs', self.onSecondaryDirs)
+        add(self.mcharts, self.ID_ProfectionsChart, 'PMProfections', self.onProfectionsChart)
+        sep(self.mcharts)
+        self.ID_LunationNavigator = new(self.mcharts, 'Syzygies and lunar phases...',
+            'Browse lunations without changing the prenatal syzygy',
+            self.onLunationNavigator).GetId()
+        sep(self.mcharts)
+        add(self.mcharts, self.ID_Elections, 'PMElections', self.onElections)
+        add(self.mcharts, self.ID_SquareChart, 'PMSquareChart', self.onSquareChart)
+        add(self.mcharts, self.ID_HelioChart, 'PMHelioChart', self.onHelioChart)
+        finish(self.mcharts, mtexts.menutxts['MCharts'])
+
+        # Tools
+        self.mtools = wx.Menu()
+        add(self.mtools, self.ID_FindTime, 'HMFindTime', self.onFindTime)
+        add(self.mtools, self.ID_Synastry, 'HMSynastry', self.onSynastry)
+        add(self.mtools, self.ID_Ephemeris, 'HMEphemeris', self.onEphemeris)
+        self.ID_DodecaCalc = new(self.mtools, 'Dodecatemoria calculator...', 'The dodecatemorion of any degree', self.onDodecaCalc).GetId()
+        finish(self.mtools, 'Tools')
+
+        # Settings: the Settings window (settingswnd), the language and saving; the dialogs
+        # of Morinus 6 open from the Settings window and keep their shortcuts
+        self.moptions = wx.Menu()
+        self.settingswnd = None
+        new(self.moptions, 'Settings...\tCtrl+,', 'All the settings, by category', self.onSettings)
+        add(self.moptions, self.ID_Languages, 'OMLanguages', self.onLanguages)
+        sep(self.moptions)
+        if shown(self.ID_AutoSaveOpts):
+            self.autosave = self.moptions.Append(self.ID_AutoSaveOpts, mtexts.menutxts['OMAutoSave'], mtexts.menutxts['OMAutoSaveDoc'], wx.ITEM_CHECK)
+            self.setAutoSave()
+            self.Bind(wx.EVT_MENU, self.onAutoSaveOpts, id=self.ID_AutoSaveOpts)
+        add(self.moptions, self.ID_SaveOpts, 'OMSave', self.onSaveOpts)
+        add(self.moptions, self.ID_Reload, 'OMReload', self.onReload)
+        finish(self.moptions, 'Settings' if mtexts.menutxts['MOptions'].replace('&', '') == 'Options' else mtexts.menutxts['MOptions'])
+        accels = []
+        for iid, key, handler in ((self.ID_Appearance1, 'OMAppearance1', self.onAppearance1), (self.ID_Appearance2, 'OMAppearance2', self.onAppearance2),
+                                  (self.ID_Colors, 'OMColors', self.onColors), (self.ID_Dignities, 'OMDignities', self.onDignities),
+                                  (self.ID_Triplicities, 'OMTriplicities', self.onTriplicities), (self.ID_Terms, 'OMTerms', self.onTerms),
+                                  (self.ID_Decans, 'OMDecans', self.onDecans), (self.ID_ChartAlmuten, 'OMChartAlmuten', self.onChartAlmuten),
+                                  (self.ID_Topical, 'OMTopical', self.onTopicals), (self.ID_Ayanamsha, 'OMAyanamsha', self.onAyanamsha),
+                                  (self.ID_Orbs, 'OMOrbs', self.onOrbs), (self.ID_PrimaryDirsOpt, 'OMPrimaryDirs', self.onPrimaryDirsOpt),
+                                  (self.ID_PrimaryKeys, 'OMPrimaryKeys', self.onPrimaryKeys), (self.ID_PDsInChartOpt, 'OMPDsInChartOpt', self.onPDsInChartOpt),
+                                  (self.ID_LotsOpt, 'OMLots', self.onLotsOpt), (self.ID_Syzygy, 'OMSyzygy', self.onSyzygy),
+                                  (self.ID_FixedStarsOpt, 'OMFixedStarsOpt', self.onFixedStarsOpt), (self.ID_ProfectionsOpt, 'OMProfectionsOpt', self.onProfectionsOpt),
+                                  (self.ID_FirdariaOpt, 'OMFirdariaOpt', self.onFirdariaOpt), (self.ID_DefLocationOpt, 'OMDefLocationOpt', self.onDefLocationOpt),
+                                  (self.ID_MenuSelFirst, 'OMMenuSelFirst', self.onMenuSelFirst), (self.ID_MenuSelSecond, 'OMMenuSelSecond', self.onMenuSelSecond)):
+            self.Bind(wx.EVT_MENU, handler, id=iid)
+            keys = mtexts.menutxts[key].partition('\t')[2]
+            entry = wx.AcceleratorEntry()
+            if shown(iid) and keys and entry.FromString(keys):
+                entry.Set(entry.GetFlags(), entry.GetKeyCode(), iid)
+                accels.append(entry)
+        # The shortcuts of Morinus's own tables and charts that became tabs of the
+        # workspaces (their menu items were removed): F1, F5, F6, F10, F11,
+        # Ctrl+F1, Ctrl+F2, Ctrl+F5, Ctrl+Shift+F7 and Ctrl+Shift+F8.
+        for iid, key, handler in ((self.ID_Positions, 'TMPositions', self.onPositions), (self.ID_Misc, 'TMMisc', self.onMisc),
+                                  (self.ID_MunPos, 'TMMunPos', self.onMunPos), (self.ID_RiseSet, 'TMRiseSet', self.onRiseSet),
+                                  (self.ID_Speeds, 'TMSpeeds', self.onSpeeds), (self.ID_FixedStars, 'TMFixStars', self.onFixedStars),
+                                  (self.ID_FixedStarsAsps, 'TMFixStarsAsps', self.onFixedStarsAsps), (self.ID_PlanetaryHours, 'TMPlanetaryHours', self.onPlanetaryHours),
+                                  (self.ID_SyzygyChart, 'PMSyzygy', self.onSyzygyChart), (self.ID_SyzygyChart2, 'PMSyzygy2', self.onSyzygyChart2),
+                                  (self.ID_ExactTransits, 'TMExactTransits', self.onTransitSearch), (self.ID_SunTransits, 'PMSunTransits', self.onSunTransitSearch),
+                                  (self.ID_UserSpeculum, 'TMUserSpeculum', lambda e: self.showPositionsWorkspace(positionscatalog.MENU_TABS['onUserSpeculum']))):
+            self.Bind(wx.EVT_MENU, lambda e, h=handler: None if self.splash else h(e), id=iid)
+            keys = mtexts.menutxts[key].partition('\t')[2]
+            entry = wx.AcceleratorEntry()
+            if keys and entry.FromString(keys):
+                entry.Set(entry.GetFlags(), entry.GetKeyCode(), iid)
+                accels.append(entry)
+        # Ctrl+K opens the same command palette whether or not the toolbar is shown.
+        self.ID_CommandSearch = wx.NewIdRef()
+        self.Bind(wx.EVT_MENU, self.onCommandSearch, id=self.ID_CommandSearch)
+        accels.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('K'), self.ID_CommandSearch))
+        self.SetAcceleratorTable(wx.AcceleratorTable(accels))
+
+        # Help
+        self.mhelp = wx.Menu()
+        add(self.mhelp, self.ID_Help, 'HEMHelp', self.onHelp)
+        add(self.mhelp, self.ID_About, 'HEMAbout', self.onAbout)
+        finish(self.mhelp, mtexts.menutxts['MHelp'])
+        self.SetMenuBar(menubar)
+
+    def buildToolBar(self):
+        """New, Open, Save, Chart data, Settings, the house system and the command search."""
+        tb = self.toolbar = self.CreateToolBar(wx.TB_HORIZONTAL | wx.TB_FLAT)
+        menubar = self.GetMenuBar()
+        art = lambda a: wx.ArtProvider.GetBitmap(a, wx.ART_TOOLBAR, (22, 22))
+        self.toolids = []
+        for iid, artid, key in ((self.ID_New, wx.ART_NEW, 'HMNew'), (self.ID_Load, wx.ART_FILE_OPEN, 'HMLoad'),
+                                (self.ID_Save, wx.ART_FILE_SAVE, 'HMSave'), (self.ID_Data, wx.ART_EDIT, 'HMData')):
+            if menubar.FindItemById(iid):
+                text, _, keys = mtexts.menutxts[key].partition('\t')
+                text = text.replace('&', '')
+                tb.AddTool(iid, text, art(artid), shortHelp=text + (' (' + keys + ')' if keys else ''))
+                self.toolids.append(iid)
+        icon = wx.ArtProvider.GetBitmap('preferences-system', wx.ART_TOOLBAR, (22, 22))	# the desktop's icon where there is one
+        tool = tb.AddTool(wx.ID_ANY, 'Settings', icon if icon.IsOk() else art(wx.ART_HELP_SETTINGS), shortHelp='Settings (Ctrl+,)')
+        self.Bind(wx.EVT_TOOL, self.onSettings, id=tool.GetId())
+        self.ID_SidebarTool = wx.NewIdRef()
+        tb.AddCheckTool(self.ID_SidebarTool, 'Planet sidebar', art(wx.ART_REPORT_VIEW), shortHelp='Planet sidebar')
+        tb.ToggleTool(self.ID_SidebarTool, tradoptions.get('show_sidebar'))
+        self.Bind(wx.EVT_TOOL, self.onViewSidebar, id=self.ID_SidebarTool)
+        tb.AddSeparator()
+        tb.AddControl(wx.StaticText(tb, -1, ' Houses: '))
+        self.tbhouses = wx.Choice(tb, -1, choices=[mtexts.menutxts[k].partition('\t')[0].replace('&', '') for k in settingswnd.HOUSESYSTEMS])
+        self.tbhouses.SetToolTip('House system (View > House system)')
+        self.tbhouses.SetSelection(self.options.hsys)
+        self.tbhouses.Bind(wx.EVT_CHOICE, self.onToolHouse)
+        tb.AddControl(self.tbhouses)
+        tb.AddStretchableSpace()
+        self.command_button = wx.Button(tb, -1, 'Find command...  Ctrl+K')
+        self.command_button.SetToolTip('Search menus and settings by name or description (Ctrl+K)')
+        self.command_button.Bind(wx.EVT_BUTTON, self.onCommandSearch)
+        tb.AddControl(self.command_button)
+        tb.Realize()
+        tb.Show(tradoptions.get('show_toolbar'))
+
+    def onCommandSearch(self, event):
+        """Use one searchable palette regardless of toolbar visibility."""
+        commandsearch.show(self)
+
+    def onToolHouse(self, event):
+        self.onHouseSystem(wx.CommandEvent(wx.wxEVT_MENU, self.hsbase + self.tbhouses.GetSelection()))
+        self.setHouse()
+
+    def onViewToolBar(self, event):
+        tradoptions.set({'show_toolbar': self.viewtoolbar.IsChecked()})
+        if self.options.autosave:
+            tradoptions.save()
+        self.toolbar.Show(self.viewtoolbar.IsChecked())
+        self.SendSizeEvent()
+
+    def updateViewMenu(self):
+        """The View menu's switches as the options are."""
+        for attr, item in self.viewchecks.items():
+            item.Check(getattr(self.options, attr))
+        if self.options.showobject in self.ringitems:
+            self.ringitems[self.options.showobject].Check(True)
+        self.viewbw.Check(self.options.bw)
+
+    def onViewOption(self, attr, value):
+        """A switch of the View menu: an option of Appearance I."""
+        setattr(self.options, attr, value)
+        self.updateViewMenu()
+        self.enableOptMenus(True)
+        if self.options.autosave:
+            if self.options.saveAppearance1():
+                self.moptions.Enable(self.ID_SaveOpts, False)
+        if not self.splash:
+            self.closeChildWnds()
+            self.clickedPlId = None
+            self.drawBkg()
+            self.Refresh()
 
     def onNew(self, event):
         dlg = datadlg.DataDlg(self, self.options.langid, self.options.netbook)
@@ -825,15 +878,8 @@ class MFrame(wx.Frame):
         findtimdlg.Show()
 
     def onEphemeris(self, event):
-        ephemdlg = graphephemdlg.GraphEphemDlg(self)
-        ephemdlg.CenterOnParent()
-        val = ephemdlg.ShowModal()
-        if val == wx.ID_OK:
-            year = int(ephemdlg.year.GetValue())
-            wait = wx.BusyCursor()
-            eph = ephemcalc.EphemCalc(year, self.options)
-            ephemfr = graphephemframe.GraphEphemFrame(self, mtexts.txtsgraphephemwnd['Ephemeris'], year, eph.posArr, self.options)
-            ephemfr.Show(True)
+        """Coordinated graphical, daily, and station/ingress ephemeris."""
+        ephemerisworkspace.show(self)
 
     def onClose(self, event):
         if self.dirty:
@@ -956,11 +1002,11 @@ class MFrame(wx.Frame):
             frame = heliacalwnd.HeliacalFrame(self, self.title, self.horoscope, self.options)
             frame.Show(True)
 
+    def onFixedStarsWorkspace(self, event):
+        fixedstarsworkspace.show(self, 0)
+
     def onStarAngles(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            frame = fixedstaranglewnd.FixedStarAnglesFrame(self, self.title, self.horoscope, self.options)
-            frame.Show(True)
+        fixedstarsworkspace.show(self, 2)
 
     def onDodecaCalc(self, event):
         dlg = dodecacalcdlg.DodecaCalcDlg(self)
@@ -980,19 +1026,16 @@ class MFrame(wx.Frame):
             frame = temperamentwnd.TemperamentFrame(self, self.title, self.horoscope, self.options)
             frame.Show(True)
 
-    def onPositions(self, event):
+    def showPositionsWorkspace(self, tab=0):
+        """Compatibility entry point for the four original positional tables."""
         if not self.splash:
-            speculum = 0
-            if self.options.primarydir == primdirs.PrimDirs.REGIOMONTAN:
-                speculum = 1
-            if True in self.options.speculums[speculum]:
-                wait = wx.BusyCursor()
-                posframe = positionsframe.PositionsFrame(self, self.title, self.horoscope, self.options)
-                posframe.Show(True)
-            else:
-                dlgm = wx.MessageDialog(self, mtexts.txtspositions['SelectColumn'], '', wx.OK | wx.ICON_INFORMATION)
-                dlgm.ShowModal()
-                dlgm.Destroy()
+            return positionsworkspace.show(self, tab)
+
+    def onPositionsWorkspace(self, event):
+        self.showPositionsWorkspace(0)
+
+    def onPositions(self, event):
+        self.showPositionsWorkspace(positionscatalog.MENU_TABS['onPositions'])
 
     def onAlmutenZodiacal(self, event):
         if not self.splash:
@@ -1025,16 +1068,10 @@ class MFrame(wx.Frame):
             antisciafr.Show(True)
 
     def onMisc(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            miscfr = miscframe.MiscFrame(self, self.title, self.horoscope, self.options)
-            miscfr.Show(True)
+        self.showPositionsWorkspace(positionscatalog.MENU_TABS['onMisc'])
 
     def onMunPos(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            munposfr = munposframe.MunPosFrame(self, self.title, self.horoscope, self.options)
-            munposfr.Show(True)
+        self.showPositionsWorkspace(positionscatalog.MENU_TABS['onMunPos'])
 
     def onAspects(self, event):
         if not self.splash:
@@ -1049,16 +1086,10 @@ class MFrame(wx.Frame):
             midsframe.Show(True)
 
     def onRiseSet(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            risesetfr = risesetframe.RiseSetFrame(self, self.title, self.horoscope, self.options)
-            risesetfr.Show(True)
+        hoursrisesetworkspace.show(self, 1)
 
     def onSpeeds(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            speedsfr = speedsframe.SpeedsFrame(self, self.title, self.horoscope, self.options)
-            speedsfr.Show(True)
+        self.showPositionsWorkspace(positionscatalog.MENU_TABS['onSpeeds'])
 
     def onZodPars(self, event):
         if not self.splash:
@@ -1067,30 +1098,10 @@ class MFrame(wx.Frame):
             zodparsfr.Show(True)
 
     def onFixedStars(self, event):
-        if not self.splash:
-            if not self.checkFixedStars():
-                return
-            if len(self.options.fixedstars) == 0:
-                dlgm = wx.MessageDialog(self, mtexts.txtscommon['NoSelFixedStars'], '', wx.OK | wx.ICON_INFORMATION)
-                dlgm.ShowModal()
-                dlgm.Destroy()
-                return
-            wait = wx.BusyCursor()
-            fixedstarsfr = fixedstarsframe.FixedStarsFrame(self, self.title, self.horoscope, self.options)
-            fixedstarsfr.Show(True)
+        fixedstarsworkspace.show(self, 0)
 
     def onFixedStarsAsps(self, event):
-        if not self.splash:
-            if not self.checkFixedStars():
-                return
-            if len(self.options.fixedstars) == 0:
-                dlgm = wx.MessageDialog(self, mtexts.txtscommon['NoSelFixedStars'], '', wx.OK | wx.ICON_INFORMATION)
-                dlgm.ShowModal()
-                dlgm.Destroy()
-                return
-            wait = wx.BusyCursor()
-            fixedstarsaspsfr = fixedstarsaspectsframe.FixedStarsAspectsFrame(self, self.title, self.horoscope, self.options)
-            fixedstarsaspsfr.Show(True)
+        fixedstarsworkspace.show(self, 1)
 
     def onLots(self, event):
         if not self.splash:
@@ -1110,11 +1121,11 @@ class MFrame(wx.Frame):
             stripfr = stripframe.StripFrame(self, self.title, self.horoscope, self.options)
             stripfr.Show(True)
 
+    def onHoursRiseSetWorkspace(self, event):
+        hoursrisesetworkspace.show(self, 0)
+
     def onPlanetaryHours(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            planetaryfr = hoursframe.HoursFrame(self, self.title, self.horoscope, self.options)
-            planetaryfr.Show(True)
+        hoursrisesetworkspace.show(self, 0)
 
     def onExactTransits(self, event):
         if self.horoscope.time.bc:
@@ -1331,7 +1342,7 @@ class MFrame(wx.Frame):
                 tw.Show(True)
             return
 
-    def onRevolutions(self, event):
+    def onRevolutions(self, event, planet=None):
         if self.horoscope.time.bc:
             dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
@@ -1340,6 +1351,8 @@ class MFrame(wx.Frame):
         if self.revdlg == None:
             self.revdlg = revolutionsdlg.RevolutionsDlg(None)
             self.revdlg.initialize(self.horoscope)
+        if planet is not None:
+            self.revdlg.setPlanet(planet)
         self.revdlg.CenterOnParent()
         val = self.revdlg.ShowModal()
         if val == wx.ID_OK:
@@ -1352,7 +1365,7 @@ class MFrame(wx.Frame):
             if result:
                 if self.options.ayanamsha != 0 and self.revdlg.typecb.GetCurrentSelection() == 3:
                     t1, t2, t3, t4, t5, t6 = self.calcPrecNutCorrectedSolar(revs)
-                dlg = timespacedlg.TimeSpaceDlg(self, mtexts.txtsrevolutionsdlg['Revolutions'], self.options.langid, self.options.netbook)
+                dlg = timespacedlg.TimeSpaceDlg(self, revolutionsdlg.returnname(self.revdlg.typecb.GetCurrentSelection()), self.options.langid, self.options.netbook)
                 ti = (t1, t2, t3, t4, t5, t6, chart.Time.GREGORIAN, chart.Time.GREENWICH, 0, 0)
                 dlg.initialize(self.horoscope, ti)
                 dlg.CenterOnParent()
@@ -1537,8 +1550,18 @@ class MFrame(wx.Frame):
             dlgm.Destroy()
             return
         syzygychart = chart.Chart(self.horoscope.name, self.horoscope.male, self.horoscope.syzygy.time, self.horoscope.place, chart.Chart.TRANSIT, '', self.options, False)
-        ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options)
+        # Left/Right (or its menu): the lunations before and after
+        ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options, stepper=lunationnavigator.stepper(self.horoscope, self.options))
         ef.Show(True)
+
+    def onTransitSearch(self, event):
+        transitsearch.show(self)
+
+    def onSunTransitSearch(self, event):
+        transitsearch.show(self, sun=True)
+
+    def onLunationNavigator(self, event):
+        lunationnavigator.show(self)
 
     def onSyzygyChart2(self, event):
         if self.horoscope.time.bc:
@@ -1547,7 +1570,8 @@ class MFrame(wx.Frame):
             dlgm.Destroy()
             return
         syzygychart = chart.Chart(self.horoscope.name, self.horoscope.male, self.horoscope.syzygy.time2, self.horoscope.place, chart.Chart.TRANSIT, '', self.options, False)
-        ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options)
+        # Left/Right (or its menu): the lunations before and after
+        ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options, stepper=lunationnavigator.stepper(self.horoscope, self.options))
         ef.Show(True)
 
     def onProfectionsChart(self, event):
@@ -1605,6 +1629,7 @@ class MFrame(wx.Frame):
         val = dlg.ShowModal()
         if val == wx.ID_OK:
             if dlg.check(self.options):
+                self.updateViewMenu()
                 self.enableOptMenus(True)
                 if self.options.autosave:
                     if self.options.saveAppearance1():
@@ -1797,6 +1822,20 @@ class MFrame(wx.Frame):
                     self.Refresh()
         dlg.Destroy()
         return
+
+    def onChartLook(self, event):
+        colours, look = chartlookdlg.show(self, self.options, None if self.splash else self.horoscope)
+        if colours or look:
+            self.enableOptMenus(True)
+            if self.options.autosave:
+                tradoptions.save()
+                if self.options.saveColors():
+                    self.moptions.Enable(self.ID_SaveOpts, False)
+            if not self.splash:
+                self.closeChildWnds()
+                self.clickedPlId = None
+                self.drawBkg()
+                self.Refresh()
 
     def onHouseSystem(self, event):
         hs = event.GetId() - self.hsbase
@@ -2108,6 +2147,9 @@ class MFrame(wx.Frame):
                         self.moptions.Enable(self.ID_SaveOpts, False)
         dlg.Destroy()
 
+    def onSettings(self, event):
+        settingswnd.show(self)
+
     def onTradOpts(self, index):
         if tradoptsdlg.show(self, index, self.options.autosave):
             if not self.options.autosave:
@@ -2139,6 +2181,7 @@ class MFrame(wx.Frame):
             self.setHouse()
             self.setNode()
             self.setAutoSave()
+            self.updateViewMenu()
             if not self.splash:
                 self.closeChildWnds()
                 self.horoscope.recalc()
@@ -2173,6 +2216,8 @@ class MFrame(wx.Frame):
         sysh = (
          self.itplac, self.itkoch, self.itregio, self.itcampa, self.itequal, self.itwhole, self.itaxial, self.itmorin, self.ithoriz, self.itpage, self.italcab, self.itporph)
         sysh[self.options.hsys].Check(True)
+        if getattr(self, 'tbhouses', None):
+            self.tbhouses.SetSelection(self.options.hsys)
 
     def setNode(self):
         if self.options.meannode:
@@ -2198,95 +2243,24 @@ class MFrame(wx.Frame):
         li = self.GetChildren()
         for ch in li:
             x, y = ch.GetClientSize()
-            if ch.GetName() != 'status_line' and y > 50:
+            if ch.GetName() != 'status_line' and y > 50 and ch is not self.settingswnd and ch is not self.sidebar and ch not in getattr(self, 'keep_open', ()) and not isinstance(ch, (wx.ToolBar, wx.PopupWindow)):
                 ch.Destroy()
 
     def enableMenus(self, bEnable):
-        if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_New - self.horbase)]:
-            self.mhoros.Enable(self.ID_New, not bEnable)
-        if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Data - self.horbase)]:
-            self.mhoros.Enable(self.ID_Data, bEnable)
-        if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_HereAndNow - self.horbase)]:
-            self.mhoros.Enable(self.ID_HereAndNow, not bEnable)
-        if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Save - self.horbase)]:
-            self.mhoros.Enable(self.ID_Save, bEnable)
-        if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_SaveAsBitmap - self.horbase)]:
-            self.mhoros.Enable(self.ID_SaveAsBitmap, bEnable)
-        if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Synastry - self.horbase)]:
-            self.mhoros.Enable(self.ID_Synastry, bEnable)
-        if self.options.menusels[MFrame.MHOROSCOPE][(self.ID_Close - self.horbase)]:
-            self.mhoros.Enable(self.ID_Close, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_Positions - self.tabbase)]:
-            self.mtables.Enable(self.ID_Positions, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenZodiacal - self.tabbase - 1)] or self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenChart - self.tabbase - 1)] or self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenTopical - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_TAlmutens, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenZodiacal - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_AlmutenZodiacal, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenChart - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_AlmutenChart, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_AlmutenTopical - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_AlmutenTopical, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_Misc - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_Misc, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_MunPos - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_MunPos, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_Antiscia - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_Antiscia, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_Aspects - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_Aspects, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_Midpoints - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_Midpoints, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_RiseSet - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_RiseSet, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_Speeds - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_Speeds, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_ZodPars - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_ZodPars, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_FixedStars - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_FixedStars, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_FixedStarsAsps - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_FixedStarsAsps, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_Lots - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_Lots, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_Strip - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_Strip, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_PlanetaryHours - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_PlanetaryHours, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_ExactTransits - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_ExactTransits, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_Profections - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_Profections, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_UserSpeculum - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_UserSpeculum, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_Firdaria - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_Firdaria, bEnable)
-        if self.options.menusels[MFrame.MTABLES][(self.ID_PrimaryDirs - self.tabbase - 1)]:
-            self.mtables.Enable(self.ID_PrimaryDirs, bEnable)
-        if self.options.menusels[MFrame.MCHARTS][(self.ID_Transits - self.chartsbase)]:
-            self.mcharts.Enable(self.ID_Transits, bEnable)
-        if self.options.menusels[MFrame.MCHARTS][(self.ID_Revolutions - self.chartsbase)]:
-            self.mcharts.Enable(self.ID_Revolutions, bEnable)
-        if self.options.menusels[MFrame.MCHARTS][(self.ID_SunTransits - self.chartsbase)]:
-            self.mcharts.Enable(self.ID_SunTransits, bEnable)
-        if self.options.menusels[MFrame.MCHARTS][(self.ID_SecondaryDirs - self.chartsbase)]:
-            self.mcharts.Enable(self.ID_SecondaryDirs, bEnable)
-        if self.options.menusels[MFrame.MCHARTS][(self.ID_Elections - self.chartsbase)]:
-            self.mcharts.Enable(self.ID_Elections, bEnable)
-        if self.options.menusels[MFrame.MCHARTS][(self.ID_SquareChart - self.chartsbase)]:
-            self.mcharts.Enable(self.ID_SquareChart, bEnable)
-        if self.options.menusels[MFrame.MCHARTS][(self.ID_SyzygyChart - self.chartsbase)]:
-            self.mcharts.Enable(self.ID_SyzygyChart, bEnable)
-        if self.options.menusels[MFrame.MCHARTS][(self.ID_SyzygyChart2 - self.chartsbase)]:
-            self.mcharts.Enable(self.ID_SyzygyChart2, bEnable)
-        if self.options.menusels[MFrame.MCHARTS][(self.ID_ProfectionsChart - self.chartsbase)]:
-            self.mcharts.Enable(self.ID_ProfectionsChart, bEnable)
-        if self.options.menusels[MFrame.MCHARTS][(self.ID_HelioChart - self.chartsbase)]:
-            self.mcharts.Enable(self.ID_HelioChart, bEnable)
-        if hasattr(self, 'ID_TradConditions'):
-            for i in (self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles):
-                self.mtables.Enable(i, bEnable)
-        if hasattr(self, 'ID_ReturnsList'):
-            self.mcharts.Enable(self.ID_ReturnsList, bEnable)
+        """Enables the items that need a chart (New and Here and now only without one)."""
+        menubar = self.GetMenuBar()
+        for iid in (self.ID_New, self.ID_HereAndNow):
+            if menubar.FindItemById(iid):
+                menubar.Enable(iid, not bEnable)
+        ids = [self.ID_Data, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_Close, self.ID_TAlmutens] + list(range(self.ID_Positions, self.ID_PrimaryDirs + 1))
+        ids += list(range(self.ID_Transits, self.ID_HelioChart + 1)) + self.returnids
+        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace, self.ID_LunationNavigator, self.ID_TransitSearch]
+        for iid in ids:
+            if menubar.FindItemById(iid):
+                menubar.Enable(iid, bEnable)
+        if getattr(self, 'toolbar', None):
+            for iid in self.toolids:
+                self.toolbar.EnableTool(iid, menubar.IsEnabled(iid))
 
     def enableOptMenus(self, bEnable):
         self.moptions.Enable(self.ID_SaveOpts, bEnable)
@@ -2306,10 +2280,86 @@ class MFrame(wx.Frame):
     def drawSplash(self):
         splashpath = os.path.join('Res', 'Morinus.jpg')
         self.buffer = wx.Image(splashpath).ConvertToBitmap()
+        self.updateStatus()
+        if getattr(self, 'sidebar', None):
+            self.placeSidebar()
 
     def drawBkg(self):
-        self.gchart = graphchart.GraphChart(self.horoscope, self.GetClientSize(), self.options, self.options.bw, self.clickedPlId)
+        self.placeSidebar()
+        self.gchart = graphchart.GraphChart(self.horoscope, self.chartSize(), self.options, self.options.bw, self.clickedPlId)
         self.buffer = self.gchart.drawChart()
+        self.updateStatus()
+        if self.sidebar.IsShown():
+            self.sidebar.setChart(self.horoscope)
+
+    def chartSize(self):
+        """The client area less the actual sidebar width."""
+        w, h = self.GetClientSize()
+        if self.sidebar.IsShown():
+            w -= self.sidebar.GetSize().width
+        return wx.Size(max(w, 50), h)
+
+    def placeSidebar(self):
+        show = tradoptions.get('show_sidebar') and not self.splash
+        if show:
+            w, h = self.GetClientSize()
+            sw = sidebar.fit_width(w, self.sidebar_width)
+            self.sidebar.SetSize(w - sw, 0, sw, h)
+        self.sidebar.Show(show)
+
+    def onSidebarResize(self, preferred, finished):
+        """Resize the chart area; persist the width only on release."""
+        if self.splash:
+            return
+        width = sidebar.fit_width(self.GetClientSize().width, preferred)
+        if width == self.sidebar.GetSize().width and not finished:
+            return
+        self.sidebar_width = width
+        now = _time.monotonic()
+        if finished:
+            tradoptions.set({'sidebar_width': width})
+            if self.options.autosave:
+                tradoptions.save()
+        # Drawing the full wheel is expensive; throttle resize repaints.
+        if finished or now - self._sidebar_last_draw >= 0.08:
+            self._sidebar_last_draw = now
+            self.drawBkg()
+            self.Refresh()
+        else:
+            self.placeSidebar()
+
+    def onViewSidebar(self, event):
+        show = event.IsChecked()
+        tradoptions.set({'show_sidebar': show})
+        if self.options.autosave:
+            tradoptions.save()
+        self.viewsidebar.Check(show)
+        self.toolbar.ToggleTool(self.ID_SidebarTool, show)
+        if not self.splash:
+            self.drawBkg()
+            self.Refresh()
+
+    def updateStatus(self):
+        """The status bar: the chart, sect, the planetary day and hour, the house system, zodiac and nodes."""
+        if self.splash:
+            for i in range(4):
+                self.statusbar.SetStatusText('', i)
+            return
+        h = self.horoscope
+        t = h.time
+        zones = (mtexts.txtscommon['ZN'], mtexts.txtscommon['UT'], mtexts.txtscommon['LC'], mtexts.txtscommon['LC'])
+        date = '%s%d.%s.%02d  %02d:%02d:%02d %s' % ('-' if t.bc else '', t.origyear, mtexts.months[t.origmonth - 1], t.origday, t.hour, t.minute, t.second, zones[t.zt])
+        self.statusbar.SetStatusText('   '.join(x for x in (h.name, date, h.place.placename) if x), 0)
+        day = h.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
+        if self.options.usedaynightorb:
+            day = h.abovehorizonwithorb
+        self.statusbar.SetStatusText('Day chart' if day else 'Night chart', 1)
+        names = [mtexts.txtscommon[k] for k in ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')]
+        ar = (6, 2, 5, 1, 4, 0, 3)
+        self.statusbar.SetStatusText('%s day, %s hour' % (names[ar[t.ph.weekday]], names[t.ph.planetaryhour]), 2)
+        zodiac = self.gchart.ayans[self.options.ayanamsha] if self.options.ayanamsha else mtexts.txtsayanamsha['Tropical']
+        node = mtexts.menutxts['OMNMean' if self.options.meannode else 'OMNTrue'].split('\t')[0].replace('&', '')
+        self.statusbar.SetStatusText('%s \u00b7 %s \u00b7 %s node' % (self.gchart.hsystem[self.options.hsys], zodiac, node.lower()), 3)
 
     def onEraseBackground(self, event):
         dc = wx.ClientDC(self)
@@ -2343,8 +2393,9 @@ class MFrame(wx.Frame):
     def onLeftUp(self, event):
         if not self.splash and self.options.enableclick:
             self.clickedPlId = self.gchart.onClick(event.GetPosition())
-            self.gchart = graphchart.GraphChart(self.horoscope, self.GetClientSize(), self.options, self.options.bw, self.clickedPlId)
+            self.gchart = graphchart.GraphChart(self.horoscope, self.chartSize(), self.options, self.options.bw, self.clickedPlId)
             self.buffer = self.gchart.drawChart()
+            self.sidebar.select(self.clickedPlId)
             self.Refresh()
 
     def onSize(self, event):

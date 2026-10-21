@@ -9,6 +9,15 @@ import mtexts
 provider = wx.SimpleHelpProvider()
 wx.HelpProvider.Set(provider)
 
+def returnname(planet):
+    """'Solar return', 'Lunar return', 'Mars return'... (planet: revolutions.Revolutions.SATURN...MOON)"""
+    if planet == revolutions.Revolutions.SUN:
+        return 'Solar return'
+    if planet == revolutions.Revolutions.MOON:
+        return 'Lunar return'
+    return mtexts.txtscommon[('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')[planet]] + ' return'
+
+
 class RevolutionsDlg(wx.Dialog):
 
     def __init__(self, parent):
@@ -17,12 +26,13 @@ class RevolutionsDlg(wx.Dialog):
         self.Create(parent, -1, mtexts.txtsrevolutionsdlg['Revolutions'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
-        stype = wx.StaticBox(self, label='')
+        stype = wx.StaticBox(self, label='Return of')
         typesizer = wx.StaticBoxSizer(stype, wx.VERTICAL)
         self.pls = (
          mtexts.txtscommon['Saturn'], mtexts.txtscommon['Jupiter'], mtexts.txtscommon['Mars'], mtexts.txtscommon['Sun'], mtexts.txtscommon['Venus'], mtexts.txtscommon['Mercury'], mtexts.txtscommon['Moon'])
         self.typecb = wx.ComboBox(self, -1, self.pls[3], size=(100, -1), choices=self.pls, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         typesizer.Add(self.typecb, 0, wx.ALIGN_CENTER | wx.TOP, 20)
+        self.typecb.Bind(wx.EVT_COMBOBOX, lambda e: self.SetTitle(returnname(self.typecb.GetSelection())))
         mhsizer.Add(typesizer, 0, wx.GROW)
         rnge = 3000
         checker = rangechecker.RangeChecker()
@@ -30,7 +40,7 @@ class RevolutionsDlg(wx.Dialog):
             rnge = 5000
         self.stime = wx.StaticBox(self, label='')
         timesizer = wx.StaticBoxSizer(self.stime, wx.VERTICAL)
-        label = wx.StaticText(self, -1, mtexts.txtsrevolutionsdlg['StartingDate'])
+        label = wx.StaticText(self, -1, 'First return after (midnight, UT)' if mtexts.txtsrevolutionsdlg['StartingDate'].startswith('Starting') else mtexts.txtsrevolutionsdlg['StartingDate'])
         vsubsizer = wx.BoxSizer(wx.VERTICAL)
         vsubsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer = wx.FlexGridSizer(0, 3, 0, 0)
@@ -96,6 +106,11 @@ class RevolutionsDlg(wx.Dialog):
                 dlgm.ShowModal()
                 dlgm.Destroy()
         return
+
+    def setPlanet(self, planet):
+        """The return of planet, named in the title."""
+        self.typecb.SetSelection(planet)
+        self.SetTitle(returnname(planet))
 
     def initialize(self, chrt):
         year = chrt.time.year

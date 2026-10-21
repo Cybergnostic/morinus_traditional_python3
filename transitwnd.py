@@ -80,3 +80,6 @@ class TransitWnd(wx.Window):
         if self.options.enableclick:
             self.clickedPlId = self.gchart.onClick(event.GetPosition())
             self.drawBkg()
+            sb = getattr(self.parent, 'sidebar', None)
+            if sb is not None and not self.compound:
+                sb.select(self.clickedPlId)

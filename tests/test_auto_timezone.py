@@ -52,9 +52,12 @@ class AutoTimezoneTests(unittest.TestCase):
 
     def test_irish_negative_dst(self):
         # IANA counts Irish winter time as -1h DST; Morinus gets the total offset
+        # tzdata may describe Irish summer as +60 standard or as 0 plus DST
+        # (vanguard or rearguard data, e.g. Ubuntu's): Morinus needs the total
+        total = lambda r: r[1] + (60 if r[2] else 0)
         with finder(DublinFinder):
-            self.assertEqual(resolve_timezone(2020, 1, 15, 12, 0, 0, 53.35, -6.26)[1:3], (0, False))
-            self.assertEqual(resolve_timezone(2020, 7, 15, 12, 0, 0, 53.35, -6.26)[1:3], (60, False))
+            self.assertEqual(total(resolve_timezone(2020, 1, 15, 12, 0, 0, 53.35, -6.26)), 0)
+            self.assertEqual(total(resolve_timezone(2020, 7, 15, 12, 0, 0, 53.35, -6.26)), 60)
 
     def test_sea_warns(self):
         with finder(SeaFinder):

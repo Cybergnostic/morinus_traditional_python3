@@ -56,8 +56,8 @@ class ProfectionsWnd(commonwnd.CommonWnd):
     def onMonthly(self, event):
         xu, yu = self.GetScrollPixelsPerUnit()
         xs, ys = self.GetViewStart()
-        scrolledoffs = yu * ys
-        x, y = event.GetPosition()
+        scrolledoffs = yu * ys / self.zoom
+        x, y = self.unzoom(*event.GetPosition())
         if y + scrolledoffs > commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TITLE_HEIGHT and y + scrolledoffs < commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TABLE_HEIGHT and x > commonwnd.CommonWnd.BORDER and x < commonwnd.CommonWnd.BORDER + self.CELL_WIDTH:
             rownum = (y + scrolledoffs - (commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TITLE_HEIGHT)) // self.LINE_HEIGHT
             dlg = proftablemondlg.ProfTableMonDlg(self)

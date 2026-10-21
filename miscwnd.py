@@ -37,6 +37,19 @@ class MiscWnd(commonwnd.CommonWnd):
     def getExt(self):
         return mtexts.txtsabbrevs['Misc']
 
+    def tableRows(self):
+        """The label/value pairs of the table, drawn by drawBkg and exported as CSV."""
+        sid = self.chart.houses.ascmc[houses.Houses.ARMC] / 15.0
+        d, m, s = util.decToDeg(sid)
+        sid_text = str(d) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
+        d, m, s = util.decToDeg(self.chart.obl[0])
+        obl_text = str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
+        return [
+            [mtexts.txtsmisc['SidTime'], sid_text],
+            [mtexts.txtsmisc['OblEcl'], obl_text],
+            [mtexts.txtsmisc['JulianDay'], util.floatstr(self.chart.time.jd)],
+        ]
+
     def drawBkg(self):
         if self.bw:
             self.bkgclr = (255, 255, 255)
@@ -60,29 +73,12 @@ class MiscWnd(commonwnd.CommonWnd):
         for i in range(self.COLUMN_NUM + 1 + 1):
             draw.line((x + self.CELL_WIDTH * i, y, x + self.CELL_WIDTH * i, y + self.TABLE_HEIGHT), fill=tableclr)
 
-        SIDTIME = 0
-        OBL = 1
-        JD = 2
-        txts = (
-         mtexts.txtsmisc['SidTime'], mtexts.txtsmisc['OblEcl'], mtexts.txtsmisc['JulianDay'])
-        data = (self.chart.houses.ascmc[houses.Houses.ARMC] / 15.0, self.chart.obl[0], self.chart.time.jd)
-        dnum = len(txts)
-        for i in range(dnum):
-            w, h = draw.textbbox((0, 0), txts[i], self.fntText)[2:]
-            draw.text((BOR + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) // 2), txts[i], fill=txtclr, font=self.fntText)
-            d, m, s = util.decToDeg(data[i])
-            if i == SIDTIME:
-                txt = str(d) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
-                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
-                draw.text((BOR + self.CELL_WIDTH + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
-            elif i == OBL:
-                txt = str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
-                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
-                draw.text((BOR + self.CELL_WIDTH + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
-            elif i == JD:
-                txt = util.floatstr(data[i])
-                w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
-                draw.text((BOR + self.CELL_WIDTH + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
+        # the same texts as the CSV export (tableRows)
+        for i, (label, txt) in enumerate(self.tableRows()):
+            w, h = draw.textbbox((0, 0), label, self.fntText)[2:]
+            draw.text((BOR + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) // 2), label, fill=txtclr, font=self.fntText)
+            w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+            draw.text((BOR + self.CELL_WIDTH + (self.CELL_WIDTH - w) // 2, BOR + self.LINE_HEIGHT * i + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
 
         wxImg = wx.Image(img.size[0], img.size[1])
         wxImg.SetData(img.tobytes())

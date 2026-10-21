@@ -232,9 +232,10 @@ class Transits:
                         tr.obj = int(lon / chart.Chart.SIGN_DEG)
                     else:
                         tr.obj = k
-                    if planet1.data[planets.Planet.DIST] < 0.0:
+                    # Morinus 6 tested the distance (always positive) instead of the speed
+                    if planet1.data[planets.Planet.SPLON] < 0.0:
                         tr.pltretr = Transit.RETR
-                    elif planet1.data[planets.Planet.DIST] == 0.0:
+                    elif planet1.data[planets.Planet.SPLON] == 0.0:
                         tr.pltretr = Transit.STAT
                     if typ == Transit.PLANET:
                         if chrt.planets.planets[k].data[planets.Planet.SPLON] < 0.0:

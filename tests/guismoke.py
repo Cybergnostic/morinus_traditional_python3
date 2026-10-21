@@ -110,10 +110,10 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'transitSearch', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
-	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
+	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
 	'onProfectionsChart', 'onHelioChart', 'onEphemeris', 'onFindTime', 'onSynastry', 'onSaveAsBitmap', 'onSave', 'onHereAndNow',
 	'onNew', 'onData', 'onLoad',
 	'onAppearance1', 'onAppearance2', 'onDignities', 'onTriplicities', 'onTerms', 'onDecans', 'onChartAlmuten', 'onTopicals',
@@ -194,7 +194,7 @@ def main():
 		# chosen for Windows); number fields are measured with their largest value
 		for c in all_children(win):
 			try:
-				if not c.IsShown():
+				if not c.IsShownOnScreen():	# also not inside a hidden panel
 					continue
 				if isinstance(c, wx.TextCtrl) and not c.IsMultiLine():
 					sample = c.GetValue()
@@ -317,7 +317,9 @@ def main():
 	for cls in (wx.ColourDialog, wx.FontDialog, wx.DirDialog, wx.TextEntryDialog, wx.SingleChoiceDialog, wx.MultiChoiceDialog, wx.PrintDialog):
 		cls.ShowModal = lambda self: wx.ID_CANCEL
 	# the native GTK about box is not a wx window and cannot be closed from here
-	wx.adv.AboutBox = lambda info, parent=None: wx.adv.GenericAboutBox(info, parent)
+	# (on Windows the generic one is modal too and would hang the run: keep the stub above)
+	if wx.Platform != '__WXMSW__':
+		wx.adv.AboutBox = lambda info, parent=None: wx.adv.GenericAboutBox(info, parent)
 
 	state = STATE
 	state.update({'step': 'startup', 'filepath': horpath})
@@ -328,6 +330,7 @@ def main():
 			subprocess.call(['import', '-window', 'root', fn])
 
 	app = wx.App(False)
+	wx.Log.SetLogLevel(wx.LOG_Info)	# as morinus.py: no wxWidgets debug diagnostics
 	opts = options.Options()
 	if '--variant' in sys.argv:
 		for k, v in VARIANTS[int(sys.argv[sys.argv.index('--variant')+1])].items():
@@ -367,13 +370,220 @@ def main():
 		state['n'] += 1
 		sys.stderr.write('== %s\n' % name)
 		try:
-			if name == 'clickWheel':
+			if name == 'chartQuality':
+				# Check both render modes on the same wheel. Scaling must never
+				# enlarge the on-screen bitmap or change click coordinates.
+				import graphchart, tradoptions, planets, houses, math
+				old_quality = tradoptions.get('chart_quality')
+				try:
+					for quality, factor in (('standard', 1), ('high', 2)):
+						tradoptions.set({'chart_quality': quality})
+						g = graphchart.GraphChart(frame.horoscope, (640, 480),
+							frame.options, frame.options.bw)
+						bmp = g.drawChart()
+						assert g.render_scale == factor, (quality, g.render_scale)
+						assert (bmp.GetWidth(), bmp.GetHeight()) == (640, 480)
+						i = planets.Planets.SUN
+						lon = g.chart.planets.planets[i].data[planets.Planet.LON]
+						asc = g.chart.houses.ascmc[houses.Houses.ASC]
+						angle = math.pi + math.radians(asc - lon - g.pshift[i])
+						x = (g.center.x + math.cos(angle) * g.rPlanet) / factor
+						y = (g.center.y + math.sin(angle) * g.rPlanet) / factor
+						assert g.onClick((x, y)) == i, 'Planet hit test: ' + quality
+				finally:
+					tradoptions.set({'chart_quality': old_quality})
+			elif name == 'tablePresentation':
+				# A5: verify that display zoom does not touch the export source;
+				# typed Miscellaneous CSV rows must remain two-column data.
+				import miscframe, miscwnd, tablepresentation
+				fr = miscframe.MiscFrame(frame, frame.title, frame.horoscope, frame.options)
+				try:
+					table = next(c for c in fr.GetChildren() if isinstance(c, miscwnd.MiscWnd))
+					rows = table.tableRows()
+					assert len(rows) == 3 and all(len(row) == 2 for row in rows), rows
+					before = (table.buffer.GetWidth(), table.buffer.GetHeight())
+					table.setZoom(1.5, keep=False)
+					image = table.scaled()
+					assert (image.GetWidth(), image.GetHeight()) == tablepresentation.pixel_size(*before, table.zoom)
+					assert (table.buffer.GetWidth(), table.buffer.GetHeight()) == before
+					table.setZoom(1.0, keep=False)
+					assert table.zoom == 1.0
+				finally:
+					fr.Destroy()
+			elif name == 'positionsWorkspace':
+				# B1: exercise all four embedded, original Morinus tables.
+				# The speculum selector must not alter primary-directions settings.
+				import positionsworkspace, positionscatalog
+				pdir = frame.options.primarydir
+				wnd = positionsworkspace.show(frame, 1)
+				assert wnd.book.GetPageCount() == len(positionscatalog.TABS)
+				for method in (0, 1):
+					wnd.activeView().setMethod(method)
+					if positionsworkspace.has_columns(frame.options, method):
+						assert wnd.activeView().view.speculum == method
+						assert wnd.activeView().view.tableRows(), 'speculum CSV rows'
+				assert frame.options.primarydir == pdir
+				# Configure columns must keep the workspace open (its own window)
+				wnd.activeView().onConfigure(None)
+				assert wnd and not wnd.IsBeingDeleted(), 'Configure columns closed the workspace'
+				# the overview: a row per planet and node, house positions as '12th, 22.0%'
+				wnd.selectTab(0)
+				rows = wnd.activeView().tableRows()
+				assert any('%' in cell for row in rows for cell in row), rows[:3]
+				assert wnd.activeView().chart is frame.horoscope
+				wnd.Close()
+			elif name == 'legacyShortcuts':
+				# F1, F5, F6, F10, F11, Ctrl+F1, Ctrl+F2, Ctrl+F5, Ctrl+Shift+F7/F8 of
+				# Morinus 6: the accelerator ids still open their tables and charts
+				expect = ((frame.ID_Positions, 'positions_workspace'), (frame.ID_Misc, 'positions_workspace'),
+					(frame.ID_MunPos, 'positions_workspace'), (frame.ID_Speeds, 'positions_workspace'),
+					(frame.ID_RiseSet, 'hours_riseset_workspace'), (frame.ID_PlanetaryHours, 'hours_riseset_workspace'),
+					(frame.ID_FixedStars, 'fixed_stars_workspace'), (frame.ID_FixedStarsAsps, 'fixed_stars_workspace'),
+					(frame.ID_SyzygyChart, None), (frame.ID_SyzygyChart2, None),
+					(frame.ID_ExactTransits, 'transit_search'), (frame.ID_SunTransits, 'transit_search'),
+					(frame.ID_UserSpeculum, 'positions_workspace'))
+				for iid, attr in expect:
+					before = set(wx.GetTopLevelWindows())
+					frame.GetEventHandler().ProcessEvent(wx.CommandEvent(wx.wxEVT_MENU, iid))
+					settle(0.2)
+					if attr is not None:
+						assert getattr(frame, attr, None), 'shortcut %d did not open %s' % (iid, attr)
+					else:
+						assert set(wx.GetTopLevelWindows()) - before, 'shortcut %d opened no chart' % iid
+			elif name == 'transitSearch':
+				# a month of transits of the sample chart, its chart and its CSV
+				import transitsearch
+				wnd = transitsearch.show(frame)
+				wnd.fromyear.SetValue(frame.horoscope.time.origyear)
+				wnd.toyear.SetValue(frame.horoscope.time.origyear)
+				wnd.tomonth.SetSelection(wnd.frommonth.GetSelection())
+				wnd.onSearch(None)
+				assert wnd.results, 'no transits in a month'
+				wnd.list.Select(0)
+				wnd.onOpen(None)
+				wnd.onCSV(None)
+				wnd.Close()
+			elif name == 'fixedStarsWorkspace':
+				# Exercise lazy tabs without calculating all angular crossings twice.
+				import fixedstarsworkspace, fixedstarscatalog
+				if frame.options.fixedstars:
+					wnd = fixedstarsworkspace.show(frame, 0)
+					if wnd is not None:
+						assert wnd.book.GetPageCount() == len(fixedstarscatalog.TABS)
+						assert wnd.activeView().chart is frame.horoscope
+						wnd.selectTab(1)
+						assert wnd.activeView().chart is frame.horoscope
+						wnd.selectTab(0)
+						assert len(wnd.views) == 2, 'Lazy third tab was constructed early'
+						wnd.Close()
+			elif name == 'hoursRiseSetWorkspace':
+				import hoursrisesetworkspace
+				wnd = hoursrisesetworkspace.show(frame, 0)
+				assert wnd.book.GetPageCount() == 2
+				assert len(wnd.views) == 1
+				assert wnd.activeView().chart is frame.horoscope
+				wnd.selectTab(1)
+				assert wnd.activeView().chart is frame.horoscope
+				assert len(wnd.views) == 2
+				wnd.selectTab(0)
+				wnd.Close()
+			elif name == 'lunationNavigator':
+				import lunationnavigator, lunationnav
+				if not frame.horoscope.time.bc:
+					syz = frame.horoscope.syzygy
+					wnd = lunationnavigator.show(frame)
+					assert wnd and len(wnd.events) >= 5
+					assert frame.horoscope.syzygy is syz
+					assert any(e[0] < frame.horoscope.time.jd for e in wnd.events)
+					assert any(e[0] > frame.horoscope.time.jd for e in wnd.events)
+					for jd, name, sun, moon in wnd.events:
+						target = 0.0 if name == 'New Moon' else 180.0
+						assert abs(lunationnav.phase_difference(moon, sun, target)) < 0.0005
+					wnd.shift(55)
+					assert frame.horoscope.syzygy is syz
+					wnd.Close()
+			elif name == 'ephemerisWorkspace':
+				# B5: the table, graph and events must share one 366-day leap
+				# series; test real Swiss ingresses/stations and CSV column counts.
+				import ephemerisworkspace, ephemerisdata
+				wnd = ephemerisworkspace.show(frame, 2024)
+				settle(0.3)
+				assert wnd.data.year == 2024
+				assert len(wnd.data.dates) == 366
+				assert len(wnd.data.longitudes) == 7
+				assert len(wnd.data.longitudes[0]) == 366
+				assert len(wnd.dailyRows()) == 367
+				assert len(wnd.dailyRows()[0]) == 15
+				assert wnd.data.events, 'No Swiss stations or ingresses in 2024'
+				wnd.month.SetSelection(2)
+				wnd.fillDays()
+				assert wnd.days.GetItemCount() == 29, 'Leap-year February must have 29 days'
+				wnd.month.SetSelection(0)
+				wnd.fillDays()
+				wnd.book.SetSelection(0)
+				settle(0.2)
+				wnd.mountGraph()
+				assert wnd.graph is not None, 'Graph must be sized/visible after Show'
+				assert len(wnd.graph.posArr[0]) == 366
+				wnd.selectDay(59)
+				assert wnd.selected_day == 59 and wnd.graph.focus_day == 59
+				wnd.graph.setShowMoon(True)
+				assert wnd.graph.numberOfPlanets() == 7
+				for ev in wnd.data.events[:6]:
+					if ev.kind == 'Station':
+						assert abs(ephemerisdata.swiss_sampler(frame.options)(
+							ev.jd, ev.planet)[1]) < 0.001
+				wnd.Close()
+			elif name == 'clickWheel':
 				w, h = frame.GetClientSize()
 				for fx in range(1, 10):
 					for fy in range(1, 10):
 						evt = wx.MouseEvent(wx.wxEVT_LEFT_UP)
 						evt.SetPosition(wx.Point(w*fx//10, h*fy//10))
 						frame.GetEventHandler().ProcessEvent(evt)
+			elif name == 'settings':
+				# the Settings window is not modal: visit its categories, search, then use every control
+				import settingswnd
+				wnd = settingswnd.show(frame)
+				settle(0.3)
+				for i in range(wnd.list.GetCount()):
+					wnd.list.SetSelection(i)
+					fire(wnd.list, wx.wxEVT_LISTBOX)
+					settle(0.1)
+					check_clipping(wnd)
+				wnd.search.SetValue('orbs')
+				settle(0.1)
+				for query, title, category in (
+				        ('Egyptian terms', 'Terms', 'Dignities'),
+				        ('Regiomontanus', 'House system', 'Calculation'),
+				        ('Zodiacal releasing years shown', 'Years shown', 'Time lords')):
+				    wnd.search.SetValue(query)
+				    settle(0.1)
+				    match = next((r for r in wnd.shown if r['title'] == title and r['category'] == category), None)
+				    assert match is not None, 'Settings search failed: %s' % query
+				    wnd.showEntry(match)
+				    assert wnd.book.GetSelection() == match['category_index']
+				wnd.search.SetValue('')
+				exercise(wnd)
+				if wnd:
+					wnd.Close()
+			elif name.startswith('menu:'):
+				# every item of a menu of the menu bar (check items twice, to end as they were)
+				for item in list(menu_items(getattr(frame, name[5:]))):
+					for _ in range(2 if item.GetKind() == wx.ITEM_CHECK else 1):
+						state['step'] = '%s/%s' % (name, item.GetItemLabelText())
+						if item.GetKind() == wx.ITEM_CHECK:
+							item.Check(not item.IsChecked())
+						elif item.GetKind() == wx.ITEM_RADIO:
+							item.Check(True)
+						evt = wx.CommandEvent(wx.wxEVT_MENU, item.GetId())
+						evt.SetInt(int(item.IsChecked()) if item.IsCheckable() else 0)
+						try:
+							frame.GetEventHandler().ProcessEvent(evt)
+							settle(0.3)
+						except Exception:
+							record('menu')
+				state['step'] = name
 			elif ':' in name:
 				# handlers taking an index, e.g. onTradOpts:0 (the options dialogs of tradoptsdlg)
 				method, arg = name.split(':')
@@ -423,6 +633,10 @@ def main():
 			while True:
 				try:
 					items = [(owner, item) for owner, menu in popup_menus(top) for item in menu_items(menu)]
+					# the copies of the popup menus in the window's menu bar (menubars.py)
+					bar = top.GetMenuBar()
+					if bar is not None:
+						items += [(top, item) for m in range(bar.GetMenuCount()) for item in menu_items(bar.GetMenu(m))]
 				except RuntimeError:
 					break
 				if i >= len(items):

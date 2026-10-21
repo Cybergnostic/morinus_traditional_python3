@@ -1,6 +1,8 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import wx
+import commonwnd
+import tablepresentation
 import os
 import chart
 import houses
@@ -19,7 +21,7 @@ class PositionsWnd(wx.ScrolledWindow):
     BORDER = 20
     SCROLL_RATE = 20
 
-    def __init__(self, parent, chrt, options, mainfr, id=-1, size=wx.DefaultSize):
+    def __init__(self, parent, chrt, options, mainfr, id=-1, size=wx.DefaultSize, speculum_index=None, userpoint=None):
         wx.ScrolledWindow.__init__(self, parent, id, wx.DefaultPosition, size=size, style=wx.SUNKEN_BORDER)
         self.parent = parent
         self.chart = chrt
@@ -27,9 +29,11 @@ class PositionsWnd(wx.ScrolledWindow):
         self.mainfr = mainfr
         self.bw = self.options.bw
         self.parent.mbw.Check(self.bw)
-        self.speculum = 0
-        if self.options.primarydir == primdirs.PrimDirs.REGIOMONTAN:
-            self.speculum = 1
+        self.speculum = 1 if self.options.primarydir == primdirs.PrimDirs.REGIOMONTAN else 0
+        if speculum_index is not None:
+            if speculum_index not in (0, 1):
+                raise ValueError('Unknown speculum index: %r' % speculum_index)
+            self.speculum = speculum_index
         column_num = 0
         for i in range(len(self.options.speculums[self.speculum])):
             if self.options.speculums[self.speculum][i] == True:
@@ -47,7 +51,10 @@ class PositionsWnd(wx.ScrolledWindow):
         self.SPACE_TITLEY = 0
         self.SPACE_ASCPLANETSY = self.LINE_HEIGHT
         self.SPACE_PLANETSHCSY = self.LINE_HEIGHT
-        self.LINE_NUM = 16
+        # userpoint: the user-defined promissor or significator of the primary
+        # directions (userpd.UserPD), shown after the planets
+        self.userpoint = userpoint
+        self.LINE_NUM = 16 + (1 if userpoint is not None else 0)
         self.TABLE_HEIGHT = self.TITLE_HEIGHT + self.LINE_NUM * self.LINE_HEIGHT + self.SPACE_TITLEY + self.SPACE_ASCPLANETSY + self.SPACE_PLANETSHCSY
         self.TABLE_WIDTH = self.SMALL_CELL_WIDTH + self.COLUMN_NUM * self.CELL_WIDTH
         self.RETRYOFFS = 3 * self.FONT_SIZE // 5
@@ -120,7 +127,7 @@ class PositionsWnd(wx.ScrolledWindow):
          0, 0, 0)
         if not self.bw:
             txtclr = self.options.clrtexts
-        draw.rectangle(((BOR + self.SMALL_CELL_WIDTH, BOR), (BOR + self.SMALL_CELL_WIDTH + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
+        draw.rectangle(((BOR + self.SMALL_CELL_WIDTH, BOR), (BOR + self.SMALL_CELL_WIDTH + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=tablepresentation.header_colour(self.bkgclr, tableclr, self.bw))
         txt = ((mtexts.txtspositions['Longitude'], mtexts.txtspositions['Latitude'], mtexts.txtspositions['Rectascension'], mtexts.txtspositions['Declination'], mtexts.txtspositions['AscDiffLat'], mtexts.txtspositions['Semiarcus'], mtexts.txtspositions['Meridiandist'], mtexts.txtspositions['Horizondist'], mtexts.txtspositions['TemporalHour'], mtexts.txtspositions['HourlyDist'], mtexts.txtspositions['PMP'], mtexts.txtspositions['AscDiffPole'], mtexts.txtspositions['PoleHeight'], mtexts.txtspositions['AODO']), (mtexts.txtspositions['Longitude'], mtexts.txtspositions['Latitude'], mtexts.txtspositions['Rectascension'], mtexts.txtspositions['Declination'], mtexts.txtspositions['Meridiandist'], mtexts.txtspositions['Horizondist'], mtexts.txtspositions['ZD'], mtexts.txtspositions['Pole'], mtexts.txtspositions['Q'], mtexts.txtspositions['WReg'], mtexts.txtspositions['CMP']))
         j = 0
         for i in range(len(txt[self.speculum])):
@@ -164,6 +171,13 @@ class PositionsWnd(wx.ScrolledWindow):
             else:
                 self.drawregiomontanline(draw, x, y + j * self.LINE_HEIGHT, tableclr, common.common.planets[i], self.chart.planets.planets[i].speculums[self.speculum].speculum, lons[j], i, self.chart.planets.planets[i].data[planets.Planet.SPLON])
             j += 1
+        if self.userpoint is not None:
+            lon = self.userpoint.speculums[self.speculum].speculum[0]
+            if self.options.ayanamsha != 0:
+                lon = util.normalize(lon - self.chart.ayanamsha)
+            line = self.drawplacidianline if self.speculum == 0 else self.drawregiomontanline
+            line(draw, x, y + j * self.LINE_HEIGHT, tableclr, 'User', self.userpoint.speculums[self.speculum].speculum, lon, None)
+            j += 1
 
         hidx = (
          1, 2, 3, 10, 11, 12)
@@ -186,7 +200,7 @@ class PositionsWnd(wx.ScrolledWindow):
           lons[4], 0.0, self.chart.houses.cusps2[(hidx[4] - 1)][0], self.chart.houses.cusps2[(hidx[4] - 1)][1]),
          (
           lons[5], 0.0, self.chart.houses.cusps2[(hidx[5] - 1)][0], self.chart.houses.cusps2[(hidx[5] - 1)][1]))
-        y = y + (planets.Planets.BODIES_NUM - 1) * self.LINE_HEIGHT + self.SPACE_PLANETSHCSY
+        y = y + j * self.LINE_HEIGHT + self.SPACE_PLANETSHCSY
         draw.line((x, y, x + self.TABLE_WIDTH, y), fill=tableclr)
         for i in range(len(hidx)):
             self.drawanglesline(draw, x, y + i * self.LINE_HEIGHT, tableclr, common.common.housenames2[(hidx[i] - 1)], data[i])
@@ -273,12 +287,12 @@ class PositionsWnd(wx.ScrolledWindow):
 
         clrpl = (0, 0, 0)
         if not self.bw:
-            clrpl = self.options.clrplanets[idxpl]
-        fnt = self.fntMorinus
+            clrpl = self.options.clrtexts if idxpl is None else self.options.clrplanets[idxpl]
+        fnt = self.fntText if idxpl is None else self.fntMorinus	# None: the user's point, labelled in text
         w, h = draw.textbbox((0, 0), txt, fnt)[2:]
         offset = (self.SMALL_CELL_WIDTH - w) // 2
         draw.text((x + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=fnt)
-        if speed <= 0.0:
+        if idxpl is not None and speed <= 0.0:	# no motion mark for the user's point
             t = common.common.retr
             fnt = self.fntMorinusRetr
             if speed == 0.0:
@@ -368,12 +382,12 @@ class PositionsWnd(wx.ScrolledWindow):
 
         clrpl = (0, 0, 0)
         if not self.bw:
-            clrpl = self.options.clrplanets[idxpl]
-        fnt = self.fntMorinus
+            clrpl = self.options.clrtexts if idxpl is None else self.options.clrplanets[idxpl]
+        fnt = self.fntText if idxpl is None else self.fntMorinus	# None: the user's point, labelled in text
         w, h = draw.textbbox((0, 0), txt, fnt)[2:]
         offset = (self.SMALL_CELL_WIDTH - w) // 2
         draw.text((x + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=fnt)
-        if speed <= 0.0:
+        if idxpl is not None and speed <= 0.0:	# no motion mark for the user's point
             t = 'R'
             if speed == 0.0:
                 t = 'S'
@@ -402,7 +416,7 @@ class PositionsWnd(wx.ScrolledWindow):
                 sign = ''
                 if data[i] < 0.0:
                     sign = '-'
-                if i == regiospec.RegiomontanianSpeculum.LAT and idxpl == 0:
+                if i == regiospec.RegiomontanianSpeculum.LAT and idxpl == planets.Planets.SUN:
                     d, m, s = (0, 0, 0)
                     sign = ''
                 txt = sign + str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
@@ -441,3 +455,11 @@ class PositionsWnd(wx.ScrolledWindow):
                 draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
             j += 1
             summa += offs[i]
+
+    def getExt(self):
+        return mtexts.txtsabbrevs['Pos']
+
+
+# copying as text or an image and CSV export, as in the other tables (commonwnd)
+for _name in ('tableText', 'tableRows', 'onCopyAsText', 'onCopyAsImage', 'onExportCSV'):
+    setattr(PositionsWnd, _name, getattr(commonwnd.CommonWnd, _name))

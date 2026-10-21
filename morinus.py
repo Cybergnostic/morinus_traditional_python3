@@ -36,6 +36,10 @@ class Morinus(wx.App):
 			os.chdir(progPath)
 		except:
 			pass
+		# wxWidgets' debug diagnostics are for its developers (on Windows e.g.
+		# 'Element ... of wxStaticBoxSizer should be created as child of its
+		# wxStaticBox' for every control of Morinus's dialogs); warnings and errors stay
+		wx.Log.SetLogLevel(wx.LOG_Info)
 		errorreport.install()
 		gtkfit.install()
 		windowmemory.install()

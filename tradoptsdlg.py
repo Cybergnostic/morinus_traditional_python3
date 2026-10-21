@@ -10,6 +10,89 @@ import tradoptions
 SECTION, CHOICE, INT, FLOAT, CHECK, CHECKS, TEXT = 'section', 'choice', 'int', 'float', 'check', 'checks', 'text'
 
 
+def build(parent, fields, onchange=None):
+	"""The controls of fields on parent, in boxes per section: (sizer, ctrls).
+	onchange() is called after any control changes."""
+	ctrls = {}
+	vsizer = wx.BoxSizer(wx.VERTICAL)
+	grid = None
+	for f in fields:
+		kind = f[0]
+		if kind == SECTION:
+			box = wx.StaticBoxSizer(wx.StaticBox(parent, label=f[1]), wx.VERTICAL)
+			grid = wx.FlexGridSizer(0, 2, 6, 10)
+			grid.AddGrowableCol(1)
+			box.Add(grid, 0, wx.EXPAND | wx.ALL, 6)
+			vsizer.Add(box, 0, wx.EXPAND | wx.ALL, 6)
+			continue
+		key, label, help = f[1], f[2], f[-1]
+		events = []
+		if kind == CHOICE:
+			ctrl = wx.Choice(parent, -1, choices=[text for value, text in f[3]])
+			events = [(ctrl, wx.EVT_CHOICE)]
+		elif kind == INT:
+			ctrl = wx.SpinCtrl(parent, -1, min=f[3], max=f[4])
+			events = [(ctrl, wx.EVT_SPINCTRL)]
+		elif kind == FLOAT:
+			ctrl = wx.SpinCtrlDouble(parent, -1, min=f[3], max=f[4], inc=f[5])
+			ctrl.SetDigits(f[6])
+			events = [(ctrl, wx.EVT_SPINCTRLDOUBLE)]
+		elif kind == CHECK:
+			ctrl = wx.CheckBox(parent, -1, label)
+			events = [(ctrl, wx.EVT_CHECKBOX)]
+		elif kind == CHECKS:
+			ctrl = wx.BoxSizer(wx.HORIZONTAL)
+			ctrl.boxes = [wx.CheckBox(parent, -1, t) for t in f[3]]
+			for b in ctrl.boxes:
+				ctrl.Add(b, 0, wx.RIGHT, 8)
+				b.SetHelpText(help)
+				b.SetToolTip(help)
+				events.append((b, wx.EVT_CHECKBOX))
+		else:
+			ctrl = wx.TextCtrl(parent, -1, size=(180, -1))
+			events = [(ctrl, wx.EVT_TEXT)]
+		if kind != CHECKS:
+			ctrl.SetHelpText(help)
+			ctrl.SetToolTip(help)
+		grid.Add(wx.StaticText(parent, -1, '' if kind == CHECK else label + ':'), 0, wx.ALIGN_CENTER_VERTICAL)
+		grid.Add(ctrl, 0, wx.EXPAND if kind == TEXT else 0)
+		ctrls[key] = (f, ctrl)
+		if onchange is not None:
+			for w, evt in events:
+				w.Bind(evt, lambda e: onchange())
+	return vsizer, ctrls
+
+
+def fill(ctrls, values):
+	for key, (f, ctrl) in ctrls.items():
+		v = values[key]
+		kind = f[0]
+		if kind == CHOICE:
+			ctrl.SetSelection([value for value, text in f[3]].index(v))
+		elif kind == CHECKS:
+			for b, on in zip(ctrl.boxes, v):
+				b.SetValue(on)
+		elif kind == TEXT:
+			ctrl.ChangeValue(str(v))
+		else:
+			ctrl.SetValue(v)
+
+
+def values(ctrls):
+	out = {}
+	for key, (f, ctrl) in ctrls.items():
+		kind = f[0]
+		if kind == CHOICE:
+			out[key] = f[3][ctrl.GetSelection()][0]
+		elif kind == CHECKS:
+			out[key] = [b.GetValue() for b in ctrl.boxes]
+		elif kind == TEXT:
+			out[key] = ctrl.GetValue().strip()
+		else:
+			out[key] = ctrl.GetValue()
+	return out
+
+
 class TradOptsDlg(wx.Dialog):
 
 	def __init__(self, parent, title, fields):
@@ -17,43 +100,7 @@ class TradOptsDlg(wx.Dialog):
 		self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
 		self.Create(parent, -1, title, style=wx.DEFAULT_DIALOG_STYLE)
 		self.fields = fields
-		self.ctrls = {}
-		mvsizer = wx.BoxSizer(wx.VERTICAL)
-		grid = None
-		for f in fields:
-			kind = f[0]
-			if kind == SECTION:
-				box = wx.StaticBoxSizer(wx.StaticBox(self, label=f[1]), wx.VERTICAL)
-				grid = wx.FlexGridSizer(0, 2, 6, 10)
-				grid.AddGrowableCol(1)
-				box.Add(grid, 0, wx.EXPAND | wx.ALL, 6)
-				mvsizer.Add(box, 0, wx.EXPAND | wx.ALL, 6)
-				continue
-			key, label, help = f[1], f[2], f[-1]
-			if kind == CHOICE:
-				ctrl = wx.Choice(self, -1, choices=[text for value, text in f[3]])
-			elif kind == INT:
-				ctrl = wx.SpinCtrl(self, -1, min=f[3], max=f[4])
-			elif kind == FLOAT:
-				ctrl = wx.SpinCtrlDouble(self, -1, min=f[3], max=f[4], inc=f[5])
-				ctrl.SetDigits(f[6])
-			elif kind == CHECK:
-				ctrl = wx.CheckBox(self, -1, label)
-			elif kind == CHECKS:
-				ctrl = wx.BoxSizer(wx.HORIZONTAL)
-				ctrl.boxes = [wx.CheckBox(self, -1, t) for t in f[3]]
-				for b in ctrl.boxes:
-					ctrl.Add(b, 0, wx.RIGHT, 8)
-					b.SetHelpText(help)
-					b.SetToolTip(help)
-			else:
-				ctrl = wx.TextCtrl(self, -1, size=(180, -1))
-			if kind != CHECKS:
-				ctrl.SetHelpText(help)
-				ctrl.SetToolTip(help)
-			grid.Add(wx.StaticText(self, -1, '' if kind == CHECK else label + ':'), 0, wx.ALIGN_CENTER_VERTICAL)
-			grid.Add(ctrl, 0, wx.EXPAND if kind == TEXT else 0)
-			self.ctrls[key] = (f, ctrl)
+		mvsizer, self.ctrls = build(self, fields)
 		btnsizer = wx.StdDialogButtonSizer()
 		if wx.Platform != '__WXMSW__':
 			btnsizer.AddButton(wx.ContextHelpButton(self))
@@ -74,30 +121,10 @@ class TradOptsDlg(wx.Dialog):
 		self.fill(tradoptions.values())
 
 	def fill(self, values):
-		for key, (f, ctrl) in self.ctrls.items():
-			v = values[key]
-			kind = f[0]
-			if kind == CHOICE:
-				ctrl.SetSelection([value for value, text in f[3]].index(v))
-			elif kind == CHECKS:
-				for b, on in zip(ctrl.boxes, v):
-					b.SetValue(on)
-			elif kind in (INT, FLOAT, CHECK, TEXT):
-				ctrl.SetValue(v if kind != TEXT else str(v))
+		fill(self.ctrls, values)
 
 	def values(self):
-		out = {}
-		for key, (f, ctrl) in self.ctrls.items():
-			kind = f[0]
-			if kind == CHOICE:
-				out[key] = f[3][ctrl.GetSelection()][0]
-			elif kind == CHECKS:
-				out[key] = [b.GetValue() for b in ctrl.boxes]
-			elif kind == TEXT:
-				out[key] = ctrl.GetValue().strip()
-			else:
-				out[key] = ctrl.GetValue()
-		return out
+		return values(self.ctrls)
 
 
 DIALOGS = [

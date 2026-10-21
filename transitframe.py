@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import wx
+import menubars
 import chart
 import positionswnd
 import positionswnd2
@@ -18,6 +19,9 @@ import electionstepperdlg
 import returnstepperdlg
 import returnslist
 import util
+import sidebar
+import time as _time
+import tradoptions
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
 pdlock = _thread.allocate_lock()
 
@@ -29,7 +33,7 @@ class TransitFrame(wx.Frame):
     POSITIONS = 2
     SQUARE = 3
 
-    def __init__(self, parent, title, chrt, radix, options, sel=0):
+    def __init__(self, parent, title, chrt, radix, options, sel=0, stepper=None):
         wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(TransitFrame.XSIZE, TransitFrame.YSIZE))
         self.chart = chrt
         self.radix = radix
@@ -37,6 +41,7 @@ class TransitFrame(wx.Frame):
         self.parent = parent
         self.title = title
         self.pmenu = wx.Menu()
+        menubars.later(self, 'Chart')
         self.ID_Selection = wx.NewId()
         self.ID_PrimaryDirections = wx.NewId()
         self.ID_SaveAsBitmap = wx.NewId()
@@ -63,8 +68,15 @@ class TransitFrame(wx.Frame):
             self.pdtoradix.Enable(False)
         # stepping: previous/next return for solar and lunar returns, time steps otherwise
         self.ID_Step = wx.NewIdRef()
+        # stepper(chart, forward) -> the chart before or after (e.g. the lunations)
+        self.stepper = stepper
         steptxt = {chart.Chart.SOLAR: 'Step solar returns... (arrow keys)', chart.Chart.LUNAR: 'Step lunar returns... (arrow keys)', chart.Chart.TRANSIT: 'Step time... (arrow keys)'}.get(self.chart.htype)
-        if steptxt is not None:
+        if stepper is not None:
+            for label, forward in (('Previous lunation (Left)', False), ('Next lunation (Right)', True)):
+                item = self.pmenu.Append(wx.NewIdRef(), label, 'The New or Full Moon before or after this one')
+                self.Bind(wx.EVT_MENU, lambda e, f=forward: self.stepTo(f), id=item.GetId())
+            self.Bind(wx.EVT_CHAR_HOOK, self.onKey)
+        elif steptxt is not None:
             self.pmenu.Append(self.ID_Step, steptxt, 'Move the chart forward or backward in time')
             self.Bind(wx.EVT_MENU, self.onStep, id=self.ID_Step)
             self.Bind(wx.EVT_CHAR_HOOK, self.onKey)
@@ -92,6 +104,56 @@ class TransitFrame(wx.Frame):
             self.w = transitwnd.TransitWnd(self, self.chart, self.radix, self.options, self.parent, True)
             self.compoundmenu.Check()
         self.Bind(EVT_PDREADY, self.OnPDReady)
+        # Same resizable sidebar as the main chart.
+        self.sidebar_width = tradoptions.get('sidebar_width')
+        self._sidebar_last_draw = 0.0
+        self.sidebar = sidebar.Sidebar(self, self.onSidebarResize)
+        self.sidebar.setChart(self.chart, self.radix)
+        self.msidebar = self.pmenu.AppendCheckItem(wx.NewIdRef(), 'Planet sidebar', 'Show the planet, chart and time lords beside the chart')
+        self.msidebar.Check(tradoptions.get('show_sidebar'))
+        self.Bind(wx.EVT_MENU, self.onSidebar, id=self.msidebar.GetId())
+        self.Bind(wx.EVT_SIZE, self.onFrameSize)
+        if tradoptions.get('show_sidebar'):
+            self.SetSize((TransitFrame.XSIZE + self.sidebar_width, TransitFrame.YSIZE))
+        self.layout()
+
+    def layout(self):
+        """The chart (or table) on the left, the sidebar on the right."""
+        w, h = self.GetClientSize()
+        show = tradoptions.get('show_sidebar')
+        sw = sidebar.fit_width(w, self.sidebar_width) if show else 0
+        self.sidebar.Show(show)
+        if show:
+            self.sidebar.SetSize(w - sw, 0, sw, h)
+        self.w.SetSize(0, 0, max(w - sw, 50), h)
+
+    def onSidebarResize(self, preferred, finished):
+        """Drag the panel edge and remember the width when released."""
+        width = sidebar.fit_width(self.GetClientSize().width, preferred)
+        if width == self.sidebar.GetSize().width and not finished:
+            return
+        self.sidebar_width = width
+        now = _time.monotonic()
+        if finished:
+            tradoptions.set({'sidebar_width': width})
+            if self.options.autosave:
+                tradoptions.save()
+        if finished or now - self._sidebar_last_draw >= 0.08:
+            self._sidebar_last_draw = now
+            self.layout()
+        else:
+            # between redraws of the chart the panel still follows the mouse
+            w, h = self.GetClientSize()
+            self.sidebar.SetSize(w - width, 0, width, h)
+
+    def onFrameSize(self, event):
+        self.layout()
+
+    def onSidebar(self, event):
+        tradoptions.set({'show_sidebar': self.msidebar.IsChecked()})
+        if self.options.autosave:
+            tradoptions.save()
+        self.layout()
 
     def onPopupMenu(self, event):
         self.PopupMenu(self.pmenu, event.GetPosition())
@@ -101,12 +163,14 @@ class TransitFrame(wx.Frame):
             self.selection = TransitFrame.CHART
             self.w.Destroy()
             self.w = transitwnd.TransitWnd(self, self.chart, self.radix, self.options, self.parent, False, -1, self.GetClientSize())
+            self.layout()
 
     def onComparison(self, event):
         if self.selection != TransitFrame.COMPOUND:
             self.selection = TransitFrame.COMPOUND
             self.w.Destroy()
             self.w = transitwnd.TransitWnd(self, self.chart, self.radix, self.options, self.parent, True, -1, self.GetClientSize())
+            self.layout()
 
     def onPositions(self, event):
         if self.selection != TransitFrame.POSITIONS:
@@ -114,15 +178,18 @@ class TransitFrame(wx.Frame):
             self.w.Destroy()
             if wx.Platform == '__WXMSW__':
                 self.w = positionswnd2.PositionsWnd2(self, self.chart, self.options, self.parent, -1, self.GetClientSize())
+                self.layout()
                 self.w.Refresh()
             else:
                 self.w = positionswnd.PositionsWnd(self, self.chart, self.options, self.parent, -1, self.GetClientSize())
+                self.layout()
 
     def onSquare(self, event):
         if self.selection != TransitFrame.SQUARE:
             self.selection = TransitFrame.SQUARE
             self.w.Destroy()
             self.w = squarechartwnd.SquareChartWnd(self, self.chart, self.options, self.parent, -1, self.GetClientSize())
+            self.layout()
 
     def onStep(self, event):
         if self.chart.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR):
@@ -138,6 +205,9 @@ class TransitFrame(wx.Frame):
         key = event.GetKeyCode()
         if key not in (wx.WXK_LEFT, wx.WXK_RIGHT) or event.AltDown():
             event.Skip()
+            return
+        if self.stepper is not None:
+            self.stepTo(key == wx.WXK_RIGHT)
             return
         forward = key == wx.WXK_RIGHT
         wait = wx.BusyCursor()
@@ -161,6 +231,14 @@ class TransitFrame(wx.Frame):
         time = chart.Time(y, m, d, h, t.minute, t.second, t.bc, t.cal, t.zt, t.plus, t.zh, t.zm, t.daylightsaving, self.chart.place)
         self.change(chart.Chart(self.chart.name, self.chart.male, time, self.chart.place, chart.Chart.TRANSIT, '', self.options, False))
 
+    def stepTo(self, forward):
+        wait = wx.BusyCursor()
+        chrt = self.stepper(self.chart, forward)
+        if chrt is not None:
+            self.change(chrt)
+            if chrt.notes:	# e.g. 'Full Moon'
+                self.SetTitle(self.title + ' \u2014 ' + chrt.notes)
+
     def change(self, chrt, title=None):
         """Shows another chart (used by the steppers), keeping the current view."""
         self.chart = chrt
@@ -168,6 +246,7 @@ class TransitFrame(wx.Frame):
         self.selection = -1
         {TransitFrame.CHART: self.onChart, TransitFrame.COMPOUND: self.onComparison,
          TransitFrame.POSITIONS: self.onPositions, TransitFrame.SQUARE: self.onSquare}[view](None)
+        self.sidebar.setChart(self.chart, self.radix)
 
     def onPDDirect(self, event):
         self.onPD(primdirs.PrimDirs.DIRECT)

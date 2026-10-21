@@ -1,6 +1,8 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import wx
+import commonwnd
+import tablepresentation
 import os
 import chart
 import houses
@@ -118,7 +120,7 @@ class PositionsWnd2(wx.Window):
          0, 0, 0)
         if not self.bw:
             txtclr = self.options.clrtexts
-        draw.rectangle(((BOR + self.SMALL_CELL_WIDTH, BOR), (BOR + self.SMALL_CELL_WIDTH + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
+        draw.rectangle(((BOR + self.SMALL_CELL_WIDTH, BOR), (BOR + self.SMALL_CELL_WIDTH + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=tablepresentation.header_colour(self.bkgclr, tableclr, self.bw))
         txt = ((mtexts.txtspositions['Longitude'], mtexts.txtspositions['Latitude'], mtexts.txtspositions['Rectascension'], mtexts.txtspositions['Declination'], mtexts.txtspositions['AscDiffLat'], mtexts.txtspositions['Semiarcus'], mtexts.txtspositions['Meridiandist'], mtexts.txtspositions['Horizondist'], mtexts.txtspositions['TemporalHour'], mtexts.txtspositions['HourlyDist'], mtexts.txtspositions['PMP'], mtexts.txtspositions['AscDiffPole'], mtexts.txtspositions['PoleHeight'], mtexts.txtspositions['AODO']), (mtexts.txtspositions['Longitude'], mtexts.txtspositions['Latitude'], mtexts.txtspositions['Rectascension'], mtexts.txtspositions['Declination'], mtexts.txtspositions['Meridiandist'], mtexts.txtspositions['Horizondist'], mtexts.txtspositions['ZD'], mtexts.txtspositions['Pole'], mtexts.txtspositions['Q'], mtexts.txtspositions['WReg'], mtexts.txtspositions['CMP']))
         j = 0
         for i in range(len(txt[self.speculum])):
@@ -398,7 +400,7 @@ class PositionsWnd2(wx.Window):
                 sign = ''
                 if data[i] < 0.0:
                     sign = '-'
-                if i == regiospec.RegiomontanianSpeculum.LAT and idxpl == 0:
+                if i == regiospec.RegiomontanianSpeculum.LAT and idxpl == planets.Planets.SUN:
                     d, m, s = (0, 0, 0)
                     sign = ''
                 txt = sign + str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
@@ -437,3 +439,11 @@ class PositionsWnd2(wx.Window):
                 draw.text((x + self.SMALL_CELL_WIDTH + summa + offset, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clrpl, font=self.fntText)
             j += 1
             summa += offs[i]
+
+    def getExt(self):
+        return mtexts.txtsabbrevs['Pos']
+
+
+# copying as text or an image and CSV export, as in the other tables (commonwnd)
+for _name in ('tableText', 'tableRows', 'onCopyAsText', 'onCopyAsImage', 'onExportCSV'):
+    setattr(PositionsWnd2, _name, getattr(commonwnd.CommonWnd, _name))

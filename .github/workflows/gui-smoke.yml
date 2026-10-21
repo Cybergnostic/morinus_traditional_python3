@@ -25,6 +25,10 @@ jobs:
           ./build.sh
           python3 tools/build_atlas.py
 
+      - name: Unit tests
+        run: |
+          xvfb-run -a python3 -m unittest discover -s tests -p 'test_*.py' -v
+
       - name: Smoke test
         run: |
           cp -r . "$RUNNER_TEMP/copy"
@@ -48,11 +52,15 @@ jobs:
           python-version: '3.12'
 
       - name: Install wxPython and Pillow
-        run: python -m pip install wxPython Pillow setuptools
+        run: python -m pip install wxPython Pillow setuptools tzdata
 
       - name: Build
         working-directory: SWEP/src
         run: python setup.py -q build_ext --build-lib ../.. --build-temp ../../build/swe
+
+      - name: Unit tests
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Smoke test
         shell: pwsh

@@ -2,6 +2,7 @@
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 from datetime import datetime, timedelta
 import wx
+import tablepresentation
 import planets
 import common
 import commonwnd
@@ -58,7 +59,7 @@ class FirdariaWnd(commonwnd.CommonWnd):
         img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.bkgclr)
         draw = ImageDraw.Draw(img)
         BOR = commonwnd.CommonWnd.BORDER
-        draw.rectangle(((BOR, BOR), (BOR + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
+        draw.rectangle(((BOR, BOR), (BOR + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=tablepresentation.header_colour(self.bkgclr, tableclr, self.bw))
         txtclr = (0, 0, 0)
         if not self.bw:
             txtclr = self.options.clrtexts
