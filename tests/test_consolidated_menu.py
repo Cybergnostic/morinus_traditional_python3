@@ -28,9 +28,15 @@ class ConsolidatedMenuTests(unittest.TestCase):
             self.assertEqual(table.count(repr(label).strip("'")), 1)
         for old in ('TMPositions', 'TMMunPos', 'TMSpeeds', 'TMMisc',
                     'TMFixStars', 'TMFixStarsAsps',
-                    'TMPlanetaryHours', 'TMRiseSet',
+                    'TMPlanetaryHours', 'TMRiseSet', 'TMExactTransits',
                     'Fixed stars on the angles'):
             self.assertNotIn("'" + old + "'", table)
+
+    def test_one_transit_search(self):
+        charts = self.app.split('self.mcharts = wx.Menu()', 1)[1].split(
+            'finish(self.mcharts', 1)[0]
+        self.assertEqual(charts.count("'Transit search...'"), 1)
+        self.assertNotIn("'PMSunTransits'", charts)
 
     def test_only_consolidated_lunation_menu_item(self):
         charts = self.app.split('self.mcharts = wx.Menu()', 1)[1].split(
@@ -50,9 +56,9 @@ class ConsolidatedMenuTests(unittest.TestCase):
         charts = self.selection.split('ctxts = (', 1)[1].split(')', 1)[0]
         self.assertEqual(tables.count('mtexts.menutxts['), 22)
         self.assertEqual(charts.count('mtexts.menutxts['), 10)
-        self.assertIn('HIDDEN_LEGACY_TABLES = frozenset((0, 4, 5, 9, 10, 12, 13, 16))',
+        self.assertIn('HIDDEN_LEGACY_TABLES = frozenset((0, 4, 5, 9, 10, 12, 13, 16, 17))',
                       self.selection)
-        self.assertIn('HIDDEN_LEGACY_CHARTS = frozenset((6, 7))', self.selection)
+        self.assertIn('HIDDEN_LEGACY_CHARTS = frozenset((2, 6, 7))', self.selection)
         self.assertIn('if i in HIDDEN_LEGACY_TABLES:', self.selection)
         self.assertIn('if i in HIDDEN_LEGACY_CHARTS:', self.selection)
 

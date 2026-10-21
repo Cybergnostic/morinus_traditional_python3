@@ -109,6 +109,7 @@ import primarykeysdlg
 import pdsinchartdlgopts
 import syzygydlg
 import lunationnavigator
+import transitsearch
 import lotsdlg
 import fixedstarsdlg
 import profdlgopts
@@ -357,7 +358,6 @@ class MFrame(wx.Frame):
         self.ID_Circumambulation = new(self.mtables, 'Circumambulation', 'The Ascendant directed through the bounds (Ptolemy)', self.onCircumambulation).GetId()
         sep(self.mtables)
         add(self.mtables, self.ID_PrimaryDirs, 'TMPrimaryDirs', self.onPrimaryDirs)
-        add(self.mtables, self.ID_ExactTransits, 'TMExactTransits', self.onExactTransits)
         sep(self.mtables)
         self.ID_HoursRiseSetWorkspace = new(self.mtables, 'Planetary hours and rise/set...',
             'Planetary hours, daylight boundaries, rise/set and culmination times',
@@ -385,7 +385,9 @@ class MFrame(wx.Frame):
             self.returnids.append(self.ID_OtherReturns)
         sep(self.mcharts)
         add(self.mcharts, self.ID_Transits, 'PMTransits', self.onTransits)
-        add(self.mcharts, self.ID_SunTransits, 'PMSunTransits', self.onSunTransits)
+        # Exact transits (Tables) and Sun transits are one search
+        self.ID_TransitSearch = new(self.mcharts, 'Transit search...', 'Exact transits over months or years, by planet, aspect and natal point',
+                                    self.onTransitSearch).GetId()
         add(self.mcharts, self.ID_SecondaryDirs, 'PMSecondaryDirs', self.onSecondaryDirs)
         add(self.mcharts, self.ID_ProfectionsChart, 'PMProfections', self.onProfectionsChart)
         sep(self.mcharts)
@@ -445,7 +447,8 @@ class MFrame(wx.Frame):
                                   (self.ID_MunPos, 'TMMunPos', self.onMunPos), (self.ID_RiseSet, 'TMRiseSet', self.onRiseSet),
                                   (self.ID_Speeds, 'TMSpeeds', self.onSpeeds), (self.ID_FixedStars, 'TMFixStars', self.onFixedStars),
                                   (self.ID_FixedStarsAsps, 'TMFixStarsAsps', self.onFixedStarsAsps), (self.ID_PlanetaryHours, 'TMPlanetaryHours', self.onPlanetaryHours),
-                                  (self.ID_SyzygyChart, 'PMSyzygy', self.onSyzygyChart), (self.ID_SyzygyChart2, 'PMSyzygy2', self.onSyzygyChart2)):
+                                  (self.ID_SyzygyChart, 'PMSyzygy', self.onSyzygyChart), (self.ID_SyzygyChart2, 'PMSyzygy2', self.onSyzygyChart2),
+                                  (self.ID_ExactTransits, 'TMExactTransits', self.onTransitSearch), (self.ID_SunTransits, 'PMSunTransits', self.onSunTransitSearch)):
             self.Bind(wx.EVT_MENU, lambda e, h=handler: None if self.splash else h(e), id=iid)
             keys = mtexts.menutxts[key].partition('\t')[2]
             entry = wx.AcceleratorEntry()
@@ -1548,6 +1551,12 @@ class MFrame(wx.Frame):
         ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options, stepper=lunationnavigator.stepper(self.horoscope, self.options))
         ef.Show(True)
 
+    def onTransitSearch(self, event):
+        transitsearch.show(self)
+
+    def onSunTransitSearch(self, event):
+        transitsearch.show(self, sun=True)
+
     def onLunationNavigator(self, event):
         lunationnavigator.show(self)
 
@@ -2242,7 +2251,7 @@ class MFrame(wx.Frame):
                 menubar.Enable(iid, not bEnable)
         ids = [self.ID_Data, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_Close, self.ID_TAlmutens] + list(range(self.ID_Positions, self.ID_PrimaryDirs + 1))
         ids += list(range(self.ID_Transits, self.ID_HelioChart + 1)) + self.returnids
-        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace, self.ID_LunationNavigator]
+        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace, self.ID_LunationNavigator, self.ID_TransitSearch]
         for iid in ids:
             if menubar.FindItemById(iid):
                 menubar.Enable(iid, bEnable)

@@ -110,7 +110,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'transitSearch', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -436,7 +436,8 @@ def main():
 					(frame.ID_MunPos, 'positions_workspace'), (frame.ID_Speeds, 'positions_workspace'),
 					(frame.ID_RiseSet, 'hours_riseset_workspace'), (frame.ID_PlanetaryHours, 'hours_riseset_workspace'),
 					(frame.ID_FixedStars, 'fixed_stars_workspace'), (frame.ID_FixedStarsAsps, 'fixed_stars_workspace'),
-					(frame.ID_SyzygyChart, None), (frame.ID_SyzygyChart2, None))
+					(frame.ID_SyzygyChart, None), (frame.ID_SyzygyChart2, None),
+					(frame.ID_ExactTransits, 'transit_search'), (frame.ID_SunTransits, 'transit_search'))
 				for iid, attr in expect:
 					before = set(wx.GetTopLevelWindows())
 					frame.GetEventHandler().ProcessEvent(wx.CommandEvent(wx.wxEVT_MENU, iid))
@@ -445,6 +446,19 @@ def main():
 						assert getattr(frame, attr, None), 'shortcut %d did not open %s' % (iid, attr)
 					else:
 						assert set(wx.GetTopLevelWindows()) - before, 'shortcut %d opened no chart' % iid
+			elif name == 'transitSearch':
+				# a month of transits of the sample chart, its chart and its CSV
+				import transitsearch
+				wnd = transitsearch.show(frame)
+				wnd.fromyear.SetValue(frame.horoscope.time.origyear)
+				wnd.toyear.SetValue(frame.horoscope.time.origyear)
+				wnd.tomonth.SetSelection(wnd.frommonth.GetSelection())
+				wnd.onSearch(None)
+				assert wnd.results, 'no transits in a month'
+				wnd.list.Select(0)
+				wnd.onOpen(None)
+				wnd.onCSV(None)
+				wnd.Close()
 			elif name == 'fixedStarsWorkspace':
 				# Exercise lazy tabs without calculating all angular crossings twice.
 				import fixedstarsworkspace, fixedstarscatalog
