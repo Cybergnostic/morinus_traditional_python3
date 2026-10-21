@@ -1,7 +1,7 @@
 """Morinus's fixed control sizes were chosen for Windows XP; on GTK (Linux) and
 current Windows some controls need more room: when a dialog or window is first
 shown, lists, number fields and spin controls narrower than their contents are
-widened and the dialog is laid out again (on any platform; nothing is made
+widened, sliders lower than they need are heightened, and the dialog is laid out again (on any platform; nothing is made
 smaller)."""
 
 import wx
@@ -37,6 +37,12 @@ def fit(win):
 		if w is not None and c.GetSize().width < w:
 			c.SetMinSize((w, c.GetMinSize().height))
 			c.SetSize((w, c.GetSize().height))
+			changed = True
+		# sliders with labels need more height on current Windows (35 of 39 pixels)
+		if isinstance(c, wx.Slider) and c.GetSize().height < c.GetBestSize().height:
+			h = c.GetBestSize().height
+			c.SetMinSize((c.GetMinSize().width, h))
+			c.SetSize((c.GetSize().width, h))
 			changed = True
 	if changed and win.GetSizer() is not None:
 		if isinstance(win, wx.Dialog):

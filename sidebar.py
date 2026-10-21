@@ -105,6 +105,7 @@ class Sidebar(wx.Panel):
 				self.choice = wx.Choice(page, -1, choices=[planetname(i) for i in range(len(NAMES))])
 				self.choice.SetToolTip('The planet shown; clicking a planet in the chart chooses it too')
 				self.choice.Bind(wx.EVT_CHOICE, lambda e: self.select(self.choice.GetSelection()))
+				self.choice.SetMinSize((-1, self.choice.GetBestSize().height))
 				vs.Add(self.choice, 0, wx.EXPAND | wx.ALL, 4)
 			html = wx.html.HtmlWindow(page, -1, style=wx.html.HW_SCROLLBAR_AUTO)
 			html.SetStandardFonts(10)
@@ -116,6 +117,19 @@ class Sidebar(wx.Panel):
 		s.Add(self.grip, 0, wx.EXPAND)
 		s.Add(self.book, 1, wx.EXPAND)
 		self.SetSizer(s)
+		# Windows does not always lay out the notebook's pages when the panel is
+		# sized from outside (the planet choice was left 6 pixels high)
+		self.Bind(wx.EVT_SIZE, self.onSize)
+
+	def onSize(self, event):
+		event.Skip()
+		wx.CallAfter(self.relayout)
+
+	def relayout(self):
+		if self:
+			self.Layout()
+			for i in range(self.book.GetPageCount()):
+				self.book.GetPage(i).Layout()
 
 	def onGripPaint(self, event):
 		dc = wx.PaintDC(self.grip)
