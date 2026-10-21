@@ -11,6 +11,7 @@ import circumambulationwnd
 import heliacalwnd
 import fixedstaranglewnd
 import fixedstarsworkspace
+import hoursrisesetworkspace
 import dodecacalcdlg
 import starnames
 import tradoptions
@@ -362,6 +363,9 @@ class MFrame(wx.Frame):
         add(self.mtables, self.ID_PrimaryDirs, 'TMPrimaryDirs', self.onPrimaryDirs)
         add(self.mtables, self.ID_ExactTransits, 'TMExactTransits', self.onExactTransits)
         sep(self.mtables)
+        self.ID_HoursRiseSetWorkspace = new(self.mtables, 'Planetary hours and Rise/Set...',
+            'Planetary hours, daylight boundaries, rise/set and culmination times',
+            self.onHoursRiseSetWorkspace).GetId()
         add(self.mtables, self.ID_PlanetaryHours, 'TMPlanetaryHours', self.onPlanetaryHours)
         add(self.mtables, self.ID_RiseSet, 'TMRiseSet', self.onRiseSet)
         self.ID_Heliacal = new(self.mtables, 'Heliacal phenomena and phasis', 'Visibility of the planets and stations around the birth', self.onHeliacal).GetId()
@@ -1073,10 +1077,7 @@ class MFrame(wx.Frame):
             midsframe.Show(True)
 
     def onRiseSet(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            risesetfr = risesetframe.RiseSetFrame(self, self.title, self.horoscope, self.options)
-            risesetfr.Show(True)
+        hoursrisesetworkspace.show(self, 1)
 
     def onSpeeds(self, event):
         self.showPositionsWorkspace(2)
@@ -1111,11 +1112,11 @@ class MFrame(wx.Frame):
             stripfr = stripframe.StripFrame(self, self.title, self.horoscope, self.options)
             stripfr.Show(True)
 
+    def onHoursRiseSetWorkspace(self, event):
+        hoursrisesetworkspace.show(self, 0)
+
     def onPlanetaryHours(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            planetaryfr = hoursframe.HoursFrame(self, self.title, self.horoscope, self.options)
-            planetaryfr.Show(True)
+        hoursrisesetworkspace.show(self, 0)
 
     def onExactTransits(self, event):
         if self.horoscope.time.bc:
@@ -2233,7 +2234,7 @@ class MFrame(wx.Frame):
                 menubar.Enable(iid, not bEnable)
         ids = [self.ID_Data, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_Close, self.ID_TAlmutens] + list(range(self.ID_Positions, self.ID_PrimaryDirs + 1))
         ids += list(range(self.ID_Transits, self.ID_HelioChart + 1)) + self.returnids
-        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace]
+        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace]
         for iid in ids:
             if menubar.FindItemById(iid):
                 menubar.Enable(iid, bEnable)
