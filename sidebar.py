@@ -127,13 +127,15 @@ class Sidebar(wx.Panel):
 		if self.on_resize is None:
 			return
 		self._drag_origin = (self.grip.ClientToScreen(event.GetPosition()).x, self.GetSize().width)
+		self._requested_width = self.GetSize().width
 		self.grip.CaptureMouse()
 
 	def onGripMove(self, event):
 		if self._drag_origin is None or not event.LeftIsDown():
 			return
 		x, width = self._drag_origin
-		self.on_resize(width + x - self.grip.ClientToScreen(event.GetPosition()).x, False)
+		self._requested_width = width + x - self.grip.ClientToScreen(event.GetPosition()).x
+		self.on_resize(self._requested_width, False)
 
 	def onGripUp(self, event):
 		if self._drag_origin is None:
@@ -142,7 +144,7 @@ class Sidebar(wx.Panel):
 		if self.grip.HasCapture():
 			self.grip.ReleaseMouse()
 		if self.on_resize is not None:
-			self.on_resize(self.GetSize().width, True)
+			self.on_resize(self._requested_width, True)
 
 	def onGripLost(self, event):
 		self._drag_origin = None
