@@ -39,6 +39,15 @@ class Houses:
 
         self.cusps2 = ((self.cuspstmp[0][0], self.cuspstmp[0][1]), (self.cuspstmp[1][0], self.cuspstmp[1][1]), (self.cuspstmp[2][0], self.cuspstmp[2][1]), (self.cuspstmp[3][0], self.cuspstmp[3][1]), (self.cuspstmp[4][0], self.cuspstmp[4][1]), (self.cuspstmp[5][0], self.cuspstmp[5][1]), (self.cuspstmp[6][0], self.cuspstmp[6][1]), (self.cuspstmp[7][0], self.cuspstmp[7][1]), (self.cuspstmp[8][0], self.cuspstmp[8][1]), (self.cuspstmp[9][0], self.cuspstmp[9][1]), (self.cuspstmp[10][0], self.cuspstmp[10][1]), (self.cuspstmp[11][0], self.cuspstmp[11][1]))
 
+    def mundanePosition(self, lon, lat, placelat):
+        """The house position of a point in this house system: 1.0 on the cusp of
+        the 1st house, 1.5 half way through it... (swe_house_pos needs the ARMC and
+        the letter of the system; whole signs, also sidereal, count from the first cusp)."""
+        if self.hsys == 5:
+            return (lon - self.cusps[1]) % 360.0 / 30.0 + 1.0
+        ret, serr = astrology.swe_house_pos(self.ascmc[Houses.ARMC], placelat, self.obl, ord(Houses.hsystems[self.hsys]), lon, lat)
+        return ret
+
     def getHousePos(self, lon, opts, useorbs=False):
         for i in range(1, Houses.HOUSE_NUM):
             orb1 = 0.0
