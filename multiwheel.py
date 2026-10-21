@@ -149,28 +149,30 @@ class MultiWheel:
         if self.aspect_ring:
             other = self.others[self.aspect_ring - 1]
             for i, j, kind, a, b in cross_aspects(self.radix, other, self.options):
-                self.stroke(self.point(a, r * 0.88),
-                            self.point(b, r * 1.12), 'divider',
+                self.stroke(self.point(a, r), self.point(b, r), 'divider',
                             self.options.clraspect[kind])
 
     def draw_houses(self, core):
         if not self.options.houses:
             return
         cusps = self.radix.houses.cusps
-        fnt = self.font(max(9, core * 0.075))
+        fnt = self.font(max(8, core * 0.06))
         for index in range(1, 13):
             lon = zodiac_lon(self.radix, cusps[index], self.options)
             nextlon = zodiac_lon(self.radix, cusps[index % 12 + 1], self.options)
-            self.stroke(self.point(lon, core * 0.20),
+            # as in Morinus's wheel: the cusps and the house numbers outside the aspects
+            self.stroke(self.point(lon, core * 0.55),
                         self.point(lon, core), 'major' if index in (1, 4, 7, 10) else 'divider')
             mid = (lon + (nextlon - lon) % 360 / 2) % 360
-            self.label(self.point(mid, core * 0.31), str(index), fnt,
+            self.label(self.point(mid, core * 0.61), str(index), fnt,
                        self.options.clrhousenumbers)
 
     def draw_radix(self, core):
         self.draw_aspects(core)
         self.draw_houses(core)
         self.circle(core * 0.55)
+        if self.options.houses:
+            self.circle(core * 0.67, 'divider')	# the ring of the house numbers
         self.circle(core)
         lons = [self.longitude(self.radix, i) for i in range(planets.Planets.BODIES_NUM)]
         radius = core * 0.78
@@ -197,33 +199,65 @@ class MultiWheel:
             self.label(self.point(lon + 15, (inner + outer) / 2),
                        common.common.signs[sign], font, self.options.clrsigns)
 
+    def measure(self, text, font):
+        """Logical width and height of a label."""
+        left, top, right, bottom = self.draw.textbbox((0, 0), text, font=font, anchor='mm')
+        return (right - left) / float(self.scale), (bottom - top) / float(self.scale)
+
+    @staticmethod
+    def reach(theta, w, h):
+        """How far a w x h label centred on the ray at theta reaches along it:
+        horizontal text is long across the ray at the top and bottom of the
+        wheel, but along it at the sides."""
+        return abs(math.cos(theta)) * w / 2.0 + abs(math.sin(theta)) * h / 2.0
+
     def draw_outer_ring(self, chrt, index, edges):
+        """Each planet: a tick at its exact longitude on the inner edge, its glyph
+        next to it and its degree (with the retrograde mark) at the outer edge,
+        both placed by their real size so that they stay inside the band."""
         inner, outer = edges
         self.circle(inner, 'major')
         self.circle(outer, 'major')
         width = outer - inner
-        radius = inner + width * 0.59
-        glyph = max(10, min(width * 0.40, self.rmax * 0.05))
+        tick = min(10, width * .15)
+        glyph = max(10, min(width * 0.36, self.rmax * 0.05))
         glyph_font = self.font(glyph, symbol=True)
-        degree_font = self.font(max(8, glyph * 0.62))
-        retro_font = self.font(max(8, glyph * 0.62), symbol=True)
-        lons = [self.longitude(chrt, i) for i in range(planets.Planets.BODIES_NUM)]
-        spread = multiwheel_layout.spread_longitudes(
-            lons, max(7, math.degrees((glyph + 4) / max(radius, 1))))
+        n = planets.Planets.BODIES_NUM
+        sizes = [self.measure(common.common.planets[i], glyph_font) for i in range(n)]
+        gw = max(w for w, h in sizes)
+        # the degree must fit beside the glyph across the band (at the sides of the wheel)
+        dsize = max(7, min(glyph * 0.62, (width - tick - gw - 8) / 3.4))
+        degree_font = self.font(dsize)
+        retro_font = self.font(dsize, symbol=True)
+        lons = [self.longitude(chrt, i) for i in range(n)]
+        texts = [self.degree_text(lon) for lon in lons]
+        retro = [chrt.planets.planets[i].data[planets.Planet.SPLON] < 0 for i in range(n)]
+        rw, rh = self.measure(common.common.retr, retro_font)
+        boxes = []
+        for i in range(n):
+            tw, th = self.measure(texts[i], degree_font)
+            boxes.append((tw + (rw + 2 if retro[i] else 0), max(th, rh if retro[i] else 0), tw))
+        widest = max(gw, max(b[0] for b in boxes))
+        separation = math.degrees((widest + 4) / max(inner + width / 2.0, 1))
+        spread = multiwheel_layout.spread_longitudes(lons, min(max(6.0, separation), 359.0 / n))
         for i, (exact, displayed) in enumerate(zip(lons, spread)):
-            self.stroke(self.point(exact, inner + 2),
-                        self.point(exact, inner + min(10, width * .20)), 'pointer')
-            xy = self.point(displayed, radius)
+            self.stroke(self.point(exact, inner + 1), self.point(exact, inner + tick), 'pointer')
+            theta = self.angle(displayed)
+            gw_i, gh_i = sizes[i]
+            g_reach = self.reach(theta, gw_i, gh_i)
+            cw, ch, tw = boxes[i]
+            t_reach = self.reach(theta, cw, ch)
+            g_r = inner + tick + 2 + g_reach
+            t_r = max(outer - 3 - t_reach, g_r + g_reach + t_reach + 1)
             colour = (self.options.clrplanets[i] if i < len(self.options.clrplanets)
                       else self.options.clrtexts)
+            xy = self.point(displayed, g_r)
             self.label(xy, common.common.planets[i], glyph_font, colour)
-            self.label(self.point(displayed, inner + width * .88),
-                       self.degree_text(exact), degree_font, self.options.clrtexts)
-            if chrt.planets.planets[i].data[planets.Planet.SPLON] < 0:
-                self.label(self.point(displayed, inner + width * .35),
-                           common.common.retr, retro_font, colour)
-            self.hits.append((xy, max(glyph * .7, 12), chrt, i, exact,
-                              'Ring %d' % index))
+            cx, cy = self.point(displayed, t_r)
+            self.label((cx - (cw - tw) / 2.0, cy), texts[i], degree_font, self.options.clrtexts)
+            if retro[i]:
+                self.label((cx + cw / 2.0 - rw / 2.0, cy), common.common.retr, retro_font, colour)
+            self.hits.append((xy, max(glyph * .7, 12), chrt, i, exact, 'Ring %d' % index))
 
     def drawChart(self):
         self.scale = 2  # crisp curves and glyphs after Lanczos downsampling
@@ -254,7 +288,7 @@ class MultiWheel:
         if not hits:
             return ''
         _, chrt, i, lon, role = min(hits, key=lambda item: item[0])
-        sign = SIGNS[int(lon // 30) % 12]
+        sign = SIGNS[int((lon + 0.5 / 60) // 30) % 12]	# as degree_text rounds to the minute
         retro = ' (R)' if chrt.planets.planets[i].data[planets.Planet.SPLON] < 0 else ''
         return '%s: %s - %s %s%s  [%s]' % (
             role, PLANET_NAMES[i], self.degree_text(lon), sign, retro, chrt.name)
@@ -290,7 +324,7 @@ class MultiWheelFrame(wx.Frame):
         outer.Add(row, 0, wx.ALL, 9)
         self.pickers = []
         for i in range(3):
-            picker = comparegrid.ChartPicker(self, mainfr, self.queue_draw)
+            picker = comparegrid.ChartPicker(self, mainfr, self.queue_draw, i + 1)
             self.pickers.append(picker)
             outer.Add(picker, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
             if i:
@@ -307,6 +341,7 @@ class MultiWheelFrame(wx.Frame):
         self.canvas.Bind(wx.EVT_PAINT, self.paint)
         self.canvas.Bind(wx.EVT_SIZE, self.resize)
         self.canvas.Bind(wx.EVT_LEFT_UP, self.on_click)
+        self.Bind(wx.EVT_ACTIVATE, lambda e: (comparegrid.refresh_pickers(self.pickers) if e.GetActive() else None, e.Skip()))
         self.CentreOnParent()
         wx.CallAfter(self.queue_draw)
 
