@@ -1,6 +1,8 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import os
+import csv
+import tradoptions
 import wx
 import menubars
 import mtexts
@@ -33,6 +35,21 @@ class CommonWnd(wx.ScrolledWindow):
         self.ID_CopyAsText = wx.NewIdRef()
         self.pmenu.Append(self.ID_CopyAsText, 'Copy as text', 'Copy the table to the clipboard as text (tab-separated)')
         self.Bind(wx.EVT_MENU, self.onCopyAsText, id=self.ID_CopyAsText)
+        # copying as an image, CSV, and zoom (scaling the drawn table; the zoom is kept for all tables)
+        for label, help, handler in (('Copy as image', 'Copy the table to the clipboard as a picture', self.onCopyAsImage),
+                                     ('Export as CSV...', 'Save the table as a CSV file for spreadsheets', self.onExportCSV), (None, None, None),
+                                     ('Zoom in\tCtrl++', 'Larger table', lambda e: self.setZoom(self.zoom * 1.25)),
+                                     ('Zoom out\tCtrl+-', 'Smaller table', lambda e: self.setZoom(self.zoom / 1.25)),
+                                     ('Actual size\tCtrl+0', 'The table at its drawn size', lambda e: self.setZoom(1.0))):
+            if label is None:
+                self.pmenu.AppendSeparator()
+                continue
+            item = self.pmenu.Append(wx.NewIdRef(), label, help)
+            self.Bind(wx.EVT_MENU, handler, id=item.GetId())
+        self.zoom = 1.0
+        self.zoomed = None
+        self.Bind(wx.EVT_MOUSEWHEEL, self.onWheel)
+        wx.CallAfter(self.initZoom)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_RIGHT_UP, self.onPopupMenu)
         self.Bind(wx.EVT_MENU, self.onSaveAsBitmap, id=self.ID_SaveAsBitmap)
@@ -70,10 +87,71 @@ class CommonWnd(wx.ScrolledWindow):
         if self.bw != event.IsChecked():
             self.bw = event.IsChecked()
             self.drawBkg()
+            self.zoomed = None
             self.Refresh()
 
     def OnPaint(self, event):
-        dc = wx.BufferedPaintDC(self, self.buffer, wx.BUFFER_VIRTUAL_AREA)
+        if self.zoom == 1.0:
+            dc = wx.BufferedPaintDC(self, self.buffer, wx.BUFFER_VIRTUAL_AREA)
+            return
+        if self.zoomed is None or self.zoomed[0] is not self.buffer:
+            self.zoomed = (self.buffer, self.scaled())
+        dc = wx.PaintDC(self)
+        self.DoPrepareDC(dc)
+        dc.SetBackground(wx.Brush(self.GetBackgroundColour()))
+        dc.Clear()
+        dc.DrawBitmap(self.zoomed[1], 0, 0)
+
+    def scaled(self):
+        img = self.buffer.ConvertToImage()
+        w, h = max(1, int(img.GetWidth() * self.zoom)), max(1, int(img.GetHeight() * self.zoom))
+        return img.Scale(w, h, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+
+    def initZoom(self):
+        if self and getattr(self, 'buffer', None) is not None:
+            self.setZoom(tradoptions.get('table_zoom'), False)
+
+    def setZoom(self, zoom, keep=True):
+        """Shows the table scaled by zoom (0.5-3); keep: for the next tables too."""
+        self.zoom = round(min(3.0, max(0.5, zoom)), 3)
+        if abs(self.zoom - 1.0) < 0.01:
+            self.zoom = 1.0
+        self.zoomed = None
+        self.SetVirtualSize((int(self.buffer.GetWidth() * self.zoom), int(self.buffer.GetHeight() * self.zoom)))
+        if keep:
+            tradoptions.set({'table_zoom': self.zoom})
+            if self.options.autosave:
+                tradoptions.save()
+        self.Refresh()
+
+    def unzoom(self, x, y):
+        """A position in the window as one in the drawn table (before scrolling)."""
+        return x / self.zoom, y / self.zoom
+
+    def onWheel(self, event):
+        if event.ControlDown():
+            self.setZoom(self.zoom * (1.1 if event.GetWheelRotation() > 0 else 1 / 1.1))
+        else:
+            event.Skip()
+
+    def onCopyAsImage(self, event):
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.BitmapDataObject(self.buffer))
+            wx.TheClipboard.Flush()
+            wx.TheClipboard.Close()
+
+    def onExportCSV(self, event):
+        name = self.chart.name + self.getExt() + '.csv'
+        dlg = wx.FileDialog(self, 'Export as CSV', '', name, 'CSV files (*.csv)|*.csv', wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+        if os.path.isdir(self.mainfr.fpathimgs):
+            dlg.SetDirectory(self.mainfr.fpathimgs)
+        if dlg.ShowModal() == wx.ID_OK:
+            fpath = dlg.GetPath()
+            if not fpath.lower().endswith('.csv'):
+                fpath += '.csv'
+            with open(fpath, 'w', newline='', encoding='utf-8-sig') as f:
+                csv.writer(f).writerows(line.split('\t') for line in self.tableText().splitlines())
+        dlg.Destroy()
 
     def tableText(self):
         """The table as tab-separated text, rebuilt from what drawBkg draws:

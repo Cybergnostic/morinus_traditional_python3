@@ -17,6 +17,7 @@ import tradoptsdlg
 import chartlookdlg
 import settingswnd
 import commandsearch
+import sidebar
 import defaultsbtn
 import returnslistframe
 import os
@@ -120,8 +121,8 @@ PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
 pdlock = _thread.allocate_lock()
 
 class MFrame(wx.Frame):
-    XSIZE = 512
-    YSIZE = 512
+    XSIZE = 960
+    YSIZE = 720
     MHOROSCOPE, MTABLES, MCHARTS, MOPTIONS, MHELP = list(range(0, 5))
 
     def __init__(self, parent, id, title, opts):
@@ -142,6 +143,8 @@ class MFrame(wx.Frame):
         self.statusbar = self.CreateStatusBar(4, name='status_line')
         self.statusbar.SetStatusWidths([-5, -2, -3, -4])
         self.buildToolBar()
+        self.sidebar = sidebar.Sidebar(self)
+        self.sidebar.Hide()
         if os.name == 'mac' or os.name == 'posix':
             self.Bind(wx.EVT_PAINT, self.onPaint)
         else:
@@ -266,6 +269,9 @@ class MFrame(wx.Frame):
         self.mview.AppendSubMenu(self.mring, 'Outer ring')
         self.viewbw = self.mview.AppendCheckItem(wx.NewIdRef(), 'Black and white', 'Draw the chart and the tables in black and white')
         self.Bind(wx.EVT_MENU, lambda e: self.onViewOption('bw', e.IsChecked()), id=self.viewbw.GetId())
+        self.viewsidebar = self.mview.AppendCheckItem(wx.NewIdRef(), 'Planet sidebar', 'Show the planet, chart and time lords beside the chart')
+        self.viewsidebar.Check(tradoptions.get('show_sidebar'))
+        self.Bind(wx.EVT_MENU, self.onViewSidebar, id=self.viewsidebar.GetId())
         self.viewtoolbar = self.mview.AppendCheckItem(wx.NewIdRef(), 'Toolbar', 'Show the toolbar with the command search')
         self.viewtoolbar.Check(tradoptions.get('show_toolbar'))
         self.Bind(wx.EVT_MENU, self.onViewToolBar, id=self.viewtoolbar.GetId())
@@ -448,6 +454,10 @@ class MFrame(wx.Frame):
         icon = wx.ArtProvider.GetBitmap('preferences-system', wx.ART_TOOLBAR, (22, 22))	# the desktop's icon where there is one
         tool = tb.AddTool(wx.ID_ANY, 'Settings', icon if icon.IsOk() else art(wx.ART_HELP_SETTINGS), shortHelp='Settings (Ctrl+,)')
         self.Bind(wx.EVT_TOOL, self.onSettings, id=tool.GetId())
+        self.ID_SidebarTool = wx.NewIdRef()
+        tb.AddCheckTool(self.ID_SidebarTool, 'Planet sidebar', art(wx.ART_REPORT_VIEW), shortHelp='Planet sidebar')
+        tb.ToggleTool(self.ID_SidebarTool, tradoptions.get('show_sidebar'))
+        self.Bind(wx.EVT_TOOL, self.onViewSidebar, id=self.ID_SidebarTool)
         tb.AddSeparator()
         tb.AddControl(wx.StaticText(tb, -1, ' Houses: '))
         self.tbhouses = wx.Choice(tb, -1, choices=[mtexts.menutxts[k].partition('\t')[0].replace('&', '') for k in settingswnd.HOUSESYSTEMS])
@@ -2225,7 +2235,7 @@ class MFrame(wx.Frame):
         li = self.GetChildren()
         for ch in li:
             x, y = ch.GetClientSize()
-            if ch.GetName() != 'status_line' and y > 50 and ch is not self.settingswnd and not isinstance(ch, (wx.ToolBar, wx.PopupWindow)):
+            if ch.GetName() != 'status_line' and y > 50 and ch is not self.settingswnd and ch is not self.sidebar and not isinstance(ch, (wx.ToolBar, wx.PopupWindow)):
                 ch.Destroy()
 
     def enableMenus(self, bEnable):
@@ -2263,11 +2273,41 @@ class MFrame(wx.Frame):
         splashpath = os.path.join('Res', 'Morinus.jpg')
         self.buffer = wx.Image(splashpath).ConvertToBitmap()
         self.updateStatus()
+        if getattr(self, 'sidebar', None):
+            self.placeSidebar()
 
     def drawBkg(self):
-        self.gchart = graphchart.GraphChart(self.horoscope, self.GetClientSize(), self.options, self.options.bw, self.clickedPlId)
+        self.placeSidebar()
+        self.gchart = graphchart.GraphChart(self.horoscope, self.chartSize(), self.options, self.options.bw, self.clickedPlId)
         self.buffer = self.gchart.drawChart()
         self.updateStatus()
+        if self.sidebar.IsShown():
+            self.sidebar.setChart(self.horoscope)
+
+    def chartSize(self):
+        """The client area less the sidebar."""
+        w, h = self.GetClientSize()
+        if self.sidebar.IsShown():
+            w -= sidebar.WIDTH
+        return wx.Size(max(w, 50), h)
+
+    def placeSidebar(self):
+        show = tradoptions.get('show_sidebar') and not self.splash
+        if show:
+            w, h = self.GetClientSize()
+            self.sidebar.SetSize(w - sidebar.WIDTH, 0, sidebar.WIDTH, h)
+        self.sidebar.Show(show)
+
+    def onViewSidebar(self, event):
+        show = event.IsChecked()
+        tradoptions.set({'show_sidebar': show})
+        if self.options.autosave:
+            tradoptions.save()
+        self.viewsidebar.Check(show)
+        self.toolbar.ToggleTool(self.ID_SidebarTool, show)
+        if not self.splash:
+            self.drawBkg()
+            self.Refresh()
 
     def updateStatus(self):
         """The status bar: the chart, sect, the planetary day and hour, the house system, zodiac and nodes."""
@@ -2323,8 +2363,9 @@ class MFrame(wx.Frame):
     def onLeftUp(self, event):
         if not self.splash and self.options.enableclick:
             self.clickedPlId = self.gchart.onClick(event.GetPosition())
-            self.gchart = graphchart.GraphChart(self.horoscope, self.GetClientSize(), self.options, self.options.bw, self.clickedPlId)
+            self.gchart = graphchart.GraphChart(self.horoscope, self.chartSize(), self.options, self.options.bw, self.clickedPlId)
             self.buffer = self.gchart.drawChart()
+            self.sidebar.select(self.clickedPlId)
             self.Refresh()
 
     def onSize(self, event):
