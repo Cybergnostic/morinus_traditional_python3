@@ -14,6 +14,8 @@ class SidebarWidthTests(unittest.TestCase):
     def test_narrow_frame(self):
         self.assertEqual(sidebar.fit_width(520, 310), 220)
         self.assertEqual(sidebar.fit_width(700, 560), 400)
+        # never unreadably narrow, even when the chart gets less than its minimum
+        self.assertEqual(sidebar.fit_width(300, 310), 200)
 
     def test_no_side_effects(self):
         before = sidebar.tradoptions.values()

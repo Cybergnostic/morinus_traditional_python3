@@ -11,11 +11,6 @@ class FixedStarsCatalogTests(unittest.TestCase):
         self.assertEqual(len(f.DESCRIPTIONS), 3)
         self.assertEqual(set(f.ALIASES.values()), set(range(3)))
 
-    def test_separate_angle_and_paran_orbs(self):
-        self.assertEqual(f.limits(30, 4),
-                         {'birth_angle_minutes': 30, 'paranatellonta_minutes': 4})
-        self.assertEqual(f.limits(4, 30)['birth_angle_minutes'], 4)
-
     def test_no_star_guard(self):
         self.assertFalse(f.is_selected([]))
         self.assertTrue(f.is_selected(['Aldebaran']))

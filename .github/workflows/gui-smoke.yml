@@ -25,19 +25,9 @@ jobs:
           ./build.sh
           python3 tools/build_atlas.py
 
-      - name: Command and Settings search unit tests
+      - name: Unit tests
         run: |
-          python3 -m unittest discover -s tests -p 'test_commandindex.py'
-          python3 -m unittest discover -s tests -p 'test_settingsindex.py'
-          python3 -m unittest discover -s tests -p 'test_chartquality.py'
-          python3 -m unittest discover -s tests -p 'test_tablepresentation.py'
-          python3 -m unittest discover -s tests -p 'test_positionscatalog.py'
-          python3 -m unittest discover -s tests -p 'test_fixedstarscatalog.py'
-          python3 -m unittest discover -s tests -p 'test_hourscatalog.py'
-          python3 -m unittest discover -s tests -p 'test_lunationnav.py'
-          python3 -m unittest discover -s tests -p 'test_ephemerisdata.py'
-          python3 -m unittest discover -s tests -p 'test_consolidated_menu.py'
-          python3 -m unittest discover -s tests -p 'test_swestatus.py'
+          python3 -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Smoke test
         run: |
@@ -62,25 +52,15 @@ jobs:
           python-version: '3.12'
 
       - name: Install wxPython and Pillow
-        run: python -m pip install wxPython Pillow setuptools
+        run: python -m pip install wxPython Pillow setuptools tzdata
 
       - name: Build
         working-directory: SWEP/src
         run: python setup.py -q build_ext --build-lib ../.. --build-temp ../../build/swe
 
-      - name: Command and Settings search unit tests
+      - name: Unit tests
         run: |
-          python -m unittest discover -s tests -p 'test_commandindex.py'
-          python -m unittest discover -s tests -p 'test_settingsindex.py'
-          python -m unittest discover -s tests -p 'test_chartquality.py'
-          python -m unittest discover -s tests -p 'test_tablepresentation.py'
-          python -m unittest discover -s tests -p 'test_positionscatalog.py'
-          python -m unittest discover -s tests -p 'test_fixedstarscatalog.py'
-          python -m unittest discover -s tests -p 'test_hourscatalog.py'
-          python -m unittest discover -s tests -p 'test_lunationnav.py'
-          python -m unittest discover -s tests -p 'test_ephemerisdata.py'
-          python -m unittest discover -s tests -p 'test_consolidated_menu.py'
-          python -m unittest discover -s tests -p 'test_swestatus.py'
+          python -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Smoke test
         shell: pwsh

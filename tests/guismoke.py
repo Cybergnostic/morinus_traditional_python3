@@ -110,7 +110,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -413,20 +413,39 @@ def main():
 				import positionsworkspace, positionscatalog
 				pdir = frame.options.primarydir
 				wnd = positionsworkspace.show(frame, 0)
-				assert wnd.notebook.GetPageCount() == len(positionscatalog.TABS)
+				assert wnd.book.GetPageCount() == len(positionscatalog.TABS)
 				for method in (0, 1):
-					wnd.choice.SetSelection(method)
-					wnd.onMethodChanged(None)
+					wnd.activeView().setMethod(method)
 					if positionsworkspace.has_columns(frame.options, method):
-						assert wnd.activeView().speculum == method
+						assert wnd.activeView().view.speculum == method
+						assert wnd.activeView().view.tableRows(), 'speculum CSV rows'
 				assert frame.options.primarydir == pdir
+				# Configure columns must keep the workspace open (its own window)
+				wnd.activeView().onConfigure(None)
+				assert wnd and not wnd.IsBeingDeleted(), 'Configure columns closed the workspace'
 				for index in range(4):
 					wnd.selectTab(index)
-					assert wnd.notebook.GetSelection() == index
+					assert wnd.book.GetSelection() == index
 					view = wnd.activeView()
 					if hasattr(view, 'chart'):
 						assert view.chart is frame.horoscope
 				wnd.Close()
+			elif name == 'legacyShortcuts':
+				# F1, F5, F6, F10, F11, Ctrl+F1, Ctrl+F2, Ctrl+F5, Ctrl+Shift+F7/F8 of
+				# Morinus 6: the accelerator ids still open their tables and charts
+				expect = ((frame.ID_Positions, 'positions_workspace'), (frame.ID_Misc, 'positions_workspace'),
+					(frame.ID_MunPos, 'positions_workspace'), (frame.ID_Speeds, 'positions_workspace'),
+					(frame.ID_RiseSet, 'hours_riseset_workspace'), (frame.ID_PlanetaryHours, 'hours_riseset_workspace'),
+					(frame.ID_FixedStars, 'fixed_stars_workspace'), (frame.ID_FixedStarsAsps, 'fixed_stars_workspace'),
+					(frame.ID_SyzygyChart, None), (frame.ID_SyzygyChart2, None))
+				for iid, attr in expect:
+					before = set(wx.GetTopLevelWindows())
+					frame.GetEventHandler().ProcessEvent(wx.CommandEvent(wx.wxEVT_MENU, iid))
+					settle(0.2)
+					if attr is not None:
+						assert getattr(frame, attr, None), 'shortcut %d did not open %s' % (iid, attr)
+					else:
+						assert set(wx.GetTopLevelWindows()) - before, 'shortcut %d opened no chart' % iid
 			elif name == 'fixedStarsWorkspace':
 				# Exercise lazy tabs without calculating all angular crossings twice.
 				import fixedstarsworkspace, fixedstarscatalog
@@ -493,10 +512,10 @@ def main():
 				assert wnd.selected_day == 59 and wnd.graph.focus_day == 59
 				wnd.graph.setShowMoon(True)
 				assert wnd.graph.numberOfPlanets() == 7
-				for record in wnd.data.events[:6]:
-					if record.kind == 'Station':
+				for ev in wnd.data.events[:6]:
+					if ev.kind == 'Station':
 						assert abs(ephemerisdata.swiss_sampler(frame.options)(
-							record.jd, record.planet)[1]) < 0.001
+							ev.jd, ev.planet)[1]) < 0.001
 				wnd.Close()
 			elif name == 'clickWheel':
 				w, h = frame.GetClientSize()
