@@ -27,7 +27,7 @@ jobs:
 
       - name: Unit tests
         run: |
-          python3 -m unittest discover -s tests -p 'test_*.py' -v
+          xvfb-run -a -s "-screen 0 1600x1000x24" python3 -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Smoke test
         run: |
