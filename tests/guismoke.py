@@ -317,7 +317,9 @@ def main():
 	for cls in (wx.ColourDialog, wx.FontDialog, wx.DirDialog, wx.TextEntryDialog, wx.SingleChoiceDialog, wx.MultiChoiceDialog, wx.PrintDialog):
 		cls.ShowModal = lambda self: wx.ID_CANCEL
 	# the native GTK about box is not a wx window and cannot be closed from here
-	wx.adv.AboutBox = lambda info, parent=None: wx.adv.GenericAboutBox(info, parent)
+	# (on Windows the generic one is modal too and would hang the run: keep the stub above)
+	if wx.Platform != '__WXMSW__':
+		wx.adv.AboutBox = lambda info, parent=None: wx.adv.GenericAboutBox(info, parent)
 
 	state = STATE
 	state.update({'step': 'startup', 'filepath': horpath})
