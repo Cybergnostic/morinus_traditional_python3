@@ -291,7 +291,8 @@ class EphemerisWorkspace(wx.Frame):
             return
         self.graph = graphephemwnd.GraphEphemWnd(
             self.graph_page, self.data.year, self.data.longitudes,
-            self.options, self.mainfr, show_moon=self.show_moon.GetValue())
+            self.options, self.mainfr, size=(w, max(240, h - 45)),
+            show_moon=self.show_moon.GetValue())
         self.graph.on_select_day = self.selectDay
         self.graph_box.Insert(0, self.graph, 1, wx.EXPAND)
         self.graph_page.Layout()

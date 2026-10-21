@@ -37,6 +37,7 @@ import findtimedlg
 import graphephemdlg
 import graphephemframe
 import ephemcalc
+import ephemerisworkspace
 import userpd
 import primdirs
 import mtexts
@@ -866,15 +867,8 @@ class MFrame(wx.Frame):
         findtimdlg.Show()
 
     def onEphemeris(self, event):
-        ephemdlg = graphephemdlg.GraphEphemDlg(self)
-        ephemdlg.CenterOnParent()
-        val = ephemdlg.ShowModal()
-        if val == wx.ID_OK:
-            year = int(ephemdlg.year.GetValue())
-            wait = wx.BusyCursor()
-            eph = ephemcalc.EphemCalc(year, self.options)
-            ephemfr = graphephemframe.GraphEphemFrame(self, mtexts.txtsgraphephemwnd['Ephemeris'], year, eph.posArr, self.options)
-            ephemfr.Show(True)
+        """Coordinated graphical, daily, and station/ingress ephemeris."""
+        ephemerisworkspace.show(self)
 
     def onClose(self, event):
         if self.dirty:
