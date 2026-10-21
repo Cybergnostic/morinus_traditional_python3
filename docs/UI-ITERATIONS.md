@@ -179,3 +179,27 @@ saving image/CSV for each available tab, resizing, and Open separately.
   sign ingress, Moon on/off, precise event charts, B&W, CSV, year navigation,
   sidereal day-of-date values and mouse selection. No claims of historical
   BC support; UI years are AD 1–5000.
+
+## Comparison grid and concentric multi-wheels (Parts 1 and 2)
+
+- Charts > Compare charts... opens two or four independent, unmodified
+  single wheels. Cells select radix, an open transit/return/lunation or a
+  saved .hor file, and display chart title and entered local date.
+- Charts > Multi-wheel... renders the radix, houses and internal aspects
+  inside the zodiac band, followed by 1-3 selectable planetary rings.
+  Each ring has boundary circles, spread glyphs, true longitude ticks,
+  degrees and retrograde symbols. Radix-to-one-ring aspects are optional,
+  using the existing planetary orbs. Clicking a glyph fills the status
+  line; PNG export and resizing are supported.
+- Both commands are enabled only when a radix is open. The original single
+  and transit bi-wheel drawing and all calculations remain unchanged.
+- Tests: tests/test_multiwheel_layout.py for radius allocation and Aries
+  wrap-around; tests/guismoke.py steps comparisonGrid and multiWheel for
+  a 2x2 layout with transit, three ring counts, resize, click and image
+  export. Screenshots are retained as smoke-test artifacts when possible.
+
+### Part 3: presentation (not implemented)
+
+Before implementation, decide whether presentation means full-screen,
+printing or a report builder; the default titles, legends and annotations;
+which page sizes, aspect tables, and PDF/SVG export formats are needed.

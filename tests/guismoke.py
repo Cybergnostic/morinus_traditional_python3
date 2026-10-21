@@ -110,7 +110,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'transitSearch', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'comparisonGrid', 'multiWheel', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'transitSearch', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -322,6 +322,20 @@ def main():
 	state = STATE
 	state.update({'step': 'startup', 'filepath': horpath})
 
+	def capture_window(window, filename):
+		"""Save a native screenshot when the platform supports ScreenDC."""
+		try:
+			wx.SafeYield()
+			r = window.GetScreenRect()
+			bmp = wx.Bitmap(r.width, r.height)
+			mem = wx.MemoryDC(bmp)
+			mem.Blit(0, 0, r.width, r.height, wx.ScreenDC(), r.x, r.y)
+			mem.SelectObject(wx.NullBitmap)
+			bmp.SaveFile(os.path.join(out, filename), wx.BITMAP_TYPE_PNG)
+		except Exception:
+			# Rendered wheel PNGs are always kept independently.
+			pass
+
 	def shot(name):
 		if shots:
 			fn = os.path.join(out, '%02d-%s-%s.png' % (state['n'], state['step'], name))
@@ -368,7 +382,66 @@ def main():
 		state['n'] += 1
 		sys.stderr.write('== %s\n' % name)
 		try:
-			if name == 'chartQuality':
+			if name == 'comparisonGrid':
+				# Four independent single-wheel canvases, including an open transit.
+				import chart, transitframe, comparegrid
+				secondary = chart.Chart(frame.horoscope.name, frame.horoscope.male,
+					frame.horoscope.time, frame.horoscope.place, chart.Chart.TRANSIT,
+					'', frame.options, False)
+				tw = transitframe.TransitFrame(frame, 'Smoke transit', secondary,
+					frame.horoscope, frame.options)
+				tw.Show(True)
+				wnd = comparegrid.show(frame)
+				settle(0.3)
+				wnd.cells[1].picker.refresh()
+				assert len(wnd.cells[1].picker.sources) > 1
+				wnd.cells[1].picker.choice.SetSelection(1)
+				wnd.cells[1].picker.changed(None)
+				wnd.layout_choice.SetSelection(1)
+				wnd.change_layout()
+				settle(0.3)
+				for cell in wnd.cells:
+					cell.redraw()
+					assert cell.buffer is not None and cell.buffer.IsOk()
+				assert wnd.cells[1].picker.selected() is secondary
+				capture_window(wnd, 'comparison-grid.png')
+				wnd.SetSize((1200, 740))
+				settle(0.2)
+				wnd.refresh_wheels()
+				wnd.Close()
+				tw.Close()
+			elif name == 'multiWheel':
+				# Three ring counts, hit testing, resize, and PNG export.
+				import multiwheel, chart
+				secondary = chart.Chart(frame.horoscope.name, frame.horoscope.male,
+					frame.horoscope.time, frame.horoscope.place, chart.Chart.TRANSIT,
+					'', frame.options, False)
+				wnd = multiwheel.show(frame)
+				settle(0.3)
+				picker = wnd.pickers[0]
+				picker.loaded.append(('Smoke transit', secondary))
+				picker.refresh()
+				picker.choice.SetSelection(len(picker.sources) - 1)
+				for count in (1, 2, 3):
+					wnd.count_choice.SetSelection(count - 1)
+					wnd.change_count()
+					wnd.aspect_choice.SetSelection(1)
+					settle(0.3)
+					wnd.redraw()
+					assert wnd.buffer is not None and wnd.buffer.IsOk()
+					assert len(wnd.renderer.others) == count
+					assert wnd.renderer.hits, 'No glyph hitboxes'
+					assert wnd.renderer.onClick(wnd.renderer.hits[0][0])
+					path = os.path.join(out, 'multiwheel-%d-rings.png' % count)
+					assert wnd.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG)
+					assert os.path.getsize(path) > 0
+				capture_window(wnd, 'multiwheel-window.png')
+				wnd.SetSize((1050, 790))
+				settle(0.2)
+				wnd.redraw()
+				wnd.onSaveAsBitmap(None)
+				wnd.Close()
+			elif name == 'chartQuality':
 				# Check both render modes on the same wheel. Scaling must never
 				# enlarge the on-screen bitmap or change click coordinates.
 				import graphchart, tradoptions, planets, houses, math

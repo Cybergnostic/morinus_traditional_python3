@@ -39,7 +39,7 @@ jobs:
         if: always()
         with:
           name: guismoke-linux
-          path: ${{ runner.temp }}/out/guismoke.json
+          path: ${{ runner.temp }}/out/
 
   windows:
     runs-on: windows-latest
@@ -74,4 +74,4 @@ jobs:
         if: always()
         with:
           name: guismoke-windows
-          path: ${{ runner.temp }}/out/guismoke.json
+          path: ${{ runner.temp }}/out/
