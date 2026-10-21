@@ -61,3 +61,16 @@ Manual review: switch both modes in Chart look on natal and transit
 bi-wheels; compare symbols, circular ticks, exact click selection, resize
 behavior and CPU/memory. Check large charts and Windows high-DPI scaling.
 A4 branch: feature/ui-chart-quality, stacked on A3.
+
+## A5: Bitmap table presentation and safer CSV extension points
+
+- A5 begins at commit e74b9ed404a517c116a7a5f1fb29f16c36d5df39.
+- Feature branch: feature/ui-tables, stacked on A4; previous branches unmodified.
+- CommonWnd: zoom always resamples the original table using Lanczos with modest sharpening.
+- Ctrl+wheel now keeps the point under the cursor; keyboard/menu zoom uses the viewport center.
+- Zoom label in context menu and memory cap for extremely large tables.
+- Header rows in two speculum views, mundane positions and Firdaria have a subtle OS-independent tint; monochrome remains unchanged.
+- Miscellaneous CSV is an explicitly structured two-column export; other tables keep their legacy text-based fallback.
+- No changed astrological values, speculum columns, original .opt files or base bitmap export size.
+- Pure tests: tests/test_tablepresentation.py; GUI smoke: tablePresentation.
+- See docs/A5-TABLES.md for manual regression checklist and known limitations.

@@ -110,7 +110,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'chartQuality', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -389,6 +389,24 @@ def main():
 						assert g.onClick((x, y)) == i, 'Planet hit test: ' + quality
 				finally:
 					tradoptions.set({'chart_quality': old_quality})
+			elif name == 'tablePresentation':
+				# A5: verify that display zoom does not touch the export source;
+				# typed Miscellaneous CSV rows must remain two-column data.
+				import miscframe, miscwnd, tablepresentation
+				fr = miscframe.MiscFrame(frame, frame.title, frame.horoscope, frame.options)
+				try:
+					table = next(c for c in fr.GetChildren() if isinstance(c, miscwnd.MiscWnd))
+					rows = table.tableRows()
+					assert len(rows) == 3 and all(len(row) == 2 for row in rows), rows
+					before = (table.buffer.GetWidth(), table.buffer.GetHeight())
+					table.setZoom(1.5, keep=False)
+					image = table.scaled()
+					assert (image.GetWidth(), image.GetHeight()) == tablepresentation.pixel_size(*before, table.zoom)
+					assert (table.buffer.GetWidth(), table.buffer.GetHeight()) == before
+					table.setZoom(1.0, keep=False)
+					assert table.zoom == 1.0
+				finally:
+					fr.Destroy()
 			elif name == 'clickWheel':
 				w, h = frame.GetClientSize()
 				for fx in range(1, 10):
