@@ -99,7 +99,8 @@ class MunPosWnd(commonwnd.CommonWnd):
                 w, h = draw.textbbox((0, 0), txt, self.fntMorinus)[2:]
                 draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntMorinus)
             elif i != 0:
-                ret, serr = astrology.swe_house_pos(self.chart.houses.ascmc[1], self.chart.place.lat, self.chart.obl[0], self.chart.houses.hsys, self.chart.planets.planets[idx].data[planets.Planet.LON], self.chart.planets.planets[idx].data[planets.Planet.LAT])
+                # Morinus 6 passed the MC instead of the ARMC and the index instead of the letter of the house system
+                ret = self.chart.houses.mundanePosition(self.chart.planets.planets[idx].data[planets.Planet.LON], self.chart.planets.planets[idx].data[planets.Planet.LAT], self.chart.place.lat)
                 txt = util.floatstr(ret)
                 w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
                 draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=tclr, font=self.fntText)
