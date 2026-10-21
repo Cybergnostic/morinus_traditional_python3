@@ -39,6 +39,7 @@ DEFAULTS = {
 	'place_timezone': True,		# offer the birth date's time zone after choosing a place
 	# chart drawing
 	'chart_smooth': True,		# antialiased lines and circles
+	'chart_quality': 'standard',	# standard pixels, high = 2x raster and LANCZOS reduction
 	'chart_lines': 'fine',		# fine, or morinus (the weights of Morinus 6)
 	'show_toolbar': True,
 	'table_zoom': 1.0,

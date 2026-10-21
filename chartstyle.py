@@ -28,12 +28,15 @@ def width(role, chartsize, lines=None):
 	return w[0] if chartsize <= SMALL else w[1] if chartsize <= MEDIUM else w[2]
 
 
-def frame_pen(options, bw, chartsize, role):
-	"""The pen of a line of the frame (circles, ticks, sign boundaries,
-	dividers, planet pointers)."""
+def frame_pen(options, bw, chartsize, role, scale=1):
+	"""The pen of a wheel line; scale keeps its *displayed* weight unchanged.
+
+	chartsize is always the logical chart size. When rendering at double
+	resolution, pen widths are doubled then reduced with the finished image.
+	"""
 	clr = (0, 0, 0) if bw else options.clrframe
 	lines = tradoptions.get('chart_lines')
 	if lines == 'fine' and role in LIGHT:
 		bkg = (255, 255, 255) if bw else options.clrbackground
 		clr = mix(clr, bkg, 0.45)
-	return wx.Pen(wx.Colour(*clr), width(role, chartsize, lines))
+	return wx.Pen(wx.Colour(*clr), width(role, chartsize, lines) * scale)

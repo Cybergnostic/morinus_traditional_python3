@@ -9,6 +9,7 @@ import graphchart
 
 CUSTOM = 'Your colours (Options > Colors)'
 LINES = [('fine', 'Fine: light ticks and dividers'), ('morinus', 'Morinus 6: heavy circles and ticks')]
+QUALITY = [('standard', 'Standard (original rendering)'), ('high', 'High quality (2x glyphs and wheel)')]
 PREVIEW = 380
 
 
@@ -29,7 +30,11 @@ class ChartLookDlg(wx.Dialog):
 		self.lines.SetToolTip('Fine lines keep the circles and the house cusps strong and draw the degree ticks and the dividers of terms and decans lighter.')
 		self.smooth = wx.CheckBox(self, -1, 'Smooth (antialiased) lines')
 		self.smooth.SetToolTip('Draws the wheel with antialiasing on Windows; on Linux and macOS lines are always smooth.')
-		for label, ctrl in (('Theme', self.theme), ('Lines', self.lines), ('', self.smooth)):
+		self.quality = wx.Choice(self, -1, choices=[title for value, title in QUALITY])
+		self.quality.SetToolTip('High quality draws at twice the resolution, then reduces to the same size. '
+			'It improves symbols and labels, but uses more memory and is slower on large charts. '
+			'Very large or tiny windows automatically use standard quality.')
+		for label, ctrl in (('Theme', self.theme), ('Lines', self.lines), ('', self.smooth), ('Rendering', self.quality)):
 			grid.Add(wx.StaticText(self, -1, label + ':' if label else ''), 0, wx.ALIGN_CENTER_VERTICAL)
 			grid.Add(ctrl, 0)
 
@@ -62,8 +67,9 @@ class ChartLookDlg(wx.Dialog):
 		self.theme.SetSelection(0 if self.custom else self.names.index(themes.current(options)))
 		self.lines.SetSelection([v for v, t in LINES].index(tradoptions.get('chart_lines')))
 		self.smooth.SetValue(tradoptions.get('chart_smooth'))
+		self.quality.SetSelection([v for v, title in QUALITY].index(tradoptions.get('chart_quality')))
 		defaults.Bind(wx.EVT_BUTTON, self.onDefaults)
-		for ctrl in (self.theme, self.lines):
+		for ctrl in (self.theme, self.lines, self.quality):
 			ctrl.Bind(wx.EVT_CHOICE, self.onChange)
 		self.smooth.Bind(wx.EVT_CHECKBOX, self.onChange)
 		self.drawPreview()
@@ -72,6 +78,7 @@ class ChartLookDlg(wx.Dialog):
 		self.theme.SetSelection(self.names.index('Ink'))
 		self.lines.SetSelection(0)
 		self.smooth.SetValue(tradoptions.DEFAULTS['chart_smooth'])
+		self.quality.SetSelection([v for v, title in QUALITY].index(tradoptions.DEFAULTS['chart_quality']))
 		self.drawPreview()
 
 	def onChange(self, event):
@@ -82,7 +89,8 @@ class ChartLookDlg(wx.Dialog):
 		return None if name == CUSTOM else name
 
 	def lookValues(self):
-		return {'chart_lines': LINES[self.lines.GetSelection()][0], 'chart_smooth': self.smooth.GetValue()}
+		return {'chart_lines': LINES[self.lines.GetSelection()][0], 'chart_smooth': self.smooth.GetValue(),
+			'chart_quality': QUALITY[self.quality.GetSelection()][0]}
 
 	def drawPreview(self):
 		if self.preview is None:

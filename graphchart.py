@@ -10,6 +10,7 @@ import chart
 import dodecatemoria
 import tradoptions
 import chartstyle
+import chartquality
 import houses
 import planets
 import fortune
@@ -31,7 +32,12 @@ class GraphChart:
 
     def __init__(self, chrt, size, opts, bw, plId=None, chart2=None):
         self.chart = chrt
-        self.w, self.h = size
+        # Use a larger internal raster only when explicitly requested.  The
+        # chart's returned bitmap, mouse coordinates and export size remain
+        # exactly those of the logical client area.
+        self.display_size = (max(1, int(size[0])), max(1, int(size[1])))
+        self.render_scale = chartquality.scale_for(self.display_size, tradoptions.get('chart_quality'))
+        self.w, self.h = chartquality.raster_size(self.display_size, self.render_scale)
         self.options = opts
         self.plId = plId
         self.chart2 = chart2
@@ -39,6 +45,7 @@ class GraphChart:
         self.buffer = wx.Bitmap(self.w, self.h)
         self.openDC()
         self.chartsize = min(self.w, self.h)
+        self.logical_chartsize = min(self.display_size)
         self.maxradius = self.chartsize // 2
         self.center = wx.Point(size[0] // 2, size[1] // 2)
         self.arrowlen = 0.04
@@ -340,7 +347,7 @@ class GraphChart:
     def drawChart(self):
         self.drawCircles()
         # terms and decans dividers
-        self.bdc.SetPen(chartstyle.frame_pen(self.options, self.bw, self.chartsize, 'divider'))
+        self.bdc.SetPen(chartstyle.frame_pen(self.options, self.bw, self.logical_chartsize, 'divider', self.render_scale))
         if self.options.showterms:
             self.drawTermsLines()
         if self.options.showdecans:
@@ -554,8 +561,14 @@ class GraphChart:
             self.drawDodecatemoria(self.chart2, lonsdodec2, self.dodecshift2, self.rDodec)
         if self.plId != None:
             self.drawOrbs(self.draw, self.chart)
-        wxImg = wx.Image(self.img.size[0], self.img.size[1])
-        wxImg.SetData(self.img.tobytes())
+        # Downsample AFTER both wx geometry and Pillow glyph layers have
+        # been drawn.  This antialiases all text and symbols consistently,
+        # not just the wx lines, without changing screen/export dimensions.
+        finished = self.img
+        if self.render_scale > 1:
+            finished = self.img.resize(self.display_size, Image.Resampling.LANCZOS)
+        wxImg = wx.Image(finished.size[0], finished.size[1])
+        wxImg.SetData(finished.tobytes())
         self.buffer = wx.Bitmap(wxImg)
         return self.buffer
 
@@ -657,7 +670,7 @@ class GraphChart:
         self.bdc.SetBrush(wx.Brush(bkgclr))
         cx, cy = self.center.Get()
         # the weight and colour of each line by its role (chartstyle)
-        pen = lambda role: self.bdc.SetPen(chartstyle.frame_pen(self.options, self.bw, self.chartsize, role))
+        pen = lambda role: self.bdc.SetPen(chartstyle.frame_pen(self.options, self.bw, self.logical_chartsize, role, self.render_scale))
         if self.chart2 != None and self.options.houses:
             pen('circle')
             self.bdc.DrawCircle(int(cx), int(cy), int(self.rOuterMax))
@@ -682,17 +695,17 @@ class GraphChart:
             clr = self.options.clrhouses
             if self.bw:
                 clr = (0, 0, 0)
-            self.bdc.SetPen(wx.Pen(clr, 1))
+            self.bdc.SetPen(wx.Pen(clr, self.render_scale))
             self.bdc.DrawCircle(int(cx), int(cy), int(self.rHouse))
         clr = self.options.clrAscMC
         if self.bw:
             clr = (0, 0, 0)
         w = self.options.maxascmcsize
-        if self.chartsize <= GraphChart.SMALL_SIZE and (w == 5 or w == 4 or w == 3):
+        if self.logical_chartsize <= GraphChart.SMALL_SIZE and (w == 5 or w == 4 or w == 3):
             w = 2
-        elif self.chartsize <= GraphChart.MEDIUM_SIZE and (w == 5 or w == 4):
+        elif self.logical_chartsize <= GraphChart.MEDIUM_SIZE and (w == 5 or w == 4):
             w = 3
-        self.bdc.SetPen(wx.Pen(clr, w))
+        self.bdc.SetPen(wx.Pen(clr, w * self.render_scale))
         self.bdc.DrawCircle(int(cx), int(cy), int(self.rBase))
         asclon = self.chart.houses.ascmc[houses.Houses.ASC]
         if self.options.ayanamsha != 0:
@@ -737,7 +750,7 @@ class GraphChart:
         clr = self.options.clrhouses
         if self.bw:
             clr = (0, 0, 0)
-        pen = wx.Pen(clr, 1)
+        pen = wx.Pen(clr, self.render_scale)
         self.bdc.SetPen(pen)
         asc = self.chart.houses.ascmc[houses.Houses.ASC]
         if self.options.ayanamsha != 0 and self.options.hsys == 5:
@@ -756,12 +769,12 @@ class GraphChart:
         if self.bw:
             clr = (0, 0, 0)
         w = self.options.maxascmcsize
-        if self.chartsize <= GraphChart.SMALL_SIZE and (w == 5 or w == 4 or w == 3):
+        if self.logical_chartsize <= GraphChart.SMALL_SIZE and (w == 5 or w == 4 or w == 3):
             w = 2
         else:
-            if self.chartsize <= GraphChart.MEDIUM_SIZE and (w == 5 or w == 4):
+            if self.logical_chartsize <= GraphChart.MEDIUM_SIZE and (w == 5 or w == 4):
                 w = 3
-        pen = wx.Pen(clr, w)
+        pen = wx.Pen(clr, w * self.render_scale)
         self.bdc.SetPen(pen)
         for i in range(4):
             ang = math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC])
@@ -800,7 +813,7 @@ class GraphChart:
         clr = self.options.clrhousenumbers
         if self.bw:
             clr = (0, 0, 0)
-        pen = wx.Pen(clr, 1)
+        pen = wx.Pen(clr, self.render_scale)
         self.bdc.SetPen(pen)
         asc = self.chart.houses.ascmc[houses.Houses.ASC]
         if self.options.ayanamsha != 0 and self.options.hsys == 5:
@@ -960,6 +973,8 @@ class GraphChart:
                     self.draw.text((x - self.symbolSize // 8, y - self.symbolSize // 8), t, fill=clr, font=rfnt)
 
     def onClick(self, pos):
+        # Mouse events use display pixels; planet geometry is in raster pixels.
+        pos = chartquality.render_position(pos, self.render_scale)
         cx, cy = self.center.Get()
         for i in range(planets.Planets.PLANETS_NUM):
             lon = self.chart.planets.planets[i].data[planets.Planet.LON]
@@ -1130,7 +1145,7 @@ class GraphChart:
         return lonsdodec, objsdodec, fntsdodec
 
     def drawObjLines(self, objshift, lons, r1, r2):
-        self.bdc.SetPen(chartstyle.frame_pen(self.options, self.bw, self.chartsize, 'pointer'))
+        self.bdc.SetPen(chartstyle.frame_pen(self.options, self.bw, self.logical_chartsize, 'pointer', self.render_scale))
         num = len(lons)
         for i in range(num):
             self.drawPlanetLine(objshift, lons[i], i, r1, r2)
