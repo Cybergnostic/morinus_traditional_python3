@@ -4,6 +4,8 @@ import os
 import csv
 import tradoptions
 import wx
+import tablepresentation
+from PIL import Image
 import menubars
 import mtexts
 from PIL import ImageDraw
@@ -48,7 +50,10 @@ class CommonWnd(wx.ScrolledWindow):
             self.Bind(wx.EVT_MENU, handler, id=item.GetId())
         self.zoom = 1.0
         self.zoomed = None
+        self.zoom_state = self.pmenu.Append(wx.NewIdRef(), 'Zoom: 100%')
+        self.zoom_state.Enable(False)
         self.Bind(wx.EVT_MOUSEWHEEL, self.onWheel)
+        self.Bind(wx.EVT_CHAR_HOOK, self.onZoomKey)
         wx.CallAfter(self.initZoom)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_RIGHT_UP, self.onPopupMenu)
@@ -103,23 +108,44 @@ class CommonWnd(wx.ScrolledWindow):
         dc.DrawBitmap(self.zoomed[1], 0, 0)
 
     def scaled(self):
-        img = self.buffer.ConvertToImage()
-        w, h = max(1, int(img.GetWidth() * self.zoom)), max(1, int(img.GetHeight() * self.zoom))
-        return img.Scale(w, h, wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+        """Resize the original, not an already enlarged, potentially fuzzy copy."""
+        wximg = self.buffer.ConvertToImage()
+        source = Image.frombytes('RGB', (wximg.GetWidth(), wximg.GetHeight()), bytes(wximg.GetData()))
+        size = tablepresentation.pixel_size(source.width, source.height, self.zoom)
+        enlarged = tablepresentation.resample(source, size)
+        output = wx.Image(enlarged.width, enlarged.height)
+        output.SetData(enlarged.tobytes())
+        return wx.Bitmap(output)
 
     def initZoom(self):
         if self and getattr(self, 'buffer', None) is not None:
             self.setZoom(tradoptions.get('table_zoom'), False)
 
-    def setZoom(self, zoom, keep=True):
-        """Shows the table scaled by zoom (0.5-3); keep: for the next tables too."""
-        self.zoom = round(min(3.0, max(0.5, zoom)), 3)
-        if abs(self.zoom - 1.0) < 0.01:
-            self.zoom = 1.0
+    def setZoom(self, zoom, keep=True, anchor=None):
+        """Adjust display zoom, keeping the selected point under the cursor.
+
+        No table fonts, calculations or export bitmap are modified.
+        """
+        old = self.zoom
+        new = tablepresentation.zoom_value(zoom, self.buffer.GetWidth(), self.buffer.GetHeight())
+        if anchor is None:
+            view = self.GetClientSize()
+            anchor = (view.width // 2, view.height // 2)
+        origin = self.GetViewStart()
+        units = self.GetScrollPixelsPerUnit()
+        previous = (origin.x * units[0], origin.y * units[1])
+        target = (
+            tablepresentation.anchored_scroll(previous[0], anchor[0], old, new),
+            tablepresentation.anchored_scroll(previous[1], anchor[1], old, new),
+        )
+        self.zoom = new
         self.zoomed = None
-        self.SetVirtualSize((int(self.buffer.GetWidth() * self.zoom), int(self.buffer.GetHeight() * self.zoom)))
+        self.SetVirtualSize(tablepresentation.pixel_size(self.buffer.GetWidth(), self.buffer.GetHeight(), new))
+        if units[0] and units[1]:
+            self.Scroll(round(target[0] / units[0]), round(target[1] / units[1]))
+        self.zoom_state.SetItemLabel('Zoom: %d%%' % round(new * 100))
         if keep:
-            tradoptions.set({'table_zoom': self.zoom})
+            tradoptions.set({'table_zoom': new})
             if self.options.autosave:
                 tradoptions.save()
         self.Refresh()
@@ -130,7 +156,26 @@ class CommonWnd(wx.ScrolledWindow):
 
     def onWheel(self, event):
         if event.ControlDown():
-            self.setZoom(self.zoom * (1.1 if event.GetWheelRotation() > 0 else 1 / 1.1))
+            self.setZoom(self.zoom * (1.1 if event.GetWheelRotation() > 0 else 1 / 1.1),
+                         anchor=event.GetPosition())
+        else:
+            event.Skip()
+
+    def onZoomKey(self, event):
+        """Make Ctrl++, Ctrl+- and Ctrl+0 work without opening the popup."""
+        if not event.ControlDown():
+            event.Skip()
+            return
+        key = event.GetKeyCode()
+        plus = (ord('+'), ord('='), getattr(wx, 'WXK_NUMPAD_ADD', -1))
+        minus = (ord('-'), getattr(wx, 'WXK_NUMPAD_SUBTRACT', -1))
+        reset = (ord('0'), getattr(wx, 'WXK_NUMPAD0', -1))
+        if key in plus:
+            self.setZoom(self.zoom * 1.25)
+        elif key in minus:
+            self.setZoom(self.zoom / 1.25)
+        elif key in reset:
+            self.setZoom(1.0)
         else:
             event.Skip()
 
@@ -150,8 +195,16 @@ class CommonWnd(wx.ScrolledWindow):
             if not fpath.lower().endswith('.csv'):
                 fpath += '.csv'
             with open(fpath, 'w', newline='', encoding='utf-8-sig') as f:
-                csv.writer(f).writerows(line.split('\t') for line in self.tableText().splitlines())
+                csv.writer(f).writerows(self.tableRows())
         dlg.Destroy()
+
+    def tableRows(self):
+        """Data rows for CSV. Specialist views may supply explicit columns.
+
+        The legacy fallback still reconstructs text from the drawn table.
+        This is intentionally not presented as a semantic CSV for every view.
+        """
+        return [line.split('\t') for line in self.tableText().splitlines()]
 
     def tableText(self):
         """The table as tab-separated text, rebuilt from what drawBkg draws:

@@ -15,8 +15,9 @@ def zoom_value(requested, width, height):
     """Fit a requested zoom in range without allocating an enormous bitmap."""
     value = max(MIN_ZOOM, min(MAX_ZOOM, float(requested)))
     pixels = max(1, int(width)) * max(1, int(height))
-    if pixels * value * value > MAX_DISPLAY_PIXELS:
-        value = max(MIN_ZOOM, min(value, math.sqrt(MAX_DISPLAY_PIXELS / pixels)))
+    if value > 1.0 and pixels * value * value > MAX_DISPLAY_PIXELS:
+        # Never shrink an already-large 100% table just to meet the cap.
+        value = max(1.0, min(value, math.sqrt(MAX_DISPLAY_PIXELS / pixels)))
     value = round(value, 3)
     return 1.0 if abs(value - 1.0) < 0.01 else value
 

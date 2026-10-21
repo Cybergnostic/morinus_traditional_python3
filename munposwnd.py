@@ -2,6 +2,7 @@
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import os
 import wx
+import tablepresentation
 import astrology
 import planets
 import chart
@@ -64,7 +65,7 @@ class MunPosWnd(commonwnd.CommonWnd):
         txtclr = (0, 0, 0)
         if not self.bw:
             txtclr = self.options.clrtexts
-        draw.rectangle(((BOR + self.SMALL_CELL_WIDTH, BOR), (BOR + self.SMALL_CELL_WIDTH + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
+        draw.rectangle(((BOR + self.SMALL_CELL_WIDTH, BOR), (BOR + self.SMALL_CELL_WIDTH + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=tablepresentation.header_colour(self.bkgclr, tableclr, self.bw))
         txt = mtexts.txtsmunpos['HousePercent']
         w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
         draw.text((BOR + self.SMALL_CELL_WIDTH + (self.CELL_WIDTH - w) // 2, BOR + (self.TITLE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)

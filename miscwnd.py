@@ -37,6 +37,19 @@ class MiscWnd(commonwnd.CommonWnd):
     def getExt(self):
         return mtexts.txtsabbrevs['Misc']
 
+    def tableRows(self):
+        """Export actual label/value pairs, not inferred text positions."""
+        sid = self.chart.houses.ascmc[houses.Houses.ARMC] / 15.0
+        d, m, s = util.decToDeg(sid)
+        sid_text = str(d) + ':' + str(m).zfill(2) + ':' + str(s).zfill(2)
+        d, m, s = util.decToDeg(self.chart.obl[0])
+        obl_text = str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
+        return [
+            [mtexts.txtsmisc['SidTime'], sid_text],
+            [mtexts.txtsmisc['OblEcl'], obl_text],
+            [mtexts.txtsmisc['JulianDay'], util.floatstr(self.chart.time.jd)],
+        ]
+
     def drawBkg(self):
         if self.bw:
             self.bkgclr = (255, 255, 255)
