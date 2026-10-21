@@ -423,7 +423,7 @@ class PrimDirsDlg(wx.Dialog):
         if not self.parent.checkFixedStars():
             return
         if len(self.options.fixedstars) == 0:
-            dlgm = wx.MessageDialog(self, mtexts.txtsprimdirsdlg['NoSelFixedStars'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NoSelFixedStars'], '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
