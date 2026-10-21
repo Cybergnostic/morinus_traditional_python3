@@ -3,6 +3,12 @@
 import wx
 import mtexts
 
+# Preserve the original saved .opt checkbox indices, but hide entries whose
+# functions are now tabs of consolidated workspaces.
+HIDDEN_LEGACY_TABLES = frozenset((0, 4, 5, 9, 10, 12, 13, 16))
+HIDDEN_LEGACY_CHARTS = frozenset((6, 7))
+
+
 class MenuSelDlg(wx.Dialog):
 
     def __init__(self, parent):
@@ -49,14 +55,20 @@ class MenuSelDlg(wx.Dialog):
         for i in range(11):
             ckb = wx.CheckBox(self, -1, tablestxts[i])
             self.artables.append(ckb)
-            vsizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
+            if i in HIDDEN_LEGACY_TABLES:
+                ckb.Hide()
+            else:
+                vsizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
 
         hsizer.Add(vsizer, 0, wx.GROW | wx.ALL, 5)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         for i in range(11, len(tablestxts)):
             ckb = wx.CheckBox(self, -1, tablestxts[i])
             self.artables.append(ckb)
-            vsizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
+            if i in HIDDEN_LEGACY_TABLES:
+                ckb.Hide()
+            else:
+                vsizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
 
         hsizer.Add(vsizer, 0, wx.GROW | wx.ALL, 5)
         stablessizer.Add(hsizer, 0, wx.GROW | wx.LEFT, 5)
@@ -76,7 +88,10 @@ class MenuSelDlg(wx.Dialog):
         for i in range(len(chartstxts)):
             ckb = wx.CheckBox(self, -1, chartstxts[i])
             self.archarts.append(ckb)
-            schartssizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
+            if i in HIDDEN_LEGACY_CHARTS:
+                ckb.Hide()
+            else:
+                schartssizer.Add(ckb, 0, wx.ALIGN_LEFT | wx.ALL, 2)
 
         mhsizer.Add(schartssizer, 0, wx.GROW | wx.LEFT, 5)
         mvsizer.Add(mhsizer, 0, wx.GROW | wx.ALL, 5)

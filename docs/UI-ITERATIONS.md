@@ -150,3 +150,23 @@ saving image/CSV for each available tab, resizing, and Open separately.
 - Pure tests: tests/test_lunationnav.py. GUI smoke: lunationNavigator.
 - Test chart date around a new/full Moon, earlier/later windows, zoom,
   event chart, ephemeris tolerance, and original prenatal syzygy stability.
+
+## C1: Menu consolidation (no duplicate commands)
+
+- Checkpoint: B4 hotfix ba43735661a9f71cbf8e2b1d30cbd27989365c0f.
+- One Tables-menu entry each for Positions and data, Fixed Stars, and
+  Planetary hours and rise/set. Removed four old Positions, three old
+  Fixed Stars, and two Hours/Rise-Set menu entries.
+- One Charts-menu entry, Syzygies and lunar phases, replaces the two old
+  prenatal chart entries and separate lunar-phase listing command.
+- Both prenatal chart operations are clearly available as buttons inside
+  the navigator using the unchanged original Morinus handlers.
+- The original standalone table windows remain available through each
+  workspace's Open separately function, without duplicating the main menu.
+- In Menu Selection, obsolete controls are hidden without renumbering the
+  original checkbox arrays or modifying existing .opt preference storage.
+- Unconsolidated specialist tools (User speculum, Zodiacal parallels,
+  Exact transits, heliacal techniques) stay in their existing locations.
+- No changes to planetary positions, astronomical calculations or options.
+- Separate feature/ui-menu-consolidation branch; simultaneous B5 ephemeris
+  work is not modified.
