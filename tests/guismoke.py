@@ -194,7 +194,7 @@ def main():
 		# chosen for Windows); number fields are measured with their largest value
 		for c in all_children(win):
 			try:
-				if not c.IsShown():
+				if not c.IsShownOnScreen():	# also not inside a hidden panel
 					continue
 				if isinstance(c, wx.TextCtrl) and not c.IsMultiLine():
 					sample = c.GetValue()

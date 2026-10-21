@@ -120,6 +120,7 @@ class Sidebar(wx.Panel):
 		# Windows does not always lay out the notebook's pages when the panel is
 		# sized from outside (the planet choice was left 6 pixels high)
 		self.Bind(wx.EVT_SIZE, self.onSize)
+		self.Bind(wx.EVT_SHOW, self.onSize)
 
 	def onSize(self, event):
 		event.Skip()
@@ -130,6 +131,10 @@ class Sidebar(wx.Panel):
 			self.Layout()
 			for i in range(self.book.GetPageCount()):
 				self.book.GetPage(i).Layout()
+			# and the planet choice at its full height, whatever the page did
+			best = self.choice.GetBestSize().height
+			if self.choice.GetSize().height < best:
+				self.choice.SetSize((max(self.choice.GetSize().width, self.book.GetPage(0).GetClientSize().width - 8), best))
 
 	def onGripPaint(self, event):
 		dc = wx.PaintDC(self.grip)

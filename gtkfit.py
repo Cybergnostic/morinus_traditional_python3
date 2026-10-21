@@ -69,5 +69,9 @@ def install():
 		def showFitted(self, show_=True, _show=cls.Show):
 			if show_:
 				_once(self)
-			return _show(self, show_)
+			shown = _show(self, show_)
+			if show_:
+				# Windows knows some sizes (e.g. of sliders) only once they are on screen
+				wx.CallAfter(lambda: self and fit(self))
+			return shown
 		cls.Show = showFitted
