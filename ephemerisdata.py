@@ -114,7 +114,7 @@ def calculate(year, start_jd, sampler):
             if station_crossing(speed0, speed1):
                 t = bisect(jd0, jd1, lambda jd: sample(jd)[1])
                 if start_jd <= t < last_day:
-                    detail = 'Station direct' if speed1 > 0 else 'Station retrograde'
+                    detail = 'Station direct' if speed0 < 0 else 'Station retrograde'
                     events.append(Event(t, planet, 'Station', detail))
             ingress = ingress_crossing(lon0, lon1)
             if ingress:

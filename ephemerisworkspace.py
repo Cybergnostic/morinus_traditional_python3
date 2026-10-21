@@ -36,12 +36,12 @@ class EphemerisWorkspace(wx.Frame):
         self.loadYear(year)
 
     def _build_layout(self, year):
-        self.year = wx.SpinCtrl(self, -1, min=1, max=3000, initial=year, size=(95, -1))
+        self.year = wx.SpinCtrl(self, -1, min=1, max=5000, initial=year, size=(95, -1))
         prev = wx.Button(self, -1, '◀ Previous year')
         next_year = wx.Button(self, -1, 'Next year ▶')
         go = wx.Button(self, -1, 'Go')
         prev.Bind(wx.EVT_BUTTON, lambda event: self.loadYear(max(1, self.data.year - 1)))
-        next_year.Bind(wx.EVT_BUTTON, lambda event: self.loadYear(min(3000, self.data.year + 1)))
+        next_year.Bind(wx.EVT_BUTTON, lambda event: self.loadYear(min(5000, self.data.year + 1)))
         go.Bind(wx.EVT_BUTTON, lambda event: self.loadYear(self.year.GetValue()))
         self.year.Bind(wx.EVT_TEXT_ENTER, lambda event: self.loadYear(self.year.GetValue()))
         head = wx.BoxSizer(wx.HORIZONTAL)
@@ -392,6 +392,7 @@ def show(mainfr, year=None):
             year = mainfr.horoscope.time.origyear
         else:
             year = datetime.date.today().year
+    year = max(1, min(5000, int(year)))
     wnd = getattr(mainfr, 'ephemeris_workspace', None)
     if wnd is None or not wnd:
         wnd = EphemerisWorkspace(mainfr, year)
