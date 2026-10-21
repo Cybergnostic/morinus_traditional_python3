@@ -131,9 +131,9 @@ class CommonWnd(wx.ScrolledWindow):
         if anchor is None:
             view = self.GetClientSize()
             anchor = (view.width // 2, view.height // 2)
-        origin = self.GetViewStart()
+        origin_x, origin_y = self.GetViewStart()
         units = self.GetScrollPixelsPerUnit()
-        previous = (origin.x * units[0], origin.y * units[1])
+        previous = (origin_x * units[0], origin_y * units[1])
         target = (
             tablepresentation.anchored_scroll(previous[0], anchor[0], old, new),
             tablepresentation.anchored_scroll(previous[1], anchor[1], old, new),
