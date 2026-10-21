@@ -138,7 +138,7 @@ class MFrame(wx.Frame):
         self.dirty = False
         self.buildMenus()
         self.statusbar = self.CreateStatusBar(4, name='status_line')
-        self.statusbar.SetStatusWidths([-1, 90, 190, 300])
+        self.statusbar.SetStatusWidths([-5, -2, -3, -4])
         if os.name == 'mac' or os.name == 'posix':
             self.Bind(wx.EVT_PAINT, self.onPaint)
         else:
