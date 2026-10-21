@@ -113,7 +113,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 HANDLERS = ['onLoad', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
-	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
+	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
 	'onProfectionsChart', 'onHelioChart', 'onEphemeris', 'onFindTime', 'onSynastry', 'onSaveAsBitmap', 'onSave', 'onHereAndNow',
 	'onNew', 'onData', 'onLoad',
 	'onAppearance1', 'onAppearance2', 'onDignities', 'onTriplicities', 'onTerms', 'onDecans', 'onChartAlmuten', 'onTopicals',
@@ -374,6 +374,22 @@ def main():
 						evt = wx.MouseEvent(wx.wxEVT_LEFT_UP)
 						evt.SetPosition(wx.Point(w*fx//10, h*fy//10))
 						frame.GetEventHandler().ProcessEvent(evt)
+			elif name == 'settings':
+				# the Settings window is not modal: visit its categories, search, then use every control
+				import settingswnd
+				wnd = settingswnd.show(frame)
+				settle(0.3)
+				for i in range(wnd.list.GetCount()):
+					wnd.list.SetSelection(i)
+					fire(wnd.list, wx.wxEVT_LISTBOX)
+					settle(0.1)
+					check_clipping(wnd)
+				wnd.search.SetValue('orbs')
+				settle(0.1)
+				wnd.search.SetValue('')
+				exercise(wnd)
+				if wnd:
+					wnd.Close()
 			elif name.startswith('menu:'):
 				# every item of a menu of the menu bar (check items twice, to end as they were)
 				for item in list(menu_items(getattr(frame, name[5:]))):

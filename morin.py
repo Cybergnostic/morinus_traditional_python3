@@ -15,6 +15,7 @@ import starnames
 import tradoptions
 import tradoptsdlg
 import chartlookdlg
+import settingswnd
 import defaultsbtn
 import returnslistframe
 import os
@@ -242,7 +243,7 @@ class MFrame(wx.Frame):
         add(self.mhoros, self.ID_Close, 'HMClose', self.onClose)
         sep(self.mhoros)
         add(self.mhoros, self.ID_Exit, 'HMExit', self.onExit)
-        finish(self.mhoros, mtexts.menutxts['MHoroscope'])
+        finish(self.mhoros, 'File' if mtexts.menutxts['MHoroscope'].replace('&', '') == 'Horoscope' else mtexts.menutxts['MHoroscope'])
 
         # View: the switches of Options > Appearance I, the house system and the nodes
         self.mview = wx.Menu()
@@ -381,47 +382,11 @@ class MFrame(wx.Frame):
         self.ID_DodecaCalc = new(self.mtools, 'Dodecatemoria calculator...', 'The dodecatemorion of any degree', self.onDodecaCalc).GetId()
         finish(self.mtools, 'Tools')
 
-        # Options
+        # Settings: the Settings window (settingswnd), the language and saving; the dialogs
+        # of Morinus 6 open from the Settings window and keep their shortcuts
         self.moptions = wx.Menu()
-        add(self.moptions, self.ID_Appearance1, 'OMAppearance1', self.onAppearance1)
-        add(self.moptions, self.ID_Appearance2, 'OMAppearance2', self.onAppearance2)
-        add(self.moptions, self.ID_Colors, 'OMColors', self.onColors)
-        new(self.moptions, 'Chart look...', 'Colour theme and line weight of the chart', self.onChartLook)
-        sep(self.moptions)
-        add(self.moptions, self.ID_Dignities, 'OMDignities', self.onDignities)
-        if shown(self.ID_Triplicities) or shown(self.ID_Terms) or shown(self.ID_Decans):
-            self.mdignities = wx.Menu()
-            self.moptions.Append(wx.MenuItem(self.moptions, self.ID_MinorDignities, mtexts.menutxts['OMMinorDignities'], subMenu=self.mdignities))
-            add(self.mdignities, self.ID_Triplicities, 'OMTriplicities', self.onTriplicities)
-            add(self.mdignities, self.ID_Terms, 'OMTerms', self.onTerms)
-            add(self.mdignities, self.ID_Decans, 'OMDecans', self.onDecans)
-        if shown(self.ID_ChartAlmuten) or shown(self.ID_Topical):
-            self.malmutens = wx.Menu()
-            self.moptions.Append(wx.MenuItem(self.moptions, self.ID_Almutens, mtexts.menutxts['OMAlmutens'], subMenu=self.malmutens))
-            add(self.malmutens, self.ID_ChartAlmuten, 'OMChartAlmuten', self.onChartAlmuten)
-            add(self.malmutens, self.ID_Topical, 'OMTopical', self.onTopicals)
-        add(self.moptions, self.ID_Ayanamsha, 'OMAyanamsha', self.onAyanamsha)
-        add(self.moptions, self.ID_Orbs, 'OMOrbs', self.onOrbs)
-        add(self.moptions, self.ID_LotsOpt, 'OMLots', self.onLotsOpt)
-        add(self.moptions, self.ID_Syzygy, 'OMSyzygy', self.onSyzygy)
-        add(self.moptions, self.ID_FixedStarsOpt, 'OMFixedStarsOpt', self.onFixedStarsOpt)
-        sep(self.moptions)
-        add(self.moptions, self.ID_PrimaryDirsOpt, 'OMPrimaryDirs', self.onPrimaryDirsOpt)
-        add(self.moptions, self.ID_PrimaryKeys, 'OMPrimaryKeys', self.onPrimaryKeys)
-        add(self.moptions, self.ID_PDsInChartOpt, 'OMPDsInChartOpt', self.onPDsInChartOpt)
-        add(self.moptions, self.ID_ProfectionsOpt, 'OMProfectionsOpt', self.onProfectionsOpt)
-        add(self.moptions, self.ID_FirdariaOpt, 'OMFirdariaOpt', self.onFirdariaOpt)
-        # options of the added techniques (tradoptsdlg)
-        sep(self.moptions)
-        for i, (title, fields) in enumerate(tradoptsdlg.DIALOGS):
-            new(self.moptions, title + '...', 'Options of ' + title.lower(), lambda e, i=i: self.onTradOpts(i))
-        sep(self.moptions)
-        add(self.moptions, self.ID_DefLocationOpt, 'OMDefLocationOpt', self.onDefLocationOpt)
-        if shown(self.ID_MenuSelFirst) or shown(self.ID_MenuSelSecond):
-            self.mmenusel = wx.Menu()
-            self.moptions.Append(wx.MenuItem(self.moptions, self.ID_MenuSel, mtexts.menutxts['OMMenuSel'], subMenu=self.mmenusel))
-            add(self.mmenusel, self.ID_MenuSelFirst, 'OMMenuSelFirst', self.onMenuSelFirst)
-            add(self.mmenusel, self.ID_MenuSelSecond, 'OMMenuSelSecond', self.onMenuSelSecond)
+        self.settingswnd = None
+        new(self.moptions, 'Settings...\tCtrl+,', 'All the settings, by category', self.onSettings)
         add(self.moptions, self.ID_Languages, 'OMLanguages', self.onLanguages)
         sep(self.moptions)
         if shown(self.ID_AutoSaveOpts):
@@ -430,7 +395,26 @@ class MFrame(wx.Frame):
             self.Bind(wx.EVT_MENU, self.onAutoSaveOpts, id=self.ID_AutoSaveOpts)
         add(self.moptions, self.ID_SaveOpts, 'OMSave', self.onSaveOpts)
         add(self.moptions, self.ID_Reload, 'OMReload', self.onReload)
-        finish(self.moptions, mtexts.menutxts['MOptions'])
+        finish(self.moptions, 'Settings' if mtexts.menutxts['MOptions'].replace('&', '') == 'Options' else mtexts.menutxts['MOptions'])
+        accels = []
+        for iid, key, handler in ((self.ID_Appearance1, 'OMAppearance1', self.onAppearance1), (self.ID_Appearance2, 'OMAppearance2', self.onAppearance2),
+                                  (self.ID_Colors, 'OMColors', self.onColors), (self.ID_Dignities, 'OMDignities', self.onDignities),
+                                  (self.ID_Triplicities, 'OMTriplicities', self.onTriplicities), (self.ID_Terms, 'OMTerms', self.onTerms),
+                                  (self.ID_Decans, 'OMDecans', self.onDecans), (self.ID_ChartAlmuten, 'OMChartAlmuten', self.onChartAlmuten),
+                                  (self.ID_Topical, 'OMTopical', self.onTopicals), (self.ID_Ayanamsha, 'OMAyanamsha', self.onAyanamsha),
+                                  (self.ID_Orbs, 'OMOrbs', self.onOrbs), (self.ID_PrimaryDirsOpt, 'OMPrimaryDirs', self.onPrimaryDirsOpt),
+                                  (self.ID_PrimaryKeys, 'OMPrimaryKeys', self.onPrimaryKeys), (self.ID_PDsInChartOpt, 'OMPDsInChartOpt', self.onPDsInChartOpt),
+                                  (self.ID_LotsOpt, 'OMLots', self.onLotsOpt), (self.ID_Syzygy, 'OMSyzygy', self.onSyzygy),
+                                  (self.ID_FixedStarsOpt, 'OMFixedStarsOpt', self.onFixedStarsOpt), (self.ID_ProfectionsOpt, 'OMProfectionsOpt', self.onProfectionsOpt),
+                                  (self.ID_FirdariaOpt, 'OMFirdariaOpt', self.onFirdariaOpt), (self.ID_DefLocationOpt, 'OMDefLocationOpt', self.onDefLocationOpt),
+                                  (self.ID_MenuSelFirst, 'OMMenuSelFirst', self.onMenuSelFirst), (self.ID_MenuSelSecond, 'OMMenuSelSecond', self.onMenuSelSecond)):
+            self.Bind(wx.EVT_MENU, handler, id=iid)
+            keys = mtexts.menutxts[key].partition('\t')[2]
+            entry = wx.AcceleratorEntry()
+            if shown(iid) and keys and entry.FromString(keys):
+                entry.Set(entry.GetFlags(), entry.GetKeyCode(), iid)
+                accels.append(entry)
+        self.SetAcceleratorTable(wx.AcceleratorTable(accels))
 
         # Help
         self.mhelp = wx.Menu()
@@ -2096,6 +2080,9 @@ class MFrame(wx.Frame):
                         self.moptions.Enable(self.ID_SaveOpts, False)
         dlg.Destroy()
 
+    def onSettings(self, event):
+        settingswnd.show(self)
+
     def onTradOpts(self, index):
         if tradoptsdlg.show(self, index, self.options.autosave):
             if not self.options.autosave:
@@ -2187,7 +2174,7 @@ class MFrame(wx.Frame):
         li = self.GetChildren()
         for ch in li:
             x, y = ch.GetClientSize()
-            if ch.GetName() != 'status_line' and y > 50:
+            if ch.GetName() != 'status_line' and y > 50 and ch is not self.settingswnd:
                 ch.Destroy()
 
     def enableMenus(self, bEnable):
