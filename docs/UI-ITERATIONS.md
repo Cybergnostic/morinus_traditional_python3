@@ -118,3 +118,18 @@ saving image/CSV for each available tab, resizing, and Open separately.
 - New unit tests in tests/test_fixedstarscatalog.py and GUI smoke test.
 - Test selected vs empty star catalogues, three pages, original windows,
   B&W, export, scrolling, angular events and paranatellonta correctness.
+
+## B3: Planetary hours and Rise/Set workspace
+
+- New branch feature/ui-hours-riseset-workspace, stacked on B2.
+- New Tables > Planetary hours and Rise/Set workspace, two native pages.
+- Legacy Tables > Planetary hours and Tables > Rise and set actions now
+  open the appropriate tab in the existing workspace instance.
+- Each tab uses the original HoursWnd/RiseSetWnd calculation and drawing
+  code, including local time handling and rising times of zodiacal signs.
+- Open separately recreates the original standalone frames.
+- Loading the second tab is deferred until used.
+- Heliacal phenomena intentionally remain separate (different calculations).
+- Unit test: tests/test_hourscatalog.py. GUI smoke: hoursRiseSetWorkspace.
+- Verify daylight/nighttime charts, hours around sunrise, rise/set, high
+  latitude edge cases, black and white, CSV, zoom, original standalone view.
