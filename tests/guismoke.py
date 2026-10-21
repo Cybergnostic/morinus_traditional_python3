@@ -328,6 +328,7 @@ def main():
 			subprocess.call(['import', '-window', 'root', fn])
 
 	app = wx.App(False)
+	wx.Log.SetLogLevel(wx.LOG_Info)	# as morinus.py: no wxWidgets debug diagnostics
 	opts = options.Options()
 	if '--variant' in sys.argv:
 		for k, v in VARIANTS[int(sys.argv[sys.argv.index('--variant')+1])].items():
@@ -437,7 +438,8 @@ def main():
 					(frame.ID_RiseSet, 'hours_riseset_workspace'), (frame.ID_PlanetaryHours, 'hours_riseset_workspace'),
 					(frame.ID_FixedStars, 'fixed_stars_workspace'), (frame.ID_FixedStarsAsps, 'fixed_stars_workspace'),
 					(frame.ID_SyzygyChart, None), (frame.ID_SyzygyChart2, None),
-					(frame.ID_ExactTransits, 'transit_search'), (frame.ID_SunTransits, 'transit_search'))
+					(frame.ID_ExactTransits, 'transit_search'), (frame.ID_SunTransits, 'transit_search'),
+					(frame.ID_UserSpeculum, 'positions_workspace'))
 				for iid, attr in expect:
 					before = set(wx.GetTopLevelWindows())
 					frame.GetEventHandler().ProcessEvent(wx.CommandEvent(wx.wxEVT_MENU, iid))

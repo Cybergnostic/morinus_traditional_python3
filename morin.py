@@ -329,7 +329,6 @@ class MFrame(wx.Frame):
         sep(self.mtables)
         add(self.mtables, self.ID_ZodPars, 'TMZodPars', self.onZodPars)
         add(self.mtables, self.ID_Midpoints, 'TMMidpoints', self.onMidpoints)
-        add(self.mtables, self.ID_UserSpeculum, 'TMUserSpeculum', self.onUserSpeculum)
         add(self.mtables, self.ID_Strip, 'TMStrip', self.onStrip)
         sep(self.mtables)
         if shown(self.ID_AlmutenZodiacal) or shown(self.ID_AlmutenChart) or shown(self.ID_AlmutenTopical):
@@ -352,10 +351,13 @@ class MFrame(wx.Frame):
         sep(self.mtables)
         add(self.mtables, self.ID_Profections, 'TMProfections', self.onProfections)
         add(self.mtables, self.ID_Firdaria, 'TMFirdaria', self.onFirdaria)
-        new(self.mtables, 'Zodiacal releasing from Fortune', 'Periods of the signs from the Lot of Fortune (Valens)', self.onZRFortune, self.ID_ZRFortune)
-        new(self.mtables, 'Zodiacal releasing from Spirit', 'Periods of the signs from the Lot of Spirit (Valens)', self.onZRSpirit, self.ID_ZRSpirit)
-        new(self.mtables, 'Decennials', 'Periods of 10 years 9 months of the planets (Valens)', self.onDecennials, self.ID_Decennials)
-        self.ID_Circumambulation = new(self.mtables, 'Circumambulation', 'The Ascendant directed through the bounds (Ptolemy)', self.onCircumambulation).GetId()
+        # the time lords of the Hellenistic astrologers in a submenu
+        self.mhellenistic = wx.Menu()
+        new(self.mhellenistic, 'Zodiacal releasing from Fortune', 'Periods of the signs from the Lot of Fortune (Valens)', self.onZRFortune, self.ID_ZRFortune)
+        new(self.mhellenistic, 'Zodiacal releasing from Spirit', 'Periods of the signs from the Lot of Spirit (Valens)', self.onZRSpirit, self.ID_ZRSpirit)
+        new(self.mhellenistic, 'Decennials', 'Periods of 10 years 9 months of the planets (Valens)', self.onDecennials, self.ID_Decennials)
+        self.ID_Circumambulation = new(self.mhellenistic, 'Circumambulation', 'The Ascendant directed through the bounds (Ptolemy)', self.onCircumambulation).GetId()
+        self.mtables.AppendSubMenu(self.mhellenistic, 'Hellenistic', 'Zodiacal releasing, decennials and circumambulation')
         sep(self.mtables)
         add(self.mtables, self.ID_PrimaryDirs, 'TMPrimaryDirs', self.onPrimaryDirs)
         sep(self.mtables)
@@ -448,7 +450,8 @@ class MFrame(wx.Frame):
                                   (self.ID_Speeds, 'TMSpeeds', self.onSpeeds), (self.ID_FixedStars, 'TMFixStars', self.onFixedStars),
                                   (self.ID_FixedStarsAsps, 'TMFixStarsAsps', self.onFixedStarsAsps), (self.ID_PlanetaryHours, 'TMPlanetaryHours', self.onPlanetaryHours),
                                   (self.ID_SyzygyChart, 'PMSyzygy', self.onSyzygyChart), (self.ID_SyzygyChart2, 'PMSyzygy2', self.onSyzygyChart2),
-                                  (self.ID_ExactTransits, 'TMExactTransits', self.onTransitSearch), (self.ID_SunTransits, 'PMSunTransits', self.onSunTransitSearch)):
+                                  (self.ID_ExactTransits, 'TMExactTransits', self.onTransitSearch), (self.ID_SunTransits, 'PMSunTransits', self.onSunTransitSearch),
+                                  (self.ID_UserSpeculum, 'TMUserSpeculum', lambda e: self.showPositionsWorkspace(positionscatalog.MENU_TABS['onUserSpeculum']))):
             self.Bind(wx.EVT_MENU, lambda e, h=handler: None if self.splash else h(e), id=iid)
             keys = mtexts.menutxts[key].partition('\t')[2]
             entry = wx.AcceleratorEntry()

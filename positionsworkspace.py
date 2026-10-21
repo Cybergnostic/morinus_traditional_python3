@@ -30,6 +30,11 @@ def has_columns(options, method):
     return positionscatalog.has_columns(options.speculums, method)
 
 
+def userpoint(chart):
+    """The user-defined promissor, or else significator, of the primary directions (as Morinus's User speculum)."""
+    return chart.userprompd if chart.userprompd is not None else chart.usersigpd
+
+
 class _NoCheck:
     """PositionsWnd checks its parent's B/W menu item; the workspace menu shows it instead."""
     def Check(self, *args):
@@ -72,7 +77,7 @@ class SpeculumPanel(wx.Panel):
         if self.view is not None:
             self.view.Destroy()
         if has_columns(self.options, self.method):
-            self.view = positionswnd.PositionsWnd(self.area, self.chart, self.options, self.mainfr, speculum_index=self.method)
+            self.view = positionswnd.PositionsWnd(self.area, self.chart, self.options, self.mainfr, speculum_index=self.method, userpoint=userpoint(self.chart))
             if self.view.bw != bw:
                 self.view.bw = bw
                 self.view.drawBkg()
@@ -141,7 +146,7 @@ def _open_speculum(mainfr, chart, options, panel):
     if not has_columns(options, method):
         wx.MessageBox(mtexts.txtspositions['SelectColumn'], 'Positions', wx.OK | wx.ICON_INFORMATION, parent=mainfr)
         return None
-    frame = positionsframe.PositionsFrame(mainfr, mainfr.title, chart, options, speculum_index=method)
+    frame = positionsframe.PositionsFrame(mainfr, mainfr.title, chart, options, speculum_index=method, userpoint=userpoint(chart))
     frame.Show()
     return frame
 

@@ -5,7 +5,7 @@ import mtexts
 
 # Preserve the original saved .opt checkbox indices, but hide entries whose
 # functions are now tabs of consolidated workspaces.
-HIDDEN_LEGACY_TABLES = frozenset((0, 4, 5, 9, 10, 12, 13, 16, 17))
+HIDDEN_LEGACY_TABLES = frozenset((0, 4, 5, 9, 10, 12, 13, 16, 17, 19))
 HIDDEN_LEGACY_CHARTS = frozenset((2, 6, 7))
 
 

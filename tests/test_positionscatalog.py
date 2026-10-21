@@ -7,7 +7,7 @@ import positionscatalog
 class PositionsCatalogTests(unittest.TestCase):
     def test_all_legacy_commands_have_independent_tab(self):
         self.assertEqual(positionscatalog.MENU_TABS,
-                         {'onPositions': 1, 'onMunPos': 0, 'onSpeeds': 0, 'onMisc': 0})
+                         {'onPositions': 1, 'onMunPos': 0, 'onSpeeds': 0, 'onMisc': 0, 'onUserSpeculum': 1})
         self.assertEqual(len(positionscatalog.TABS), 2)
         self.assertEqual(len(positionscatalog.DESCRIPTIONS), 2)
         self.assertEqual(set(positionscatalog.MENU_TABS.values()), set(range(2)))

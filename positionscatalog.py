@@ -8,11 +8,12 @@ TABS = ('Overview', 'Speculum')
 DESCRIPTIONS = (
     'Zodiacal and equatorial positions, motion, houses and mundane positions, '
     'the angles and lots, and the data of the chart.',
-    'The full Placidus or Regiomontanus speculum; Appearance II chooses its columns.',
+    'The full Placidus or Regiomontanus speculum, with your point of the primary directions when defined; '
+    'Appearance II chooses its columns.',
 )
 # Morinus's Positions (F1) is the speculum; Mundane positions (F6), Speeds (F11)
 # and Misc (F5) are all in the overview.
-MENU_TABS = {'onPositions': 1, 'onMunPos': 0, 'onSpeeds': 0, 'onMisc': 0}
+MENU_TABS = {'onPositions': 1, 'onMunPos': 0, 'onSpeeds': 0, 'onMisc': 0, 'onUserSpeculum': 1}
 
 
 def initial_speculum(primarydir, regiomontan):
