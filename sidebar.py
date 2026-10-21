@@ -49,7 +49,7 @@ def rulers(opts, lon, night):
 	sign, deg = int(lon // 30.0) % 12, lon % 30.0
 	dom = next((p for p in range(7) if opts.dignities[p][0][sign]), -1)
 	exa = next((p for p in range(7) if opts.dignities[p][1][sign]), -1)
-	trip = opts.trips[opts.seltrip][TRIPLS[sign]]
+	trip = [p if 0 <= p < 7 else -1 for p in opts.trips[opts.seltrip][TRIPLS[sign]]]	# 7: none
 	total, term = 0.0, -1
 	for pl, width in opts.terms[opts.selterm][sign]:
 		total += width

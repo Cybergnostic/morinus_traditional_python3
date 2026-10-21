@@ -40,7 +40,7 @@ class RevolutionsDlg(wx.Dialog):
             rnge = 5000
         self.stime = wx.StaticBox(self, label='')
         timesizer = wx.StaticBoxSizer(self.stime, wx.VERTICAL)
-        label = wx.StaticText(self, -1, mtexts.txtsrevolutionsdlg['StartingDate'])
+        label = wx.StaticText(self, -1, 'First return after (midnight, UT)' if mtexts.txtsrevolutionsdlg['StartingDate'].startswith('Starting') else mtexts.txtsrevolutionsdlg['StartingDate'])
         vsubsizer = wx.BoxSizer(wx.VERTICAL)
         vsubsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer = wx.FlexGridSizer(0, 3, 0, 0)
