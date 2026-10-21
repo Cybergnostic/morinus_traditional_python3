@@ -47,7 +47,7 @@ class GraphChart:
         self.chartsize = min(self.w, self.h)
         self.logical_chartsize = min(self.display_size)
         self.maxradius = self.chartsize // 2
-        self.center = wx.Point(size[0] // 2, size[1] // 2)
+        self.center = wx.Point(self.w // 2, self.h // 2)
         self.arrowlen = 0.04
         self.retrdiff = 0.01
         self.deg01510len = 0.01
