@@ -43,7 +43,8 @@ def ingress_crossing(a, b):
     if movement > 0:
         sign = int((b % 360) // 30)
         return sign, 1
-    sign = int((a % 360) // 30)
+    # In retrograde motion the newly ENTERED sign is at the right end.
+    sign = int((b % 360) // 30)
     return sign, -1
 
 
