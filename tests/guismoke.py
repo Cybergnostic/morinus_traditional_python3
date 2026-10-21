@@ -352,7 +352,7 @@ def main():
 	frame = morin.MFrame(None, -1, mtexts.txtscommon['ProgramTitle'], opts)
 	frame.Show(True)
 
-	steps = iter(HANDLERS)
+	steps = iter(['onLoad', 'comparisonGrid', 'multiWheel', 'onExit'] if '--multiwheel-only' in sys.argv else HANDLERS)
 	state['n'] = 0
 
 	def settle(secs):

@@ -29,6 +29,13 @@ jobs:
         run: |
           xvfb-run -a -s "-screen 0 1600x1000x24" python3 -m unittest discover -s tests -p 'test_*.py' -v
 
+      - name: Focused multi-wheel GUI test
+        if: ${{ always() }}
+        run: |
+          cp -r . "$RUNNER_TEMP/multiwheel-copy"
+          xvfb-run -a -s "-screen 0 1600x1000x24" python3 tests/guismoke.py "$RUNNER_TEMP/multiwheel-copy" "$RUNNER_TEMP/multiwheel-out" --exercise --multiwheel-only
+          python3 tests/check_smoke.py "$RUNNER_TEMP/multiwheel-out/guismoke.json"
+
       - name: Smoke test
         if: ${{ always() }}
         run: |
@@ -40,7 +47,9 @@ jobs:
         if: always()
         with:
           name: guismoke-linux
-          path: ${{ runner.temp }}/out/
+          path: |
+            ${{ runner.temp }}/out/
+            ${{ runner.temp }}/multiwheel-out/
 
   windows:
     runs-on: windows-latest
@@ -63,6 +72,14 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_*.py' -v
 
+      - name: Focused multi-wheel GUI test
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          Copy-Item . "$env:RUNNER_TEMP\multiwheel-copy" -Recurse
+          python tests/guismoke.py "$env:RUNNER_TEMP\multiwheel-copy" "$env:RUNNER_TEMP\multiwheel-out" --exercise --multiwheel-only
+          python tests/check_smoke.py "$env:RUNNER_TEMP\multiwheel-out\guismoke.json"
+
       - name: Smoke test
         if: ${{ always() }}
         shell: pwsh
@@ -76,4 +93,6 @@ jobs:
         if: always()
         with:
           name: guismoke-windows
-          path: ${{ runner.temp }}/out/
+          path: |
+            ${{ runner.temp }}/out/
+            ${{ runner.temp }}/multiwheel-out/

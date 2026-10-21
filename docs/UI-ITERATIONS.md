@@ -206,3 +206,6 @@ which page sizes, aspect tables, and PDF/SVG export formats are needed.
 
 - Same-orientation toggle was intentionally omitted: GraphChart fixes each
   single wheel to its own Ascendant, and the brief prohibits changing it.
+
+- Focused smoke option `--multiwheel-only` runs onLoad, comparisonGrid,
+  multiWheel and onExit, alongside the complete GUI smoke in CI.
