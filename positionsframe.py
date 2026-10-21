@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import wx
+import menubars
 import positionswnd
 import mtexts
 
@@ -11,6 +12,7 @@ class PositionsFrame(wx.Frame):
     def __init__(self, parent, title, chrt, options):
         wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(PositionsFrame.XSIZE, PositionsFrame.YSIZE))
         self.pmenu = wx.Menu()
+        menubars.later(self, 'Table')
         self.ID_SaveAsBitmap = wx.NewId()
         self.ID_BlackAndWhite = wx.NewId()
         self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveTable'])

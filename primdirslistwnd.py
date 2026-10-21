@@ -3,6 +3,7 @@
 import math
 import os
 import wx
+import menubars
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -48,6 +49,8 @@ class PrimDirsListWnd(wx.ScrolledWindow):
         if chrt.htype == chart.Chart.RADIX:
             self.pmenu.Append(self.ID_PDsInChart, mtexts.txtsprimdirslist['PDsInChart'], mtexts.txtsprimdirslist['PDsInChart'])
             self.pmenu.Append(self.ID_PDsInChartIngress, mtexts.txtsprimdirslist['PDsInChartIngress'], mtexts.txtsprimdirslist['PDsInChartIngress'])
+        # the directions in a chart act on the clicked row: right-click only
+        menubars.later(self, 'Table', (getattr(self, 'ID_PDsInChart', None), getattr(self, 'ID_PDsInChartIngress', None)))
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_RIGHT_UP, self.onPopupMenu)
         self.Bind(wx.EVT_MENU, self.onSaveAsBitmap, id=self.ID_SaveAsBitmap)

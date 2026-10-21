@@ -2,6 +2,7 @@
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import os
 import wx
+import menubars
 import mtexts
 from PIL import ImageDraw
 
@@ -24,6 +25,7 @@ class CommonWnd(wx.ScrolledWindow):
         self.SetBackgroundColour(self.options.clrbackground)
         self.SetScrollRate(CommonWnd.SCROLL_RATE, CommonWnd.SCROLL_RATE)
         self.pmenu = wx.Menu()
+        menubars.later(self, 'Table')
         self.ID_SaveAsBitmap = wx.NewId()
         self.ID_BlackAndWhite = wx.NewId()
         self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveTable'])

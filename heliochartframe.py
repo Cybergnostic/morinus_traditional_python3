@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import wx
+import menubars
 import heliochartwnd
 import mtexts
 
@@ -14,6 +15,7 @@ class HelioChartFrame(wx.Frame):
         self.options = opts
         self.parent = parent
         self.pmenu = wx.Menu()
+        menubars.later(self, 'Chart')
         self.ID_SaveAsBitmap = wx.NewId()
         self.ID_BlackAndWhite = wx.NewId()
         self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveChart'])

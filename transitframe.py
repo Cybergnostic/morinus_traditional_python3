@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import wx
+import menubars
 import chart
 import positionswnd
 import positionswnd2
@@ -37,6 +38,7 @@ class TransitFrame(wx.Frame):
         self.parent = parent
         self.title = title
         self.pmenu = wx.Menu()
+        menubars.later(self, 'Chart')
         self.ID_Selection = wx.NewId()
         self.ID_PrimaryDirections = wx.NewId()
         self.ID_SaveAsBitmap = wx.NewId()
