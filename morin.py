@@ -72,6 +72,7 @@ import firdariaframe
 import primdirslistframe
 import primdirsrangedlg
 import graphchart
+import comparegrid
 import squarechartframe
 import transits
 import revolutions
@@ -387,6 +388,7 @@ class MFrame(wx.Frame):
             self.returnids.append(self.ID_OtherReturns)
         sep(self.mcharts)
         add(self.mcharts, self.ID_Transits, 'PMTransits', self.onTransits)
+        self.ID_CompareGrid = new(self.mcharts, 'Compare charts...', 'Show 2 or 4 independent chart wheels', self.onCompareGrid).GetId()
         # Exact transits (Tables) and Sun transits are one search
         self.ID_TransitSearch = new(self.mcharts, 'Transit search...', 'Exact transits over months or years, by planet, aspect and natal point',
                                     self.onTransitSearch).GetId()
@@ -1554,6 +1556,9 @@ class MFrame(wx.Frame):
         ef = transitframe.TransitFrame(self, self.title, syzygychart, self.horoscope, self.options, stepper=lunationnavigator.stepper(self.horoscope, self.options))
         ef.Show(True)
 
+    def onCompareGrid(self, event):
+        comparegrid.show(self)
+
     def onTransitSearch(self, event):
         transitsearch.show(self)
 
@@ -2254,7 +2259,7 @@ class MFrame(wx.Frame):
                 menubar.Enable(iid, not bEnable)
         ids = [self.ID_Data, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_Close, self.ID_TAlmutens] + list(range(self.ID_Positions, self.ID_PrimaryDirs + 1))
         ids += list(range(self.ID_Transits, self.ID_HelioChart + 1)) + self.returnids
-        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace, self.ID_LunationNavigator, self.ID_TransitSearch]
+        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace, self.ID_LunationNavigator, self.ID_TransitSearch, self.ID_CompareGrid]
         for iid in ids:
             if menubar.FindItemById(iid):
                 menubar.Enable(iid, bEnable)
