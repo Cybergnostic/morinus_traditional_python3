@@ -10,6 +10,7 @@ import decennialswnd
 import circumambulationwnd
 import heliacalwnd
 import fixedstaranglewnd
+import fixedstarsworkspace
 import dodecacalcdlg
 import starnames
 import tradoptions
@@ -344,6 +345,9 @@ class MFrame(wx.Frame):
         add(self.mtables, self.ID_Antiscia, 'TMAntiscia', self.onAntiscia)
         add(self.mtables, self.ID_Lots, 'TMLots', self.onLots)
         sep(self.mtables)
+        self.ID_FixedStarsWorkspace = new(self.mtables, 'Fixed Stars workspace...',
+            'Catalogue, conjunctions and aspects, birth angles and paranatellonta',
+            self.onFixedStarsWorkspace).GetId()
         add(self.mtables, self.ID_FixedStars, 'TMFixStars', self.onFixedStars)
         add(self.mtables, self.ID_FixedStarsAsps, 'TMFixStarsAsps', self.onFixedStarsAsps)
         self.ID_StarAngles = new(self.mtables, 'Fixed stars on the angles', 'Stars on the angles at the birth and the paranatellonta of the birth day', self.onStarAngles).GetId()
@@ -985,11 +989,11 @@ class MFrame(wx.Frame):
             frame = heliacalwnd.HeliacalFrame(self, self.title, self.horoscope, self.options)
             frame.Show(True)
 
+    def onFixedStarsWorkspace(self, event):
+        fixedstarsworkspace.show(self, 0)
+
     def onStarAngles(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            frame = fixedstaranglewnd.FixedStarAnglesFrame(self, self.title, self.horoscope, self.options)
-            frame.Show(True)
+        fixedstarsworkspace.show(self, 2)
 
     def onDodecaCalc(self, event):
         dlg = dodecacalcdlg.DodecaCalcDlg(self)
@@ -1084,30 +1088,10 @@ class MFrame(wx.Frame):
             zodparsfr.Show(True)
 
     def onFixedStars(self, event):
-        if not self.splash:
-            if not self.checkFixedStars():
-                return
-            if len(self.options.fixedstars) == 0:
-                dlgm = wx.MessageDialog(self, mtexts.txtscommon['NoSelFixedStars'], '', wx.OK | wx.ICON_INFORMATION)
-                dlgm.ShowModal()
-                dlgm.Destroy()
-                return
-            wait = wx.BusyCursor()
-            fixedstarsfr = fixedstarsframe.FixedStarsFrame(self, self.title, self.horoscope, self.options)
-            fixedstarsfr.Show(True)
+        fixedstarsworkspace.show(self, 0)
 
     def onFixedStarsAsps(self, event):
-        if not self.splash:
-            if not self.checkFixedStars():
-                return
-            if len(self.options.fixedstars) == 0:
-                dlgm = wx.MessageDialog(self, mtexts.txtscommon['NoSelFixedStars'], '', wx.OK | wx.ICON_INFORMATION)
-                dlgm.ShowModal()
-                dlgm.Destroy()
-                return
-            wait = wx.BusyCursor()
-            fixedstarsaspsfr = fixedstarsaspectsframe.FixedStarsAspectsFrame(self, self.title, self.horoscope, self.options)
-            fixedstarsaspsfr.Show(True)
+        fixedstarsworkspace.show(self, 1)
 
     def onLots(self, event):
         if not self.splash:
@@ -2249,7 +2233,7 @@ class MFrame(wx.Frame):
                 menubar.Enable(iid, not bEnable)
         ids = [self.ID_Data, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_Close, self.ID_TAlmutens] + list(range(self.ID_Positions, self.ID_PrimaryDirs + 1))
         ids += list(range(self.ID_Transits, self.ID_HelioChart + 1)) + self.returnids
-        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles, self.ID_ReturnsList, self.ID_PositionsWorkspace]
+        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace]
         for iid in ids:
             if menubar.FindItemById(iid):
                 menubar.Enable(iid, bEnable)
