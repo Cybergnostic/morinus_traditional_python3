@@ -37,6 +37,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_lunationnav.py'
           python3 -m unittest discover -s tests -p 'test_ephemerisdata.py'
           python3 -m unittest discover -s tests -p 'test_consolidated_menu.py'
+          python3 -m unittest discover -s tests -p 'test_swestatus.py'
 
       - name: Smoke test
         run: |
@@ -79,6 +80,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_lunationnav.py'
           python -m unittest discover -s tests -p 'test_ephemerisdata.py'
           python -m unittest discover -s tests -p 'test_consolidated_menu.py'
+          python -m unittest discover -s tests -p 'test_swestatus.py'
 
       - name: Smoke test
         shell: pwsh

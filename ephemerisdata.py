@@ -8,6 +8,7 @@ import calendar
 import datetime
 import math
 from collections import namedtuple
+from swestatus import status_code
 
 PLANETS = ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')
 SIGNS = ('Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -142,7 +143,7 @@ def swiss_sampler(options):
     def sample(jd, planet):
         ret, data, error = astrology.swe_calc_ut(
             jd, util.mapChaldeanToModern(planet), flags)
-        if ret < 0:
+        if status_code(ret) < 0:
             raise RuntimeError('Swiss Ephemeris failed: ' + str(error))
         longitude = data[0]
         if sidereal:

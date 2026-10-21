@@ -5,6 +5,8 @@ crossings directly at UT Julian days. Pure phase helpers are testable without
 Swiss Ephemeris, while production uses Morinus's astrology bridge.
 """
 
+from swestatus import status_code
+
 STEP_DAYS = 0.75
 KINDS = ((0.0, 'New Moon'), (180.0, 'Full Moon'))
 
@@ -69,7 +71,7 @@ def ephemeris_sampler():
             jd, astrology.SE_SUN, flags)
         moon_status, moon, moon_error = astrology.swe_calc_ut(
             jd, astrology.SE_MOON, flags)
-        if sun_status < 0 or moon_status < 0:
+        if status_code(sun_status) < 0 or status_code(moon_status) < 0:
             raise RuntimeError('Swiss Ephemeris could not calculate a lunar phase: ' +
                                str(sun_error or moon_error))
         return sun[0], moon[0]
