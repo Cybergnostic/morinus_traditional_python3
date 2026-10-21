@@ -44,6 +44,7 @@ import placidianutppd
 import regiomontanpd
 import campanianpd
 import positionsframe
+import positionsworkspace
 import almutenchartframe
 import almutentopicalsframe
 import almutenzodsframe
@@ -315,6 +316,11 @@ class MFrame(wx.Frame):
 
         # Tables, grouped: positions; dignities; aspects and points; fixed stars; time lords; directions and transits; hours and visibility
         self.mtables = wx.Menu()
+        self.ID_PositionsWorkspace = wx.NewIdRef()
+        new(self.mtables, 'Positions workspace...\tCtrl+Shift+P',
+            'Browse zodiacal specula, mundane positions, motion and chart data in one window',
+            self.onPositionsWorkspace, self.ID_PositionsWorkspace)
+        sep(self.mtables)
         add(self.mtables, self.ID_Positions, 'TMPositions', self.onPositions)
         add(self.mtables, self.ID_MunPos, 'TMMunPos', self.onMunPos)
         add(self.mtables, self.ID_Speeds, 'TMSpeeds', self.onSpeeds)
@@ -1003,19 +1009,16 @@ class MFrame(wx.Frame):
             frame = temperamentwnd.TemperamentFrame(self, self.title, self.horoscope, self.options)
             frame.Show(True)
 
-    def onPositions(self, event):
+    def showPositionsWorkspace(self, tab=0):
+        """Compatibility entry point for the four original positional tables."""
         if not self.splash:
-            speculum = 0
-            if self.options.primarydir == primdirs.PrimDirs.REGIOMONTAN:
-                speculum = 1
-            if True in self.options.speculums[speculum]:
-                wait = wx.BusyCursor()
-                posframe = positionsframe.PositionsFrame(self, self.title, self.horoscope, self.options)
-                posframe.Show(True)
-            else:
-                dlgm = wx.MessageDialog(self, mtexts.txtspositions['SelectColumn'], '', wx.OK | wx.ICON_INFORMATION)
-                dlgm.ShowModal()
-                dlgm.Destroy()
+            return positionsworkspace.show(self, tab)
+
+    def onPositionsWorkspace(self, event):
+        self.showPositionsWorkspace(0)
+
+    def onPositions(self, event):
+        self.showPositionsWorkspace(0)
 
     def onAlmutenZodiacal(self, event):
         if not self.splash:
@@ -1048,16 +1051,10 @@ class MFrame(wx.Frame):
             antisciafr.Show(True)
 
     def onMisc(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            miscfr = miscframe.MiscFrame(self, self.title, self.horoscope, self.options)
-            miscfr.Show(True)
+        self.showPositionsWorkspace(3)
 
     def onMunPos(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            munposfr = munposframe.MunPosFrame(self, self.title, self.horoscope, self.options)
-            munposfr.Show(True)
+        self.showPositionsWorkspace(1)
 
     def onAspects(self, event):
         if not self.splash:
@@ -1078,10 +1075,7 @@ class MFrame(wx.Frame):
             risesetfr.Show(True)
 
     def onSpeeds(self, event):
-        if not self.splash:
-            wait = wx.BusyCursor()
-            speedsfr = speedsframe.SpeedsFrame(self, self.title, self.horoscope, self.options)
-            speedsfr.Show(True)
+        self.showPositionsWorkspace(2)
 
     def onZodPars(self, event):
         if not self.splash:
@@ -2255,7 +2249,7 @@ class MFrame(wx.Frame):
                 menubar.Enable(iid, not bEnable)
         ids = [self.ID_Data, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_Close, self.ID_TAlmutens] + list(range(self.ID_Positions, self.ID_PrimaryDirs + 1))
         ids += list(range(self.ID_Transits, self.ID_HelioChart + 1)) + self.returnids
-        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles, self.ID_ReturnsList]
+        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_StarAngles, self.ID_ReturnsList, self.ID_PositionsWorkspace]
         for iid in ids:
             if menubar.FindItemById(iid):
                 menubar.Enable(iid, bEnable)
