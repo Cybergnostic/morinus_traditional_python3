@@ -406,7 +406,7 @@ class PositionsWnd(wx.ScrolledWindow):
                 sign = ''
                 if data[i] < 0.0:
                     sign = '-'
-                if i == regiospec.RegiomontanianSpeculum.LAT and idxpl == 0:
+                if i == regiospec.RegiomontanianSpeculum.LAT and idxpl == planets.Planets.SUN:
                     d, m, s = (0, 0, 0)
                     sign = ''
                 txt = sign + str(d).rjust(2) + self.deg_symbol + str(m).zfill(2) + "'" + str(s).zfill(2) + '"'
