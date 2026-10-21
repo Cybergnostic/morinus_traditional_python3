@@ -100,3 +100,21 @@ Manual review: open one chart, invoke each of the four legacy Table menu items,
 check it selects the correct notebook page, switch both specula, and verify
 all columns and values against original individual windows. Test B&W,
 saving image/CSV for each available tab, resizing, and Open separately.
+
+## B2: Fixed Stars workspace
+
+- Starts from B1 `a308a61c299771d8ab09432aaf9fedc6d256501c`.
+- New `feature/ui-fixed-stars-workspace` and native three-tab explorer:
+  star catalogue; original fixed-star aspect matrix; angular events (stars on
+  angles + paranatellonta in two sections).
+- Legacy Tables menu names retained as aliases to the matching page.
+- Separate independent windows remain available via Open separately.
+- Reuses original fixedstarswnd, fixedstarsaspectswnd, fixedstaranglewnd,
+  including their original orb calculations and Swiss Ephemeris calls.
+- Distinguish angular proximity to birth (`fsa_minutes`) from planet/star
+  simultaneity (`fsa_paranminutes`). Neither is changed.
+- Lazy view construction avoids expensive paran calculations until selected.
+- Shared lazy `legacytabworkspace.TableWorkspace` is reusable for B3.
+- New unit tests in tests/test_fixedstarscatalog.py and GUI smoke test.
+- Test selected vs empty star catalogues, three pages, original windows,
+  B&W, export, scrolling, angular events and paranatellonta correctness.

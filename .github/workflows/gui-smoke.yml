@@ -32,6 +32,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_chartquality.py'
           python3 -m unittest discover -s tests -p 'test_tablepresentation.py'
           python3 -m unittest discover -s tests -p 'test_positionscatalog.py'
+          python3 -m unittest discover -s tests -p 'test_fixedstarscatalog.py'
 
       - name: Smoke test
         run: |
@@ -69,6 +70,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_chartquality.py'
           python -m unittest discover -s tests -p 'test_tablepresentation.py'
           python -m unittest discover -s tests -p 'test_positionscatalog.py'
+          python -m unittest discover -s tests -p 'test_fixedstarscatalog.py'
 
       - name: Smoke test
         shell: pwsh

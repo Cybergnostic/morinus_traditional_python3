@@ -110,7 +110,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -427,6 +427,19 @@ def main():
 					if hasattr(view, 'chart'):
 						assert view.chart is frame.horoscope
 				wnd.Close()
+			elif name == 'fixedStarsWorkspace':
+				# Exercise lazy tabs without calculating all angular crossings twice.
+				import fixedstarsworkspace, fixedstarscatalog
+				if frame.options.fixedstars:
+					wnd = fixedstarsworkspace.show(frame, 0)
+					if wnd is not None:
+						assert wnd.book.GetPageCount() == len(fixedstarscatalog.TABS)
+						assert wnd.activeView().chart is frame.horoscope
+						wnd.selectTab(1)
+						assert wnd.activeView().chart is frame.horoscope
+						wnd.selectTab(0)
+						assert len(wnd.views) == 2, 'Lazy third tab was constructed early'
+						wnd.Close()
 			elif name == 'clickWheel':
 				w, h = frame.GetClientSize()
 				for fx in range(1, 10):
