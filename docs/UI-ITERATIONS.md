@@ -133,3 +133,20 @@ saving image/CSV for each available tab, resizing, and Open separately.
 - Unit test: tests/test_hourscatalog.py. GUI smoke: hoursRiseSetWorkspace.
 - Verify daylight/nighttime charts, hours around sunrise, rise/set, high
   latitude edge cases, black and white, CSV, zoom, original standalone view.
+
+## B4: Independent New/Full Moon navigator
+
+- Based on B3, on separate feature/ui-lunation-navigator branch.
+- Charts > New and Full Moon navigator opens a separate wxPython list view.
+- Computes geocentric Sun–Moon ecliptic conjunctions and oppositions via
+  Swiss Ephemeris UT, with bracketed bisection (does not invoke Syzygy()).
+- Earlier, Later, Birth date navigate successive ~two-month windows.
+- Open event chart generates a normal transit chart for selected event.
+- Dates are formatted in the radix's entered local-time convention.
+- Does NOT modify radix.syzygy, its prenatal selection, its time, or
+  lots, almutens, or other traditional calculations.
+- Original Charts > Syzygy chart and Syzygy chart 2 remain untouched.
+- BC event-chart navigation disabled as in existing syzygy chart tools.
+- Pure tests: tests/test_lunationnav.py. GUI smoke: lunationNavigator.
+- Test chart date around a new/full Moon, earlier/later windows, zoom,
+  event chart, ephemeris tolerance, and original prenatal syzygy stability.

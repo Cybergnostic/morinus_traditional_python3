@@ -110,7 +110,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -451,6 +451,21 @@ def main():
 				assert len(wnd.views) == 2
 				wnd.selectTab(0)
 				wnd.Close()
+			elif name == 'lunationNavigator':
+				import lunationnavigator, lunationnav
+				if not frame.horoscope.time.bc:
+					syz = frame.horoscope.syzygy
+					wnd = lunationnavigator.show(frame)
+					assert wnd and len(wnd.events) >= 5
+					assert frame.horoscope.syzygy is syz
+					assert any(e[0] < frame.horoscope.time.jd for e in wnd.events)
+					assert any(e[0] > frame.horoscope.time.jd for e in wnd.events)
+					for jd, name, sun, moon in wnd.events:
+						target = 0.0 if name == 'New Moon' else 180.0
+						assert abs(lunationnav.phase_difference(moon, sun, target)) < 0.0005
+					wnd.shift(55)
+					assert frame.horoscope.syzygy is syz
+					wnd.Close()
 			elif name == 'clickWheel':
 				w, h = frame.GetClientSize()
 				for fx in range(1, 10):
