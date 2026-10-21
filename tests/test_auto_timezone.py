@@ -54,7 +54,12 @@ class AutoTimezoneTests(unittest.TestCase):
         # IANA counts Irish winter time as -1h DST; Morinus gets the total offset
         with finder(DublinFinder):
             self.assertEqual(resolve_timezone(2020, 1, 15, 12, 0, 0, 53.35, -6.26)[1:3], (0, False))
-            self.assertEqual(resolve_timezone(2020, 7, 15, 12, 0, 0, 53.35, -6.26)[1:3], (60, False))
+            # tzdb builds differ in whether Ireland's UTC+1 summer is
+            # represented as standard GMT+1 or GMT+0 with +1h DST.
+            # Both are equivalent for Morinus's standard offset/DST fields.
+            _, standard, summer_dst, _ = resolve_timezone(
+                2020, 7, 15, 12, 0, 0, 53.35, -6.26)
+            self.assertIn((standard, summer_dst), ((60, False), (0, True)))
 
     def test_sea_warns(self):
         with finder(SeaFinder):
