@@ -20,6 +20,7 @@ import returnstepperdlg
 import returnslist
 import util
 import sidebar
+import time as _time
 import tradoptions
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
 pdlock = _thread.allocate_lock()
@@ -96,26 +97,43 @@ class TransitFrame(wx.Frame):
             self.w = transitwnd.TransitWnd(self, self.chart, self.radix, self.options, self.parent, True)
             self.compoundmenu.Check()
         self.Bind(EVT_PDREADY, self.OnPDReady)
-        # the sidebar of the main window, for this chart
-        self.sidebar = sidebar.Sidebar(self)
+        # Same resizable sidebar as the main chart.
+        self.sidebar_width = tradoptions.get('sidebar_width')
+        self._sidebar_last_draw = 0.0
+        self.sidebar = sidebar.Sidebar(self, self.onSidebarResize)
         self.sidebar.setChart(self.chart, self.radix)
         self.msidebar = self.pmenu.AppendCheckItem(wx.NewIdRef(), 'Planet sidebar', 'Show the planet, chart and time lords beside the chart')
         self.msidebar.Check(tradoptions.get('show_sidebar'))
         self.Bind(wx.EVT_MENU, self.onSidebar, id=self.msidebar.GetId())
         self.Bind(wx.EVT_SIZE, self.onFrameSize)
         if tradoptions.get('show_sidebar'):
-            self.SetSize((TransitFrame.XSIZE + sidebar.WIDTH, TransitFrame.YSIZE))
+            self.SetSize((TransitFrame.XSIZE + self.sidebar_width, TransitFrame.YSIZE))
         self.layout()
 
     def layout(self):
         """The chart (or table) on the left, the sidebar on the right."""
         w, h = self.GetClientSize()
         show = tradoptions.get('show_sidebar')
-        sw = sidebar.WIDTH if show else 0
+        sw = sidebar.fit_width(w, self.sidebar_width) if show else 0
         self.sidebar.Show(show)
         if show:
             self.sidebar.SetSize(w - sw, 0, sw, h)
         self.w.SetSize(0, 0, max(w - sw, 50), h)
+
+    def onSidebarResize(self, preferred, finished):
+        """Drag the panel edge and remember the width when released."""
+        width = sidebar.fit_width(self.GetClientSize().width, preferred)
+        if width == self.sidebar.GetSize().width and not finished:
+            return
+        self.sidebar_width = width
+        now = _time.monotonic()
+        if finished:
+            tradoptions.set({'sidebar_width': width})
+            if self.options.autosave:
+                tradoptions.save()
+        if finished or now - self._sidebar_last_draw >= 0.08:
+            self._sidebar_last_draw = now
+            self.layout()
 
     def onFrameSize(self, event):
         self.layout()

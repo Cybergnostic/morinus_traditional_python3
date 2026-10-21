@@ -18,6 +18,7 @@ import chartlookdlg
 import settingswnd
 import commandsearch
 import sidebar
+import time as _time
 import defaultsbtn
 import returnslistframe
 import os
@@ -143,7 +144,9 @@ class MFrame(wx.Frame):
         self.statusbar = self.CreateStatusBar(4, name='status_line')
         self.statusbar.SetStatusWidths([-5, -2, -3, -4])
         self.buildToolBar()
-        self.sidebar = sidebar.Sidebar(self)
+        self.sidebar_width = tradoptions.get('sidebar_width')
+        self._sidebar_last_draw = 0.0
+        self.sidebar = sidebar.Sidebar(self, self.onSidebarResize)
         self.sidebar.Hide()
         if os.name == 'mac' or os.name == 'posix':
             self.Bind(wx.EVT_PAINT, self.onPaint)
@@ -2285,18 +2288,40 @@ class MFrame(wx.Frame):
             self.sidebar.setChart(self.horoscope)
 
     def chartSize(self):
-        """The client area less the sidebar."""
+        """The client area less the actual sidebar width."""
         w, h = self.GetClientSize()
         if self.sidebar.IsShown():
-            w -= sidebar.WIDTH
+            w -= self.sidebar.GetSize().width
         return wx.Size(max(w, 50), h)
 
     def placeSidebar(self):
         show = tradoptions.get('show_sidebar') and not self.splash
         if show:
             w, h = self.GetClientSize()
-            self.sidebar.SetSize(w - sidebar.WIDTH, 0, sidebar.WIDTH, h)
+            sw = sidebar.fit_width(w, self.sidebar_width)
+            self.sidebar.SetSize(w - sw, 0, sw, h)
         self.sidebar.Show(show)
+
+    def onSidebarResize(self, preferred, finished):
+        """Resize the chart area; persist the width only on release."""
+        if self.splash:
+            return
+        width = sidebar.fit_width(self.GetClientSize().width, preferred)
+        if width == self.sidebar.GetSize().width and not finished:
+            return
+        self.sidebar_width = width
+        now = _time.monotonic()
+        if finished:
+            tradoptions.set({'sidebar_width': width})
+            if self.options.autosave:
+                tradoptions.save()
+        # Drawing the full wheel is expensive; throttle resize repaints.
+        if finished or now - self._sidebar_last_draw >= 0.08:
+            self._sidebar_last_draw = now
+            self.drawBkg()
+            self.Refresh()
+        else:
+            self.placeSidebar()
 
     def onViewSidebar(self, event):
         show = event.IsChecked()

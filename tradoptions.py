@@ -43,6 +43,7 @@ DEFAULTS = {
 	'show_toolbar': True,
 	'table_zoom': 1.0,
 	'show_sidebar': True,
+	'sidebar_width': 310,		# resizable panel width in logical pixels
 	# windows and errors
 	'win_remember': True,
 	'err_show': True,

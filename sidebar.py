@@ -20,6 +20,18 @@ import zodiacalreleasing
 import decennials
 
 WIDTH = 310
+MIN_WIDTH = 250
+MAX_WIDTH = 560
+MIN_CHART_WIDTH = 300
+GRIP_WIDTH = 7
+
+
+def fit_width(total, preferred):
+	"""Clamp width while preserving chart space in narrow windows."""
+	total = max(0, int(total))
+	return min(max(MIN_WIDTH, int(preferred)), MAX_WIDTH, max(80, total - MIN_CHART_WIDTH))
+
+
 P = planets.Planets
 NAMES = ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon', 'North Node', 'South Node')
 SIGNS = ('Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces')
@@ -66,11 +78,23 @@ def jdstr(chrt, jd):
 
 class Sidebar(wx.Panel):
 
-	def __init__(self, parent):
+	def __init__(self, parent, on_resize=None):
 		wx.Panel.__init__(self, parent, -1, size=(WIDTH, -1))
 		self.chart = None
 		self.key = None
 		self.planet = P.SUN
+		self.on_resize = on_resize
+		self._drag_origin = None
+		self.grip = wx.Panel(self, -1, size=(GRIP_WIDTH, -1))
+		self.grip.SetMinSize((GRIP_WIDTH, -1))
+		self.grip.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_3DFACE))
+		self.grip.SetToolTip('Drag the divider to resize the sidebar')
+		self.grip.SetCursor(wx.Cursor(wx.CURSOR_SIZEWE))
+		self.grip.Bind(wx.EVT_PAINT, self.onGripPaint)
+		self.grip.Bind(wx.EVT_LEFT_DOWN, self.onGripDown)
+		self.grip.Bind(wx.EVT_LEFT_UP, self.onGripUp)
+		self.grip.Bind(wx.EVT_MOTION, self.onGripMove)
+		self.grip.Bind(wx.EVT_MOUSE_CAPTURE_LOST, self.onGripLost)
 		self.book = wx.Notebook(self, -1)
 		self.pages = []
 		for title in ('Planet', 'Chart', 'Time lords'):
@@ -87,9 +111,41 @@ class Sidebar(wx.Panel):
 			page.SetSizer(vs)
 			self.book.AddPage(page, title)
 			self.pages.append(html)
-		s = wx.BoxSizer(wx.VERTICAL)
+		s = wx.BoxSizer(wx.HORIZONTAL)
+		s.Add(self.grip, 0, wx.EXPAND)
 		s.Add(self.book, 1, wx.EXPAND)
 		self.SetSizer(s)
+
+	def onGripPaint(self, event):
+		dc = wx.PaintDC(self.grip)
+		dc.SetPen(wx.Pen(wx.SystemSettings.GetColour(wx.SYS_COLOUR_3DSHADOW)))
+		x = self.grip.GetClientSize().width // 2
+		y = self.grip.GetClientSize().height // 2
+		dc.DrawLine(x, max(0, y - 18), x, y + 18)
+
+	def onGripDown(self, event):
+		if self.on_resize is None:
+			return
+		self._drag_origin = (self.grip.ClientToScreen(event.GetPosition()).x, self.GetSize().width)
+		self.grip.CaptureMouse()
+
+	def onGripMove(self, event):
+		if self._drag_origin is None or not event.LeftIsDown():
+			return
+		x, width = self._drag_origin
+		self.on_resize(width + x - self.grip.ClientToScreen(event.GetPosition()).x, False)
+
+	def onGripUp(self, event):
+		if self._drag_origin is None:
+			return
+		self._drag_origin = None
+		if self.grip.HasCapture():
+			self.grip.ReleaseMouse()
+		if self.on_resize is not None:
+			self.on_resize(self.GetSize().width, True)
+
+	def onGripLost(self, event):
+		self._drag_origin = None
 
 	def setChart(self, chrt, radix=None):
 		"""Shows a chart; recalculates only when it or its settings changed. With
@@ -129,16 +185,19 @@ class Sidebar(wx.Panel):
 	def page(self, body):
 		c = lambda i: wx.SystemSettings.GetColour(i).GetAsString(wx.C2S_HTML_SYNTAX)
 		self.grey = c(wx.SYS_COLOUR_GRAYTEXT)
-		return '<html><body bgcolor="%s" text="%s">%s</body></html>' % (c(wx.SYS_COLOUR_WINDOW), c(wx.SYS_COLOUR_WINDOWTEXT), body.replace('$GREY', self.grey))
+		body = body.replace('$GREY', self.grey).replace('$SECTION', c(wx.SYS_COLOUR_HIGHLIGHT))
+		return ('<html><body bgcolor="%s" text="%s">'
+			'<table width="100%%" cellspacing="0" cellpadding="8"><tr><td>%s</td></tr></table>'
+			'</body></html>') % (c(wx.SYS_COLOUR_WINDOW), c(wx.SYS_COLOUR_WINDOWTEXT), body)
 
 	@staticmethod
 	def rows(pairs):
-		return '<table cellspacing="0" cellpadding="2" width="100%">' + ''.join(
+		return '<table cellspacing="0" cellpadding="4" width="100%">' + ''.join(
 			'<tr><td valign="top" width="42%%"><font color="$GREY">%s</font></td><td valign="top">%s</td></tr>' % (k, v) for k, v in pairs if v) + '</table>'
 
 	@staticmethod
 	def head(text):
-		return '<p><b>%s</b></p>' % text
+		return '<p><font color="$SECTION"><b>%s</b></font></p>' % text
 
 	def planetHtml(self, i):
 		h = self.chart
@@ -146,7 +205,7 @@ class Sidebar(wx.Panel):
 		lon, speed = pl.data[planets.Planet.LON], pl.data[planets.Planet.SPLON]
 		ascsign = int(h.houses.ascmc[houses.Houses.ASC] // 30.0)
 		house = (int(lon // 30.0) - ascsign) % 12 + 1
-		out = ['<font size="+2"><b>%s</b></font><br>%s, house %d (whole sign)' % (planetname(i), pos(lon), house)]
+		out = ['<font size="+2"><b>%s</b></font><p>%s<br><font color="$GREY">House %d (whole sign)</font></p>' % (planetname(i), pos(lon), house)]
 		pairs = [('Motion', '%s, %.2f° a day' % ('retrograde' if speed < 0 else 'direct', abs(speed)))]
 		rep = None
 		if self.analysis is not None and i < 7:
