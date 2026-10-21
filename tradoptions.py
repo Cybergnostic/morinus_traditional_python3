@@ -40,6 +40,7 @@ DEFAULTS = {
 	# chart drawing
 	'chart_smooth': True,		# antialiased lines and circles
 	'chart_lines': 'fine',		# fine, or morinus (the weights of Morinus 6)
+	'show_toolbar': True,
 	# windows and errors
 	'win_remember': True,
 	'err_show': True,

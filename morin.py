@@ -16,6 +16,7 @@ import tradoptions
 import tradoptsdlg
 import chartlookdlg
 import settingswnd
+import commandsearch
 import defaultsbtn
 import returnslistframe
 import os
@@ -140,6 +141,7 @@ class MFrame(wx.Frame):
         self.buildMenus()
         self.statusbar = self.CreateStatusBar(4, name='status_line')
         self.statusbar.SetStatusWidths([-5, -2, -3, -4])
+        self.buildToolBar()
         if os.name == 'mac' or os.name == 'posix':
             self.Bind(wx.EVT_PAINT, self.onPaint)
         else:
@@ -264,6 +266,9 @@ class MFrame(wx.Frame):
         self.mview.AppendSubMenu(self.mring, 'Outer ring')
         self.viewbw = self.mview.AppendCheckItem(wx.NewIdRef(), 'Black and white', 'Draw the chart and the tables in black and white')
         self.Bind(wx.EVT_MENU, lambda e: self.onViewOption('bw', e.IsChecked()), id=self.viewbw.GetId())
+        self.viewtoolbar = self.mview.AppendCheckItem(wx.NewIdRef(), 'Toolbar', 'Show the toolbar with the command search')
+        self.viewtoolbar.Check(tradoptions.get('show_toolbar'))
+        self.Bind(wx.EVT_MENU, self.onViewToolBar, id=self.viewtoolbar.GetId())
         sep(self.mview)
         self.ID_Housesystem1, self.ID_Housesystem2, self.ID_Housesystem3, self.ID_Housesystem4, self.ID_Housesystem5, self.ID_Housesystem6, self.ID_Housesystem7, self.ID_Housesystem8, self.ID_Housesystem9, self.ID_Housesystem10, self.ID_Housesystem11, self.ID_Housesystem12 = list(range(1050, 1062))
         self.ID_NodeMean = 1070
@@ -356,7 +361,7 @@ class MFrame(wx.Frame):
             mreturns = wx.Menu()
             for pl, key in ((revolutions.Revolutions.MERCURY, 'Mercury'), (revolutions.Revolutions.VENUS, 'Venus'), (revolutions.Revolutions.MARS, 'Mars'),
                             (revolutions.Revolutions.JUPITER, 'Jupiter'), (revolutions.Revolutions.SATURN, 'Saturn')):
-                self.returnids.append(new(mreturns, mtexts.txtscommon[key] + '...', 'The return of ' + key + ' to its place in the chart', lambda e, pl=pl: self.onRevolutions(e, pl)).GetId())
+                self.returnids.append(new(mreturns, mtexts.txtscommon[key] + ' return...', 'The return of ' + key + ' to its place in the chart', lambda e, pl=pl: self.onRevolutions(e, pl)).GetId())
             self.ID_OtherReturns = wx.NewIdRef()
             self.mcharts.Append(wx.MenuItem(self.mcharts, self.ID_OtherReturns, 'Other planetary returns', subMenu=mreturns))
             self.returnids.append(self.ID_OtherReturns)
@@ -414,6 +419,10 @@ class MFrame(wx.Frame):
             if shown(iid) and keys and entry.FromString(keys):
                 entry.Set(entry.GetFlags(), entry.GetKeyCode(), iid)
                 accels.append(entry)
+        # Ctrl+K: the command search of the toolbar
+        self.ID_CommandSearch = wx.NewIdRef()
+        self.Bind(wx.EVT_MENU, lambda e: self.cmdsearch.start() if self.toolbar.IsShown() else None, id=self.ID_CommandSearch)
+        accels.append(wx.AcceleratorEntry(wx.ACCEL_CTRL, ord('K'), self.ID_CommandSearch))
         self.SetAcceleratorTable(wx.AcceleratorTable(accels))
 
         # Help
@@ -422,6 +431,46 @@ class MFrame(wx.Frame):
         add(self.mhelp, self.ID_About, 'HEMAbout', self.onAbout)
         finish(self.mhelp, mtexts.menutxts['MHelp'])
         self.SetMenuBar(menubar)
+
+    def buildToolBar(self):
+        """New, Open, Save, Chart data, Settings, the house system and the command search."""
+        tb = self.toolbar = self.CreateToolBar(wx.TB_HORIZONTAL | wx.TB_FLAT)
+        menubar = self.GetMenuBar()
+        art = lambda a: wx.ArtProvider.GetBitmap(a, wx.ART_TOOLBAR, (22, 22))
+        self.toolids = []
+        for iid, artid, key in ((self.ID_New, wx.ART_NEW, 'HMNew'), (self.ID_Load, wx.ART_FILE_OPEN, 'HMLoad'),
+                                (self.ID_Save, wx.ART_FILE_SAVE, 'HMSave'), (self.ID_Data, wx.ART_EDIT, 'HMData')):
+            if menubar.FindItemById(iid):
+                text, _, keys = mtexts.menutxts[key].partition('\t')
+                text = text.replace('&', '')
+                tb.AddTool(iid, text, art(artid), shortHelp=text + (' (' + keys + ')' if keys else ''))
+                self.toolids.append(iid)
+        icon = wx.ArtProvider.GetBitmap('preferences-system', wx.ART_TOOLBAR, (22, 22))	# the desktop's icon where there is one
+        tool = tb.AddTool(wx.ID_ANY, 'Settings', icon if icon.IsOk() else art(wx.ART_HELP_SETTINGS), shortHelp='Settings (Ctrl+,)')
+        self.Bind(wx.EVT_TOOL, self.onSettings, id=tool.GetId())
+        tb.AddSeparator()
+        tb.AddControl(wx.StaticText(tb, -1, ' Houses: '))
+        self.tbhouses = wx.Choice(tb, -1, choices=[mtexts.menutxts[k].partition('\t')[0].replace('&', '') for k in settingswnd.HOUSESYSTEMS])
+        self.tbhouses.SetToolTip('House system (View > House system)')
+        self.tbhouses.SetSelection(self.options.hsys)
+        self.tbhouses.Bind(wx.EVT_CHOICE, self.onToolHouse)
+        tb.AddControl(self.tbhouses)
+        tb.AddStretchableSpace()
+        self.cmdsearch = commandsearch.CommandSearch(tb, self)
+        tb.AddControl(self.cmdsearch)
+        tb.Realize()
+        tb.Show(tradoptions.get('show_toolbar'))
+
+    def onToolHouse(self, event):
+        self.onHouseSystem(wx.CommandEvent(wx.wxEVT_MENU, self.hsbase + self.tbhouses.GetSelection()))
+        self.setHouse()
+
+    def onViewToolBar(self, event):
+        tradoptions.set({'show_toolbar': self.viewtoolbar.IsChecked()})
+        if self.options.autosave:
+            tradoptions.save()
+        self.toolbar.Show(self.viewtoolbar.IsChecked())
+        self.SendSizeEvent()
 
     def updateViewMenu(self):
         """The View menu's switches as the options are."""
@@ -2149,6 +2198,8 @@ class MFrame(wx.Frame):
         sysh = (
          self.itplac, self.itkoch, self.itregio, self.itcampa, self.itequal, self.itwhole, self.itaxial, self.itmorin, self.ithoriz, self.itpage, self.italcab, self.itporph)
         sysh[self.options.hsys].Check(True)
+        if getattr(self, 'tbhouses', None):
+            self.tbhouses.SetSelection(self.options.hsys)
 
     def setNode(self):
         if self.options.meannode:
@@ -2174,7 +2225,7 @@ class MFrame(wx.Frame):
         li = self.GetChildren()
         for ch in li:
             x, y = ch.GetClientSize()
-            if ch.GetName() != 'status_line' and y > 50 and ch is not self.settingswnd:
+            if ch.GetName() != 'status_line' and y > 50 and ch is not self.settingswnd and not isinstance(ch, (wx.ToolBar, wx.PopupWindow)):
                 ch.Destroy()
 
     def enableMenus(self, bEnable):
@@ -2189,6 +2240,9 @@ class MFrame(wx.Frame):
         for iid in ids:
             if menubar.FindItemById(iid):
                 menubar.Enable(iid, bEnable)
+        if getattr(self, 'toolbar', None):
+            for iid in self.toolids:
+                self.toolbar.EnableTool(iid, menubar.IsEnabled(iid))
 
     def enableOptMenus(self, bEnable):
         self.moptions.Enable(self.ID_SaveOpts, bEnable)
@@ -2230,7 +2284,7 @@ class MFrame(wx.Frame):
         if self.options.usedaynightorb:
             day = h.abovehorizonwithorb
         self.statusbar.SetStatusText('Day chart' if day else 'Night chart', 1)
-        names = [mtexts.txtscommon[k] for k in ('Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn')]
+        names = [mtexts.txtscommon[k] for k in ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')]
         ar = (6, 2, 5, 1, 4, 0, 3)
         self.statusbar.SetStatusText('%s day, %s hour' % (names[ar[t.ph.weekday]], names[t.ph.planetaryhour]), 2)
         zodiac = self.gchart.ayans[self.options.ayanamsha] if self.options.ayanamsha else mtexts.txtsayanamsha['Tropical']
