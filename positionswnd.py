@@ -20,7 +20,7 @@ class PositionsWnd(wx.ScrolledWindow):
     BORDER = 20
     SCROLL_RATE = 20
 
-    def __init__(self, parent, chrt, options, mainfr, id=-1, size=wx.DefaultSize):
+    def __init__(self, parent, chrt, options, mainfr, id=-1, size=wx.DefaultSize, speculum_index=None):
         wx.ScrolledWindow.__init__(self, parent, id, wx.DefaultPosition, size=size, style=wx.SUNKEN_BORDER)
         self.parent = parent
         self.chart = chrt
@@ -28,9 +28,11 @@ class PositionsWnd(wx.ScrolledWindow):
         self.mainfr = mainfr
         self.bw = self.options.bw
         self.parent.mbw.Check(self.bw)
-        self.speculum = 0
-        if self.options.primarydir == primdirs.PrimDirs.REGIOMONTAN:
-            self.speculum = 1
+        self.speculum = 1 if self.options.primarydir == primdirs.PrimDirs.REGIOMONTAN else 0
+        if speculum_index is not None:
+            if speculum_index not in (0, 1):
+                raise ValueError('Unknown speculum index: %r' % speculum_index)
+            self.speculum = speculum_index
         column_num = 0
         for i in range(len(self.options.speculums[self.speculum])):
             if self.options.speculums[self.speculum][i] == True:
