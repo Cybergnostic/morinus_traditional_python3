@@ -27,7 +27,7 @@ jobs:
 
       - name: Unit tests
         run: |
-          python3 -m unittest discover -s tests -p 'test_*.py' -v
+          xvfb-run -a python3 -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Smoke test
         run: |
