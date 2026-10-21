@@ -7,6 +7,7 @@ import wx
 import mtexts
 import tradoptions
 import tradoptsdlg
+import settingsindex
 
 
 def menutext(key):
@@ -80,33 +81,36 @@ HOUSESYSTEMS = ('OMHSPlacidus', 'OMHSKoch', 'OMHSRegiomontanus', 'OMHSCampanus',
 class SettingsWnd(wx.Dialog):
 
 	def __init__(self, frame):
-		wx.Dialog.__init__(self, frame, -1, 'Settings', size=(940, 660), style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+		wx.Dialog.__init__(self, frame, -1, 'Settings', size=(1000, 700), style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 		self.frame = frame
 		self.tradctrls = []
-		self.SetMinSize((720, 460))
+		self.entries = []		# searchable settings with live control targets
+		self.pages = []
+		self.SetMinSize((850, 520))
 
-		self.search = wx.SearchCtrl(self, -1, size=(230, -1))
-		self.search.SetDescriptiveText('Search settings')
+		self.search = wx.SearchCtrl(self, -1, size=(265, -1), style=wx.TE_PROCESS_ENTER)
+		self.search.SetDescriptiveText('Find a setting or option')
 		self.search.ShowCancelButton(True)
-		self.list = wx.ListBox(self, -1, size=(230, -1), style=wx.LB_SINGLE)
+		self.list = wx.ListBox(self, -1, size=(265, -1), style=wx.LB_SINGLE)
+		self.result_count = wx.StaticText(self, -1, 'Browse by category')
+		self.result_count.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
 		self.book = wx.Simplebook(self)
-		self.texts = []
-		for name, entries in CATEGORIES:
+		for category_index, (name, entries) in enumerate(CATEGORIES):
 			page = wx.ScrolledWindow(self.book, -1, style=wx.VSCROLL)
+			self.pages.append(page)
 			page.SetScrollRate(0, 12)
 			vsizer = wx.BoxSizer(wx.VERTICAL)
 			head = wx.StaticText(page, -1, name)
 			head.SetFont(head.GetFont().Bold().Scaled(1.4))
 			vsizer.Add(head, 0, wx.ALL, 12)
-			words = [name]
 			for e in entries:
-				words += self.addEntry(page, vsizer, e)
+				self.addEntry(page, vsizer, e, name, category_index)
 			page.SetSizer(vsizer)
 			self.book.AddPage(page, name)
-			self.texts.append(' '.join(words).lower())
 
 		left = wx.BoxSizer(wx.VERTICAL)
 		left.Add(self.search, 0, wx.EXPAND | wx.BOTTOM, 6)
+		left.Add(self.result_count, 0, wx.BOTTOM, 7)
 		left.Add(self.list, 1, wx.EXPAND)
 		hsizer = wx.BoxSizer(wx.HORIZONTAL)
 		hsizer.Add(left, 0, wx.EXPAND | wx.ALL, 10)
@@ -124,19 +128,29 @@ class SettingsWnd(wx.Dialog):
 		mvsizer.Add(bottom, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 		self.SetSizer(mvsizer)
 
-		self.shown = list(range(len(CATEGORIES)))
+		self.shown = settingsindex.categories(CATEGORIES)
 		self.list.Set([c[0] for c in CATEGORIES])
 		self.list.SetSelection(0)
 		self.list.Bind(wx.EVT_LISTBOX, self.onCategory)
+		self.list.Bind(wx.EVT_LISTBOX_DCLICK, self.onCategory)
 		self.search.Bind(wx.EVT_TEXT, self.onSearch)
+		self.search.Bind(wx.EVT_TEXT_ENTER, self.onSearchEnter)
+		self.search.Bind(wx.EVT_CHAR_HOOK, self.onSearchKey)
 		self.search.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, lambda e: self.search.SetValue(''))
 		close.Bind(wx.EVT_BUTTON, lambda e: self.Close())
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		self.Bind(wx.EVT_ACTIVATE, self.onActivate)
 		self.refresh()
 
-	def addEntry(self, page, vsizer, e):
-		"""Adds an entry to a page; returns its words for the search."""
+	def register(self, title, category, category_index, description, control, group=''):
+		"""Index a real option or dialog action without altering its behavior."""
+		self.entries.append({
+			'title': title, 'category': category, 'category_index': category_index,
+			'description': description, 'control': control, 'group': group,
+		})
+
+	def addEntry(self, page, vsizer, e, category, category_index):
+		"""Build existing controls and index their searchable targets."""
 		kind = e[0]
 		if kind == 'dialog':
 			key, handler, desc = e[1], e[2], e[3]
@@ -150,14 +164,15 @@ class SettingsWnd(wx.Dialog):
 			texts.Add(t, 0)
 			d = wx.StaticText(page, -1, desc + ('   (' + keys + ')' if keys else ''))
 			d.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
-			d.Wrap(520)
+			d.Wrap(365)
 			texts.Add(d, 0, wx.TOP, 2)
 			box.Add(texts, 1, wx.ALIGN_CENTER_VERTICAL)
 			btn = wx.Button(page, -1, 'Edit...')
 			btn.Bind(wx.EVT_BUTTON, lambda ev, h=handler: self.onEdit(h))
 			box.Add(btn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 12)
-			vsizer.Add(box, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
-			return [title, desc]
+			vsizer.Add(box, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 14)
+			self.register(title, category, category_index, desc, btn)
+			return
 		if kind == 'trad':
 			title, fields = tradoptsdlg.DIALOGS[e[1]]
 			t = wx.StaticText(page, -1, title)
@@ -173,8 +188,21 @@ class SettingsWnd(wx.Dialog):
 			defaults.SetToolTip('The values the program comes with')
 			defaults.Bind(wx.EVT_BUTTON, lambda ev: self.onTradDefaults(ctrls))
 			row.Add(defaults, 0, wx.ALIGN_BOTTOM | wx.ALL, 6)
-			vsizer.Add(row, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
-			return [title] + [f[2] for f in fields if len(f) > 2 and isinstance(f[2], str)] + [f[1] for f in fields if f[0] == tradoptsdlg.SECTION]
+			vsizer.Add(row, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
+			for field in fields:
+				if field[0] == tradoptsdlg.SECTION:
+					continue
+				ctrl = ctrls[field[1]][1]
+				if field[0] == tradoptsdlg.CHECKS:
+					ctrl = ctrl.boxes[0] if ctrl.boxes else defaults
+				choices = ''
+				if field[0] == tradoptsdlg.CHOICE:
+					choices = ' '.join(str(label) for value, label in field[3])
+				elif field[0] == tradoptsdlg.CHECKS:
+					choices = ' '.join(field[3])
+				self.register(field[2], category, category_index,
+					' '.join((title, field[-1], choices)), ctrl, title)
+			return
 		if kind == 'houses':
 			grid = wx.FlexGridSizer(0, 2, 8, 10)
 			self.hsys = wx.Choice(page, -1, choices=[menutext(k)[0] for k in HOUSESYSTEMS])
@@ -186,8 +214,11 @@ class SettingsWnd(wx.Dialog):
 				grid.Add(ctrl, 0)
 			self.hsys.Bind(wx.EVT_CHOICE, self.onHouseSystem)
 			self.nodes.Bind(wx.EVT_CHOICE, self.onNodes)
-			vsizer.Add(grid, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
-			return ['house system', 'houses', 'nodes', 'mean', 'true'] + [menutext(k)[0] for k in HOUSESYSTEMS]
+			vsizer.Add(grid, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 14)
+			self.register('House system', category, category_index,
+				'Available house systems: ' + ', '.join(menutext(k)[0] for k in HOUSESYSTEMS), self.hsys)
+			self.register('Lunar nodes', category, category_index, 'Mean or true lunar nodes', self.nodes)
+			return
 		if kind == 'general':
 			self.autosave = wx.CheckBox(page, -1, 'Save the settings automatically')
 			self.autosave.SetToolTip('Otherwise the settings are kept until the program closes, unless saved with "Save the settings now".')
@@ -202,8 +233,10 @@ class SettingsWnd(wx.Dialog):
 			row.Add(reload, 0)
 			vsizer.Add(self.autosave, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
 			vsizer.Add(row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
-			return ['save', 'automatic', 'autosave', 'reload', 'default settings']
-		return []
+			self.register('Save settings automatically', category, category_index, 'Autosave all settings', self.autosave)
+			self.register('Save the settings now', category, category_index, 'Save settings manually', save)
+			self.register('Default settings', category, category_index, 'Reload and reset all saved settings', reload)
+			return
 
 	def refresh(self):
 		"""The controls as the settings are (they may have changed elsewhere)."""
@@ -219,20 +252,55 @@ class SettingsWnd(wx.Dialog):
 			self.refresh()
 		event.Skip()
 
+	def showEntry(self, entry, focus=False):
+		"""Open its category and scroll to the specific, existing control."""
+		self.book.SetSelection(entry['category_index'])
+		ctrl = entry.get('control')
+		if ctrl is not None:
+			page = self.pages[entry['category_index']]
+			wx.CallAfter(self.reveal, page, ctrl, focus)
+
+	def reveal(self, page, ctrl, focus):
+		if not self or not page or not ctrl:
+			return
+		page.ScrollChildIntoView(ctrl)
+		if focus:
+			ctrl.SetFocus()
+
 	def onCategory(self, event):
 		sel = self.list.GetSelection()
-		if sel != wx.NOT_FOUND:
-			self.book.SetSelection(self.shown[sel])
+		if 0 <= sel < len(self.shown):
+			self.showEntry(self.shown[sel], True)
 
 	def onSearch(self, event):
-		q = self.search.GetValue().strip().lower()
-		current = self.book.GetSelection()
-		self.shown = [i for i, text in enumerate(self.texts) if all(w in text for w in q.split())]
-		self.list.Set([CATEGORIES[i][0] for i in self.shown])
+		query = self.search.GetValue().strip()
+		if query:
+			self.shown = settingsindex.search(self.entries, query)
+			labels = [settingsindex.label(e) for e in self.shown]
+			self.result_count.SetLabel('%d matching setting%s' %
+				(len(self.shown), '' if len(self.shown) == 1 else 's'))
+		else:
+			self.shown = settingsindex.categories(CATEGORIES)
+			labels = [c[0] for c in CATEGORIES]
+			self.result_count.SetLabel('Browse by category')
+		self.list.Set(labels)
 		if self.shown:
-			i = current if current in self.shown else self.shown[0]
-			self.list.SetSelection(self.shown.index(i))
-			self.book.SetSelection(i)
+			self.list.SetSelection(0)
+			self.showEntry(self.shown[0])
+
+	def onSearchEnter(self, event):
+		self.onCategory(event)
+
+	def onSearchKey(self, event):
+		key = event.GetKeyCode()
+		if key in (wx.WXK_DOWN, wx.WXK_UP):
+			if self.shown:
+				old = self.list.GetSelection()
+				change = 1 if key == wx.WXK_DOWN else -1
+				self.list.SetSelection(max(0, min(len(self.shown) - 1, old + change)))
+				self.showEntry(self.shown[self.list.GetSelection()])
+		else:
+			event.Skip()
 
 	def onEdit(self, handler):
 		getattr(self.frame, handler)(wx.CommandEvent())
