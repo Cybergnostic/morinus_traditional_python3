@@ -15,27 +15,21 @@ import miscwnd
 import miscframe
 import mtexts
 import primdirs
+import positionscatalog
 
 
-TABS = ('Zodiacal / speculum', 'Mundane', 'Motion', 'Chart data')
-DESCRIPTIONS = (
-    'Zodiacal positions and the full Placidus or Regiomontanus speculum. '
-    'The chosen columns are controlled by Appearance II.',
-    'Mundane house positions and the mundane Lot of Fortune.',
-    'Longitude and latitude speeds of the planets.',
-    'Sidereal time, obliquity of the ecliptic, and Julian day.',
-)
+TABS = positionscatalog.TABS
+DESCRIPTIONS = positionscatalog.DESCRIPTIONS
 SPECULUMS = ('Placidian speculum', 'Regiomontanian speculum')
 
 
 def initial_speculum(options):
-    """Default to the method used by the legacy Positions window."""
-    return int(options.primarydir == primdirs.PrimDirs.REGIOMONTAN)
+    return positionscatalog.initial_speculum(options.primarydir,
+                                             primdirs.PrimDirs.REGIOMONTAN)
 
 
 def has_columns(options, method):
-    """Keep the original guard against an empty specialist table."""
-    return method in (0, 1) and any(options.speculums[method])
+    return positionscatalog.has_columns(options.speculums, method)
 
 
 class PositionsWorkspace(wx.Frame):
@@ -198,6 +192,7 @@ class PositionsWorkspace(wx.Frame):
         self.GetMenuBar().Enable(self.ID_SaveImage, hasattr(view, 'onSaveAsBitmap'))
         self.GetMenuBar().Enable(self.ID_Separate, True)
         self.mbw.Check(getattr(view, 'bw', self.options.bw))
+        self.mbw.Enable(hasattr(view, 'onBlackAndWhite'))
         self.intro.SetLabel(DESCRIPTIONS[tab])
         self.Layout()
 
