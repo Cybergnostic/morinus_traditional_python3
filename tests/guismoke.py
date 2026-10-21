@@ -386,6 +386,16 @@ def main():
 					check_clipping(wnd)
 				wnd.search.SetValue('orbs')
 				settle(0.1)
+				for query, title, category in (
+				        ('Egyptian terms', 'Terms', 'Dignities'),
+				        ('Regiomontanus', 'House system', 'Calculation'),
+				        ('Zodiacal releasing years shown', 'Years shown', 'Time lords')):
+				    wnd.search.SetValue(query)
+				    settle(0.1)
+				    match = next((r for r in wnd.shown if r['title'] == title and r['category'] == category), None)
+				    assert match is not None, 'Settings search failed: %s' % query
+				    wnd.showEntry(match)
+				    assert wnd.book.GetSelection() == match['category_index']
 				wnd.search.SetValue('')
 				exercise(wnd)
 				if wnd:
