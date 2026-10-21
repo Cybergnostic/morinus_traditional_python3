@@ -18,6 +18,8 @@ class LunationNavigatorTests(unittest.TestCase):
         self.assertTrue(n.crossing(-5, 5))
         self.assertFalse(n.crossing(-179, 179))
         self.assertFalse(n.crossing(5, -5))
+        self.assertTrue(n.crossing(-1, 0))
+        self.assertFalse(n.crossing(0, 1))
 
     def test_bisection(self):
         jd = n.refine(-1.0, 1.0, 0, synthetic)

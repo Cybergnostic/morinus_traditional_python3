@@ -16,7 +16,9 @@ def phase_difference(moon_lon, sun_lon, target):
 
 def crossing(left, right):
     """True at a forward-moving phase root, but not a 180-degree wrap."""
-    return left <= 0.0 <= right and right - left < 40.0
+    # Assign an exactly sampled phase to the interval that ENDS there,
+    # not also the next interval that begins at the same zero.
+    return left < 0.0 <= right and right - left < 40.0
 
 
 def refine(jd0, jd1, target, sampler, iterations=27):
