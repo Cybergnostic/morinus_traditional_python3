@@ -19,6 +19,8 @@ import electionstepperdlg
 import returnstepperdlg
 import returnslist
 import util
+import sidebar
+import tradoptions
 PDReadyEvent, EVT_PDREADY = wx.lib.newevent.NewEvent()
 pdlock = _thread.allocate_lock()
 
@@ -94,6 +96,35 @@ class TransitFrame(wx.Frame):
             self.w = transitwnd.TransitWnd(self, self.chart, self.radix, self.options, self.parent, True)
             self.compoundmenu.Check()
         self.Bind(EVT_PDREADY, self.OnPDReady)
+        # the sidebar of the main window, for this chart
+        self.sidebar = sidebar.Sidebar(self)
+        self.sidebar.setChart(self.chart, self.radix)
+        self.msidebar = self.pmenu.AppendCheckItem(wx.NewIdRef(), 'Planet sidebar', 'Show the planet, chart and time lords beside the chart')
+        self.msidebar.Check(tradoptions.get('show_sidebar'))
+        self.Bind(wx.EVT_MENU, self.onSidebar, id=self.msidebar.GetId())
+        self.Bind(wx.EVT_SIZE, self.onFrameSize)
+        if tradoptions.get('show_sidebar'):
+            self.SetSize((TransitFrame.XSIZE + sidebar.WIDTH, TransitFrame.YSIZE))
+        self.layout()
+
+    def layout(self):
+        """The chart (or table) on the left, the sidebar on the right."""
+        w, h = self.GetClientSize()
+        show = tradoptions.get('show_sidebar')
+        sw = sidebar.WIDTH if show else 0
+        self.sidebar.Show(show)
+        if show:
+            self.sidebar.SetSize(w - sw, 0, sw, h)
+        self.w.SetSize(0, 0, max(w - sw, 50), h)
+
+    def onFrameSize(self, event):
+        self.layout()
+
+    def onSidebar(self, event):
+        tradoptions.set({'show_sidebar': self.msidebar.IsChecked()})
+        if self.options.autosave:
+            tradoptions.save()
+        self.layout()
 
     def onPopupMenu(self, event):
         self.PopupMenu(self.pmenu, event.GetPosition())
@@ -103,12 +134,14 @@ class TransitFrame(wx.Frame):
             self.selection = TransitFrame.CHART
             self.w.Destroy()
             self.w = transitwnd.TransitWnd(self, self.chart, self.radix, self.options, self.parent, False, -1, self.GetClientSize())
+            self.layout()
 
     def onComparison(self, event):
         if self.selection != TransitFrame.COMPOUND:
             self.selection = TransitFrame.COMPOUND
             self.w.Destroy()
             self.w = transitwnd.TransitWnd(self, self.chart, self.radix, self.options, self.parent, True, -1, self.GetClientSize())
+            self.layout()
 
     def onPositions(self, event):
         if self.selection != TransitFrame.POSITIONS:
@@ -116,15 +149,18 @@ class TransitFrame(wx.Frame):
             self.w.Destroy()
             if wx.Platform == '__WXMSW__':
                 self.w = positionswnd2.PositionsWnd2(self, self.chart, self.options, self.parent, -1, self.GetClientSize())
+                self.layout()
                 self.w.Refresh()
             else:
                 self.w = positionswnd.PositionsWnd(self, self.chart, self.options, self.parent, -1, self.GetClientSize())
+                self.layout()
 
     def onSquare(self, event):
         if self.selection != TransitFrame.SQUARE:
             self.selection = TransitFrame.SQUARE
             self.w.Destroy()
             self.w = squarechartwnd.SquareChartWnd(self, self.chart, self.options, self.parent, -1, self.GetClientSize())
+            self.layout()
 
     def onStep(self, event):
         if self.chart.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR):
@@ -170,6 +206,7 @@ class TransitFrame(wx.Frame):
         self.selection = -1
         {TransitFrame.CHART: self.onChart, TransitFrame.COMPOUND: self.onComparison,
          TransitFrame.POSITIONS: self.onPositions, TransitFrame.SQUARE: self.onSquare}[view](None)
+        self.sidebar.setChart(self.chart, self.radix)
 
     def onPDDirect(self, event):
         self.onPD(primdirs.PrimDirs.DIRECT)

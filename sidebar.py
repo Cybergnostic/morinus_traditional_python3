@@ -91,10 +91,13 @@ class Sidebar(wx.Panel):
 		s.Add(self.book, 1, wx.EXPAND)
 		self.SetSizer(s)
 
-	def setChart(self, chrt):
-		"""Shows a chart; recalculates only when it or its settings changed."""
+	def setChart(self, chrt, radix=None):
+		"""Shows a chart; recalculates only when it or its settings changed. With
+		radix (a return, transit... of it) the time lords are the radix's at the
+		time of chrt, otherwise the chart's of today."""
 		o = chrt.options
-		key = (id(chrt), chrt.time.jd, chrt.houses.ascmc[houses.Houses.ASC], o.meannode, o.ayanamsha, o.seltrip, o.selterm, o.seldecan,
+		self.radix = radix
+		key = (id(chrt), id(radix), chrt.time.jd, chrt.houses.ascmc[houses.Houses.ASC], o.meannode, o.ayanamsha, o.seltrip, o.selterm, o.seldecan,
 			o.isfirbonatti, json.dumps(tradoptions.values(), sort_keys=True))
 		if key == self.key:
 			return
@@ -201,18 +204,19 @@ class Sidebar(wx.Panel):
 		return self.rows(pairs)
 
 	def lordsHtml(self):
-		h = self.chart
-		now = zodiacalreleasing.now()
+		h = self.radix or self.chart
+		now = self.chart.time.jd if self.radix else zodiacalreleasing.now()
 		if now < h.time.jd:
-			return '<p>The chart is in the future: no time lords yet.</p>'
+			return '<p>Before the birth: no time lords.</p>'
 		age = (now - h.time.jd) / 365.2425
-		out = ['<p>Today, %s: age %d</p>' % (jdstr(h, now), int(age))]
+		out = ['<p>%s %s: age %d</p>' % ('Of the radix at this chart,' if self.radix else 'Today,', jdstr(h, now), int(age))]
 		ascsign = int(h.houses.ascmc[houses.Houses.ASC] // 30.0)
 		prof = (ascsign + int(age)) % 12
-		lord = rulers(h.options, prof * 30.0, self.night)[0]
+		night = lotswnd.LotsWnd.isNightChart(h)
+		lord = rulers(h.options, prof * 30.0, night)[0]
 		out.append(self.head('Annual profection'))
 		out.append(self.rows([('Ascendant profected to', signname(prof)), ('Lord of the year', planetname(lord))]))
-		fir = self.firdariaNow(age)
+		fir = self.firdariaNow(h, night, age)
 		if fir:
 			out.append(self.head('Firdaria'))
 			out.append(self.rows(fir))
@@ -221,7 +225,7 @@ class Sidebar(wx.Panel):
 			cur = [p for p in periods if p.start <= now < p.end]
 			if cur:
 				out.append(self.head('Zodiacal releasing from ' + zodiacalreleasing.LOTNAMES[lot]))
-				out.append(self.rows([('Level %d' % p.level, '%s (%s, until %s)%s' % (signname(p.sign), planetname(rulers(h.options, p.sign * 30.0, self.night)[0]),
+				out.append(self.rows([('Level %d' % p.level, '%s (%s, until %s)%s' % (signname(p.sign), planetname(rulers(h.options, p.sign * 30.0, night)[0]),
 					jdstr(h, p.end), ', loosing of the bond' if p.loosing else '')) for p in cur]))
 		seq, periods = decennials.decennials(h, max(int(age) + 2, 1))
 		cur = [p for p in periods if p.start <= now < p.end]
@@ -231,11 +235,10 @@ class Sidebar(wx.Panel):
 		out.append('<p><font color="$GREY" size="-1">Profection by whole signs from the Ascendant; the tables (Tables menu) give the full periods.</font></p>')
 		return ''.join(out)
 
-	def firdariaNow(self, age):
-		"""The firdaria period and sub-period at an age, with Morinus's sequences."""
-		h = self.chart
+	def firdariaNow(self, h, night, age):
+		"""The firdaria period and sub-period of chart h at an age, with Morinus's sequences."""
 		try:
-			f = firdaria.Firdaria(h.time.origyear, h.time.origmonth, h.time.origday, h.options, not self.night)
+			f = firdaria.Firdaria(h.time.origyear, h.time.origmonth, h.time.origday, h.options, not night)
 		except (ValueError, OverflowError):
 			return None
 		seq = f.dailyplanetaryyears if f.isdaily else f.nightlyplanetaryyearsbonatti if h.options.isfirbonatti else f.nightlyplanetaryyearsalbiruni

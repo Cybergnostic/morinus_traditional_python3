@@ -197,10 +197,10 @@ txtsabbrevseng = {'Pos': 'Pos', 'Squ': 'Squ', 'Alm': 'Alm', 'Lot': 'Lot', 'Misc'
 txtssecdirdlgeng = {'SecondaryDirs': 'Secondary Directions', 'Age': 'Age', 'ApparentSolarTime': 'Apparent Solar Time', 'MeanTime': 'Mean Time', 'Direct': 'Direct', 'Converse': 'Converse'}
 txtsstepperdlgeng = {'SecondaryDirs': 'Secondary Directions', 'Days': 'Days'}
 txtselectionsstepperdlgeng = {'Elections': 'Elections', 'Year': 'Year', 'Month': 'Month', 'Day': 'Day', 'Hour': 'Hour', 'Min': 'Min', 'Sec': 'Sec'}
-txtsrevolutionsdlgeng = {'Revolutions': 'Revolutions', 'StartingDate': 'Starting Time(Midnight, GMT)', 'Year': 'Year', 'Month': 'Month', 'Day': 'Day', 'HelpYear': 'Range 5000 BC - AD 5000 is covered by the swiss ephemeris', 
+txtsrevolutionsdlgeng = {'Revolutions': 'Revolutions', 'StartingDate': 'First return after (midnight, UT)', 'Year': 'Year', 'Month': 'Month', 'Day': 'Day', 'HelpYear': 'Range 5000 BC - AD 5000 is covered by the swiss ephemeris', 
    'HelpYear2': 'Range 3000 BC - AD 3000 is covered by the Moshier ephemeris', 'HelpMonth': 'Must be between 1 and 12', 
    'HelpDay': 'Must be between 1 and 31', 'InvalidDate': 'Invalid Date!', 'Error': 'Error'}
-txtssuntransitsdlgeng = {'SunTransits': 'Sun-Transits', 'StartingDate': 'Starting Time(Midnight, GMT)', 'Year': 'Year', 'Month': 'Month', 'Day': 'Day', 'HelpYear': 'Range 5000 BC - AD 5000 is covered by the swiss ephemeris', 
+txtssuntransitsdlgeng = {'SunTransits': 'Sun-Transits', 'StartingDate': 'First return after (midnight, UT)', 'Year': 'Year', 'Month': 'Month', 'Day': 'Day', 'HelpYear': 'Range 5000 BC - AD 5000 is covered by the swiss ephemeris', 
    'HelpYear2': 'Range 3000 BC - AD 3000 is covered by the Moshier ephemeris', 'HelpMonth': 'Must be between 1 and 12', 
    'HelpDay': 'Must be between 1 and 31', 'Ascendant': 'Ascendant', 'MediumCoeli': 'Medium Coeli'}
 txtsalmutenchartdlgeng = {'AlmutenOfTheChart': 'Almuten of the chart', 'Essential': 'Essential', 'Triplicities': 'Triplicities', 'OneRuler': 'One ruler(Day/Night)', 

@@ -1355,7 +1355,7 @@ class MFrame(wx.Frame):
             self.revdlg = revolutionsdlg.RevolutionsDlg(None)
             self.revdlg.initialize(self.horoscope)
         if planet is not None:
-            self.revdlg.typecb.SetSelection(planet)
+            self.revdlg.setPlanet(planet)
         self.revdlg.CenterOnParent()
         val = self.revdlg.ShowModal()
         if val == wx.ID_OK:
@@ -1368,7 +1368,7 @@ class MFrame(wx.Frame):
             if result:
                 if self.options.ayanamsha != 0 and self.revdlg.typecb.GetCurrentSelection() == 3:
                     t1, t2, t3, t4, t5, t6 = self.calcPrecNutCorrectedSolar(revs)
-                dlg = timespacedlg.TimeSpaceDlg(self, mtexts.txtsrevolutionsdlg['Revolutions'], self.options.langid, self.options.netbook)
+                dlg = timespacedlg.TimeSpaceDlg(self, revolutionsdlg.returnname(self.revdlg.typecb.GetCurrentSelection()), self.options.langid, self.options.netbook)
                 ti = (t1, t2, t3, t4, t5, t6, chart.Time.GREGORIAN, chart.Time.GREENWICH, 0, 0)
                 dlg.initialize(self.horoscope, ti)
                 dlg.CenterOnParent()
