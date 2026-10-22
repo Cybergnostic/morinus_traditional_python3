@@ -108,3 +108,15 @@ def allocate_traditional_rings(max_radius, count, show_terms=False, show_decans=
         rings.append((cursor, next_edge))
         cursor = next_edge
     return core, decans, terms, zodiac, rings
+
+
+def zodiac_sign_lane(edges):
+    """The sign glyphs sit between the tick-lane divider and the outer edge.
+
+    The longest degree ticks end at 28% of the band, leaving clear space
+    before the sign-lane circle at 38%.
+    """
+    inner, outer = edges
+    if outer <= inner:
+        raise ValueError('Zodiac band must have positive width')
+    return inner + (outer - inner) * .38, outer
