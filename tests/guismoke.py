@@ -476,14 +476,17 @@ def main():
 				wnd.zoom_fit()
 				wnd.redraw()
 				assert wnd.zoom_factor is None
-				# Regression: one exact-degree dial per chart, one caption
-				# in the centre, one caption inside *each* outer chart, and
-				# one set of four angle arrows per chart.
-				traces = {'dial': [], 'center': 0, 'outer': 0, 'angles': 0}
+				# Each chart has the same marker convention and planetary fonts:
+				# ASC hollow circle, DESC/MC arrows and IC plain line.
+				traces = {'dial': [], 'center': 0, 'outer': 0, 'angles': 0,
+					'arrow': 0, 'asc_circle': 0, 'planet_fonts': []}
 				original_dial = multiwheel.MultiWheel.draw_degree_dial
 				original_center = multiwheel.MultiWheel.draw_centre_identity
 				original_outer = multiwheel.MultiWheel.draw_outer_identity
 				original_angles = multiwheel.MultiWheel.draw_angles
+				original_arrow = multiwheel.MultiWheel.draw_angle_arrowhead
+				original_asc = multiwheel.MultiWheel.draw_angle_open_circle
+				original_planets = multiwheel.MultiWheel.draw_planet_band
 				def trace_dial(renderer, edges, side):
 					traces['dial'].append(side)
 					return original_dial(renderer, edges, side)
@@ -496,20 +499,40 @@ def main():
 				def trace_angles(renderer, *args, **kwargs):
 					traces['angles'] += 1
 					return original_angles(renderer, *args, **kwargs)
+				def trace_arrow(renderer, *args, **kwargs):
+					traces['arrow'] += 1
+					return original_arrow(renderer, *args, **kwargs)
+				def trace_asc(renderer, *args, **kwargs):
+					traces['asc_circle'] += 1
+					return original_asc(renderer, *args, **kwargs)
+				def trace_planets(renderer, *args, **kwargs):
+					traces['planet_fonts'].append(tuple(sorted(
+						renderer.planet_fonts.items())))
+					return original_planets(renderer, *args, **kwargs)
 				try:
 					multiwheel.MultiWheel.draw_degree_dial = trace_dial
 					multiwheel.MultiWheel.draw_centre_identity = trace_center
 					multiwheel.MultiWheel.draw_outer_identity = trace_outer
 					multiwheel.MultiWheel.draw_angles = trace_angles
+					multiwheel.MultiWheel.draw_angle_arrowhead = trace_arrow
+					multiwheel.MultiWheel.draw_angle_open_circle = trace_asc
+					multiwheel.MultiWheel.draw_planet_band = trace_planets
 					wnd.redraw()
 				finally:
 					multiwheel.MultiWheel.draw_degree_dial = original_dial
 					multiwheel.MultiWheel.draw_centre_identity = original_center
 					multiwheel.MultiWheel.draw_outer_identity = original_outer
 					multiwheel.MultiWheel.draw_angles = original_angles
+					multiwheel.MultiWheel.draw_angle_arrowhead = original_arrow
+					multiwheel.MultiWheel.draw_angle_open_circle = original_asc
+					multiwheel.MultiWheel.draw_planet_band = original_planets
 				assert traces['dial'] == ['outer', 'inner', 'inner', 'inner']
 				assert traces['center'] == 1 and traces['outer'] == 3
 				assert traces['angles'] == 4
+				assert traces['arrow'] == 8  # 2 per chart: DESC + MC
+				assert traces['asc_circle'] == 4  # 1 per chart: ASC
+				assert len(traces['planet_fonts']) == 4
+				assert len(set(traces['planet_fonts'])) == 1
 				# Check the shared Morinus reference bands even when the normal
 				# test options have both traditional strips switched off.
 				original_terms = frame.options.showterms
