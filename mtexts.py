@@ -939,8 +939,8 @@ txtsmenuseldlgfre = {'MenuSel': 'S\xe9lection Menu'}
 txtslangdlgfre = {'Languages': 'Langues'}
 licensetxtfre = "Morinus, programme d'astrologie\nCopyright (C) 2008-2012  Robert Nagy (robert.pluto@gmail.com)\n\nCe programme est un logiciel libre: vous pouvez le redistribuer et/ou le modifier\nselon les termes de la Licence Publique G\xc3\xa9n\xc3\xa9rale GNU publi\xc3\xa9e par\nla Free Software Foundation, soit la version 3 de cette licence, ou\n(\xc3\xa0 votre choix) toute version ult\xc3\xa9rieure.\n\nCe programme est distribu\xc3\xa9 en esp\xc3\xa9rant qu'il sera utile, \nmais SANS AUCUNE GARANTIE; sans m\xc3\xaame la garantie implicite de \nCOMMERCIALISATION ou D'ADAPTATION A UN OBJET PARTICULIER.  Voir la\nlicence GNU General Public License pour plus de d\xc3\xa9tails.\n\nVous trouverez un exemplaire de la licence GNU General Public License\navec ce programme.  Si non, voyez http://www.gnu.org/licenses/."
 helptxts = (
- 'helpEng.html', 'helpRus.html', 'helpFre.html')
-langtexts = ('English', '\xd0\xa0\xd1\x83\xd1\x81\xd1\x81\xd0\xba\xd0\xb8\xd0\xb9(Russian)', 'Fran\xc3\xa7ais(French)')
+ 'helpEng.html', 'helpRus.html', 'helpFre.html', 'helpEng.html')	# no Serbian help yet
+langtexts = ('English', 'Русский (Russian)', 'Français (French)', 'Srpski (Serbian)')
 langs = (
  (
   menutxtseng, txtsfileseng, txtsgraphephemwndeng, txtspositionseng, txtsalmutencharttableeng, txtsalmutentopicalseng, txtsalmutenzodseng, txtsmisceng, txtsmunposeng, txtsantisciaeng, txtsmidpointseng, txtsriseseteng, txtsspeedseng, txtszodparseng, txtsfixedstarseng, txtslotseng, txtsstripeng, txtshourseng, txtstransitseng, txtsprofwndeng, txtsprofmonwndeng, txtsfirdariaeng, txtsdatadlgeng, txtsfindtimedlgeng, txtsgraphephemdlgeng, txtsplacesdlgeng, txtsappearance1dlgeng, txtsappearance2dlgeng, txtsdignitiesdlgeng, txtsdecansdlgeng, txtstriplicitiesdlgeng, txtstermsdlgeng, txtssyzygydlgeng, txtsfixedstarsdlgeng, txtscolorsdlgeng, txtsorbsdlgeng, txtsvalidatorseng, txtspopupmenueng, txtsabbrevseng, txtssecdirdlgeng, txtsstepperdlgeng, txtselectionsstepperdlgeng, txtsrevolutionsdlgeng, txtssuntransitsdlgeng, txtsalmutenchartdlgeng, txtsalmutentopicalsdlgeng, txtslotsdlgeng, txtstransitmdlgeng, txtsprimdirsdlgeng, txtsuserpddlgeng, txtsfixedstarspddlgeng, txtsprimarykeysdlgeng, txtsprimdirsrangedlgeng, txtspdsinchartoptsdlgeng, txtsprimdirslisteng, txtspdsinchartstepperdlgeng, txtsayanamshaeng, txtsprofdlgeng, txtsprofdlgoptseng, txtsfirdariadlgeng, txtsdeflocdlgoptseng, txtsprofstepperdlgeng, txtsproftabledlgeng, txtsproftablemondlgeng, txtscommoneng, txtsmenuseldlgeng, txtslangdlgeng, licensetxteng),
@@ -1110,7 +1110,26 @@ conv = {lotstxts[ASC]: ASC, lotstxts[DESC]: DESC, lotstxts[MC]: MC, lotstxts[IC]
    lotstxts[LHOLORD]: LHOLORD, lotstxts[DEG]: DEG, lotstxts[DEGLORD]: DEGLORD, lotstxts[REF]: REF, 
    lotstxts[REFLORD]: REFLORD}
 
+def _serbian():
+    """The English tables with the Serbian texts of mtexts_sr over them (what is
+    not translated, codes and names, stays English)."""
+    import mtexts_sr
+    names = dict((id(v), k[:-3]) for k, v in globals().items() if k.endswith('eng'))
+    out = []
+    for table in langs[0]:
+        sr = getattr(mtexts_sr, names[id(table)], None)
+        if isinstance(table, dict) and sr:
+            table = dict(table, **sr)
+        out.append(table)
+    return tuple(out)
+
+
+langs = langs + (_serbian(),)
+current = 0	# the language set by setLang (i18n.tr)
+
 def setLang(langid):
+    global current
+    current = langid
     global ayanamshalist
     global calList
     global conv

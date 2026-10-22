@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import sys
 import wx
 import limchecklistctrlmixin
@@ -11,7 +12,7 @@ import options
 import mtexts
 import copy
 provider = wx.SimpleHelpProvider()
-wx.HelpProvider.Set(provider)
+wx.HelpProvider.Set(i18n.tr(provider))
 
 class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
     NUM = 0
@@ -38,19 +39,19 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
 
     def Populate(self):
         self.InsertColumn(LotsListCtrl.NUM, '')
-        self.InsertColumn(LotsListCtrl.NAME, mtexts.txtslotsdlg['Name'])
-        self.InsertColumn(LotsListCtrl.FORMULA, mtexts.txtslotsdlg['Formula'], format=wx.LIST_FORMAT_CENTER)
-        self.InsertColumn(LotsListCtrl.DIURNAL, mtexts.txtslotsdlg['Diurnal'], format=wx.LIST_FORMAT_CENTER)
-        self.InsertColumn(LotsListCtrl.SHOWN, mtexts.txtslotsdlg['Formula'], format=wx.LIST_FORMAT_CENTER)
+        self.InsertColumn(LotsListCtrl.NAME, i18n.tr(mtexts.txtslotsdlg['Name']))
+        self.InsertColumn(LotsListCtrl.FORMULA, i18n.tr(mtexts.txtslotsdlg['Formula']), format=wx.LIST_FORMAT_CENTER)
+        self.InsertColumn(LotsListCtrl.DIURNAL, i18n.tr(mtexts.txtslotsdlg['Diurnal']), format=wx.LIST_FORMAT_CENTER)
+        self.InsertColumn(LotsListCtrl.SHOWN, i18n.tr(mtexts.txtslotsdlg['Formula']), format=wx.LIST_FORMAT_CENTER)
         items = list(self.lotsdata.items())
         cnt = 0
         for key, data in items:
             cnt += 1
             index = self.InsertStringItem(self.GetItemCount(), data[0])
             self.SetItem(index, LotsListCtrl.NUM, str(cnt) + '.')
-            self.SetItem(index, LotsListCtrl.NAME, data[0])
-            self.SetItem(index, LotsListCtrl.FORMULA, data[1])
-            self.SetItem(index, LotsListCtrl.DIURNAL, data[2])
+            self.SetItem(index, LotsListCtrl.NAME, i18n.tr(data[0]))
+            self.SetItem(index, LotsListCtrl.FORMULA, i18n.tr(data[1]))
+            self.SetItem(index, LotsListCtrl.DIURNAL, i18n.tr(data[2]))
             self.SetItemData(index, key)
 
         self.SetColumnWidth(LotsListCtrl.NUM, 60)
@@ -79,7 +80,7 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
     def updateShown(self, index):
         form = self.getColumnText(index, LotsListCtrl.FORMULA)
         diurnal = self.getColumnText(index, LotsListCtrl.DIURNAL) != ''
-        wx.ListCtrl.SetItem(self, index, LotsListCtrl.SHOWN, self.shownFormula(form, diurnal))
+        wx.ListCtrl.SetItem(self, index, i18n.tr(LotsListCtrl.SHOWN), self.shownFormula(form, diurnal))
 
     def setNight(self, night):
         self.night = night
@@ -246,13 +247,13 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
         num = self.GetItemCount()
         it = (num, item[0], item[1], item[2])
         if self.checkName(it[LotsListCtrl.NAME]):
-            dlgm = wx.MessageDialog(self, mtexts.txtslotsdlg['LotAlreadyExists'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtslotsdlg['LotAlreadyExists']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return False
         self.InsertStringItem(num, str(num + 1))
         for i in range(1, len(it)):
-            self.SetItem(num, i, it[i])
+            self.SetItem(num, i, i18n.tr(it[i]))
 
         self.currentItem = num
         self.EnsureVisible(self.currentItem)
@@ -266,20 +267,20 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
         if self.currentItem == 0:
             nametxt = self.getColumnText(0, LotsListCtrl.NAME)
             if nametxt != item[0]:
-                self.SetItem(0, LotsListCtrl.NAME, item[0])
+                self.SetItem(0, LotsListCtrl.NAME, i18n.tr(item[0]))
                 self.changed = True
             diurnaltxt = self.getColumnText(0, LotsListCtrl.DIURNAL)
             if diurnaltxt != item[2]:
-                self.SetItem(0, LotsListCtrl.DIURNAL, item[2])
+                self.SetItem(0, LotsListCtrl.DIURNAL, i18n.tr(item[2]))
                 self.changed = True
         else:
             if self.checkName(it[LotsListCtrl.NAME], self.currentItem):
-                dlgm = wx.MessageDialog(self, mtexts.txtslotsdlg['LotAlreadyExists'], '', wx.OK | wx.ICON_INFORMATION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtslotsdlg['LotAlreadyExists']), '', wx.OK | wx.ICON_INFORMATION)
                 dlgm.ShowModal()
                 dlgm.Destroy()
                 return
             for i in range(1, len(it)):
-                self.SetItem(self.currentItem, i, it[i])
+                self.SetItem(self.currentItem, i, i18n.tr(it[i]))
 
             self.changed = True
         self.EnsureVisible(self.currentItem)
@@ -287,7 +288,7 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
 
     def OnRemove(self):
         if self.currentItem != 0:
-            dlg = wx.MessageDialog(self, mtexts.txtscommon['AreYouSure'], mtexts.txtscommon['Confirm'], wx.YES_NO | wx.ICON_QUESTION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['AreYouSure']), i18n.tr(mtexts.txtscommon['Confirm']), wx.YES_NO | wx.ICON_QUESTION)
             val = dlg.ShowModal()
             if val == wx.ID_YES:
                 num = self.currentItem + 1
@@ -315,7 +316,7 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
                                         fs[j] += LotsListCtrl.LORDTXT
 
                         formula = fs[0] + ' + ' + fs[1] + ' - ' + fs[2]
-                        self.SetItem(i, LotsListCtrl.FORMULA, formula)
+                        self.SetItem(i, LotsListCtrl.FORMULA, i18n.tr(formula))
 
                 for l in range(len(linestodelete)):
                     self.DeleteItem(linestodelete[l] - l)
@@ -333,12 +334,12 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
                 self.removed = True
             dlg.Destroy()
         else:
-            dlg = wx.MessageDialog(self, mtexts.txtslotsdlg['LoFCannotBeRemoved'], mtexts.txtscommon['Information'], wx.OK | wx.ICON_INFORMATION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtslotsdlg['LoFCannotBeRemoved']), i18n.tr(mtexts.txtscommon['Information']), wx.OK | wx.ICON_INFORMATION)
             dlg.ShowModal()
 
     def OnRemoveAll(self):
         if self.GetItemCount() > 1:
-            dlg = wx.MessageDialog(self, mtexts.txtscommon['AreYouSure'], mtexts.txtscommon['Confirm'], wx.YES_NO | wx.ICON_QUESTION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['AreYouSure']), i18n.tr(mtexts.txtscommon['Confirm']), wx.YES_NO | wx.ICON_QUESTION)
             val = dlg.ShowModal()
             if val == wx.ID_YES:
                 num = self.GetItemCount()
@@ -350,7 +351,7 @@ class LotsListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
                 self.removed = True
             dlg.Destroy()
         else:
-            dlg = wx.MessageDialog(self, mtexts.txtslotsdlg['LoFCannotBeRemoved'], mtexts.txtscommon['Information'], wx.OK | wx.ICON_INFORMATION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtslotsdlg['LoFCannotBeRemoved']), i18n.tr(mtexts.txtscommon['Information']), wx.OK | wx.ICON_INFORMATION)
             dlg.ShowModal()
 
     def load(self, lotsobj):
@@ -468,7 +469,7 @@ class LotsDlg(wx.Dialog):
     def __init__(self, parent, opts):
         wx.Dialog.__init__(self)
         self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        self.Create(parent, -1, mtexts.txtslotsdlg['Lots'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
+        self.Create(parent, -1, i18n.tr(mtexts.txtslotsdlg['Lots']), pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         self.options = opts
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -480,13 +481,13 @@ class LotsDlg(wx.Dialog):
         refsizer = wx.StaticBoxSizer(self.sascref, wx.HORIZONTAL)
         label = wx.StaticText(self, -1, mtexts.txtslotsdlg['Ascendant'] + ':')
         refsizer.Add(label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, DIFF)
-        self.refcb = wx.ComboBox(self, -1, mtexts.lotsreftxts[0], size=(COMBOSIZE, -1), choices=mtexts.lotsreftxts, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.refcb = wx.ComboBox(self, -1, mtexts.lotsreftxts[0], size=(COMBOSIZE, -1), choices=i18n.tr(mtexts.lotsreftxts), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.refcb.SetStringSelection(mtexts.lotsreftxts[0])
         refsizer.Add(self.refcb, 0, wx.ALL, DIFF)
         # which sect's formulas the list shows; calculation always follows the chart
-        label = wx.StaticText(self, -1, 'Formulas:')
+        label = wx.StaticText(self, -1, i18n.tr('Formulas:'))
         refsizer.Add(label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, DIFF)
-        self.sectcb = wx.ComboBox(self, -1, 'Day', size=(COMBOSIZE+30, -1), choices=['Day', 'Night'], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.sectcb = wx.ComboBox(self, -1, 'Day', size=(COMBOSIZE+30, -1), choices=i18n.tr(['Day', 'Night']), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.sectcb.SetSelection(1 if LotsDlg.isNightChart(parent) else 0)
         refsizer.Add(self.sectcb, 0, wx.ALL, DIFF)
         self.Bind(wx.EVT_COMBOBOX, self.onSect, id=self.sectcb.GetId())
@@ -500,44 +501,44 @@ class LotsDlg(wx.Dialog):
         self.name.SetMaxLength(40)
         editorsizer.Add(self.name, 0, wx.ALL, DIFF)
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.acb = wx.ComboBox(self, -1, mtexts.lotstxts[0], size=(COMBOSIZE, -1), choices=mtexts.lotstxts, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.acb = wx.ComboBox(self, -1, mtexts.lotstxts[0], size=(COMBOSIZE, -1), choices=i18n.tr(mtexts.lotstxts), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.acb.SetStringSelection(mtexts.lotstxts[0])
         hsizer.Add(self.acb, 0, wx.ALL, DIFF)
         label = wx.StaticText(self, -1, '+(')
         hsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
-        self.bcb = wx.ComboBox(self, -1, mtexts.lotstxts[0], size=(COMBOSIZE, -1), choices=mtexts.lotstxts, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.bcb = wx.ComboBox(self, -1, mtexts.lotstxts[0], size=(COMBOSIZE, -1), choices=i18n.tr(mtexts.lotstxts), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.bcb.SetStringSelection(mtexts.lotstxts[0])
         hsizer.Add(self.bcb, 0, wx.ALL, DIFF)
         label = wx.StaticText(self, -1, '-')
         hsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
-        self.ccb = wx.ComboBox(self, -1, mtexts.lotstxts[0], size=(COMBOSIZE, -1), choices=mtexts.lotstxts, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.ccb = wx.ComboBox(self, -1, mtexts.lotstxts[0], size=(COMBOSIZE, -1), choices=i18n.tr(mtexts.lotstxts), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.ccb.SetStringSelection(mtexts.lotstxts[0])
         hsizer.Add(self.ccb, 0, wx.ALL, DIFF)
         label = wx.StaticText(self, -1, ')')
         hsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
         editorsizer.Add(hsizer, 0, wx.ALL, DIFF)
-        self.diurnalckb = wx.CheckBox(self, -1, mtexts.txtslotsdlg['Diurnal'])
+        self.diurnalckb = wx.CheckBox(self, -1, i18n.tr(mtexts.txtslotsdlg['Diurnal']))
         editorsizer.Add(self.diurnalckb, 0, wx.ALL, DIFF)
         self.arrefnum = []
         for i in range(len(self.options.lots)):
             self.arrefnum.append(str(i + 1))
 
-        self.sref = wx.StaticBox(self, label=mtexts.txtslotsdlg['Reference'])
+        self.sref = wx.StaticBox(self, label=i18n.tr(mtexts.txtslotsdlg['Reference']))
         refsizer = wx.StaticBoxSizer(self.sref, wx.VERTICAL)
         hrefsizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.rcba = wx.ComboBox(self, -1, self.arrefnum[0], size=(COMBOSIZE, -1), choices=self.arrefnum, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.rcba = wx.ComboBox(self, -1, self.arrefnum[0], size=(COMBOSIZE, -1), choices=i18n.tr(self.arrefnum), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.rcba.SetStringSelection(self.arrefnum[0])
         self.rcba.Enable(False)
         hrefsizer.Add(self.rcba, 0, wx.ALL, 5)
         label = wx.StaticText(self, -1, '  ')
         hrefsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
-        self.rcbb = wx.ComboBox(self, -1, self.arrefnum[0], size=(COMBOSIZE, -1), choices=self.arrefnum, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.rcbb = wx.ComboBox(self, -1, self.arrefnum[0], size=(COMBOSIZE, -1), choices=i18n.tr(self.arrefnum), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.rcbb.SetStringSelection(self.arrefnum[0])
         self.rcbb.Enable(False)
         hrefsizer.Add(self.rcbb, 0, wx.ALL, 5)
         label = wx.StaticText(self, -1, ' ')
         hrefsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
-        self.rcbc = wx.ComboBox(self, -1, self.arrefnum[0], size=(COMBOSIZE, -1), choices=self.arrefnum, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.rcbc = wx.ComboBox(self, -1, self.arrefnum[0], size=(COMBOSIZE, -1), choices=i18n.tr(self.arrefnum), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.rcbc.SetStringSelection(self.arrefnum[0])
         self.rcbc.Enable(False)
         hrefsizer.Add(self.rcbc, 0, wx.ALL, 5)
@@ -547,22 +548,22 @@ class LotsDlg(wx.Dialog):
          mtexts.txtscommon['Aries'], mtexts.txtscommon['Taurus'], mtexts.txtscommon['Gemini'], mtexts.txtscommon['Cancer'], mtexts.txtscommon['Leo'], mtexts.txtscommon['Virgo'], mtexts.txtscommon['Libra'], mtexts.txtscommon['Scorpio'], mtexts.txtscommon['Sagittarius'], mtexts.txtscommon['Capricorn'], mtexts.txtscommon['Aquarius'], mtexts.txtscommon['Pisces'])
         self.signsabbr = (
          mtexts.txtscommon['Ari'], mtexts.txtscommon['Tau'], mtexts.txtscommon['Gem'], mtexts.txtscommon['Can'], mtexts.txtscommon['Leo'], mtexts.txtscommon['Vir'], mtexts.txtscommon['Lib'], mtexts.txtscommon['Sco'], mtexts.txtscommon['Sag'], mtexts.txtscommon['Cap'], mtexts.txtscommon['Aqu'], mtexts.txtscommon['Pis'])
-        self.sdeg = wx.StaticBox(self, label=mtexts.txtslotsdlg['Degrees'])
+        self.sdeg = wx.StaticBox(self, label=i18n.tr(mtexts.txtslotsdlg['Degrees']))
         degsizer = wx.StaticBoxSizer(self.sdeg, wx.VERTICAL)
         hdegsizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.dcba = wx.ComboBox(self, -1, self.signs[0], size=(COMBOSIZE, -1), choices=self.signs, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.dcba = wx.ComboBox(self, -1, self.signs[0], size=(COMBOSIZE, -1), choices=i18n.tr(self.signs), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.dcba.SetStringSelection(self.signs[0])
         self.dcba.Enable(False)
         hdegsizer.Add(self.dcba, 0, wx.ALL, DIFF)
         label = wx.StaticText(self, -1, '  ')
         hdegsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
-        self.dcbb = wx.ComboBox(self, -1, self.signs[0], size=(COMBOSIZE, -1), choices=self.signs, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.dcbb = wx.ComboBox(self, -1, self.signs[0], size=(COMBOSIZE, -1), choices=i18n.tr(self.signs), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.dcbb.SetStringSelection(self.signs[0])
         self.dcbb.Enable(False)
         hdegsizer.Add(self.dcbb, 0, wx.ALL, DIFF)
         label = wx.StaticText(self, -1, ' ')
         hdegsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 2)
-        self.dcbc = wx.ComboBox(self, -1, self.signs[0], size=(COMBOSIZE, -1), choices=self.signs, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.dcbc = wx.ComboBox(self, -1, self.signs[0], size=(COMBOSIZE, -1), choices=i18n.tr(self.signs), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.dcbc.SetStringSelection(self.signs[0])
         self.dcbc.Enable(False)
         hdegsizer.Add(self.dcbc, 0, wx.ALL, DIFF)
@@ -586,24 +587,24 @@ class LotsDlg(wx.Dialog):
         vsubsizer.Add(editorsizer, 0, wx.ALIGN_LEFT | wx.RIGHT, DIFF)
         susehouses = wx.StaticBox(self, label='')
         usehousessizer = wx.StaticBoxSizer(susehouses, wx.VERTICAL)
-        self.usehousesckb = wx.CheckBox(self, -1, mtexts.txtslotsdlg['UseHousesNotDegrees'])
+        self.usehousesckb = wx.CheckBox(self, -1, i18n.tr(mtexts.txtslotsdlg['UseHousesNotDegrees']))
         usehousessizer.Add(self.usehousesckb, 0, wx.ALL, DIFF)
         vsubsizer.Add(usehousessizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.RIGHT, 5)
         sbtns = wx.StaticBox(self, label='')
         btnssizer = wx.StaticBoxSizer(sbtns, wx.VERTICAL)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         ID_Add = wx.NewId()
-        btnAdd = wx.Button(self, ID_Add, mtexts.txtslotsdlg['Add'])
+        btnAdd = wx.Button(self, ID_Add, i18n.tr(mtexts.txtslotsdlg['Add']))
         vsizer.Add(btnAdd, 0, wx.GROW | wx.ALL, DIFF)
         ID_Modify = wx.NewId()
-        btnModify = wx.Button(self, ID_Modify, mtexts.txtslotsdlg['Modify'])
+        btnModify = wx.Button(self, ID_Modify, i18n.tr(mtexts.txtslotsdlg['Modify']))
         vsizer.Add(btnModify, 0, wx.GROW | wx.ALL, DIFF)
         if not self.options.netbook:
             ID_Remove = wx.NewId()
-            btnRemove = wx.Button(self, ID_Remove, mtexts.txtslotsdlg['Remove'])
+            btnRemove = wx.Button(self, ID_Remove, i18n.tr(mtexts.txtslotsdlg['Remove']))
             vsizer.Add(btnRemove, 0, wx.GROW | wx.ALL, 5)
             ID_RemoveAll = wx.NewId()
-            btnRemoveAll = wx.Button(self, ID_RemoveAll, mtexts.txtslotsdlg['RemoveAll'])
+            btnRemoveAll = wx.Button(self, ID_RemoveAll, i18n.tr(mtexts.txtslotsdlg['RemoveAll']))
             vsizer.Add(btnRemoveAll, 0, wx.GROW | wx.ALL, 5)
         btnssizer.Add(vsizer, 0, wx.GROW | wx.ALL, DIFF)
         vsubsizer.Add(btnssizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.RIGHT, 5)
@@ -626,12 +627,12 @@ class LotsDlg(wx.Dialog):
         if wx.Platform != '__WXMSW__':
             btn = wx.ContextHelpButton(self)
             btnsizer.AddButton(btn)
-        btnOk = wx.Button(self, wx.ID_OK, mtexts.txtscommon['Ok'])
-        btnOk.SetHelpText(mtexts.txtscommon['HelpOk'])
+        btnOk = wx.Button(self, wx.ID_OK, i18n.tr(mtexts.txtscommon['Ok']))
+        btnOk.SetHelpText(i18n.tr(mtexts.txtscommon['HelpOk']))
         btnOk.SetDefault()
         btnsizer.AddButton(btnOk)
-        btn = wx.Button(self, wx.ID_CANCEL, mtexts.txtscommon['Cancel'])
-        btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
+        btn = wx.Button(self, wx.ID_CANCEL, i18n.tr(mtexts.txtscommon['Cancel']))
+        btn.SetHelpText(i18n.tr(mtexts.txtscommon['HelpCancel']))
         btnsizer.AddButton(btn)
         btnsizer.Realize()
         DIFF = 10
@@ -698,7 +699,7 @@ class LotsDlg(wx.Dialog):
     def OnAdd(self, event):
         name = self.name.GetValue()
         if name == '':
-            dlgm = wx.MessageDialog(self, mtexts.txtslotsdlg['LotNameEmpty'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtslotsdlg['LotNameEmpty']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -727,7 +728,7 @@ class LotsDlg(wx.Dialog):
             if arformcbs[i].GetCurrentSelection() == lots.Lots.REF or arformcbs[i].GetCurrentSelection() == lots.Lots.REFLORD:
                 lotidx = arrefcbs[i].GetCurrentSelection() + 1
                 if self.li.isReferring(lotidx):
-                    dlg = wx.MessageDialog(self, mtexts.txtslotsdlg['AlreadyReferring'], '', wx.OK | wx.ICON_INFORMATION)
+                    dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtslotsdlg['AlreadyReferring']), '', wx.OK | wx.ICON_INFORMATION)
                     dlg.ShowModal()
                     dlg.Destroy()
                     return
@@ -753,7 +754,7 @@ class LotsDlg(wx.Dialog):
     def OnModify(self, event):
         name = self.name.GetValue()
         if name == '':
-            dlgm = wx.MessageDialog(self, mtexts.txtslotsdlg['LotNameEmpty'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtslotsdlg['LotNameEmpty']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -761,7 +762,7 @@ class LotsDlg(wx.Dialog):
         if self.diurnalckb.GetValue():
             diurnal = LotsListCtrl.DIURNALTXT
         if self.li.getCurrItem() == 0:
-            dlgm = wx.MessageDialog(self, mtexts.txtslotsdlg['FormulaWontBeCopied'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtslotsdlg['FormulaWontBeCopied']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             item = (
@@ -792,13 +793,13 @@ class LotsDlg(wx.Dialog):
                 if arformcbs[i].GetCurrentSelection() == lots.Lots.REF or arformcbs[i].GetCurrentSelection() == lots.Lots.REFLORD:
                     lotidx = self.li.getCurrItem() + 1
                     if self.li.isReferred(lotidx):
-                        dlg = wx.MessageDialog(self, mtexts.txtslotsdlg['AlreadyReferred'], '', wx.OK | wx.ICON_INFORMATION)
+                        dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtslotsdlg['AlreadyReferred']), '', wx.OK | wx.ICON_INFORMATION)
                         dlg.ShowModal()
                         dlg.Destroy()
                         return
                     lotidx = arrefcbs[i].GetCurrentSelection() + 1
                     if self.li.isReferring(lotidx):
-                        dlg = wx.MessageDialog(self, mtexts.txtslotsdlg['AlreadyReferring'], '', wx.OK | wx.ICON_INFORMATION)
+                        dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtslotsdlg['AlreadyReferring']), '', wx.OK | wx.ICON_INFORMATION)
                         dlg.ShowModal()
                         dlg.Destroy()
                         return

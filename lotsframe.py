@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import wx
 import lotswnd
 
@@ -8,11 +9,11 @@ class LotsFrame(wx.Frame):
     YSIZE = 512
 
     def __init__(self, parent, title, chrt, options):
-        wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(LotsFrame.XSIZE, LotsFrame.YSIZE))
+        wx.Frame.__init__(self, parent, -1, i18n.tr(title), wx.DefaultPosition, wx.Size(LotsFrame.XSIZE, LotsFrame.YSIZE))
         bar = wx.Panel(self)
         barsizer = wx.BoxSizer(wx.HORIZONTAL)
-        barsizer.Add(wx.StaticText(bar, -1, 'Formulas:'), 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-        self.sectcb = wx.Choice(bar, -1, choices=['Day', 'Night'])
+        barsizer.Add(wx.StaticText(bar, -1, i18n.tr('Formulas:')), 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.sectcb = wx.Choice(bar, -1, choices=i18n.tr(['Day', 'Night']))
         barsizer.Add(self.sectcb, 0, wx.ALL, 3)
         bar.SetSizer(barsizer)
         self.sw = lotswnd.LotsWnd(self, chrt, options, parent)

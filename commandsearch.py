@@ -3,6 +3,7 @@
     Every enabled menu command and all Settings categories are searchable;
     keyboard navigation and run/close behavior are shared by all entry points.
 """
+import i18n
 import wx
 import settingswnd
 import commandindex
@@ -33,7 +34,7 @@ def commands(frame):
     menu_labels = {commandindex.normalise(c[0]) for c in res}
     for category, entries in settingswnd.CATEGORIES:
         for entry in entries:
-            where = 'Settings › ' + category
+            where = i18n.tr('Settings') + ' › ' + i18n.tr(category)
             if entry[0] == 'dialog':
                 title = (entry[4] if len(entry) > 4 else
                          settingswnd.menutext(entry[1])[0] if entry[1] in settingswnd.mtexts.menutxts else entry[1])
@@ -43,7 +44,7 @@ def commands(frame):
                             lambda handler=entry[2]: getattr(frame, handler)(wx.CommandEvent())))
             elif entry[0] == 'trad':
                 title, fields = settingswnd.tradoptsdlg.DIALOGS[entry[1]]
-                res.append((title + ' options', where, '',
+                res.append((i18n.tr(title) + ' (' + i18n.tr('options') + ')', where, '',
                             lambda cat=category: settingswnd.show(frame, cat)))
                 # Individual added-technique controls are directly searchable.
                 for field in fields:
@@ -55,7 +56,7 @@ def commands(frame):
                     res.append((field[2], where + ' › ' + title, description,
                                 lambda cat=category, group=title, label=field[2]:
                                     settingswnd.show(frame, cat, setting=(group, label))))
-        res.append((category, 'Settings', 'Open the ' + category.lower() + ' settings',
+        res.append((i18n.tr(category), i18n.tr('Settings'), i18n.tr('Settings') + ': ' + i18n.tr(category),
                     lambda cat=category: settingswnd.show(frame, cat)))
     return res
 
@@ -80,7 +81,7 @@ def search(cmds, query):
 class CommandPalette(wx.Dialog):
     """Keyboard-first command search, not tied to any toolbar or popup focus."""
     def __init__(self, frame):
-        super().__init__(frame, title='Find command', style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        super().__init__(frame, title=i18n.tr('Find command'), style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
                          size=(760, 490))
         self.SetMinSize((520, 350))
         self.available = commands(frame)
@@ -88,17 +89,17 @@ class CommandPalette(wx.Dialog):
         self.selected_command = None
 
         self.query = wx.SearchCtrl(self, -1, style=wx.TE_PROCESS_ENTER)
-        self.query.SetDescriptiveText('Search commands and settings')
-        self.query.SetToolTip('Type words from the command, menu path, or description')
+        self.query.SetDescriptiveText(i18n.tr('Search commands and settings'))
+        self.query.SetToolTip(i18n.tr('Type words from the command, menu path, or description'))
         self.query.ShowCancelButton(True)
 
-        self.result_label = wx.StaticText(self, -1, 'Type to search menus and settings')
+        self.result_label = wx.StaticText(self, -1, i18n.tr('Type to search menus and settings'))
         self.list = wx.ListBox(self, -1, style=wx.LB_SINGLE)
-        self.description = wx.StaticText(self, -1, 'Up / Down to select  ·  Enter to run  ·  Esc to close')
+        self.description = wx.StaticText(self, -1, i18n.tr('Up / Down to select  ·  Enter to run  ·  Esc to close'))
         self.description.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
-        self.run_button = wx.Button(self, wx.ID_OK, 'Run')
+        self.run_button = wx.Button(self, wx.ID_OK, i18n.tr('Run'))
         self.run_button.Enable(False)
-        cancel = wx.Button(self, wx.ID_CANCEL, 'Cancel')
+        cancel = wx.Button(self, wx.ID_CANCEL, i18n.tr('Cancel'))
 
         layout = wx.BoxSizer(wx.VERTICAL)
         layout.Add(self.query, 0, wx.EXPAND | wx.ALL, 12)
@@ -126,8 +127,8 @@ class CommandPalette(wx.Dialog):
         self.results = search(self.available, self.query.GetValue())
         self.list.Set(['%s    —    %s' % (label, path) for label, path, _, _ in self.results])
         self.result_label.SetLabel(
-            '%d matching command%s' % (len(self.results), '' if len(self.results) == 1 else 's')
-            if self.query.GetValue().strip() else 'Type to search menus and settings')
+            i18n.tr('%d matching command%s') % (len(self.results), '' if len(self.results) == 1 else 's')
+            if self.query.GetValue().strip() else i18n.tr('Type to search menus and settings'))
         if self.results:
             self.list.SetSelection(0)
         self.onSelection(None)
@@ -144,7 +145,7 @@ class CommandPalette(wx.Dialog):
             cmd = self.results[selection]
             self.description.SetLabel(cmd[2] or cmd[1])
         else:
-            self.description.SetLabel('Up / Down to select  ·  Enter to run  ·  Esc to close')
+            self.description.SetLabel(i18n.tr('Up / Down to select  ·  Enter to run  ·  Esc to close'))
         self.Layout()
 
     def onKey(self, event):

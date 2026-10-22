@@ -1,5 +1,6 @@
 """Heliacal phenomena and phasis as a native Morinus table."""
 
+import i18n
 import wx
 import common
 import tablewnd
@@ -38,4 +39,4 @@ class HeliacalWnd(tablewnd.TableWnd):
 class HeliacalFrame(tablewnd.TableFrame):
 
 	def __init__(self, parent, title, chrt, options):
-		tablewnd.TableFrame.__init__(self, parent, title + ' - Heliacal phenomena', lambda f: HeliacalWnd(f, chrt, options, parent))
+		tablewnd.TableFrame.__init__(self, parent, title + ' - ' + i18n.tr('Heliacal phenomena'), lambda f: HeliacalWnd(f, chrt, options, parent))

@@ -3,6 +3,7 @@
 This intentionally never calls or changes graphchart.GraphChart for the
 concentric wheel. The existing single and comparison views are unchanged.
 """
+import i18n
 import math
 import os
 import time as _time
@@ -186,7 +187,7 @@ class MultiWheel:
             xy = self.point(displayed, radius)
             clr = self.options.clrplanets[i] if i < len(self.options.clrplanets) else self.options.clrtexts
             self.label(xy, common.common.planets[i], symbol_font, clr)
-            self.hits.append((xy, max(10, glyph * .65), self.radix, i, lons[i], 'Radix'))
+            self.hits.append((xy, max(10, glyph * .65), self.radix, i, lons[i], i18n.tr('Radix')))
 
     def draw_zodiac(self, edges):
         inner, outer = edges
@@ -257,7 +258,7 @@ class MultiWheel:
             self.label((cx - (cw - tw) / 2.0, cy), texts[i], degree_font, self.options.clrtexts)
             if retro[i]:
                 self.label((cx + cw / 2.0 - rw / 2.0, cy), common.common.retr, retro_font, colour)
-            self.hits.append((xy, max(glyph * .7, 12), chrt, i, exact, 'Ring %d' % index))
+            self.hits.append((xy, max(glyph * .7, 12), chrt, i, exact, i18n.tr('Ring %d') % index))
 
     def drawChart(self):
         self.scale = 2  # crisp curves and glyphs after Lanczos downsampling
@@ -266,8 +267,8 @@ class MultiWheel:
         core, zodiac, rings = multiwheel_layout.allocate_rings(
             self.rmax, len(self.others))
         bg = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
-        image = Image.new('RGB', (self.width * self.scale,
-                                  self.height * self.scale), bg)
+        image = Image.new('RGB', i18n.tr((self.width * self.scale,
+                                  self.height * self.scale)), i18n.tr(bg))
         self.draw = ImageDraw.Draw(image)
         self.hits = []
         self.draw_radix(core)
@@ -291,14 +292,14 @@ class MultiWheel:
         sign = SIGNS[int((lon + 0.5 / 60) // 30) % 12]	# as degree_text rounds to the minute
         retro = ' (R)' if chrt.planets.planets[i].data[planets.Planet.SPLON] < 0 else ''
         return '%s: %s - %s %s%s  [%s]' % (
-            role, PLANET_NAMES[i], self.degree_text(lon), sign, retro, chrt.name)
+            role, i18n.tr(PLANET_NAMES[i]), self.degree_text(lon), i18n.tr(sign), retro, chrt.name)
 
 
 class MultiWheelFrame(wx.Frame):
     """Chart selection, aspect controls and a resizable multi-wheel canvas."""
 
     def __init__(self, mainfr):
-        wx.Frame.__init__(self, mainfr, title='Multi-wheel', size=(950, 900))
+        wx.Frame.__init__(self, mainfr, title=i18n.tr('Multi-wheel'), size=(950, 900))
         self.mainfr = mainfr
         self.options = mainfr.options
         self.buffer = None
@@ -309,17 +310,17 @@ class MultiWheelFrame(wx.Frame):
         self.SetMinSize((650, 660))
         outer = wx.BoxSizer(wx.VERTICAL)
         row = wx.BoxSizer(wx.HORIZONTAL)
-        row.Add(wx.StaticText(self, label='Outer charts:'), 0,
+        row.Add(wx.StaticText(self, label=i18n.tr('Outer charts:')), 0,
                 wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
-        self.count_choice = wx.Choice(self, choices=['1 (bi-wheel)', '2 (tri-wheel)', '3 (quad-wheel)'])
+        self.count_choice = wx.Choice(self, choices=i18n.tr(['1 (bi-wheel)', '2 (tri-wheel)', '3 (quad-wheel)']))
         self.count_choice.SetSelection(0)
         row.Add(self.count_choice, 0, wx.RIGHT, 20)
-        row.Add(wx.StaticText(self, label='Aspects between:'), 0,
+        row.Add(wx.StaticText(self, label=i18n.tr('Aspects between:')), 0,
                 wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
-        self.aspect_choice = wx.Choice(self, choices=['Radix only', 'Radix and ring 1'])
+        self.aspect_choice = wx.Choice(self, choices=i18n.tr(['Radix only', 'Radix and ring 1']))
         self.aspect_choice.SetSelection(0)
         row.Add(self.aspect_choice, 0, wx.RIGHT, 15)
-        self.savebutton = wx.Button(self, label='Save image (PNG)...')
+        self.savebutton = wx.Button(self, label=i18n.tr('Save image (PNG)...'))
         row.Add(self.savebutton)
         outer.Add(row, 0, wx.ALL, 9)
         self.pickers = []
@@ -410,7 +411,7 @@ class MultiWheelFrame(wx.Frame):
         if self.buffer is None:
             return
         folder = self.mainfr.fpathimgs
-        dlg = wx.FileDialog(self, 'Save multi-wheel as PNG',
+        dlg = wx.FileDialog(self, i18n.tr('Save multi-wheel as PNG'),
                             folder if os.path.isdir(folder) else '.',
                             'multiwheel.png', 'PNG images (*.png)|*.png',
                             wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)

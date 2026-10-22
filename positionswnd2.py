@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import wx
 import commonwnd
 import tablepresentation
@@ -72,7 +73,7 @@ class PositionsWnd2(wx.Window):
 
     def onSaveAsBitmap(self, event):
         name = self.chart.name + mtexts.txtsabbrevs['Pos']
-        dlg = wx.FileDialog(self, mtexts.txtsfiles['SaveAsBmp'], '', name, mtexts.txtsfiles['BMPFiles'], wx.FD_SAVE)
+        dlg = wx.FileDialog(self, i18n.tr(mtexts.txtsfiles['SaveAsBmp']), '', name, mtexts.txtsfiles['BMPFiles'], wx.FD_SAVE)
         if os.path.isdir(self.mainfr.fpathimgs):
             dlg.SetDirectory(self.mainfr.fpathimgs)
         else:
@@ -83,7 +84,7 @@ class PositionsWnd2(wx.Window):
             if not fpath.endswith('.png'):
                 fpath += '.png'
             if os.path.isfile(fpath):
-                dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['FileExists']), i18n.tr(mtexts.txtsfiles['Message']), wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:
                     dlgm.Destroy()
                     dlg.Destroy()
@@ -113,7 +114,7 @@ class PositionsWnd2(wx.Window):
         if self.bw:
             tableclr = (
              0, 0, 0)
-        img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.bkgclr)
+        img = Image.new('RGB', i18n.tr((self.WIDTH, self.HEIGHT)), i18n.tr(self.bkgclr))
         draw = ImageDraw.Draw(img)
         BOR = PositionsWnd2.BORDER
         txtclr = (

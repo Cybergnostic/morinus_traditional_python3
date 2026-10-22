@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import wx
 import wx.adv
 import conditionswnd
@@ -136,7 +137,7 @@ class MFrame(wx.Frame):
     MHOROSCOPE, MTABLES, MCHARTS, MOPTIONS, MHELP = list(range(0, 5))
 
     def __init__(self, parent, id, title, opts):
-        wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(MFrame.XSIZE, MFrame.YSIZE))
+        wx.Frame.__init__(self, parent, id, i18n.tr(title), wx.DefaultPosition, wx.Size(MFrame.XSIZE, MFrame.YSIZE))
         self.fpath = ''
         self.fpathhors = 'Hors'
         self.fpathimgs = 'Images'
@@ -220,12 +221,12 @@ class MFrame(wx.Frame):
         def add(menu, iid, key, handler, doc=None):
             # an item of Morinus 6
             if shown(iid):
-                menu.Append(iid, mtexts.menutxts[key], mtexts.menutxts[doc or key + 'Doc'])
+                menu.Append(iid, i18n.tr(mtexts.menutxts[key]), i18n.tr(mtexts.menutxts[doc or key + 'Doc']))
                 self.Bind(wx.EVT_MENU, handler, id=iid)
 
         def new(menu, label, doc, handler, iid=None):
             # an added item, always shown
-            item = menu.Append(iid if iid is not None else wx.NewIdRef(), label, doc)
+            item = menu.Append(iid if iid is not None else wx.NewIdRef(), i18n.tr(label), i18n.tr(doc))
             self.Bind(wx.EVT_MENU, handler, id=item.GetId())
             return item
 
@@ -239,7 +240,7 @@ class MFrame(wx.Frame):
             if n and menu.FindItemByPosition(n - 1).IsSeparator():
                 menu.Delete(menu.FindItemByPosition(n - 1))
             if menu.GetMenuItemCount():
-                menubar.Append(menu, label)
+                menubar.Append(menu, i18n.tr(label))
 
         # File
         self.mhoros = wx.Menu()
@@ -248,7 +249,7 @@ class MFrame(wx.Frame):
         add(self.mhoros, self.ID_Load, 'HMLoad', self.onLoad)
         if shown(self.ID_Load):
             self.mrecent = wx.Menu()
-            self.mhoros.AppendSubMenu(self.mrecent, 'Recent charts')
+            self.mhoros.AppendSubMenu(self.mrecent, i18n.tr('Recent charts'))
             self.filehistory = wx.FileHistory()
             self.filehistory.UseMenu(self.mrecent)
             self.Bind(wx.EVT_MENU_RANGE, self.OnFileHistory, id=wx.ID_FILE1, id2=wx.ID_FILE9)
@@ -268,23 +269,23 @@ class MFrame(wx.Frame):
         for attr, label, doc in (('houses', 'House cusps', 'Draw the house cusps on the chart'), ('showterms', 'Terms', 'Show the ring of the terms'),
                                  ('showdecans', 'Decans', 'Show the ring of the decans'), ('showdata', 'Chart data', 'Write the data of the chart in its centre'),
                                  ('enableclick', 'Click a planet for its aspects', 'Clicking a planet draws only its aspects')):
-            item = self.mview.AppendCheckItem(wx.NewIdRef(), label, doc)
+            item = self.mview.AppendCheckItem(wx.NewIdRef(), i18n.tr(label), i18n.tr(doc))
             self.Bind(wx.EVT_MENU, lambda e, a=attr: self.onViewOption(a, e.IsChecked()), id=item.GetId())
             self.viewchecks[attr] = item
         self.mring = wx.Menu()
         self.ringitems = {}
         for value, label in ((chart.Chart.SHOWNONE, 'None'), (chart.Chart.SHOWFIXEDSTARS, 'Fixed stars'), (chart.Chart.SHOWANTIS, 'Antiscia'),
                              (chart.Chart.SHOWLOTS, 'Lots'), (chart.Chart.SHOWDODECATEMORIA, 'Dodecatemoria')):
-            item = self.mring.AppendRadioItem(wx.NewIdRef(), label, 'Show this in the outer ring of the chart')
+            item = self.mring.AppendRadioItem(wx.NewIdRef(), i18n.tr(label), i18n.tr('Show this in the outer ring of the chart'))
             self.Bind(wx.EVT_MENU, lambda e, v=value: self.onViewOption('showobject', v), id=item.GetId())
             self.ringitems[value] = item
-        self.mview.AppendSubMenu(self.mring, 'Outer ring')
-        self.viewbw = self.mview.AppendCheckItem(wx.NewIdRef(), 'Black and white', 'Draw the chart and the tables in black and white')
+        self.mview.AppendSubMenu(self.mring, i18n.tr('Outer ring'))
+        self.viewbw = self.mview.AppendCheckItem(wx.NewIdRef(), i18n.tr('Black and white'), i18n.tr('Draw the chart and the tables in black and white'))
         self.Bind(wx.EVT_MENU, lambda e: self.onViewOption('bw', e.IsChecked()), id=self.viewbw.GetId())
-        self.viewsidebar = self.mview.AppendCheckItem(wx.NewIdRef(), 'Planet sidebar', 'Show the planet, chart and time lords beside the chart')
+        self.viewsidebar = self.mview.AppendCheckItem(wx.NewIdRef(), i18n.tr('Planet sidebar'), i18n.tr('Show the planet, chart and time lords beside the chart'))
         self.viewsidebar.Check(tradoptions.get('show_sidebar'))
         self.Bind(wx.EVT_MENU, self.onViewSidebar, id=self.viewsidebar.GetId())
-        self.viewtoolbar = self.mview.AppendCheckItem(wx.NewIdRef(), 'Toolbar', 'Show the toolbar with the command search')
+        self.viewtoolbar = self.mview.AppendCheckItem(wx.NewIdRef(), i18n.tr('Toolbar'), i18n.tr('Show the toolbar with the command search'))
         self.viewtoolbar.Check(tradoptions.get('show_toolbar'))
         self.Bind(wx.EVT_MENU, self.onViewToolBar, id=self.viewtoolbar.GetId())
         sep(self.mview)
@@ -294,39 +295,39 @@ class MFrame(wx.Frame):
         self.hsbase = self.ID_Housesystem1
         self.nodebase = self.ID_NodeMean
         self.mhousesystem = wx.Menu()
-        self.itplac = self.mhousesystem.Append(self.ID_Housesystem1, mtexts.menutxts['OMHSPlacidus'], '', wx.ITEM_RADIO)
-        self.itkoch = self.mhousesystem.Append(self.ID_Housesystem2, mtexts.menutxts['OMHSKoch'], '', wx.ITEM_RADIO)
-        self.itregio = self.mhousesystem.Append(self.ID_Housesystem3, mtexts.menutxts['OMHSRegiomontanus'], '', wx.ITEM_RADIO)
-        self.itcampa = self.mhousesystem.Append(self.ID_Housesystem4, mtexts.menutxts['OMHSCampanus'], '', wx.ITEM_RADIO)
-        self.itequal = self.mhousesystem.Append(self.ID_Housesystem5, mtexts.menutxts['OMHSEqual'], '', wx.ITEM_RADIO)
-        self.itwhole = self.mhousesystem.Append(self.ID_Housesystem6, mtexts.menutxts['OMHSWholeSign'], '', wx.ITEM_RADIO)
-        self.itaxial = self.mhousesystem.Append(self.ID_Housesystem7, mtexts.menutxts['OMHSAxial'], '', wx.ITEM_RADIO)
-        self.itmorin = self.mhousesystem.Append(self.ID_Housesystem8, mtexts.menutxts['OMHSMorinus'], '', wx.ITEM_RADIO)
-        self.ithoriz = self.mhousesystem.Append(self.ID_Housesystem9, mtexts.menutxts['OMHSHorizontal'], '', wx.ITEM_RADIO)
-        self.itpage = self.mhousesystem.Append(self.ID_Housesystem10, mtexts.menutxts['OMHSPagePolich'], '', wx.ITEM_RADIO)
-        self.italcab = self.mhousesystem.Append(self.ID_Housesystem11, mtexts.menutxts['OMHSAlcabitus'], '', wx.ITEM_RADIO)
-        self.itporph = self.mhousesystem.Append(self.ID_Housesystem12, mtexts.menutxts['OMHSPorphyrius'], '', wx.ITEM_RADIO)
+        self.itplac = self.mhousesystem.Append(self.ID_Housesystem1, i18n.tr(mtexts.menutxts['OMHSPlacidus']), '', wx.ITEM_RADIO)
+        self.itkoch = self.mhousesystem.Append(self.ID_Housesystem2, i18n.tr(mtexts.menutxts['OMHSKoch']), '', wx.ITEM_RADIO)
+        self.itregio = self.mhousesystem.Append(self.ID_Housesystem3, i18n.tr(mtexts.menutxts['OMHSRegiomontanus']), '', wx.ITEM_RADIO)
+        self.itcampa = self.mhousesystem.Append(self.ID_Housesystem4, i18n.tr(mtexts.menutxts['OMHSCampanus']), '', wx.ITEM_RADIO)
+        self.itequal = self.mhousesystem.Append(self.ID_Housesystem5, i18n.tr(mtexts.menutxts['OMHSEqual']), '', wx.ITEM_RADIO)
+        self.itwhole = self.mhousesystem.Append(self.ID_Housesystem6, i18n.tr(mtexts.menutxts['OMHSWholeSign']), '', wx.ITEM_RADIO)
+        self.itaxial = self.mhousesystem.Append(self.ID_Housesystem7, i18n.tr(mtexts.menutxts['OMHSAxial']), '', wx.ITEM_RADIO)
+        self.itmorin = self.mhousesystem.Append(self.ID_Housesystem8, i18n.tr(mtexts.menutxts['OMHSMorinus']), '', wx.ITEM_RADIO)
+        self.ithoriz = self.mhousesystem.Append(self.ID_Housesystem9, i18n.tr(mtexts.menutxts['OMHSHorizontal']), '', wx.ITEM_RADIO)
+        self.itpage = self.mhousesystem.Append(self.ID_Housesystem10, i18n.tr(mtexts.menutxts['OMHSPagePolich']), '', wx.ITEM_RADIO)
+        self.italcab = self.mhousesystem.Append(self.ID_Housesystem11, i18n.tr(mtexts.menutxts['OMHSAlcabitus']), '', wx.ITEM_RADIO)
+        self.itporph = self.mhousesystem.Append(self.ID_Housesystem12, i18n.tr(mtexts.menutxts['OMHSPorphyrius']), '', wx.ITEM_RADIO)
         if shown(self.ID_HouseSystem):
             self.mview.Append(wx.MenuItem(self.mview, self.ID_HouseSystem, mtexts.menutxts['OMHouseSystem'], subMenu=self.mhousesystem))
             self.setHouse()
             self.Bind(wx.EVT_MENU_RANGE, self.onHouseSystem, id=self.ID_Housesystem1, id2=self.ID_Housesystem12)
         self.mnodes = wx.Menu()
-        self.meanitem = self.mnodes.Append(self.ID_NodeMean, mtexts.menutxts['OMNMean'], '', wx.ITEM_RADIO)
-        self.trueitem = self.mnodes.Append(self.ID_NodeTrue, mtexts.menutxts['OMNTrue'], '', wx.ITEM_RADIO)
+        self.meanitem = self.mnodes.Append(self.ID_NodeMean, i18n.tr(mtexts.menutxts['OMNMean']), '', wx.ITEM_RADIO)
+        self.trueitem = self.mnodes.Append(self.ID_NodeTrue, i18n.tr(mtexts.menutxts['OMNTrue']), '', wx.ITEM_RADIO)
         if shown(self.ID_Nodes):
             self.mview.Append(wx.MenuItem(self.mview, self.ID_Nodes, mtexts.menutxts['OMNodes'], subMenu=self.mnodes))
             self.setNode()
             self.Bind(wx.EVT_MENU_RANGE, self.onNodes, id=self.ID_NodeMean, id2=self.ID_NodeTrue)
         sep(self.mview)
-        new(self.mview, 'Chart look...', 'Colour theme and line weight of the chart', self.onChartLook)
+        new(self.mview, i18n.tr('Chart look...'), i18n.tr('Colour theme and line weight of the chart'), self.onChartLook)
         self.updateViewMenu()
         finish(self.mview, 'View')
 
         # Tables, grouped: positions; dignities; aspects and points; fixed stars; time lords; directions and transits; hours and visibility
         self.mtables = wx.Menu()
         self.ID_PositionsWorkspace = wx.NewIdRef()
-        new(self.mtables, 'Positions and data...\tCtrl+Shift+P',
-            'Browse zodiacal specula, mundane positions, motion and chart data in one window',
+        new(self.mtables, i18n.tr('Positions and data...\tCtrl+Shift+P'),
+            i18n.tr('Browse zodiacal specula, mundane positions, motion and chart data in one window'),
             self.onPositionsWorkspace, self.ID_PositionsWorkspace)
         sep(self.mtables)
         add(self.mtables, self.ID_ZodPars, 'TMZodPars', self.onZodPars)
@@ -340,34 +341,34 @@ class MFrame(wx.Frame):
             add(self.talmutens, self.ID_AlmutenChart, 'TMAlmutenChart', self.onAlmutenChart)
             add(self.talmutens, self.ID_AlmutenTopical, 'TMAlmutenTopical', self.onAlmutenTopical)
         self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials = 143, 145, 146, 147, 148
-        new(self.mtables, 'Planetary conditions', 'Sect, hayz, synodic phase, stations, joys, latitude, Via Combusta, void of course', self.onConditions, self.ID_TradConditions)
-        new(self.mtables, 'Temperament', 'Temperament worksheet', self.onTemperament, self.ID_TradTemperament)
+        new(self.mtables, i18n.tr('Planetary conditions'), i18n.tr('Sect, hayz, synodic phase, stations, joys, latitude, Via Combusta, void of course'), self.onConditions, self.ID_TradConditions)
+        new(self.mtables, i18n.tr('Temperament'), i18n.tr('Temperament worksheet'), self.onTemperament, self.ID_TradTemperament)
         sep(self.mtables)
         add(self.mtables, self.ID_Aspects, 'TMAspects', self.onAspects)
         add(self.mtables, self.ID_Antiscia, 'TMAntiscia', self.onAntiscia)
         add(self.mtables, self.ID_Lots, 'TMLots', self.onLots)
         sep(self.mtables)
-        self.ID_FixedStarsWorkspace = new(self.mtables, 'Fixed Stars...',
-            'Catalogue, conjunctions and aspects, birth angles and paranatellonta',
+        self.ID_FixedStarsWorkspace = new(self.mtables, i18n.tr('Fixed Stars...'),
+            i18n.tr('Catalogue, conjunctions and aspects, birth angles and paranatellonta'),
             self.onFixedStarsWorkspace).GetId()
         sep(self.mtables)
         add(self.mtables, self.ID_Profections, 'TMProfections', self.onProfections)
         add(self.mtables, self.ID_Firdaria, 'TMFirdaria', self.onFirdaria)
         # the time lords of the Hellenistic astrologers in a submenu
         self.mhellenistic = wx.Menu()
-        new(self.mhellenistic, 'Zodiacal releasing from Fortune', 'Periods of the signs from the Lot of Fortune (Valens)', self.onZRFortune, self.ID_ZRFortune)
-        new(self.mhellenistic, 'Zodiacal releasing from Spirit', 'Periods of the signs from the Lot of Spirit (Valens)', self.onZRSpirit, self.ID_ZRSpirit)
-        new(self.mhellenistic, 'Decennials', 'Periods of 10 years 9 months of the planets (Valens)', self.onDecennials, self.ID_Decennials)
-        self.ID_Circumambulation = new(self.mhellenistic, 'Circumambulation', 'The Ascendant directed through the bounds (Ptolemy)', self.onCircumambulation).GetId()
-        self.mtables.AppendSubMenu(self.mhellenistic, 'Hellenistic', 'Zodiacal releasing, decennials and circumambulation')
+        new(self.mhellenistic, i18n.tr('Zodiacal releasing from Fortune'), i18n.tr('Periods of the signs from the Lot of Fortune (Valens)'), self.onZRFortune, self.ID_ZRFortune)
+        new(self.mhellenistic, i18n.tr('Zodiacal releasing from Spirit'), i18n.tr('Periods of the signs from the Lot of Spirit (Valens)'), self.onZRSpirit, self.ID_ZRSpirit)
+        new(self.mhellenistic, i18n.tr('Decennials'), i18n.tr('Periods of 10 years 9 months of the planets (Valens)'), self.onDecennials, self.ID_Decennials)
+        self.ID_Circumambulation = new(self.mhellenistic, i18n.tr('Circumambulation'), i18n.tr('The Ascendant directed through the bounds (Ptolemy)'), self.onCircumambulation).GetId()
+        self.mtables.AppendSubMenu(self.mhellenistic, i18n.tr('Hellenistic'), i18n.tr('Zodiacal releasing, decennials and circumambulation'))
         sep(self.mtables)
         add(self.mtables, self.ID_PrimaryDirs, 'TMPrimaryDirs', self.onPrimaryDirs)
         sep(self.mtables)
-        self.ID_HoursRiseSetWorkspace = new(self.mtables, 'Planetary hours and rise/set...',
-            'Planetary hours, daylight boundaries, rise/set and culmination times',
+        self.ID_HoursRiseSetWorkspace = new(self.mtables, i18n.tr('Planetary hours and rise/set...'),
+            i18n.tr('Planetary hours, daylight boundaries, rise/set and culmination times'),
             self.onHoursRiseSetWorkspace).GetId()
         sep(self.mtables)
-        self.ID_Heliacal = new(self.mtables, 'Heliacal phenomena and phasis', 'Visibility of the planets and stations around the birth', self.onHeliacal).GetId()
+        self.ID_Heliacal = new(self.mtables, i18n.tr('Heliacal phenomena and phasis'), i18n.tr('Visibility of the planets and stations around the birth'), self.onHeliacal).GetId()
         finish(self.mtables, mtexts.menutxts['MTable'])
 
         # Charts: returns (Solar and Lunar, the others grouped); transits and progressions; lunations; other charts
@@ -375,30 +376,30 @@ class MFrame(wx.Frame):
         self.ID_ReturnsList = 160
         self.returnids = []
         if shown(self.ID_Revolutions):
-            self.mcharts.Append(self.ID_Revolutions, 'Solar return...\tCtrl+Shift+F2', 'The return of the Sun to its place in the chart')
+            self.mcharts.Append(self.ID_Revolutions, i18n.tr('Solar return...\tCtrl+Shift+F2'), i18n.tr('The return of the Sun to its place in the chart'))
             self.Bind(wx.EVT_MENU, lambda e: self.onRevolutions(e, revolutions.Revolutions.SUN), id=self.ID_Revolutions)
-            self.returnids.append(new(self.mcharts, 'Lunar return...', 'The return of the Moon to its place in the chart', lambda e: self.onRevolutions(e, revolutions.Revolutions.MOON)).GetId())
-        new(self.mcharts, 'Lunar returns of the year...', 'Lunar returns covering a solar year', self.onReturnsList, self.ID_ReturnsList)
+            self.returnids.append(new(self.mcharts, i18n.tr('Lunar return...'), i18n.tr('The return of the Moon to its place in the chart'), lambda e: self.onRevolutions(e, revolutions.Revolutions.MOON)).GetId())
+        new(self.mcharts, i18n.tr('Lunar returns of the year...'), i18n.tr('Lunar returns covering a solar year'), self.onReturnsList, self.ID_ReturnsList)
         if shown(self.ID_Revolutions):
             mreturns = wx.Menu()
             for pl, key in ((revolutions.Revolutions.MERCURY, 'Mercury'), (revolutions.Revolutions.VENUS, 'Venus'), (revolutions.Revolutions.MARS, 'Mars'),
                             (revolutions.Revolutions.JUPITER, 'Jupiter'), (revolutions.Revolutions.SATURN, 'Saturn')):
-                self.returnids.append(new(mreturns, mtexts.txtscommon[key] + ' return...', 'The return of ' + key + ' to its place in the chart', lambda e, pl=pl: self.onRevolutions(e, pl)).GetId())
+                self.returnids.append(new(mreturns, key + ' return...', 'The return of ' + key + ' to its place in the chart', lambda e, pl=pl: self.onRevolutions(e, pl)).GetId())
             self.ID_OtherReturns = wx.NewIdRef()
             self.mcharts.Append(wx.MenuItem(self.mcharts, self.ID_OtherReturns, 'Other planetary returns', subMenu=mreturns))
             self.returnids.append(self.ID_OtherReturns)
         sep(self.mcharts)
         add(self.mcharts, self.ID_Transits, 'PMTransits', self.onTransits)
-        self.ID_CompareGrid = new(self.mcharts, 'Compare charts...', 'Show 2 or 4 independent chart wheels', self.onCompareGrid).GetId()
-        self.ID_MultiWheel = new(self.mcharts, 'Multi-wheel...', 'Show radix with up to three chart rings', self.onMultiWheel).GetId()
+        self.ID_CompareGrid = new(self.mcharts, i18n.tr('Compare charts...'), i18n.tr('Show 2 or 4 independent chart wheels'), self.onCompareGrid).GetId()
+        self.ID_MultiWheel = new(self.mcharts, i18n.tr('Multi-wheel...'), i18n.tr('Show radix with up to three chart rings'), self.onMultiWheel).GetId()
         # Exact transits (Tables) and Sun transits are one search
-        self.ID_TransitSearch = new(self.mcharts, 'Transit search...', 'Exact transits over months or years, by planet, aspect and natal point',
+        self.ID_TransitSearch = new(self.mcharts, i18n.tr('Transit search...'), i18n.tr('Exact transits over months or years, by planet, aspect and natal point'),
                                     self.onTransitSearch).GetId()
         add(self.mcharts, self.ID_SecondaryDirs, 'PMSecondaryDirs', self.onSecondaryDirs)
         add(self.mcharts, self.ID_ProfectionsChart, 'PMProfections', self.onProfectionsChart)
         sep(self.mcharts)
-        self.ID_LunationNavigator = new(self.mcharts, 'Syzygies and lunar phases...',
-            'Browse lunations without changing the prenatal syzygy',
+        self.ID_LunationNavigator = new(self.mcharts, i18n.tr('Syzygies and lunar phases...'),
+            i18n.tr('Browse lunations without changing the prenatal syzygy'),
             self.onLunationNavigator).GetId()
         sep(self.mcharts)
         add(self.mcharts, self.ID_Elections, 'PMElections', self.onElections)
@@ -411,18 +412,18 @@ class MFrame(wx.Frame):
         add(self.mtools, self.ID_FindTime, 'HMFindTime', self.onFindTime)
         add(self.mtools, self.ID_Synastry, 'HMSynastry', self.onSynastry)
         add(self.mtools, self.ID_Ephemeris, 'HMEphemeris', self.onEphemeris)
-        self.ID_DodecaCalc = new(self.mtools, 'Dodecatemoria calculator...', 'The dodecatemorion of any degree', self.onDodecaCalc).GetId()
+        self.ID_DodecaCalc = new(self.mtools, i18n.tr('Dodecatemoria calculator...'), i18n.tr('The dodecatemorion of any degree'), self.onDodecaCalc).GetId()
         finish(self.mtools, 'Tools')
 
         # Settings: the Settings window (settingswnd), the language and saving; the dialogs
         # of Morinus 6 open from the Settings window and keep their shortcuts
         self.moptions = wx.Menu()
         self.settingswnd = None
-        new(self.moptions, 'Settings...\tCtrl+,', 'All the settings, by category', self.onSettings)
+        new(self.moptions, i18n.tr('Settings...\tCtrl+,'), i18n.tr('All the settings, by category'), self.onSettings)
         add(self.moptions, self.ID_Languages, 'OMLanguages', self.onLanguages)
         sep(self.moptions)
         if shown(self.ID_AutoSaveOpts):
-            self.autosave = self.moptions.Append(self.ID_AutoSaveOpts, mtexts.menutxts['OMAutoSave'], mtexts.menutxts['OMAutoSaveDoc'], wx.ITEM_CHECK)
+            self.autosave = self.moptions.Append(self.ID_AutoSaveOpts, i18n.tr(mtexts.menutxts['OMAutoSave']), i18n.tr(mtexts.menutxts['OMAutoSaveDoc']), wx.ITEM_CHECK)
             self.setAutoSave()
             self.Bind(wx.EVT_MENU, self.onAutoSaveOpts, id=self.ID_AutoSaveOpts)
         add(self.moptions, self.ID_SaveOpts, 'OMSave', self.onSaveOpts)
@@ -486,25 +487,25 @@ class MFrame(wx.Frame):
             if menubar.FindItemById(iid):
                 text, _, keys = mtexts.menutxts[key].partition('\t')
                 text = text.replace('&', '')
-                tb.AddTool(iid, text, art(artid), shortHelp=text + (' (' + keys + ')' if keys else ''))
+                tb.AddTool(iid, i18n.tr(text), art(artid), shortHelp=text + (' (' + keys + ')' if keys else ''))
                 self.toolids.append(iid)
         icon = wx.ArtProvider.GetBitmap('preferences-system', wx.ART_TOOLBAR, (22, 22))	# the desktop's icon where there is one
-        tool = tb.AddTool(wx.ID_ANY, 'Settings', icon if icon.IsOk() else art(wx.ART_HELP_SETTINGS), shortHelp='Settings (Ctrl+,)')
+        tool = tb.AddTool(wx.ID_ANY, i18n.tr('Settings'), icon if icon.IsOk() else art(wx.ART_HELP_SETTINGS), shortHelp=i18n.tr('Settings (Ctrl+,)'))
         self.Bind(wx.EVT_TOOL, self.onSettings, id=tool.GetId())
         self.ID_SidebarTool = wx.NewIdRef()
-        tb.AddCheckTool(self.ID_SidebarTool, 'Planet sidebar', art(wx.ART_REPORT_VIEW), shortHelp='Planet sidebar')
+        tb.AddCheckTool(self.ID_SidebarTool, i18n.tr('Planet sidebar'), art(wx.ART_REPORT_VIEW), shortHelp=i18n.tr('Planet sidebar'))
         tb.ToggleTool(self.ID_SidebarTool, tradoptions.get('show_sidebar'))
         self.Bind(wx.EVT_TOOL, self.onViewSidebar, id=self.ID_SidebarTool)
         tb.AddSeparator()
-        tb.AddControl(wx.StaticText(tb, -1, ' Houses: '))
+        tb.AddControl(wx.StaticText(tb, -1, i18n.tr(' Houses: ')))
         self.tbhouses = wx.Choice(tb, -1, choices=[mtexts.menutxts[k].partition('\t')[0].replace('&', '') for k in settingswnd.HOUSESYSTEMS])
-        self.tbhouses.SetToolTip('House system (View > House system)')
+        self.tbhouses.SetToolTip(i18n.tr('House system (View > House system)'))
         self.tbhouses.SetSelection(self.options.hsys)
         self.tbhouses.Bind(wx.EVT_CHOICE, self.onToolHouse)
         tb.AddControl(self.tbhouses)
         tb.AddStretchableSpace()
-        self.command_button = wx.Button(tb, -1, 'Find command...  Ctrl+K')
-        self.command_button.SetToolTip('Search menus and settings by name or description (Ctrl+K)')
+        self.command_button = wx.Button(tb, -1, i18n.tr('Find command...  Ctrl+K'))
+        self.command_button.SetToolTip(i18n.tr('Search menus and settings by name or description (Ctrl+K)'))
         self.command_button.Bind(wx.EVT_BUTTON, self.onCommandSearch)
         tb.AddControl(self.command_button)
         tb.Realize()
@@ -581,7 +582,7 @@ class MFrame(wx.Frame):
         if val == wx.ID_OK:
             changed = dlg.check(self.horoscope)
             if self.dirty and changed:
-                dlgm = wx.MessageDialog(self, mtexts.txtsfiles['DiscardCurrHor'], '', wx.YES_NO | wx.ICON_QUESTION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['DiscardCurrHor']), '', wx.YES_NO | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:
                     self.save()
                 dlgm.Destroy()
@@ -695,12 +696,12 @@ class MFrame(wx.Frame):
 
     def onLoad(self, event):
         if self.dirty:
-            dlgm = wx.MessageDialog(self, mtexts.txtsfiles['DiscardCurrHor'], '', wx.YES_NO | wx.ICON_QUESTION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['DiscardCurrHor']), '', wx.YES_NO | wx.ICON_QUESTION)
             if dlgm.ShowModal() == wx.ID_NO:
                 dlgm.Destroy()
                 return
             dlgm.Destroy()
-        dlg = wx.FileDialog(self, mtexts.txtsfiles['OpenHor'], '', '', mtexts.txtsfiles['HORFiles'], wx.FD_OPEN)
+        dlg = wx.FileDialog(self, i18n.tr(mtexts.txtsfiles['OpenHor']), '', '', mtexts.txtsfiles['HORFiles'], wx.FD_OPEN)
         if os.path.isdir(self.fpathhors):
             dlg.SetDirectory(self.fpathhors)
         else:
@@ -765,7 +766,7 @@ class MFrame(wx.Frame):
             time = chart.Time(year, month, day, hour, minute, second, bc, cal, zt, plus, zh, zm, daylightsaving, place)
             chrt = chart.Chart(name, male, time, place, htype, notes, self.options)
         except IOError:
-            dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileError'], mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['FileError']), i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
 
@@ -775,7 +776,7 @@ class MFrame(wx.Frame):
         self.save()
 
     def save(self):
-        dlg = wx.FileDialog(self, mtexts.txtsfiles['SaveHor'], '', self.horoscope.name, mtexts.txtsfiles['HORFiles'], wx.FD_SAVE)
+        dlg = wx.FileDialog(self, i18n.tr(mtexts.txtsfiles['SaveHor']), '', self.horoscope.name, mtexts.txtsfiles['HORFiles'], wx.FD_SAVE)
         if os.path.isdir(self.fpathhors):
             dlg.SetDirectory(self.fpathhors)
         else:
@@ -786,7 +787,7 @@ class MFrame(wx.Frame):
             if not fpath.endswith('.hor'):
                 fpath += '.hor'
             if os.path.isfile(fpath):
-                dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['FileExists']), i18n.tr(mtexts.txtsfiles['Message']), wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:
                     dlgm.Destroy()
                     return
@@ -826,7 +827,7 @@ class MFrame(wx.Frame):
                 f.close()
                 self.dirty = False
             except IOError:
-                dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileError'], mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['FileError']), i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
                 dlgm.ShowModal()
                 dlgm.Destroy()
 
@@ -836,7 +837,7 @@ class MFrame(wx.Frame):
         name = self.horoscope.name
         if name == '':
             name = mtexts.txtscommon['Horoscope']
-        dlg = wx.FileDialog(self, mtexts.txtsfiles['SaveAsBmp'], '', name, mtexts.txtsfiles['BMPFiles'], wx.FD_SAVE)
+        dlg = wx.FileDialog(self, i18n.tr(mtexts.txtsfiles['SaveAsBmp']), '', name, mtexts.txtsfiles['BMPFiles'], wx.FD_SAVE)
         if os.path.isdir(self.fpathimgs):
             dlg.SetDirectory(self.fpathimgs)
         else:
@@ -847,7 +848,7 @@ class MFrame(wx.Frame):
             if not fpath.endswith('.png'):
                 fpath += '.png'
             if os.path.isfile(fpath):
-                dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['FileExists']), i18n.tr(mtexts.txtsfiles['Message']), wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:
                     dlgm.Destroy()
                     return
@@ -857,7 +858,7 @@ class MFrame(wx.Frame):
         dlg.Destroy()
 
     def onSynastry(self, event):
-        dlg = wx.FileDialog(self, mtexts.txtsfiles['OpenHor'], '', '', mtexts.txtsfiles['HORFiles'], wx.FD_OPEN)
+        dlg = wx.FileDialog(self, i18n.tr(mtexts.txtsfiles['OpenHor']), '', '', mtexts.txtsfiles['HORFiles'], wx.FD_OPEN)
         if os.path.isdir(self.fpathhors):
             dlg.SetDirectory(self.fpathhors)
         else:
@@ -887,7 +888,7 @@ class MFrame(wx.Frame):
 
     def onClose(self, event):
         if self.dirty:
-            dlgm = wx.MessageDialog(self, mtexts.txtsfiles['DiscardCurrHor'], '', wx.YES_NO | wx.ICON_QUESTION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['DiscardCurrHor']), '', wx.YES_NO | wx.ICON_QUESTION)
             if dlgm.ShowModal() == wx.ID_NO:
                 dlgm.Destroy()
                 return
@@ -904,7 +905,7 @@ class MFrame(wx.Frame):
 
     def onExit(self, event):
         if self.dirty:
-            dlgm = wx.MessageDialog(self, mtexts.txtsfiles['DiscardCurrHor'], '', wx.YES_NO | wx.ICON_QUESTION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['DiscardCurrHor']), '', wx.YES_NO | wx.ICON_QUESTION)
             if dlgm.ShowModal() == wx.ID_NO:
                 dlgm.Destroy()
                 return
@@ -914,7 +915,7 @@ class MFrame(wx.Frame):
 
     def OnFileHistory(self, evt):
         if self.dirty:
-            dlgm = wx.MessageDialog(self, mtexts.txtsfiles['DiscardCurrHor'], '', wx.YES_NO | wx.ICON_QUESTION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['DiscardCurrHor']), '', wx.YES_NO | wx.ICON_QUESTION)
             if dlgm.ShowModal() == wx.ID_NO:
                 dlgm.Destroy()
                 return
@@ -938,7 +939,7 @@ class MFrame(wx.Frame):
                 self.filehistory.AddFileToHistory(path)
                 self.destroyDlgs()
         else:
-            dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileError'], mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['FileError']), i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             self.filehistory.RemoveFileFromHistory(fileNum)
@@ -969,7 +970,7 @@ class MFrame(wx.Frame):
         if self.splash:
             return
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1060,7 +1061,7 @@ class MFrame(wx.Frame):
                 topicalframe = almutentopicalsframe.AlmutenTopicalsFrame(self, self.horoscope, self.title)
                 topicalframe.Show(True)
             else:
-                dlgm = wx.MessageDialog(self, mtexts.txtscommon['NoTopicalsCreated'], '', wx.OK | wx.ICON_INFORMATION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NoTopicalsCreated']), '', wx.OK | wx.ICON_INFORMATION)
                 dlgm.ShowModal()
                 dlgm.Destroy()
         return
@@ -1111,7 +1112,7 @@ class MFrame(wx.Frame):
         if not self.splash:
             oneselected = True in self.options.lotsvisible
             if not oneselected:
-                dlgm = wx.MessageDialog(self, mtexts.txtscommon['NoSelLots'], '', wx.OK | wx.ICON_INFORMATION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NoSelLots']), '', wx.OK | wx.ICON_INFORMATION)
                 dlgm.ShowModal()
                 dlgm.Destroy()
                 return
@@ -1133,7 +1134,7 @@ class MFrame(wx.Frame):
 
     def onExactTransits(self, event):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1154,7 +1155,7 @@ class MFrame(wx.Frame):
 
     def onProfections(self, event):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1214,11 +1215,11 @@ class MFrame(wx.Frame):
                     usrframe = userframe.UserFrame(self, self.title, self.horoscope, self.options, self.horoscope.usersigpd)
                     usrframe.Show(True)
                 else:
-                    dlgm = wx.MessageDialog(self, mtexts.txtscommon['CheckUser'], '', wx.OK | wx.ICON_INFORMATION)
+                    dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['CheckUser']), '', wx.OK | wx.ICON_INFORMATION)
                     dlgm.ShowModal()
                     dlgm.Destroy()
             else:
-                dlgm = wx.MessageDialog(self, mtexts.txtscommon['SelectColumn'], '', wx.OK | wx.ICON_INFORMATION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['SelectColumn']), '', wx.OK | wx.ICON_INFORMATION)
                 dlgm.ShowModal()
                 dlgm.Destroy()
         return
@@ -1226,7 +1227,7 @@ class MFrame(wx.Frame):
     def onFirdaria(self, event):
         if not self.splash and self.horoscope.time.bc:
             # the periods are dated with Python dates, which have no BC years
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1237,7 +1238,7 @@ class MFrame(wx.Frame):
 
     def onPrimaryDirs(self, event):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1267,7 +1268,7 @@ class MFrame(wx.Frame):
                 else:
                     keytxt = mtexts.typeListStat[self.options.pdkeys]
                 txt = mtexts.typeListDirs[self.options.primarydir] + '; ' + keytxt + '\n' + mtexts.txtscommon['BusyInfo']
-                self.progbar = wx.ProgressDialog(mtexts.txtscommon['Calculating'], txt, parent=self, style=wx.PD_CAN_ABORT | wx.PD_APP_MODAL)
+                self.progbar = wx.ProgressDialog(i18n.tr(mtexts.txtscommon['Calculating']), i18n.tr(txt), parent=self, style=wx.PD_CAN_ABORT | wx.PD_APP_MODAL)
                 self.progbar.Fit()
                 self.pds = None
                 self.pdready = False
@@ -1312,7 +1313,7 @@ class MFrame(wx.Frame):
             pdw = primdirslistframe.PrimDirsListFrame(self, self.horoscope, self.options, self.pds, self.title.replace(mtexts.typeList[self.horoscope.htype], mtexts.txtsprimdirslist['PrimaryDirs']))
             pdw.Show(True)
         else:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NoPDsWithSettings'], mtexts.txtscommon['Information'], wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NoPDsWithSettings']), i18n.tr(mtexts.txtscommon['Information']), wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
         if self.pds != None:
@@ -1322,7 +1323,7 @@ class MFrame(wx.Frame):
 
     def onTransits(self, event):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1348,7 +1349,7 @@ class MFrame(wx.Frame):
 
     def onRevolutions(self, event, planet=None):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1393,7 +1394,7 @@ class MFrame(wx.Frame):
                     rw.Show(True)
                 dlg.Destroy()
             else:
-                dlgm = wx.MessageDialog(self, mtexts.txtscommon['CouldnotComputeRevolution'], mtexts.txtscommon['Error'], wx.OK | wx.ICON_EXCLAMATION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['CouldnotComputeRevolution']), i18n.tr(mtexts.txtscommon['Error']), wx.OK | wx.ICON_EXCLAMATION)
                 dlgm.ShowModal()
                 dlgm.Destroy()
         return
@@ -1436,7 +1437,7 @@ class MFrame(wx.Frame):
 
     def onSunTransits(self, event):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1478,14 +1479,14 @@ class MFrame(wx.Frame):
                     rw.Show(True)
                 dlg.Destroy()
             else:
-                dlgm = wx.MessageDialog(self, mtexts.txtscommon['CouldnotComputeTransit'], mtexts.txtscommon['Error'], wx.OK | wx.ICON_EXCLAMATION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['CouldnotComputeTransit']), i18n.tr(mtexts.txtscommon['Error']), wx.OK | wx.ICON_EXCLAMATION)
                 dlgm.ShowModal()
                 dlgm.Destroy()
         return
 
     def onSecondaryDirs(self, event):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1531,7 +1532,7 @@ class MFrame(wx.Frame):
 
     def onElections(self, event):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1549,7 +1550,7 @@ class MFrame(wx.Frame):
 
     def onSyzygyChart(self, event):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1575,7 +1576,7 @@ class MFrame(wx.Frame):
 
     def onSyzygyChart2(self, event):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -1586,7 +1587,7 @@ class MFrame(wx.Frame):
 
     def onProfectionsChart(self, event):
         if self.horoscope.time.bc:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NotAvailable'], '', wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NotAvailable']), '', wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             return
@@ -2178,7 +2179,7 @@ class MFrame(wx.Frame):
             self.moptions.Enable(self.ID_SaveOpts, False)
 
     def onReload(self, event):
-        dlg = wx.MessageDialog(self, mtexts.txtscommon['AreYouSure'], mtexts.txtscommon['Confirm'], wx.YES_NO | wx.ICON_QUESTION)
+        dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['AreYouSure']), i18n.tr(mtexts.txtscommon['Confirm']), wx.YES_NO | wx.ICON_QUESTION)
         val = dlg.ShowModal()
         if val == wx.ID_YES:
             if self.options.checkOptsFiles():
@@ -2204,7 +2205,7 @@ class MFrame(wx.Frame):
         fname = os.path.join('Res', mtexts.helptxt)
         if not os.path.exists(fname):
             txt = fname + ' ' + mtexts.txtsfiles['NotFound']
-            dlgm = wx.MessageDialog(self, txt, mtexts.txtsfiles['Error'], wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(txt), i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
         else:
@@ -2243,7 +2244,7 @@ class MFrame(wx.Frame):
         fname = os.path.join(common.common.ephepath, starnames.CATALOGUE)
         if not os.path.exists(fname):
             txt = fname + ' ' + mtexts.txtsfiles['NotFound']
-            dlgm = wx.MessageDialog(self, txt, mtexts.txtsfiles['Error'], wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(txt), i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
             res = False
@@ -2285,7 +2286,7 @@ class MFrame(wx.Frame):
             self.title = txt
         else:
             self.title = self.origtitle
-        self.SetTitle(self.title)
+        self.SetTitle(i18n.tr(self.title))
 
     def drawSplash(self):
         splashpath = os.path.join('Res', 'Morinus.jpg')
@@ -2363,13 +2364,13 @@ class MFrame(wx.Frame):
         day = h.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
         if self.options.usedaynightorb:
             day = h.abovehorizonwithorb
-        self.statusbar.SetStatusText('Day chart' if day else 'Night chart', 1)
+        self.statusbar.SetStatusText(i18n.tr('Day chart' if day else 'Night chart'), 1)
         names = [mtexts.txtscommon[k] for k in ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')]
         ar = (6, 2, 5, 1, 4, 0, 3)
-        self.statusbar.SetStatusText('%s day, %s hour' % (names[ar[t.ph.weekday]], names[t.ph.planetaryhour]), 2)
+        self.statusbar.SetStatusText(i18n.tr('%s day, %s hour') % (names[ar[t.ph.weekday]], names[t.ph.planetaryhour]), 2)
         zodiac = self.gchart.ayans[self.options.ayanamsha] if self.options.ayanamsha else mtexts.txtsayanamsha['Tropical']
         node = mtexts.menutxts['OMNMean' if self.options.meannode else 'OMNTrue'].split('\t')[0].replace('&', '')
-        self.statusbar.SetStatusText('%s \u00b7 %s \u00b7 %s node' % (self.gchart.hsystem[self.options.hsys], zodiac, node.lower()), 3)
+        self.statusbar.SetStatusText(i18n.tr('%s \u00b7 %s \u00b7 %s node') % (self.gchart.hsystem[self.options.hsys], zodiac, node.lower()), 3)
 
     def onEraseBackground(self, event):
         dc = wx.ClientDC(self)

@@ -1,9 +1,11 @@
 """Planetary conditions as a native Morinus table (the analysis comes from traditional.py)."""
 
 import wx
+import i18n
 import common
 import planets
 import tablewnd
+import sidebar
 import traditional
 from hor_tools import output as hout
 
@@ -37,23 +39,23 @@ class ConditionsWnd(tablewnd.TableWnd):
 			('Sect', 'Day' if solar.is_day else 'Night'),
 			("Sun's true altitude", '%+.4f\xb0' % solar.sun_true_altitude),
 			('Apparent sunrise / sunset', '%s / %s' % tuple(t.strftime('%H:%M:%S') if t else 'none' for t in (solar.sunrise_local, solar.sunset_local))),
-			('Planetary day / hour ruler', '%s / %s' % (a.technical.day_ruler, a.technical.hour_ruler or '- (no sunrise or sunset)')),
+			('Planetary day / hour ruler', '%s / %s' % (i18n.tr(a.technical.day_ruler), i18n.tr(a.technical.hour_ruler) or i18n.tr('- (no sunrise or sunset)'))),
 			('Moon void of course', 'yes' if moon is not None and moon.is_void_of_course else 'no')]
 		for r in a.reports:
 			p = r.planet
 			idx = PLANETIDS[p.name]
-			hayz = ', '.join(t for t, on in (('hayz', r.hayz), ('halb', r.halb)) if on) or '-'
+			hayz = ', '.join(i18n.tr(t) for t, on in (('hayz', r.hayz), ('halb', r.halb)) if on) or '-'
 			station = {'first': 'first (turning retrograde)', 'second': 'second (turning direct)'}.get(p.station or '', '-')
-			motion = '%s, %s, %.2f\xb0/day (%.2fx mean)' % ('retrograde' if p.retrograde else 'direct', r.speed_class, abs(p.speed_long), r.speed_ratio)
+			motion = i18n.tr('%s, %s, %.2f\xb0/day (%.2fx mean)') % (i18n.tr('retrograde' if p.retrograde else 'direct'), i18n.tr(r.speed_class), abs(p.speed_long), r.speed_ratio)
 			lat = {'north_strengthening': 'north: strengthening', 'south_weakening': 'south: weakening'}.get(r.latitude_condition, 'on the ecliptic')
 			self.rows.append((idx, [
 				(tablewnd.GLYPH, common.common.planets[idx]),
 				(tablewnd.POSITION, self.chart.planets.planets[idx].data[planets.Planet.LON]),
 				str(p.house),
-				'%s planet, %s' % (r.sect_planet, 'in sect' if r.in_sect else 'out of sect'),
+				i18n.tr('%s planet, %s') % (i18n.tr(r.sect_planet), i18n.tr('in sect' if r.in_sect else 'out of sect')),
 				hayz,
 				'-' if p.name == 'Sun' else ('oriental' if r.oriental else 'occidental'),
-				hout._format_synodic(r) or '-',
+				sidebar.traditional_phase(r) or '-',
 				station,
 				motion,
 				'joy' if r.is_in_planetary_joy else '-',
@@ -67,4 +69,4 @@ class ConditionsWnd(tablewnd.TableWnd):
 class ConditionsFrame(tablewnd.TableFrame):
 
 	def __init__(self, parent, title, chrt, options):
-		tablewnd.TableFrame.__init__(self, parent, title + ' - Planetary conditions', lambda f: ConditionsWnd(f, chrt, options, parent))
+		tablewnd.TableFrame.__init__(self, parent, title + ' - ' + i18n.tr('Planetary conditions'), lambda f: ConditionsWnd(f, chrt, options, parent))

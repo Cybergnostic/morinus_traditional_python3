@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import os
 import wx
 import pickle
@@ -841,7 +842,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -856,7 +857,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -870,7 +871,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -885,7 +886,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -900,7 +901,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -915,7 +916,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -936,7 +937,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -954,7 +955,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -968,7 +969,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -993,7 +994,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1007,7 +1008,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1021,7 +1022,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1039,7 +1040,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1081,7 +1082,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1101,7 +1102,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1115,7 +1116,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1129,7 +1130,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1144,7 +1145,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1158,7 +1159,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1183,7 +1184,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1198,7 +1199,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1212,7 +1213,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1226,7 +1227,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 
@@ -1240,7 +1241,7 @@ class Options:
             f.close()
             return True
         except IOError:
-            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(None, mtexts.txtsfiles['OptFileError'] + ' (' + optfile + ')', i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return False
 

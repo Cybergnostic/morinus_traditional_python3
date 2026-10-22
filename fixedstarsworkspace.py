@@ -1,4 +1,5 @@
 """Fixed Stars explorer: original catalogue, aspects and angular techniques."""
+import i18n
 import wx
 import mtexts
 import fixedstarswnd
@@ -37,7 +38,7 @@ def show(mainfr, tab=0):
          lambda view: _separate(fixedstaranglewnd.FixedStarAnglesFrame, mainfr)),
     )
     wnd = legacytabworkspace.TableWorkspace(
-        mainfr, 'Fixed Stars — ' + chart.name, specs, tab,
+        mainfr, i18n.tr('Fixed Stars') + ' — ' + chart.name, specs, tab,
         size=(1150, 730), attribute='fixed_stars_workspace')
     mainfr.fixed_stars_workspace = wnd
     wnd.Show()
@@ -55,7 +56,7 @@ def _needs_stars(parent, mainfr, build):
 
 def _separate(frameclass, mainfr, needs_stars=False):
     if needs_stars and not fixedstarscatalog.is_selected(mainfr.options.fixedstars):
-        wx.MessageBox(mtexts.txtscommon['NoSelFixedStars'], '', wx.OK | wx.ICON_INFORMATION, parent=mainfr)
+        wx.MessageBox(i18n.tr(mtexts.txtscommon['NoSelFixedStars']), '', wx.OK | wx.ICON_INFORMATION, parent=mainfr)
         return None
     wnd = frameclass(mainfr, mainfr.title, mainfr.horoscope, mainfr.options)
     wnd.Show()

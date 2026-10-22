@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import wx
 import menubars
 import chart
@@ -18,7 +19,7 @@ class PDsInChartFrame(wx.Frame):
     SQUARE = 3
 
     def __init__(self, parent, title, chrt, radix, options, sel=0):
-        wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(PDsInChartFrame.XSIZE, PDsInChartFrame.YSIZE))
+        wx.Frame.__init__(self, parent, -1, i18n.tr(title), wx.DefaultPosition, wx.Size(PDsInChartFrame.XSIZE, PDsInChartFrame.YSIZE))
         self.chart = chrt
         self.radix = radix
         self.options = options
@@ -35,13 +36,13 @@ class PDsInChartFrame(wx.Frame):
         self.ID_Positions = wx.NewId()
         self.ID_Square = wx.NewId()
         self.selmenu = wx.Menu()
-        self.chartmenu = self.selmenu.Append(self.ID_Chart, mtexts.txtspopupmenu['Chart'], '', wx.ITEM_RADIO)
-        self.compoundmenu = self.selmenu.Append(self.ID_Comparison, mtexts.txtspopupmenu['Comparison'], '', wx.ITEM_RADIO)
-        self.positionsmenu = self.selmenu.Append(self.ID_Positions, mtexts.txtspopupmenu['Positions'], '', wx.ITEM_RADIO)
-        self.squaremenu = self.selmenu.Append(self.ID_Square, mtexts.txtspopupmenu['Square'], '', wx.ITEM_RADIO)
+        self.chartmenu = self.selmenu.Append(self.ID_Chart, i18n.tr(mtexts.txtspopupmenu['Chart']), '', wx.ITEM_RADIO)
+        self.compoundmenu = self.selmenu.Append(self.ID_Comparison, i18n.tr(mtexts.txtspopupmenu['Comparison']), '', wx.ITEM_RADIO)
+        self.positionsmenu = self.selmenu.Append(self.ID_Positions, i18n.tr(mtexts.txtspopupmenu['Positions']), '', wx.ITEM_RADIO)
+        self.squaremenu = self.selmenu.Append(self.ID_Square, i18n.tr(mtexts.txtspopupmenu['Square']), '', wx.ITEM_RADIO)
         self.pmenu.Append(wx.MenuItem(self.pmenu, self.ID_Selection, mtexts.txtspopupmenu['Windows'], subMenu=self.selmenu))
-        self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveChart'])
-        self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['ChartBW'], wx.ITEM_CHECK)
+        self.pmenu.Append(self.ID_SaveAsBitmap, i18n.tr(mtexts.txtspopupmenu['SaveAsBmp']), i18n.tr(mtexts.txtspopupmenu['SaveChart']))
+        self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, i18n.tr(mtexts.txtspopupmenu['BlackAndWhite']), i18n.tr(mtexts.txtspopupmenu['ChartBW']), wx.ITEM_CHECK)
         self.SetMinSize((200, 200))
         self.Bind(wx.EVT_RIGHT_UP, self.onPopupMenu)
         self.Bind(wx.EVT_MENU, self.onChart, id=self.ID_Chart)
@@ -97,7 +98,7 @@ class PDsInChartFrame(wx.Frame):
         self.w.drawBkg()
         self.w.Refresh()
         txt = pdtypetxt + ' ' + pdkeytxt + ' ' + txtdir + ' ' + str(y) + '.' + str(m).zfill(2) + '.' + str(d).zfill(2) + ' ' + str(ho).zfill(2) + ':' + str(mi).zfill(2) + ':' + str(se).zfill(2) + '  ' + str(da)
-        self.SetTitle(txt)
+        self.SetTitle(i18n.tr(txt))
 
     def onSaveAsBitmap(self, event):
         self.w.onSaveAsBitmap(event)

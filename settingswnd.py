@@ -2,6 +2,7 @@
 the added techniques and the simple choices are shown here and take effect at
 once; the dialogs of Morinus 6 open from their entries ("Edit...")."""
 
+import i18n
 import copy
 import wx
 import wx.lib.scrolledpanel as scrolledpanel
@@ -82,7 +83,7 @@ HOUSESYSTEMS = ('OMHSPlacidus', 'OMHSKoch', 'OMHSRegiomontanus', 'OMHSCampanus',
 class SettingsWnd(wx.Dialog):
 
 	def __init__(self, frame):
-		wx.Dialog.__init__(self, frame, -1, 'Settings', size=(1000, 700), style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+		wx.Dialog.__init__(self, frame, -1, i18n.tr('Settings'), size=(1000, 700), style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 		self.frame = frame
 		self.tradctrls = []
 		self.entries = []		# searchable settings with live control targets
@@ -90,24 +91,24 @@ class SettingsWnd(wx.Dialog):
 		self.SetMinSize((850, 520))
 
 		self.search = wx.SearchCtrl(self, -1, size=(265, -1), style=wx.TE_PROCESS_ENTER)
-		self.search.SetDescriptiveText('Find a setting or option')
+		self.search.SetDescriptiveText(i18n.tr('Find a setting or option'))
 		self.search.ShowCancelButton(True)
 		self.list = wx.ListBox(self, -1, size=(265, -1), style=wx.LB_SINGLE)
-		self.result_count = wx.StaticText(self, -1, 'Browse by category')
+		self.result_count = wx.StaticText(self, -1, i18n.tr('Browse by category'))
 		self.result_count.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
 		self.book = wx.Simplebook(self)
 		for category_index, (name, entries) in enumerate(CATEGORIES):
 			page = scrolledpanel.ScrolledPanel(self.book, -1)
 			self.pages.append(page)
 			vsizer = wx.BoxSizer(wx.VERTICAL)
-			head = wx.StaticText(page, -1, name)
+			head = wx.StaticText(page, -1, i18n.tr(name))
 			head.SetFont(head.GetFont().Bold().Scaled(1.4))
 			vsizer.Add(head, 0, wx.ALL, 12)
 			for e in entries:
 				self.addEntry(page, vsizer, e, name, category_index)
 			page.SetSizer(vsizer)
 			page.SetupScrolling(scroll_x=False, scroll_y=True, rate_y=12)
-			self.book.AddPage(page, name)
+			self.book.AddPage(page, i18n.tr(name))
 
 		left = wx.BoxSizer(wx.VERTICAL)
 		left.Add(self.search, 0, wx.EXPAND | wx.BOTTOM, 6)
@@ -118,7 +119,7 @@ class SettingsWnd(wx.Dialog):
 		hsizer.Add(self.book, 1, wx.EXPAND | wx.TOP | wx.BOTTOM | wx.RIGHT, 10)
 		close = wx.Button(self, wx.ID_CLOSE)
 		self.SetEscapeId(wx.ID_CLOSE)
-		note = wx.StaticText(self, -1, 'Changes take effect at once.')
+		note = wx.StaticText(self, -1, i18n.tr('Changes take effect at once.'))
 		note.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
 		bottom = wx.BoxSizer(wx.HORIZONTAL)
 		bottom.Add(note, 0, wx.ALIGN_CENTER_VERTICAL)
@@ -145,9 +146,11 @@ class SettingsWnd(wx.Dialog):
 
 	def register(self, title, category, category_index, description, control, group=''):
 		"""Index a real option or dialog action without altering its behavior."""
+		# searched in the language of the program
 		self.entries.append({
-			'title': title, 'category': category, 'category_index': category_index,
-			'description': description, 'control': control, 'group': group,
+			'title': i18n.tr(title), 'category': i18n.tr(category), 'category_index': category_index,
+			'description': i18n.tr(description), 'control': control, 'group': i18n.tr(group),
+			'english': ' '.join((title, category, group, description)),	# found in English too
 		})
 
 	def addEntry(self, page, vsizer, e, category, category_index):
@@ -160,7 +163,7 @@ class SettingsWnd(wx.Dialog):
 				title = e[4]
 			box = wx.BoxSizer(wx.HORIZONTAL)
 			texts = wx.BoxSizer(wx.VERTICAL)
-			t = wx.StaticText(page, -1, title)
+			t = wx.StaticText(page, -1, i18n.tr(title))
 			t.SetFont(t.GetFont().Bold())
 			texts.Add(t, 0)
 			d = wx.StaticText(page, -1, desc + ('   (' + keys + ')' if keys else ''))
@@ -168,7 +171,7 @@ class SettingsWnd(wx.Dialog):
 			d.Wrap(365)
 			texts.Add(d, 0, wx.TOP, 2)
 			box.Add(texts, 1, wx.ALIGN_CENTER_VERTICAL)
-			btn = wx.Button(page, -1, 'Edit...')
+			btn = wx.Button(page, -1, i18n.tr('Edit...'))
 			btn.Bind(wx.EVT_BUTTON, lambda ev, h=handler: self.onEdit(h))
 			box.Add(btn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 12)
 			vsizer.Add(box, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 14)
@@ -176,7 +179,7 @@ class SettingsWnd(wx.Dialog):
 			return
 		if kind == 'trad':
 			title, fields = tradoptsdlg.DIALOGS[e[1]]
-			t = wx.StaticText(page, -1, title)
+			t = wx.StaticText(page, -1, i18n.tr(title))
 			t.SetFont(t.GetFont().Bold())
 			vsizer.Add(t, 0, wx.LEFT | wx.RIGHT, 12)
 			holder = []
@@ -185,8 +188,8 @@ class SettingsWnd(wx.Dialog):
 			self.tradctrls.append(ctrls)
 			row = wx.BoxSizer(wx.HORIZONTAL)
 			row.Add(sizer, 1)
-			defaults = wx.Button(page, -1, 'Defaults')
-			defaults.SetToolTip('The values the program comes with')
+			defaults = wx.Button(page, -1, i18n.tr('Defaults'))
+			defaults.SetToolTip(i18n.tr('The values the program comes with'))
 			defaults.Bind(wx.EVT_BUTTON, lambda ev: self.onTradDefaults(ctrls))
 			row.Add(defaults, 0, wx.ALIGN_BOTTOM | wx.ALL, 6)
 			vsizer.Add(row, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
@@ -207,9 +210,9 @@ class SettingsWnd(wx.Dialog):
 		if kind == 'houses':
 			grid = wx.FlexGridSizer(0, 2, 8, 10)
 			self.hsys = wx.Choice(page, -1, choices=[menutext(k)[0] for k in HOUSESYSTEMS])
-			self.nodes = wx.Choice(page, -1, choices=[menutext('OMNMean')[0], menutext('OMNTrue')[0]])
+			self.nodes = wx.Choice(page, -1, choices=i18n.tr([menutext('OMNMean')[0], menutext('OMNTrue')[0]]))
 			for label, ctrl in (('House system', self.hsys), ('Lunar nodes', self.nodes)):
-				t = wx.StaticText(page, -1, label + ':')
+				t = wx.StaticText(page, -1, i18n.tr(label) + ':')
 				t.SetFont(t.GetFont().Bold())
 				grid.Add(t, 0, wx.ALIGN_CENTER_VERTICAL)
 				grid.Add(ctrl, 0)
@@ -221,13 +224,13 @@ class SettingsWnd(wx.Dialog):
 			self.register('Lunar nodes', category, category_index, 'Mean or true lunar nodes', self.nodes)
 			return
 		if kind == 'general':
-			self.autosave = wx.CheckBox(page, -1, 'Save the settings automatically')
-			self.autosave.SetToolTip('Otherwise the settings are kept until the program closes, unless saved with "Save the settings now".')
+			self.autosave = wx.CheckBox(page, -1, i18n.tr('Save the settings automatically'))
+			self.autosave.SetToolTip(i18n.tr('Otherwise the settings are kept until the program closes, unless saved with "Save the settings now".'))
 			self.autosave.Bind(wx.EVT_CHECKBOX, self.onAutoSave)
-			save = wx.Button(page, -1, 'Save the settings now')
+			save = wx.Button(page, -1, i18n.tr('Save the settings now'))
 			save.Bind(wx.EVT_BUTTON, lambda ev: self.frame.onSaveOpts(wx.CommandEvent()))
-			reload = wx.Button(page, -1, 'Default settings...')
-			reload.SetToolTip('Remove your saved settings and use those the program comes with')
+			reload = wx.Button(page, -1, i18n.tr('Default settings...'))
+			reload.SetToolTip(i18n.tr('Remove your saved settings and use those the program comes with'))
 			reload.Bind(wx.EVT_BUTTON, self.onReload)
 			row = wx.BoxSizer(wx.HORIZONTAL)
 			row.Add(save, 0, wx.RIGHT, 8)
@@ -278,13 +281,13 @@ class SettingsWnd(wx.Dialog):
 		if query:
 			self.shown = settingsindex.search(self.entries, query)
 			labels = [settingsindex.label(e) for e in self.shown]
-			self.result_count.SetLabel('%d matching setting%s' %
+			self.result_count.SetLabel(i18n.tr('%d matching setting%s') %
 				(len(self.shown), '' if len(self.shown) == 1 else 's'))
 		else:
 			self.shown = settingsindex.categories(CATEGORIES)
 			labels = [c[0] for c in CATEGORIES]
-			self.result_count.SetLabel('Browse by category')
-		self.list.Set(labels)
+			self.result_count.SetLabel(i18n.tr('Browse by category'))
+		self.list.Set(i18n.tr(labels))
 		if self.shown:
 			self.list.SetSelection(0)
 			self.showEntry(self.shown[0])
@@ -362,7 +365,8 @@ def show(frame, category=None, setting=None):
 	wnd.Show()
 	wnd.Raise()
 	if setting is not None:
-		group, title = setting
+		group, title = i18n.tr(setting[0]), i18n.tr(setting[1])	# the index is translated
+		category = i18n.tr(category)
 		wnd.search.SetValue(' '.join((group, title)))
 		wnd.onSearch(None)
 		for index, item in enumerate(wnd.shown):

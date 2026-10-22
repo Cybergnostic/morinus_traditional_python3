@@ -11,7 +11,7 @@ import urllib.parse
 class Geonames:
     NAME, LON, LAT, COUNTRYCODE, COUNTRYNAME, ALTITUDE, GMTOFFS = list(range(0, 7))
     username = 'morinastro'
-    langs = ('en', 'ru', 'fr')
+    langs = ('en', 'ru', 'fr', 'en')	# Serbian: the English names (Latin script)
 
     def __init__(self, city, maxnum, langid):
         self.city = city

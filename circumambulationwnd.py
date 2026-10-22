@@ -1,5 +1,6 @@
 """Circumambulation of the Ascendant through the bounds as a native Morinus table."""
 
+import i18n
 import wx
 import common
 import tablewnd
@@ -51,4 +52,4 @@ class CircumambulationWnd(tablewnd.TableWnd):
 class CircumambulationFrame(tablewnd.TableFrame):
 
 	def __init__(self, parent, title, chrt, options):
-		tablewnd.TableFrame.__init__(self, parent, title + ' - Circumambulation', lambda f: CircumambulationWnd(f, chrt, options, parent))
+		tablewnd.TableFrame.__init__(self, parent, title + ' - ' + i18n.tr('Circumambulation'), lambda f: CircumambulationWnd(f, chrt, options, parent))

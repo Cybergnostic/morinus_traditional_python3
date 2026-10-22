@@ -1,4 +1,5 @@
 """Side-by-side single-chart wheels, without changing GraphChart."""
+import i18n
 import os
 import wx
 import graphchart
@@ -6,7 +7,7 @@ import graphchart
 
 def caption(chrt):
     t = chrt.time
-    year = '%d BC' % t.origyear if t.bc else str(t.origyear)
+    year = i18n.tr('%d BC') % t.origyear if t.bc else str(t.origyear)
     return '%s - %s-%02d-%02d %02d:%02d' % (
         chrt.name, year, t.origmonth, t.origday, t.hour, t.minute)
 
@@ -24,7 +25,7 @@ class ChartPicker(wx.Panel):
         self.sources = []
         line = wx.BoxSizer(wx.HORIZONTAL)
         self.choice = wx.Choice(self)
-        self.openbutton = wx.Button(self, label='Open chart file...')
+        self.openbutton = wx.Button(self, label=i18n.tr('Open chart file...'))
         line.Add(self.choice, 1, wx.EXPAND | wx.RIGHT, 5)
         line.Add(self.openbutton, 0)
         self.SetSizer(line)
@@ -35,16 +36,16 @@ class ChartPicker(wx.Panel):
 
     def refresh(self, event=None):
         previous = self.selected()
-        sources = [('Radix: ' + caption(self.mainfr.horoscope),
+        sources = [(i18n.tr('Radix') + ': ' + caption(self.mainfr.horoscope),
                     self.mainfr.horoscope)]
         # TransitFrame also hosts return charts and the lunation event charts.
         import transitframe
         for w in wx.GetTopLevelWindows():
             if isinstance(w, transitframe.TransitFrame) and not w.IsBeingDeleted():
                 chrt = w.chart
-                sources.append(('Open: ' + caption(chrt), chrt))
+                sources.append((i18n.tr('Open') + ': ' + caption(chrt), chrt))
         for fpath, chrt in self.loaded:
-            sources.append(('File: ' + caption(chrt), chrt))
+            sources.append((i18n.tr('File') + ': ' + caption(chrt), chrt))
         self.sources = sources
         self.choice.Clear()
         for title, _ in sources:
@@ -63,7 +64,7 @@ class ChartPicker(wx.Panel):
         self.on_change()
 
     def open_file(self, event):
-        dlg = wx.FileDialog(self, 'Open chart', self.mainfr.fpathhors, '',
+        dlg = wx.FileDialog(self, i18n.tr('Open chart'), self.mainfr.fpathhors, '',
                             'Morinus charts (*.hor)|*.hor',
                             wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
         try:
@@ -147,12 +148,12 @@ class WheelCell(wx.Panel):
 
 class CompareGridFrame(wx.Frame):
     def __init__(self, mainfr):
-        wx.Frame.__init__(self, mainfr, title='Compare charts', size=(1100, 650))
+        wx.Frame.__init__(self, mainfr, title=i18n.tr('Compare charts'), size=(1100, 650))
         self.SetMinSize((700, 500))
         outer = wx.BoxSizer(wx.VERTICAL)
         bar = wx.BoxSizer(wx.HORIZONTAL)
-        bar.Add(wx.StaticText(self, label='Layout:'), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
-        self.layout_choice = wx.Choice(self, choices=['1 x 2', '2 x 2'])
+        bar.Add(wx.StaticText(self, label=i18n.tr('Layout:')), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
+        self.layout_choice = wx.Choice(self, choices=i18n.tr(['1 x 2', '2 x 2']))
         self.layout_choice.SetSelection(0)
         bar.Add(self.layout_choice)
         outer.Add(bar, 0, wx.ALL, 10)

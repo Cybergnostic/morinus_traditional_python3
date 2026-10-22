@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import wx
 import menubars
 import chart
@@ -34,7 +35,7 @@ class TransitFrame(wx.Frame):
     SQUARE = 3
 
     def __init__(self, parent, title, chrt, radix, options, sel=0, stepper=None):
-        wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(TransitFrame.XSIZE, TransitFrame.YSIZE))
+        wx.Frame.__init__(self, parent, -1, i18n.tr(title), wx.DefaultPosition, wx.Size(TransitFrame.XSIZE, TransitFrame.YSIZE))
         self.chart = chrt
         self.radix = radix
         self.options = options
@@ -54,16 +55,16 @@ class TransitFrame(wx.Frame):
         self.ID_PDConverse = wx.NewId()
         self.ID_PDRadix = wx.NewId()
         self.selmenu = wx.Menu()
-        self.chartmenu = self.selmenu.Append(self.ID_Chart, mtexts.txtspopupmenu['Chart'], '', wx.ITEM_RADIO)
-        self.compoundmenu = self.selmenu.Append(self.ID_Comparison, mtexts.txtspopupmenu['Comparison'], '', wx.ITEM_RADIO)
-        self.positionsmenu = self.selmenu.Append(self.ID_Positions, mtexts.txtspopupmenu['Positions'], '', wx.ITEM_RADIO)
-        self.squaremenu = self.selmenu.Append(self.ID_Square, mtexts.txtspopupmenu['Square'], '', wx.ITEM_RADIO)
+        self.chartmenu = self.selmenu.Append(self.ID_Chart, i18n.tr(mtexts.txtspopupmenu['Chart']), '', wx.ITEM_RADIO)
+        self.compoundmenu = self.selmenu.Append(self.ID_Comparison, i18n.tr(mtexts.txtspopupmenu['Comparison']), '', wx.ITEM_RADIO)
+        self.positionsmenu = self.selmenu.Append(self.ID_Positions, i18n.tr(mtexts.txtspopupmenu['Positions']), '', wx.ITEM_RADIO)
+        self.squaremenu = self.selmenu.Append(self.ID_Square, i18n.tr(mtexts.txtspopupmenu['Square']), '', wx.ITEM_RADIO)
         self.pmenu.Append(wx.MenuItem(self.pmenu, self.ID_Selection, mtexts.txtspopupmenu['Windows'], subMenu=self.selmenu))
         if self.chart.htype == chart.Chart.SOLAR or self.chart.htype == chart.Chart.LUNAR:
             self.pdselmenu = wx.Menu()
-            self.pddirectmenu = self.pdselmenu.Append(self.ID_PDDirect, mtexts.txtspopupmenu['Direct'], '')
-            self.pdconversemenu = self.pdselmenu.Append(self.ID_PDConverse, mtexts.txtspopupmenu['Converse'], '')
-            self.pdtoradix = self.pdselmenu.Append(self.ID_PDRadix, mtexts.txtspopupmenu['PDRadix'], '', wx.ITEM_CHECK)
+            self.pddirectmenu = self.pdselmenu.Append(self.ID_PDDirect, i18n.tr(mtexts.txtspopupmenu['Direct']), '')
+            self.pdconversemenu = self.pdselmenu.Append(self.ID_PDConverse, i18n.tr(mtexts.txtspopupmenu['Converse']), '')
+            self.pdtoradix = self.pdselmenu.Append(self.ID_PDRadix, i18n.tr(mtexts.txtspopupmenu['PDRadix']), '', wx.ITEM_CHECK)
             self.pmenu.Append(wx.MenuItem(self.pmenu, self.ID_PrimaryDirections, mtexts.txtspopupmenu['PrimaryDirs'], subMenu=self.pdselmenu))
             self.pdtoradix.Enable(False)
         # stepping: previous/next return for solar and lunar returns, time steps otherwise
@@ -73,15 +74,15 @@ class TransitFrame(wx.Frame):
         steptxt = {chart.Chart.SOLAR: 'Step solar returns... (arrow keys)', chart.Chart.LUNAR: 'Step lunar returns... (arrow keys)', chart.Chart.TRANSIT: 'Step time... (arrow keys)'}.get(self.chart.htype)
         if stepper is not None:
             for label, forward in (('Previous lunation (Left)', False), ('Next lunation (Right)', True)):
-                item = self.pmenu.Append(wx.NewIdRef(), label, 'The New or Full Moon before or after this one')
+                item = self.pmenu.Append(wx.NewIdRef(), i18n.tr(label), i18n.tr('The New or Full Moon before or after this one'))
                 self.Bind(wx.EVT_MENU, lambda e, f=forward: self.stepTo(f), id=item.GetId())
             self.Bind(wx.EVT_CHAR_HOOK, self.onKey)
         elif steptxt is not None:
-            self.pmenu.Append(self.ID_Step, steptxt, 'Move the chart forward or backward in time')
+            self.pmenu.Append(self.ID_Step, i18n.tr(steptxt), i18n.tr('Move the chart forward or backward in time'))
             self.Bind(wx.EVT_MENU, self.onStep, id=self.ID_Step)
             self.Bind(wx.EVT_CHAR_HOOK, self.onKey)
-        self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveChart'])
-        self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['ChartBW'], wx.ITEM_CHECK)
+        self.pmenu.Append(self.ID_SaveAsBitmap, i18n.tr(mtexts.txtspopupmenu['SaveAsBmp']), i18n.tr(mtexts.txtspopupmenu['SaveChart']))
+        self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, i18n.tr(mtexts.txtspopupmenu['BlackAndWhite']), i18n.tr(mtexts.txtspopupmenu['ChartBW']), wx.ITEM_CHECK)
         self.SetMinSize((200, 200))
         self.Bind(wx.EVT_RIGHT_UP, self.onPopupMenu)
         self.Bind(wx.EVT_MENU, self.onChart, id=self.ID_Chart)
@@ -109,7 +110,7 @@ class TransitFrame(wx.Frame):
         self._sidebar_last_draw = 0.0
         self.sidebar = sidebar.Sidebar(self, self.onSidebarResize)
         self.sidebar.setChart(self.chart, self.radix)
-        self.msidebar = self.pmenu.AppendCheckItem(wx.NewIdRef(), 'Planet sidebar', 'Show the planet, chart and time lords beside the chart')
+        self.msidebar = self.pmenu.AppendCheckItem(wx.NewIdRef(), i18n.tr('Planet sidebar'), i18n.tr('Show the planet, chart and time lords beside the chart'))
         self.msidebar.Check(tradoptions.get('show_sidebar'))
         self.Bind(wx.EVT_MENU, self.onSidebar, id=self.msidebar.GetId())
         self.Bind(wx.EVT_SIZE, self.onFrameSize)
@@ -271,7 +272,7 @@ class TransitFrame(wx.Frame):
         else:
             keytxt = mtexts.typeListStat[self.options.pdkeys]
         txt = mtexts.typeListDirs[self.options.primarydir] + '; ' + keytxt + '\n' + mtexts.txtscommon['BusyInfo']
-        self.progbar = wx.ProgressDialog(mtexts.txtscommon['Calculating'], txt, parent=self, style=wx.PD_CAN_ABORT | wx.PD_APP_MODAL)
+        self.progbar = wx.ProgressDialog(i18n.tr(mtexts.txtscommon['Calculating']), i18n.tr(txt), parent=self, style=wx.PD_CAN_ABORT | wx.PD_APP_MODAL)
         self.progbar.Fit()
         self.pds = None
         self.pdready = False
@@ -314,7 +315,7 @@ class TransitFrame(wx.Frame):
             pdw = primdirsrevlistframe.PrimDirsRevListFrame(self, self.parent, self.chart, self.options, self.pds, self.title.replace(mtexts.typeList[self.chart.htype], mtexts.txtsprimdirslist['PrimaryDirs']))
             pdw.Show(True)
         else:
-            dlgm = wx.MessageDialog(self, mtexts.txtscommon['NoPDsWithSettings'], mtexts.txtscommon['Information'], wx.OK | wx.ICON_INFORMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['NoPDsWithSettings']), i18n.tr(mtexts.txtscommon['Information']), wx.OK | wx.ICON_INFORMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
         if self.pds != None:

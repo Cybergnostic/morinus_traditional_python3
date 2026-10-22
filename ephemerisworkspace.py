@@ -1,4 +1,5 @@
 """Graphical, tabular and event ephemerides backed by one Swiss data series."""
+import i18n
 import calendar
 import csv
 import datetime
@@ -21,7 +22,7 @@ def event_datetime(year_data, jd):
 
 class EphemerisWorkspace(wx.Frame):
     def __init__(self, mainfr, year):
-        super().__init__(mainfr, -1, 'Ephemeris — %d' % year, size=(1180, 760))
+        super().__init__(mainfr, -1, i18n.tr('Ephemeris — %d') % year, size=(1180, 760))
         self.mainfr = mainfr
         self.options = mainfr.options
         self.SetMinSize((760, 500))
@@ -37,15 +38,15 @@ class EphemerisWorkspace(wx.Frame):
 
     def _build_layout(self, year):
         self.year = wx.SpinCtrl(self, -1, min=1, max=5000, initial=year, size=(95, -1))
-        prev = wx.Button(self, -1, '◀ Previous year')
-        next_year = wx.Button(self, -1, 'Next year ▶')
-        go = wx.Button(self, -1, 'Go')
+        prev = wx.Button(self, -1, i18n.tr('◀ Previous year'))
+        next_year = wx.Button(self, -1, i18n.tr('Next year ▶'))
+        go = wx.Button(self, -1, i18n.tr('Go'))
         prev.Bind(wx.EVT_BUTTON, lambda event: self.loadYear(max(1, self.data.year - 1)))
         next_year.Bind(wx.EVT_BUTTON, lambda event: self.loadYear(min(5000, self.data.year + 1)))
         go.Bind(wx.EVT_BUTTON, lambda event: self.loadYear(self.year.GetValue()))
         self.year.Bind(wx.EVT_TEXT_ENTER, lambda event: self.loadYear(self.year.GetValue()))
         head = wx.BoxSizer(wx.HORIZONTAL)
-        head.Add(wx.StaticText(self, -1, 'Gregorian year'), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        head.Add(wx.StaticText(self, -1, i18n.tr('Gregorian year')), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         head.Add(self.year, 0, wx.RIGHT, 9)
         head.Add(go, 0, wx.RIGHT, 20)
         head.Add(prev, 0, wx.RIGHT, 7)
@@ -55,9 +56,9 @@ class EphemerisWorkspace(wx.Frame):
         self.graph_page = wx.Panel(self.book)
         self.daily_page = wx.Panel(self.book)
         self.events_page = wx.Panel(self.book)
-        self.book.AddPage(self.graph_page, 'Graph')
-        self.book.AddPage(self.daily_page, 'Daily positions')
-        self.book.AddPage(self.events_page, 'Stations & ingresses')
+        self.book.AddPage(self.graph_page, i18n.tr('Graph'))
+        self.book.AddPage(self.daily_page, i18n.tr('Daily positions'))
+        self.book.AddPage(self.events_page, i18n.tr('Stations & ingresses'))
 
         self._build_graph_page()
         self._build_daily_page()
@@ -75,18 +76,18 @@ class EphemerisWorkspace(wx.Frame):
 
     def _build_graph_page(self):
         self.graph_menu = wx.Menu()
-        self.graph_save = self.graph_menu.Append(wx.NewIdRef(), 'Save graph as image...')
-        self.mbw = self.graph_menu.AppendCheckItem(wx.NewIdRef(), 'Black and white')
+        self.graph_save = self.graph_menu.Append(wx.NewIdRef(), i18n.tr('Save graph as image...'))
+        self.mbw = self.graph_menu.AppendCheckItem(wx.NewIdRef(), i18n.tr('Black and white'))
         self.mbw.Check(bool(self.options.bw))
         self.Bind(wx.EVT_MENU, self.onSaveGraph, id=self.graph_save.GetId())
         self.Bind(wx.EVT_MENU, self.onBW, id=self.mbw.GetId())
         self.graph_page.mbw = self.mbw
         self.graph_page.onPopupMenu = self.onGraphPopup
 
-        self.show_moon = wx.CheckBox(self.graph_page, -1, 'Show Moon on graph')
-        self.show_moon.SetToolTip('Off reproduces the original six-planet Morinus graphical ephemeris')
+        self.show_moon = wx.CheckBox(self.graph_page, -1, i18n.tr('Show Moon on graph'))
+        self.show_moon.SetToolTip(i18n.tr('Off reproduces the original six-planet Morinus graphical ephemeris'))
         self.show_moon.Bind(wx.EVT_CHECKBOX, self.onShowMoon)
-        self.open_classic = wx.Button(self.graph_page, -1, 'Open classic graph')
+        self.open_classic = wx.Button(self.graph_page, -1, i18n.tr('Open classic graph'))
         self.open_classic.Bind(wx.EVT_BUTTON, self.onOpenClassic)
         bar = wx.BoxSizer(wx.HORIZONTAL)
         bar.Add(self.show_moon, 0, wx.ALIGN_CENTER_VERTICAL)
@@ -102,13 +103,13 @@ class EphemerisWorkspace(wx.Frame):
                                choices=['All months'] + list(calendar.month_name)[1:])
         self.month.SetSelection(0)
         self.month.Bind(wx.EVT_CHOICE, lambda e: self.fillDays())
-        self.with_speeds = wx.CheckBox(self.daily_page, -1, 'Show speeds (°/day)')
+        self.with_speeds = wx.CheckBox(self.daily_page, -1, i18n.tr('Show speeds (°/day)'))
         self.with_speeds.Bind(wx.EVT_CHECKBOX, lambda e: self.fillDays())
-        copy = wx.Button(self.daily_page, -1, 'Copy CSV')
-        export = wx.Button(self.daily_page, -1, 'Export CSV...')
+        copy = wx.Button(self.daily_page, -1, i18n.tr('Copy CSV'))
+        export = wx.Button(self.daily_page, -1, i18n.tr('Export CSV...'))
         copy.Bind(wx.EVT_BUTTON, lambda e: self.copyCSV(self.dailyRows()))
         export.Bind(wx.EVT_BUTTON, lambda e: self.saveCSV(self.dailyRows(), 'ephemeris'))
-        controls.Add(wx.StaticText(self.daily_page, -1, 'Month'), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 7)
+        controls.Add(wx.StaticText(self.daily_page, -1, i18n.tr('Month')), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 7)
         controls.Add(self.month, 0, wx.RIGHT, 18)
         controls.Add(self.with_speeds, 0, wx.ALIGN_CENTER_VERTICAL)
         controls.AddStretchSpacer()
@@ -124,13 +125,13 @@ class EphemerisWorkspace(wx.Frame):
     def _build_events_page(self):
         top = wx.BoxSizer(wx.HORIZONTAL)
         self.kind = wx.Choice(self.events_page, -1,
-                              choices=['All events', 'Stations only', 'Ingresses only'])
+                              choices=i18n.tr(['All events', 'Stations only', 'Ingresses only']))
         self.kind.SetSelection(0)
         self.kind.Bind(wx.EVT_CHOICE, lambda e: self.fillEvents())
-        self.open_event = wx.Button(self.events_page, -1, 'Open event chart')
+        self.open_event = wx.Button(self.events_page, -1, i18n.tr('Open event chart'))
         self.open_event.Bind(wx.EVT_BUTTON, self.onOpenEvent)
-        copy = wx.Button(self.events_page, -1, 'Copy CSV')
-        export = wx.Button(self.events_page, -1, 'Export CSV...')
+        copy = wx.Button(self.events_page, -1, i18n.tr('Copy CSV'))
+        export = wx.Button(self.events_page, -1, i18n.tr('Export CSV...'))
         copy.Bind(wx.EVT_BUTTON, lambda e: self.copyCSV(self.eventRows()))
         export.Bind(wx.EVT_BUTTON, lambda e: self.saveCSV(self.eventRows(), 'events'))
         top.Add(self.kind, 0, wx.RIGHT, 8)
@@ -143,7 +144,7 @@ class EphemerisWorkspace(wx.Frame):
         columns = [('UT date and time', 190), ('Planet', 105), ('Event', 110),
                    ('Details', 230)]
         for index, (heading, width) in enumerate(columns):
-            self.events.InsertColumn(index, heading, width=width)
+            self.events.InsertColumn(index, i18n.tr(heading), width=width)
         self.events.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onEventSelected)
         self.events.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onOpenEvent)
         self.event_indices = []
@@ -165,7 +166,7 @@ class EphemerisWorkspace(wx.Frame):
                     self.cache.pop(next(iter(self.cache)))
             self.data = self.cache[year]
             self.year.SetValue(year)
-            self.SetTitle('Ephemeris — %s' % year)
+            self.SetTitle(i18n.tr('Ephemeris — %s') % year)
             self.selected_day = 0
             self.fillDays()
             self.fillEvents()
@@ -185,10 +186,10 @@ class EphemerisWorkspace(wx.Frame):
         try:
             self.days.Freeze()
             self.days.ClearAll()
-            self.days.InsertColumn(0, 'Date (00:00 UT)', width=155)
+            self.days.InsertColumn(0, i18n.tr('Date (00:00 UT)'), width=155)
             widths = 210 if self.with_speeds.GetValue() else 139
             for idx, planet in enumerate(ephemerisdata.PLANETS, 1):
-                self.days.InsertColumn(idx, planet, width=widths)
+                self.days.InsertColumn(idx, i18n.tr(planet), width=widths)
             self.day_indices = []
             month = self.month.GetSelection()
             for day, date in enumerate(self.data.dates):
@@ -202,7 +203,7 @@ class EphemerisWorkspace(wx.Frame):
                     label = ephemerisdata.format_position(lon, speed)
                     if self.with_speeds.GetValue():
                         label += ' (%+.4f)' % speed
-                    self.days.SetItem(index, planet + 1, label)
+                    self.days.SetItem(index, planet + 1, i18n.tr(label))
             if self.selected_day in self.day_indices:
                 row = self.day_indices.index(self.selected_day)
                 self.days.Select(row)
@@ -227,9 +228,9 @@ class EphemerisWorkspace(wx.Frame):
                 self.event_indices.append(index)
                 row = self.events.InsertItem(self.events.GetItemCount(),
                     event_datetime(self.data, event.jd).strftime('%Y-%m-%d %H:%M:%S'))
-                self.events.SetItem(row, 1, ephemerisdata.PLANETS[event.planet])
-                self.events.SetItem(row, 2, event.kind)
-                self.events.SetItem(row, 3, event.detail)
+                self.events.SetItem(row, 1, i18n.tr(ephemerisdata.PLANETS[event.planet]))
+                self.events.SetItem(row, 2, i18n.tr(event.kind))
+                self.events.SetItem(row, 3, i18n.tr(event.detail))
             self.open_event.Enable(bool(self.event_indices))
         finally:
             self.events.Thaw()
@@ -266,8 +267,8 @@ class EphemerisWorkspace(wx.Frame):
         date = self.data.dates[self.selected_day].isoformat()
         mode = ('sidereal (ayanamsha of date)' if self.options.ayanamsha
                 else 'tropical of date')
-        self.status.SetLabel('%s • midnight UT • %s • 7 visible planets • '
-                             '%d days • %d stations/ingresses' %
+        self.status.SetLabel(i18n.tr('%s • midnight UT • %s • 7 visible planets • '
+                             '%d days • %d stations/ingresses') %
                              (date, mode, len(self.data.dates), len(self.data.events)))
 
     def onPage(self, event):
@@ -349,7 +350,7 @@ class EphemerisWorkspace(wx.Frame):
 
     def saveCSV(self, rows, suffix):
         name = '%d_%s.csv' % (self.data.year, suffix)
-        with wx.FileDialog(self, 'Export ephemeris CSV', wildcard='CSV files (*.csv)|*.csv',
+        with wx.FileDialog(self, i18n.tr('Export ephemeris CSV'), wildcard='CSV files (*.csv)|*.csv',
                            defaultFile=name, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dlg:
             if dlg.ShowModal() != wx.ID_OK:
                 return
@@ -364,8 +365,8 @@ class EphemerisWorkspace(wx.Frame):
         instant = event_datetime(self.data, record.jd)
         radix = None if self.mainfr.splash else self.mainfr.horoscope
         if radix is None:
-            wx.MessageBox('Open a natal chart before creating an event wheel.',
-                          'Ephemeris', wx.OK | wx.ICON_INFORMATION, self)
+            wx.MessageBox(i18n.tr('Open a natal chart before creating an event wheel.'),
+                          i18n.tr('Ephemeris'), wx.OK | wx.ICON_INFORMATION, self)
             return
         place = radix.place
         time = chart.Time(instant.year, instant.month, instant.day,
@@ -376,7 +377,7 @@ class EphemerisWorkspace(wx.Frame):
                                  chart.Chart.TRANSIT, record.detail,
                                  self.options, False)
         wnd = transitframe.TransitFrame(self.mainfr,
-                self.mainfr.title + ' — ' + record.detail,
+                self.mainfr.title + ' — ' + i18n.tr(record.detail),
                 eventchart, radix, self.options)
         wnd.Show()
 

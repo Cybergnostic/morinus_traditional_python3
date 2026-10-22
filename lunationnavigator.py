@@ -1,4 +1,5 @@
 """Independent lunar-phase navigator; never changes the prenatal syzygy."""
+import i18n
 import wx
 import astrology
 import chart
@@ -42,7 +43,7 @@ def stepper(radix, options):
 
 class LunationNavigator(wx.Frame):
     def __init__(self, mainfr):
-        super().__init__(mainfr, -1, 'Syzygies and lunar phases — ' + mainfr.horoscope.name,
+        super().__init__(mainfr, -1, i18n.tr('Syzygies and lunar phases') + ' — ' + mainfr.horoscope.name,
                          size=(850, 580))
         self.mainfr = mainfr
         self.radix = mainfr.horoscope
@@ -51,27 +52,27 @@ class LunationNavigator(wx.Frame):
         self.sampler = lunationnav.ephemeris_sampler()
         self.SetMinSize((650, 430))
         self.heading = wx.StaticText(self, -1,
-            'New and Full Moons near the chart date (geocentric ecliptic conjunction/opposition)')
+            i18n.tr('New and Full Moons near the chart date (geocentric ecliptic conjunction/opposition)'))
         self.note = wx.StaticText(self, -1,
-            'Times shown in the birth chart\'s entered time convention. '
-            'The prenatal syzygy used by lots, almutens and traditional techniques is unchanged.')
+            i18n.tr('Times shown in the birth chart\'s entered time convention. '
+            'The prenatal syzygy used by lots, almutens and traditional techniques is unchanged.'))
         self.note.Wrap(780)
 
         self.list = wx.ListCtrl(self, -1, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
         for i, (name, width) in enumerate((
                 ('Event', 125), ('Chart time', 200), ('Days from birth', 130),
                 ('Sun longitude', 130), ('Moon longitude', 130))):
-            self.list.InsertColumn(i, name, width=width)
+            self.list.InsertColumn(i, i18n.tr(name), width=width)
         self.list.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onSelection)
         self.list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onOpenChart)
 
-        self.earlier = wx.Button(self, -1, 'Earlier')
-        self.later = wx.Button(self, -1, 'Later')
-        self.reset = wx.Button(self, -1, 'Birth date')
-        self.open = wx.Button(self, -1, 'Open event chart')
-        self.prenatal = wx.Button(self, -1, 'Prenatal syzygy chart')
-        self.other_prenatal = wx.Button(self, -1, 'Other prenatal lunation chart')
-        self.close = wx.Button(self, wx.ID_CLOSE, 'Close')
+        self.earlier = wx.Button(self, -1, i18n.tr('Earlier'))
+        self.later = wx.Button(self, -1, i18n.tr('Later'))
+        self.reset = wx.Button(self, -1, i18n.tr('Birth date'))
+        self.open = wx.Button(self, -1, i18n.tr('Open event chart'))
+        self.prenatal = wx.Button(self, -1, i18n.tr('Prenatal syzygy chart'))
+        self.other_prenatal = wx.Button(self, -1, i18n.tr('Other prenatal lunation chart'))
+        self.close = wx.Button(self, wx.ID_CLOSE, i18n.tr('Close'))
         self.earlier.Bind(wx.EVT_BUTTON, lambda e: self.shift(-55))
         self.later.Bind(wx.EVT_BUTTON, lambda e: self.shift(55))
         self.reset.Bind(wx.EVT_BUTTON, lambda e: self.resetDate())
@@ -83,7 +84,7 @@ class LunationNavigator(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
         traditional = wx.BoxSizer(wx.HORIZONTAL)
-        traditional.Add(wx.StaticText(self, -1, 'Traditional syzygies:'), 0,
+        traditional.Add(wx.StaticText(self, -1, i18n.tr('Traditional syzygies:')), 0,
                         wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
         traditional.Add(self.prenatal, 0, wx.RIGHT, 8)
         traditional.Add(self.other_prenatal, 0)
@@ -107,7 +108,7 @@ class LunationNavigator(wx.Frame):
         self.events = lunationnav.find_events(self.center_jd, self.sampler)
         self.list.DeleteAllItems()
         for idx, (jd, kind, sun, moon) in enumerate(self.events):
-            self.list.InsertItem(idx, kind)
+            self.list.InsertItem(idx, i18n.tr(kind))
             cells = (
                 zodiacalreleasing.datestr(self.radix, jd, hours=True),
                 '%+.2f' % (jd - self.radix.time.jd),
@@ -115,7 +116,7 @@ class LunationNavigator(wx.Frame):
                 '%.3f°' % (moon % 360),
             )
             for col, value in enumerate(cells, 1):
-                self.list.SetItem(idx, col, value)
+                self.list.SetItem(idx, col, i18n.tr(value))
         if self.events:
             selected = min(range(len(self.events)),
                            key=lambda i: abs(self.events[i][0] - self.center_jd))
@@ -142,11 +143,11 @@ class LunationNavigator(wx.Frame):
         jd, kind, sun, moon = self.events[selection]
         eventchart = event_chart(self.radix, jd, kind, self.mainfr.options)
         if eventchart is None:
-            wx.MessageBox('Event charts before AD 1 are not supported here.',
-                          'Syzygies and lunar phases', wx.OK | wx.ICON_INFORMATION, self)
+            wx.MessageBox(i18n.tr('Event charts before AD 1 are not supported here.'),
+                          i18n.tr('Syzygies and lunar phases'), wx.OK | wx.ICON_INFORMATION, self)
             return
         frame = transitframe.TransitFrame(self.mainfr,
-                 self.mainfr.title + ' — ' + kind, eventchart,
+                 self.mainfr.title + ' — ' + i18n.tr(kind), eventchart,
                  self.radix, self.mainfr.options, stepper=stepper(self.radix, self.mainfr.options))
         frame.Show(True)
 
@@ -160,8 +161,8 @@ def show(mainfr):
     if mainfr.splash:
         return None
     if mainfr.horoscope.time.bc:
-        wx.MessageBox('Lunation navigation is not available for BC charts.',
-                      'New and Full Moons', wx.OK | wx.ICON_INFORMATION, mainfr)
+        wx.MessageBox(i18n.tr('Lunation navigation is not available for BC charts.'),
+                      i18n.tr('New and Full Moons'), wx.OK | wx.ICON_INFORMATION, mainfr)
         return None
     existing = getattr(mainfr, 'lunation_navigator', None)
     if existing:

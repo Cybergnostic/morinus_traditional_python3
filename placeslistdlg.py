@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import sys
 import wx
 import intvalidator
@@ -8,7 +9,7 @@ import geonames
 import mtexts
 import util
 provider = wx.SimpleHelpProvider()
-wx.HelpProvider.Set(provider)
+wx.HelpProvider.Set(i18n.tr(provider))
 
 class PlaceListCtrl(wx.ListCtrl):
     PLACE = 0
@@ -28,11 +29,11 @@ class PlaceListCtrl(wx.ListCtrl):
         self.changed = False
 
     def Populate(self):
-        self.InsertColumn(PlaceListCtrl.PLACE, mtexts.txtsplacesdlg['Place'])
-        self.InsertColumn(PlaceListCtrl.COUNTRY, mtexts.txtsplacesdlg['Country'])
+        self.InsertColumn(PlaceListCtrl.PLACE, i18n.tr(mtexts.txtsplacesdlg['Place']))
+        self.InsertColumn(PlaceListCtrl.COUNTRY, i18n.tr(mtexts.txtsplacesdlg['Country']))
         self.InsertColumn(PlaceListCtrl.LON, mtexts.txtsplacesdlg['Long'] + '.')
         self.InsertColumn(PlaceListCtrl.LAT, mtexts.txtsplacesdlg['Lat'] + '.')
-        self.InsertColumn(PlaceListCtrl.ZONE, mtexts.txtsplacesdlg['Zone'])
+        self.InsertColumn(PlaceListCtrl.ZONE, i18n.tr(mtexts.txtsplacesdlg['Zone']))
         self.InsertColumn(PlaceListCtrl.ALT, mtexts.txtsplacesdlg['Alt'] + '.')
         self.fillRows()
         self.SetColumnWidth(PlaceListCtrl.PLACE, 200)
@@ -54,13 +55,13 @@ class PlaceListCtrl(wx.ListCtrl):
     def fillRows(self):
         items = list(self.placedata.items())
         for key, data in items:
-            index = self.InsertItem(self.GetItemCount(), data[0])
-            self.SetItem(index, PlaceListCtrl.PLACE, data[0])
-            self.SetItem(index, PlaceListCtrl.COUNTRY, data[1])
-            self.SetItem(index, PlaceListCtrl.LON, data[2])
-            self.SetItem(index, PlaceListCtrl.LAT, data[3])
-            self.SetItem(index, PlaceListCtrl.ZONE, data[4])
-            self.SetItem(index, PlaceListCtrl.ALT, data[5])
+            index = self.InsertItem(self.GetItemCount(), i18n.tr(data[0]))
+            self.SetItem(index, PlaceListCtrl.PLACE, i18n.tr(data[0]))
+            self.SetItem(index, PlaceListCtrl.COUNTRY, i18n.tr(data[1]))
+            self.SetItem(index, PlaceListCtrl.LON, i18n.tr(data[2]))
+            self.SetItem(index, PlaceListCtrl.LAT, i18n.tr(data[3]))
+            self.SetItem(index, PlaceListCtrl.ZONE, i18n.tr(data[4]))
+            self.SetItem(index, PlaceListCtrl.ALT, i18n.tr(data[5]))
             self.SetItemData(index, key)
 
         self.currentItem = -1
@@ -118,7 +119,7 @@ class PlacesListDlg(wx.Dialog):
         again as you type; self.places is the list shown."""
         wx.Dialog.__init__(self)
         self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        self.Create(parent, -1, mtexts.txtsplacesdlg['Places'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
+        self.Create(parent, -1, i18n.tr(mtexts.txtsplacesdlg['Places']), pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         self.places = li
         self.search = search
         mvsizer = wx.BoxSizer(wx.VERTICAL)
@@ -126,9 +127,9 @@ class PlacesListDlg(wx.Dialog):
             hsizer = wx.BoxSizer(wx.HORIZONTAL)
             hsizer.Add(wx.StaticText(self, -1, mtexts.txtsplacesdlg['Place'] + ':'), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
             self.query = wx.TextCtrl(self, -1, query, size=(300, -1))
-            self.query.SetHelpText('Name, or name, region or country (e.g. Springfield, Illinois)')
+            self.query.SetHelpText(i18n.tr('Name, or name, region or country (e.g. Springfield, Illinois)'))
             hsizer.Add(self.query, 1, wx.ALL, 5)
-            hsizer.Add(wx.StaticText(self, -1, 'Atlas: GeoNames (CC BY 4.0)'), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+            hsizer.Add(wx.StaticText(self, -1, i18n.tr('Atlas: GeoNames (CC BY 4.0)')), 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
             mvsizer.Add(hsizer, 0, wx.GROW | wx.LEFT | wx.RIGHT | wx.TOP, 5)
             self.query.Bind(wx.EVT_TEXT, self.onQuery)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -143,11 +144,11 @@ class PlacesListDlg(wx.Dialog):
         if wx.Platform != '__WXMSW__':
             btn = wx.ContextHelpButton(self)
             btnsizer.AddButton(btn)
-        btnOk = wx.Button(self, wx.ID_OK, mtexts.txtscommon['Ok'])
-        btnOk.SetHelpText(mtexts.txtscommon['HelpOk'])
+        btnOk = wx.Button(self, wx.ID_OK, i18n.tr(mtexts.txtscommon['Ok']))
+        btnOk.SetHelpText(i18n.tr(mtexts.txtscommon['HelpOk']))
         btnOk.SetDefault()
         btnsizer.AddButton(btnOk)
-        btn = wx.Button(self, wx.ID_CANCEL, mtexts.txtscommon['Cancel'])
+        btn = wx.Button(self, wx.ID_CANCEL, i18n.tr(mtexts.txtscommon['Cancel']))
         btnsizer.AddButton(btn)
         btnsizer.Realize()
         mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)

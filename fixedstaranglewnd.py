@@ -1,6 +1,7 @@
 """Fixed stars on the angles at the birth and the paranatellonta of the birth day,
 as a native Morinus table."""
 
+import i18n
 import wx
 import common
 import tablewnd
@@ -37,4 +38,4 @@ class FixedStarAnglesWnd(tablewnd.TableWnd):
 class FixedStarAnglesFrame(tablewnd.TableFrame):
 
 	def __init__(self, parent, title, chrt, options):
-		tablewnd.TableFrame.__init__(self, parent, title + ' - Fixed stars on the angles', lambda f: FixedStarAnglesWnd(f, chrt, options, parent))
+		tablewnd.TableFrame.__init__(self, parent, title + ' - ' + i18n.tr('Fixed stars on the angles'), lambda f: FixedStarAnglesWnd(f, chrt, options, parent))

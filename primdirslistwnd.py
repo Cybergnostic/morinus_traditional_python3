@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import math
 import os
 import wx
@@ -43,12 +44,12 @@ class PrimDirsListWnd(wx.ScrolledWindow):
         if chrt.htype == chart.Chart.RADIX:
             self.ID_PDsInChart = wx.NewId()
             self.ID_PDsInChartIngress = wx.NewId()
-        self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveTable'])
-        self.pmenu.Append(self.ID_SaveAsText, mtexts.txtsfiles['SaveAsText'], mtexts.txtsfiles['SavePDs'])
-        mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['TableBW'], wx.ITEM_CHECK)
+        self.pmenu.Append(self.ID_SaveAsBitmap, i18n.tr(mtexts.txtspopupmenu['SaveAsBmp']), i18n.tr(mtexts.txtspopupmenu['SaveTable']))
+        self.pmenu.Append(self.ID_SaveAsText, i18n.tr(mtexts.txtsfiles['SaveAsText']), i18n.tr(mtexts.txtsfiles['SavePDs']))
+        mbw = self.pmenu.Append(self.ID_BlackAndWhite, i18n.tr(mtexts.txtspopupmenu['BlackAndWhite']), i18n.tr(mtexts.txtspopupmenu['TableBW']), wx.ITEM_CHECK)
         if chrt.htype == chart.Chart.RADIX:
-            self.pmenu.Append(self.ID_PDsInChart, mtexts.txtsprimdirslist['PDsInChart'], mtexts.txtsprimdirslist['PDsInChart'])
-            self.pmenu.Append(self.ID_PDsInChartIngress, mtexts.txtsprimdirslist['PDsInChartIngress'], mtexts.txtsprimdirslist['PDsInChartIngress'])
+            self.pmenu.Append(self.ID_PDsInChart, i18n.tr(mtexts.txtsprimdirslist['PDsInChart']), i18n.tr(mtexts.txtsprimdirslist['PDsInChart']))
+            self.pmenu.Append(self.ID_PDsInChartIngress, i18n.tr(mtexts.txtsprimdirslist['PDsInChartIngress']), i18n.tr(mtexts.txtsprimdirslist['PDsInChartIngress']))
         # the directions in a chart act on the clicked row: right-click only
         menubars.later(self, 'Table', (getattr(self, 'ID_PDsInChart', None), getattr(self, 'ID_PDsInChartIngress', None)))
         self.Bind(wx.EVT_PAINT, self.OnPaint)
@@ -98,7 +99,7 @@ class PrimDirsListWnd(wx.ScrolledWindow):
 
     def onSaveAsBitmap(self, event):
         name = self.chart.name + mtexts.txtsabbrevs['PD']
-        dlg = wx.FileDialog(self, mtexts.txtsfiles['SaveAsBmp'], '', name, mtexts.txtsfiles['BMPFiles'], wx.FD_SAVE)
+        dlg = wx.FileDialog(self, i18n.tr(mtexts.txtsfiles['SaveAsBmp']), '', name, mtexts.txtsfiles['BMPFiles'], wx.FD_SAVE)
         if os.path.isdir(self.mainfr.fpathimgs):
             dlg.SetDirectory(self.mainfr.fpathimgs)
         else:
@@ -109,7 +110,7 @@ class PrimDirsListWnd(wx.ScrolledWindow):
             if not fpath.endswith('.png'):
                 fpath += '.png'
             if os.path.isfile(fpath):
-                dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['FileExists']), i18n.tr(mtexts.txtsfiles['Message']), wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:
                     dlgm.Destroy()
                     dlg.Destroy()
@@ -121,11 +122,11 @@ class PrimDirsListWnd(wx.ScrolledWindow):
 
     def onSaveAsText(self, event):
         if self.options.langid != 0:
-            dlg = wx.MessageDialog(self, mtexts.txtsprimdirslist['SwitchToEnglish'], mtexts.txtsfiles['Message'], wx.OK)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtsprimdirslist['SwitchToEnglish']), i18n.tr(mtexts.txtsfiles['Message']), wx.OK)
             dlg.ShowModal()
             return
         name = self.chart.name + mtexts.txtsabbrevs['PD']
-        dlg = wx.FileDialog(self, mtexts.txtsfiles['SaveAsText'], '', name, mtexts.txtsfiles['TXTFiles'], wx.FD_SAVE)
+        dlg = wx.FileDialog(self, i18n.tr(mtexts.txtsfiles['SaveAsText']), '', name, mtexts.txtsfiles['TXTFiles'], wx.FD_SAVE)
         if os.path.isdir(self.mainfr.fpathimgs):
             dlg.SetDirectory(self.mainfr.fpathimgs)
         else:
@@ -136,7 +137,7 @@ class PrimDirsListWnd(wx.ScrolledWindow):
             if not fpath.endswith('.txt'):
                 fpath += '.txt'
             if os.path.isfile(fpath):
-                dlg = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+                dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['FileExists']), i18n.tr(mtexts.txtsfiles['Message']), wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlg.ShowModal() == wx.ID_NO:
                     return
             self.mainfr.fpathimgs = dpath
@@ -151,7 +152,7 @@ class PrimDirsListWnd(wx.ScrolledWindow):
     def onPDsInChart(self, event):
         valid, y, m, d, ho, mi, se, t, pdtypetxt, pdkeytxt, direct, da, pdchart = self.calc(event)
         if not valid:
-            dlg = wx.MessageDialog(self, mtexts.txtsprimdirslist['PDClickError'], mtexts.txtsfiles['Message'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtsprimdirslist['PDClickError']), i18n.tr(mtexts.txtsfiles['Message']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return
         txtdir = mtexts.txtspdsinchartstepperdlg['D']
@@ -167,7 +168,7 @@ class PrimDirsListWnd(wx.ScrolledWindow):
     def onPDsInChartIngress(self, event):
         valid, y, m, d, ho, mi, se, t, pdtypetxt, pdkeytxt, direct, da, pdchart = self.calc(event)
         if not valid:
-            dlg = wx.MessageDialog(self, mtexts.txtsprimdirslist['PDClickError'], mtexts.txtsfiles['Message'], wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtsprimdirslist['PDClickError']), i18n.tr(mtexts.txtsfiles['Message']), wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             return
         cal = chart.Time.GREGORIAN
@@ -268,7 +269,7 @@ class PrimDirsListWnd(wx.ScrolledWindow):
         tableclr = self.options.clrtable
         if self.bw:
             tableclr = (0, 0, 0)
-        img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.bkgclr)
+        img = Image.new('RGB', i18n.tr((self.WIDTH, self.HEIGHT)), i18n.tr(self.bkgclr))
         draw = ImageDraw.Draw(img)
         BOR = PrimDirsListWnd.BORDER
         draw.rectangle(((BOR, BOR), (BOR + self.TITLE_CELL_WIDTH, BOR + self.TITLE_CELL_HEIGHT)), outline=tableclr, fill=self.bkgclr)
