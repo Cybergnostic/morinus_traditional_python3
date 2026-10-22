@@ -1,6 +1,7 @@
 import unittest
 
-from multiwheel_layout import allocate_rings, spread_longitudes
+from multiwheel_layout import (allocate_rings, allocate_traditional_rings,
+                               spread_longitudes)
 
 
 class MultiWheelLayoutTests(unittest.TestCase):
@@ -21,6 +22,33 @@ class MultiWheelLayoutTests(unittest.TestCase):
         for value in (0, 4):
             with self.assertRaises(ValueError):
                 allocate_rings(200, value)
+
+    def test_traditional_reference_bands_appear_once(self):
+        for count in (1, 2, 3):
+            for show_terms in (False, True):
+                for show_decans in (False, True):
+                    core, decans, terms, zodiac, outer = allocate_traditional_rings(
+                        300, count, show_terms, show_decans)
+                    self.assertEqual(len(outer), count)
+                    self.assertEqual(decans is not None, show_decans)
+                    self.assertEqual(terms is not None, show_terms)
+                    cursor = core
+                    for band in (decans, terms, zodiac, *outer):
+                        if band is None:
+                            continue
+                        self.assertAlmostEqual(cursor, band[0])
+                        self.assertGreater(band[1], band[0])
+                        cursor = band[1]
+                    self.assertAlmostEqual(cursor, 300)
+                    self.assertGreater(core, 0)
+
+    def test_traditional_layout_rejects_invalid_dimensions(self):
+        for count in (0, 4):
+            with self.assertRaises(ValueError):
+                allocate_traditional_rings(300, count)
+        for size in (0, -1):
+            with self.assertRaises(ValueError):
+                allocate_traditional_rings(size, 2)
 
     def test_spreading_keeps_order_across_aries(self):
         longitudes = [359, 1, 3, 15, 210]
