@@ -197,26 +197,71 @@ class MultiWheel:
                         'divider', colour if colour is not None else self.options.clrhouses)
 
     def draw_angles(self, chrt, inner, outer, colour=None):
-        """ASC/DSC/MC/IC for this chart, in the radix's shared orientation."""
+        """Draw all four chart-local axes with visible inward-based arrows.
+
+        The normal GraphChart draws triangular ASC/MC arrowheads.  Scale the
+        same triangles to multiwheel bands; mark all four axes explicitly so
+        ASC, DSC, MC and IC remain readable in a crowded multiwheel.
+        """
         asc, mc = (chrt.houses.ascmc[houses.Houses.ASC],
                    chrt.houses.ascmc[houses.Houses.MC])
         colour = colour if colour is not None else self.options.clrAscMC
-        for i, lon in enumerate(wheel_primitives.angle_longitudes(asc, mc)):
+        ink = self.stroke_colour(colour, 'major')
+        size = min(8.5, max(5.5, (outer - inner) * .16))
+        half_base = max(2.0, min(3.3, size * .42))
+        for lon in wheel_primitives.angle_longitudes(asc, mc):
             display_lon = zodiac_lon(chrt, lon, self.options)
-            a, b = self.point(display_lon, inner), self.point(display_lon, outer)
-            self.stroke(a, b, 'major', colour)
-            # Like GraphChart.drawAscMC, arrowheads mark ASC and MC only.
-            if i in (0, 2):
-                theta = self.angle(display_lon)
-                delta = math.pi / 360.0
-                x, y = self.cx, self.cy
-                left = (x + math.cos(theta + delta) * (outer - 3),
-                        y + math.sin(theta + delta) * (outer - 3))
-                right = (x + math.cos(theta - delta) * (outer - 3),
-                         y + math.sin(theta - delta) * (outer - 3))
-                tip = self.point(display_lon, outer - 1)
-                self.stroke(left, tip, 'pointer', colour)
-                self.stroke(right, tip, 'pointer', colour)
+            tip_radius = outer - 1.8
+            self.stroke(self.point(display_lon, inner),
+                        self.point(display_lon, tip_radius - size),
+                        'major', colour)
+            theta = self.angle(display_lon)
+            bx, by = self.point(display_lon, tip_radius - size)
+            dx, dy = -math.sin(theta) * half_base, math.cos(theta) * half_base
+            points = [self.scaled((bx + dx, by + dy)),
+                      self.scaled((bx - dx, by - dy)),
+                      self.scaled(self.point(display_lon, tip_radius))]
+            self.draw.polygon(points, fill=ink)
+
+    @staticmethod
+    def dial_width(edges):
+        inner, outer = edges
+        return min(8.5, max(5.5, (outer - inner) * .14))
+
+    def draw_degree_dial(self, edges, side):
+        """A chart's own 360-degree dial, with 1/5/10-degree tick hierarchy.
+
+        'outer': radial (inner) chart, with ticks immediately below its
+        outer boundary.  'inner': additional charts, where a narrow dial
+        sits just beyond the empty separator.  Returns the free label band
+        and the true-longitude radius for pointer leaders.
+        """
+        inner, outer = edges
+        width = self.dial_width(edges)
+        if side == 'outer':
+            base, far = outer - 1.0, outer - width
+            label_edges = (inner + 1.0, far - 2.0)
+            direction = -1.0
+        elif side == 'inner':
+            base, far = inner + 1.0, inner + width
+            label_edges = (far + 2.0, outer - 2.0)
+            direction = 1.0
+        else:
+            raise ValueError('Unknown planetary dial orientation')
+        self.circle(base, 'divider')
+        self.circle(far, 'divider')
+        for degree in range(360):
+            if degree % 30 == 0:
+                length, role = width * .85, 'tick10'
+            elif degree % 10 == 0:
+                length, role = width * .70, 'tick10'
+            elif degree % 5 == 0:
+                length, role = width * .44, 'tick10'
+            else:
+                length, role = width * .21, 'tick1'
+            self.stroke(self.point(degree, base),
+                        self.point(degree, base + direction * length), role)
+        return label_edges, far
 
     def draw_sign_spokes(self, inner, outer):
         """Continue sign divisions inside a planetary ring, never the zodiac."""
