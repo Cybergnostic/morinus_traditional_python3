@@ -1890,7 +1890,7 @@ class MFrame(wx.Frame):
                 for wnd in live:
                     if isinstance(wnd, multiwheel.MultiWheelFrame):
                         wnd.queue_draw()
-                    elif isinstance(wnd.w, transitwnd.TransitWnd):
+                    elif hasattr(wnd.w, 'drawBkg'):
                         wnd.w.drawBkg()
                         wnd.sidebar.setChart(wnd.chart, self.horoscope)
         return
