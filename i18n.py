@@ -10,11 +10,12 @@ import mtexts
 SERBIAN = 3	# index of Srpski in mtexts.langtexts
 
 
-def tr(text):
-	if mtexts.current != SERBIAN:
+def tr(text, lang=None):
+	"""lang: the language to translate into, if not that of the program"""
+	if (mtexts.current if lang is None else lang) != SERBIAN:
 		return text
 	if isinstance(text, (list, tuple)):
-		return type(text)(tr(t) for t in text)
+		return type(text)(tr(t, lang) for t in text)
 	if not isinstance(text, str):
 		return text
 	label, tab, keys = text.partition('\t')

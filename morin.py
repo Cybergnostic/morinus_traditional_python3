@@ -2152,10 +2152,11 @@ class MFrame(wx.Frame):
         val = dlg.ShowModal()
         if val == wx.ID_OK:
             if dlg.check(self.options):
-                self.enableOptMenus(True)
-                if self.options.autosave:
-                    if self.options.saveLanguages():
-                        self.moptions.Enable(self.ID_SaveOpts, False)
+                # saved even without autosave: the language is only read at start
+                self.options.saveLanguages()
+                lang = self.options.langid
+                wx.MessageBox(i18n.tr('Restart Morinus to see the new language.', lang),
+                              i18n.tr('Language', lang), wx.OK | wx.ICON_INFORMATION, self)
         dlg.Destroy()
 
     def onSettings(self, event):
