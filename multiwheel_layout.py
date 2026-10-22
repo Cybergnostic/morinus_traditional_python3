@@ -249,7 +249,19 @@ def place_planet_clusters(longitudes, box_groups, edges, asc,
                                  for a in candidate['rects']
                                  for b in prior['rects'])
                 overflow = 0 if candidate['fits'] else 10000
-                score = (collisions * 100 + overflow +
+                # Keeping the *centre* inside a sign is insufficient: the
+                # horizontal text box can still straddle the division line.
+                # Prefer candidates with enough tangent clearance for ink.
+                theta = math.pi + math.radians(asc - shifted)
+                tangent = max((abs(math.sin(theta)) * box[0] +
+                               abs(math.cos(theta)) * box[1]) * .5
+                              for box in group[:3])
+                radius = max(1.0, (inner + outer) * .5)
+                clearance = math.degrees(math.atan((tangent + 1.0) / radius))
+                sign_degree = shifted % 30
+                sign_penalty = (900 if sign_degree < clearance or
+                                sign_degree > 30 - clearance else 0)
+                score = (collisions * 100 + overflow + sign_penalty +
                          abs(delta) * 1.3 + abs(off) * .35)
                 if score < best_score:
                     best, best_score = candidate, score
