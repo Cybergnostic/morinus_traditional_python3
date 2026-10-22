@@ -83,7 +83,12 @@ def allocate_traditional_rings(max_radius, count, show_terms=False, show_decans=
     # The compact two-tier planet labels no longer need the old broad bands.
     core_factor = {1: 0.615, 2: 0.505, 3: 0.400}[count]
     core = max_radius * core_factor
-    band_width = max_radius * 0.04
+    # The normal Morinus chart allocates around 8% of its radius to
+    # each traditional subdivision strip. Preserve a similar readable
+    # proportion without starving the extra planetary rings in a quad-wheel.
+    # A narrow .04 band was the source of the cramped, tiny glyphs.
+    band_fraction = {1: .065, 2: .056, 3: .047}[count]
+    band_width = max_radius * band_fraction
     zodiac_width = max_radius * 0.10
     cursor = core
     decans = None
