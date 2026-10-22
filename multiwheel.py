@@ -25,6 +25,15 @@ SIGNS = ('Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
 PLANET_NAMES = ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus',
                 'Mercury', 'Moon', 'North Node', 'South Node')
 
+# Muted ring colours distinguish charts without replacing the planet colours.
+RING_COLOURS = ((45, 96, 143), (150, 100, 44), (111, 80, 130))
+
+
+def aspect_ring_from_choice(selection):
+    """-1 means no aspect lines, 0 radix only, 1..3 radix to outer ring."""
+    return selection - 1
+
+
 
 def zodiac_lon(chrt, lon, options):
     """Display-space longitude, consistent with the configured zodiac."""
@@ -69,7 +78,7 @@ class MultiWheel:
         self.height = max(1, int(size[1]))
         self.options = options
         self.bw = bool(bw)
-        self.aspect_ring = 0  # 0 = radix only; otherwise 1..len(others)
+        self.aspect_ring = -1  # -1 = none; 0 = radix only; 1..3 = radix to ring
         self.hits = []
         self.buffer = None
 
@@ -103,8 +112,10 @@ class MultiWheel:
         return (int(round(xy[0] * self.scale)),
                 int(round(xy[1] * self.scale)))
 
-    def circle(self, radius, role='circle'):
+    def circle(self, radius, role='circle', colour=None):
         ink, width = self.ink(role)
+        if colour is not None:
+            ink = self.colour(colour)
         x, y = self.cx, self.cy
         rect = (int((x - radius) * self.scale),
                 int((y - radius) * self.scale),
@@ -134,7 +145,9 @@ class MultiWheel:
         return '%02d\N{DEGREE SIGN}%02d' % (n, minute)
 
     def draw_aspects(self, core):
-        """Draw within-radix lines; optionally add links to ONE selected ring."""
+        """Draw no aspects by default; optionally radix or one selected ring."""
+        if self.aspect_ring < 0:
+            return
         r = core * 0.52
         matrix = getattr(self.radix, 'aspmatrix', None)
         if matrix is not None:
@@ -212,13 +225,41 @@ class MultiWheel:
         wheel, but along it at the sides."""
         return abs(math.cos(theta)) * w / 2.0 + abs(math.sin(theta)) * h / 2.0
 
+    def draw_ring_backgrounds(self, zodiac, rings):
+        """Tint only planetary bands; keep the single shared zodiac untouched.
+
+        Draw circles outside-in before all labels and ticks, avoiding masks
+        or per-pixel image operations even when the canvas is resized.
+        """
+        background = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
+        for i in reversed(range(len(rings))):
+            outer = rings[i][1]
+            if self.bw:
+                shade = (249, 249, 249) if i % 2 == 0 else (240, 240, 240)
+            else:
+                accent = RING_COLOURS[i]
+                shade = chartstyle.mix(background, accent, 0.065 + i * 0.015)
+            r = outer * self.scale
+            xy = (int((self.cx - outer) * self.scale),
+                  int((self.cy - outer) * self.scale),
+                  int((self.cx + outer) * self.scale),
+                  int((self.cy + outer) * self.scale))
+            self.draw.ellipse(xy, fill=shade)
+        inner = zodiac[1]
+        xy = (int((self.cx - inner) * self.scale),
+              int((self.cy - inner) * self.scale),
+              int((self.cx + inner) * self.scale),
+              int((self.cy + inner) * self.scale))
+        self.draw.ellipse(xy, fill=background)
+
     def draw_outer_ring(self, chrt, index, edges):
         """Each planet: a tick at its exact longitude on the inner edge, its glyph
         next to it and its degree (with the retrograde mark) at the outer edge,
         both placed by their real size so that they stay inside the band."""
         inner, outer = edges
-        self.circle(inner, 'major')
-        self.circle(outer, 'major')
+        border = None if self.bw else RING_COLOURS[index - 1]
+        self.circle(inner, 'major', border)
+        self.circle(outer, 'major', border)
         width = outer - inner
         tick = min(10, width * .15)
         glyph = max(10, min(width * 0.36, self.rmax * 0.05))
@@ -271,6 +312,7 @@ class MultiWheel:
                                   self.height * self.scale)), i18n.tr(bg))
         self.draw = ImageDraw.Draw(image)
         self.hits = []
+        self.draw_ring_backgrounds(zodiac, rings)
         self.draw_radix(core)
         self.draw_zodiac(zodiac)
         for index, (chrt, edges) in enumerate(zip(self.others, rings), 1):
@@ -317,19 +359,36 @@ class MultiWheelFrame(wx.Frame):
         row.Add(self.count_choice, 0, wx.RIGHT, 20)
         row.Add(wx.StaticText(self, label=i18n.tr('Aspects between:')), 0,
                 wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
-        self.aspect_choice = wx.Choice(self, choices=i18n.tr(['Radix only', 'Radix and ring 1']))
+        self.aspect_choice = wx.Choice(
+            self, choices=i18n.tr(['None', 'Radix only', 'Radix and ring 1']))
         self.aspect_choice.SetSelection(0)
         row.Add(self.aspect_choice, 0, wx.RIGHT, 15)
         self.savebutton = wx.Button(self, label=i18n.tr('Save image (PNG)...'))
         row.Add(self.savebutton)
         outer.Add(row, 0, wx.ALL, 9)
+        self.radix_label = wx.StaticText(
+            self, label=i18n.tr('Inner radix') + ': ' + comparegrid.caption(mainfr.horoscope))
+        outer.Add(self.radix_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
         self.pickers = []
+        self.picker_rows = []
         for i in range(3):
-            picker = comparegrid.ChartPicker(self, mainfr, self.queue_draw, i + 1)
+            strip = wx.Panel(self)
+            line = wx.BoxSizer(wx.HORIZONTAL)
+            tag = wx.StaticText(strip, label=i18n.tr('Ring %d') % (i + 1) + ':')
+            tag.SetMinSize((75, -1))
+            if not self.options.bw:
+                tag.SetForegroundColour(wx.Colour(*RING_COLOURS[i]))
+            line.Add(tag, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
+            picker = comparegrid.ChartPicker(strip, mainfr, self.queue_draw, i + 1)
+            line.Add(picker, 1, wx.EXPAND)
+            strip.SetSizer(line)
             self.pickers.append(picker)
-            outer.Add(picker, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
+            self.picker_rows.append(strip)
+            outer.Add(strip, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
             if i:
-                picker.Hide()
+                strip.Hide()
+        self.selection_note = wx.StaticText(self, label='')
+        outer.Add(self.selection_note, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
         self.canvas = wx.Panel(self)
         self.canvas.SetMinSize((420, 420))
         self.canvas.SetBackgroundStyle(wx.BG_STYLE_PAINT)
@@ -348,14 +407,15 @@ class MultiWheelFrame(wx.Frame):
 
     def change_count(self, event=None):
         count = self.count_choice.GetSelection() + 1
-        for i, picker in enumerate(self.pickers):
-            picker.Show(i < count)
+        for i, strip in enumerate(self.picker_rows):
+            strip.Show(i < count)
         prior = self.aspect_choice.GetSelection()
         self.aspect_choice.Clear()
-        self.aspect_choice.Append('Radix only')
+        self.aspect_choice.Append(i18n.tr('None'))
+        self.aspect_choice.Append(i18n.tr('Radix only'))
         for i in range(count):
-            self.aspect_choice.Append('Radix and ring %d' % (i + 1))
-        self.aspect_choice.SetSelection(min(max(prior, 0), count))
+            self.aspect_choice.Append(i18n.tr('Radix and ring %d') % (i + 1))
+        self.aspect_choice.SetSelection(min(max(prior, 0), count + 1))
         self.Layout()
         self.queue_draw()
 
@@ -389,9 +449,18 @@ class MultiWheelFrame(wx.Frame):
             return
         count = self.count_choice.GetSelection() + 1
         charts = [picker.selected() for picker in self.pickers[:count]]
+        repeated = []
+        seen = {id(self.mainfr.horoscope): i18n.tr('Radix')}
+        for i, selected in enumerate(charts, 1):
+            if id(selected) in seen:
+                repeated.append(i18n.tr('Ring %d') % i + ' = ' + seen[id(selected)])
+            else:
+                seen[id(selected)] = i18n.tr('Ring %d') % i
+        self.selection_note.SetLabel(
+            i18n.tr('Repeated charts') + ': ' + ', '.join(repeated) if repeated else '')
         self.renderer = MultiWheel(self.mainfr.horoscope, charts,
                                    (w, h), self.options, self.options.bw)
-        self.renderer.aspect_ring = max(0, self.aspect_choice.GetSelection())
+        self.renderer.aspect_ring = aspect_ring_from_choice(self.aspect_choice.GetSelection())
         self.buffer = self.renderer.drawChart()
         self.canvas.Refresh(False)
 
