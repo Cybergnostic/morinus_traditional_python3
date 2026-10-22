@@ -78,7 +78,11 @@ def allocate_traditional_rings(max_radius, count, show_terms=False, show_decans=
     if max_radius <= 0:
         raise ValueError('Radius must be positive')
 
-    core = max_radius * (0.64 - 0.085 * count)
+    # Give the radix more room and slim the planetary rings, especially
+    # for a bi-wheel. Retain the same overall wheel diameter and outer border.
+    # The compact two-tier planet labels no longer need the old broad bands.
+    core_factor = {1: 0.615, 2: 0.505, 3: 0.400}[count]
+    core = max_radius * core_factor
     band_width = max_radius * 0.04
     zodiac_width = max_radius * 0.10
     cursor = core
