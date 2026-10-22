@@ -196,20 +196,16 @@ class MultiWheel:
                         y + math.sin(theta + delta) * (outer - 3))
                 right = (x + math.cos(theta - delta) * (outer - 3),
                          y + math.sin(theta - delta) * (outer - 3))
-                tip = self.point(display_lon, outer + min(5, (outer - inner) * .11))
+                tip = self.point(display_lon, outer - 1)
                 self.stroke(left, tip, 'pointer', colour)
                 self.stroke(right, tip, 'pointer', colour)
 
-    def draw_shared_spokes(self, core, zodiac, rings):
-        """Continue the radix cusps and sign boundaries through *all* charts."""
-        edge = rings[-1][1]
-        # Cusp lines are lighter than the four axes drawn over them.
-        self.draw_house_spokes(self.radix, core * .55, edge)
+    def draw_sign_spokes(self, inner, outer):
+        """Continue sign divisions inside a planetary ring, never the zodiac."""
         for sign in range(12):
             lon = sign * 30.0
-            self.stroke(self.point(lon, zodiac[0]),
-                        self.point(lon, edge), 'major')
-        self.draw_angles(self.radix, core * .55, edge)
+            self.stroke(self.point(lon, inner),
+                        self.point(lon, outer), 'major')
 
     def draw_houses(self, core):
         """House numbers retain the inner Morinus chart's house-number ring."""
@@ -284,6 +280,8 @@ class MultiWheel:
     def draw_radix(self, core):
         self.draw_aspects(core)
         self.draw_houses(core)
+        self.draw_house_spokes(self.radix, core * .55, core)
+        self.draw_angles(self.radix, core * .55, core)
         self.circle(core * .55)
         if self.options.houses:
             self.circle(core * .67, 'divider')
@@ -389,13 +387,37 @@ class MultiWheel:
         """A chart-specific ring with Morinus notation and its own axes."""
         inner, outer = edges
         border = None if self.bw else RING_COLOURS[index - 1]
-        # Thin double concentric dividers separate the charts.
-        self.circle(inner, 'major', border)
-        self.circle(inner + min(4.0, (outer - inner) * .075), 'divider', border)
-        self.circle(outer, 'major', border)
-        self.draw_house_spokes(chrt, inner + 4, outer - 2, border)
-        self.draw_angles(chrt, inner + 4, outer - 5, border)
+        separation = self.separator_width(edges)
+        chart_start = inner + separation + 1
+        self.draw_sign_spokes(chart_start, outer)
+        self.draw_house_spokes(chrt, chart_start, outer, border)
+        self.draw_angles(chrt, chart_start, outer, border)
         self.draw_planet_band(chrt, edges, i18n.tr('Ring %d') % index)
+
+    @staticmethod
+    def separator_width(edges):
+        inner, outer = edges
+        return min(4.0, (outer - inner) * .075)
+
+    def draw_separator_gaps(self, rings):
+        """Erase the entire separator annulus, then draw its two borders.
+
+        Painting last means *no* sign, house, or angle line can cross the gap.
+        """
+        background = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
+        for index, edges in enumerate(rings):
+            inner, _ = edges
+            width = self.separator_width(edges)
+            mid = inner + width * .5
+            rect = (int((self.cx - mid) * self.scale),
+                    int((self.cy - mid) * self.scale),
+                    int((self.cx + mid) * self.scale),
+                    int((self.cy + mid) * self.scale))
+            self.draw.ellipse(rect, outline=background,
+                              width=max(1, int(math.ceil(width * self.scale))))
+            border = None if self.bw else RING_COLOURS[index]
+            self.circle(inner, 'major', border)
+            self.circle(inner + width, 'major', border)
 
     def drawChart(self):
         self.scale = 2  # crisp curves and glyphs after Lanczos downsampling
@@ -409,13 +431,13 @@ class MultiWheel:
         self.draw = ImageDraw.Draw(image)
         self.hits = []
         self.draw_ring_backgrounds(zodiac, rings)
-        self.draw_shared_spokes(core, zodiac, rings)
         self.draw_radix(core)
         self.draw_decans(decans)
         self.draw_terms(terms)
         self.draw_zodiac(zodiac)
         for index, (chrt, edges) in enumerate(zip(self.others, rings), 1):
             self.draw_outer_ring(chrt, index, edges)
+        self.draw_separator_gaps(rings)
         image = image.resize((self.width, self.height), Image.Resampling.LANCZOS)
         out = wx.Image(self.width, self.height)
         out.SetData(image.tobytes())
