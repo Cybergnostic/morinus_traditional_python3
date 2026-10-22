@@ -389,38 +389,57 @@ class MultiWheel:
         self.draw_planet_band(self.radix, (core * .67, core), i18n.tr('Radix'),
                               'outer')
 
+    def traditional_font(self, edges):
+        """Follow the small Morinus-planet glyph size used by GraphChart.
+
+        GraphChart's small traditional ruler is 2/3 of the symbol size
+        (typically about 1/18 of the chart radius). Limit it by this band's
+        actual height for tri- and quad-wheels.
+        """
+        inner, outer = edges
+        pixels = max(8, int(min((outer - inner) * .78,
+                                 self.rmax / 18.0)))
+        return self.font(pixels, symbol=True), pixels * self.scale
+
     def draw_decans(self, edges):
-        """The one shared decan band, using Morinus's selected rulers."""
+        """Shared GraphChart decan rulerships, precise tenth divisions.
+
+        Use exactly the same glyph square-centering as GraphChart.drawDecans,
+        rather than PIL's unrelated 'mm' text anchor.
+        """
         if edges is None:
             return
         inner, outer = edges
-        self.circle(inner, 'divider')
-        self.circle(outer, 'divider')
-        font = self.font(max(8, (outer - inner) * .72), symbol=True)
-        for sign, rulers in enumerate(self.options.decans[self.options.seldecan]):
-            for part, ruler in enumerate(rulers):
-                start = sign * 30 + part * 10
-                self.stroke(self.point(start, inner), self.point(start, outer), 'divider')
-                self.label(self.point(start + 5, (inner + outer) / 2),
-                           common.common.planets[ruler], font, self.options.clrsigns)
+        self.circle(inner, 'circle')
+        self.circle(outer, 'circle')
+        font, size = self.traditional_font(edges)
+        middle = (inner + outer) / 2.0
+        rulers = self.options.decans[self.options.seldecan]
+        for centre, ruler, start in wheel_primitives.traditional_decan_markers(rulers):
+            self.stroke(self.point(start, inner),
+                        self.point(start, outer), 'divider')
+            wheel_primitives.paint_glyph(
+                self.draw, self.scaled(self.point(centre, middle)),
+                common.common.planets[ruler], font, size,
+                self.colour(self.options.clrsigns))
 
     def draw_terms(self, edges):
-        """The one shared term band, using the existing selected terms."""
+        """Use the *same unequal bounds* and glyph positioning as GraphChart."""
         if edges is None:
             return
         inner, outer = edges
-        self.circle(inner, 'divider')
-        self.circle(outer, 'divider')
-        font = self.font(max(8, (outer - inner) * .72), symbol=True)
-        for sign, divisions in enumerate(self.options.terms[self.options.selterm]):
-            cursor = sign * 30.0
-            for ruler, width in divisions:
-                span = float(width)
-                self.stroke(self.point(cursor, inner),
-                            self.point(cursor, outer), 'divider')
-                self.label(self.point(cursor + span / 2, (inner + outer) / 2),
-                           common.common.planets[ruler], font, self.options.clrsigns)
-                cursor += span
+        self.circle(inner, 'circle')
+        self.circle(outer, 'circle')
+        font, size = self.traditional_font(edges)
+        middle = (inner + outer) / 2.0
+        bounds = self.options.terms[self.options.selterm]
+        for centre, ruler, endpoint in wheel_primitives.traditional_term_markers(bounds):
+            self.stroke(self.point(endpoint, inner),
+                        self.point(endpoint, outer), 'divider')
+            wheel_primitives.paint_glyph(
+                self.draw, self.scaled(self.point(centre, middle)),
+                common.common.planets[ruler], font, size,
+                self.colour(self.options.clrsigns))
 
     def draw_zodiac(self, edges):
         """One zodiac band for every chart, including Morinus degree ticks."""
