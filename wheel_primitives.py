@@ -125,6 +125,9 @@ def compact_planet_radii(inner, outer, angle, glyph_box, position_box,
     position_reach = radial_half_extent(position_box, angle)
     free = outer - inner - 4.0 - 2.0 * (glyph_reach + position_reach)
     gap = min(spacing, max(0.0, free))
-    glyph = outer - 2.0 - glyph_reach
-    position = glyph - glyph_reach - position_reach - gap
+    # Centre the two-row group *in the available band*. Anchoring the
+    # glyph to outer - 2 forced every planet to the rim of its chart.
+    centre = (inner + outer) / 2.0
+    glyph = centre + gap / 2.0 + glyph_reach
+    position = centre - gap / 2.0 - position_reach
     return {'glyph': glyph, 'position': position}
