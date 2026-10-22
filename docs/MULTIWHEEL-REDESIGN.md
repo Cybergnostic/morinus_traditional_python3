@@ -98,3 +98,25 @@ unchanged and the bi-/tri-/quad-wheel results pass visual inspection.
 - GUI regression covers one dial per wheel, each ring's identity field,
   and a four-angle rendering pass for each chart. Full screenshot review is
   still required before the draft pull request may be merged.
+
+
+## October 22: correcting traditional-band parity with GraphChart
+
+The original implementation wrongly treated the traditional bands as small
+generic overlays. GraphChart's normal chart uses substantially wider bands,
+its small Morinus glyph font and square-centred drawing conventions.
+
+The normal GraphChart and multiwheel now use one shared pair of *pure*
+longitude layout helpers, `traditional_term_markers` and
+`traditional_decan_markers`, covering the exact unequal terms, 10-degree
+decans, their rulers, and all division lines. GraphChart's existing
+typography, radii and pens are preserved, while the multiwheel's bands
+receive wheel-count-aware allocations (.065, .056, .047 radius respectively
+for bi-, tri-, quad-wheels). The multiwheel ruler glyphs use GraphChart's
+square-centred painting primitive and an approximate GraphChart small-symbol
+scale bounded by the available band height.
+
+This improves parity **without claiming the full multiwheel is yet
+pixel-identical** to a single GraphChart. Houses, collision placement and
+other chart-specific layers still need visual comparison and targeted reuse
+rather than independent approximations.
