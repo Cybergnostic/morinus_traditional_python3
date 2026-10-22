@@ -11,6 +11,7 @@ import chart
 import dodecatemoria
 import tradoptions
 import chartstyle
+import wheel_primitives
 import chartquality
 import houses
 import planets
@@ -757,11 +758,8 @@ class GraphChart:
         if self.options.ayanamsha != 0 and self.options.hsys == 5:
             asc = util.normalize(self.chart.houses.ascmc[houses.Houses.ASC] - self.chart.ayanamsha)
         for i in range(1, houses.Houses.HOUSE_NUM + 1):
-            dif = math.radians(util.normalize(asc - chouses.cusps[i]))
-            x1 = cx + math.cos(math.pi + dif) * r1
-            y1 = cy + math.sin(math.pi + dif) * r1
-            x2 = cx + math.cos(math.pi + dif) * r2
-            y2 = cy + math.sin(math.pi + dif) * r2
+            x1, y1 = wheel_primitives.polar_point(cx, cy, asc, chouses.cusps[i], r1)
+            x2, y2 = wheel_primitives.polar_point(cx, cy, asc, chouses.cusps[i], r2)
             self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
 
     def drawAscMC(self, ascmc, r1, r2, rArrow):
@@ -933,16 +931,14 @@ class GraphChart:
                 if self.options.ayanamsha != 0:
                     alon -= self.chart.ayanamsha
                     alon = util.normalize(alon)
-                d, m, s = util.decToDeg(alon)
-                d = d % chart.Chart.SIGN_DEG
-                degtxt = str(d).zfill(2) + self.deg_symbol
+                degtxt, mintxt = wheel_primitives.position_text(alon, self.deg_symbol)
                 wdeg, hdeg = self.draw.textbbox((0, 0), degtxt, self.fntText)[2:]
                 x = cx + math.cos(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosDeg
                 y = cy + math.sin(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosDeg
                 xdeg = x - wdeg // 2
                 ydeg = y - hdeg // 2
                 self.draw.text((xdeg, ydeg), degtxt, fill=clr, font=self.fntText)
-                mintxt = str(m).zfill(2) + "'"
+
                 wdeg, hdeg = self.draw.textbbox((0, 0), mintxt, self.fntSmallText2)[2:]
                 x = cx + math.cos(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosMin
                 y = cy + math.sin(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosMin
