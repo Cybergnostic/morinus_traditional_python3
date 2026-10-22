@@ -151,3 +151,22 @@ screenshots for all wheel counts. In particular, exact single-wheel visual
 parity, optional chart-specific objects, and the remaining dense conjunction
 cases are not yet guaranteed. Single-wheel GraphChart and comparison-grid
 rendering have deliberately not been changed in this phase.
+
+## October 23: chart-local axis markers and consistent planet glyph scale
+
+- Radix and every outer chart now use the same marker vocabulary: ASC ends
+  in a small unfilled circle (a fishing-hook-style beginning), DESC and MC
+  have triangular outward arrowheads, and IC is a plain line.
+- The hollow ASC centre is painted in the appropriate chart-field colour,
+  so a house spoke does not appear inside the circle. Angle positions, chart
+  boundaries and astrological calculations remain unchanged.
+- Planet glyph, degree, minute and motion font sizes are computed **once**
+  for the entire multiwheel using the narrowest usable planetary label band,
+  excluding local degree dials and chart separator gaps.
+- All radix and extra chart planetary glyphs therefore have identical font
+  sizes. Terms/decans remain separate, smaller traditional ruler glyphs.
+- GUI smoke now checks two triangle markers and one hollow ASC per chart,
+  plus identical font settings across all planetary rings. Pure layout
+  tests verify narrow-ring font selection and zoom behaviour.
+
+Do not merge until the multiwheel screenshots have been checked.
