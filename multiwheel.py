@@ -96,16 +96,34 @@ class MultiWheel:
     def colour(self, value):
         return (0, 0, 0) if self.bw else tuple(value)
 
+    # Multiwheel has a denser drawing than a single Morinus chart. Do not
+    # change chartstyle's global pens or the ordinary chart's appearance.
+    LINE_WEIGHTS = {
+        'major': 1.1, 'circle': 1.1, 'divider': .72,
+        'pointer': .72, 'tick10': .76, 'tick1': .56,
+    }
+    LINE_FADE = {
+        'major': .18, 'circle': .13, 'divider': .38,
+        'pointer': .36, 'tick10': .32, 'tick1': .48,
+    }
+
+    def stroke_colour(self, colour, role):
+        background = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
+        return chartstyle.mix(self.colour(colour), background,
+                              self.LINE_FADE.get(role, 0.0))
+
     def ink(self, role):
         pen = chartstyle.frame_pen(self.options, self.bw,
                                    min(self.width, self.height), role)
         c = pen.GetColour()
-        return (c.Red(), c.Green(), c.Blue()), max(1, pen.GetWidth() * self.scale)
+        colour = self.stroke_colour((c.Red(), c.Green(), c.Blue()), role)
+        weight = self.LINE_WEIGHTS.get(role, 1.0)
+        return colour, max(1, round(weight * self.scale))
 
     def stroke(self, a, b, role='divider', colour=None):
         ink, width = self.ink(role)
         if colour is not None:
-            ink = self.colour(colour)
+            ink = self.stroke_colour(colour, role)
         self.draw.line((self.scaled(a), self.scaled(b)),
                        fill=ink, width=width)
 
@@ -116,7 +134,7 @@ class MultiWheel:
     def circle(self, radius, role='circle', colour=None):
         ink, width = self.ink(role)
         if colour is not None:
-            ink = self.colour(colour)
+            ink = self.stroke_colour(colour, role)
         x, y = self.cx, self.cy
         rect = (int((x - radius) * self.scale),
                 int((y - radius) * self.scale),
@@ -397,7 +415,9 @@ class MultiWheel:
     @staticmethod
     def separator_width(edges):
         inner, outer = edges
-        return min(7.0, max(5.0, (outer - inner) * .15))
+        # Slim but visibly empty at all three wheel counts; the two lines
+        # themselves are light single-pixel strokes after downsampling.
+        return min(3.2, max(2.4, (outer - inner) * .055))
 
     def draw_separator_gaps(self, rings):
         """Erase the entire separator annulus, then draw its two borders.
@@ -438,6 +458,10 @@ class MultiWheel:
         for index, (chrt, edges) in enumerate(zip(self.others, rings), 1):
             self.draw_outer_ring(chrt, index, edges)
         self.draw_separator_gaps(rings)
+        # One continuous perimeter closes the entire multiwheel. Draw last
+        # so house/angle spokes stop cleanly at the final edge.
+        self.circle(rings[-1][1] - .6, 'circle',
+                    None if self.bw else RING_COLOURS[len(rings) - 1])
         image = image.resize((self.width, self.height), Image.Resampling.LANCZOS)
         out = wx.Image(self.width, self.height)
         out.SetData(image.tobytes())
