@@ -1,7 +1,8 @@
 import unittest
 
 from multiwheel_layout import (allocate_rings, allocate_traditional_rings,
-                               spread_longitudes, zodiac_sign_lane,\n                               place_planet_clusters, _intersect_area)
+                               spread_longitudes, zodiac_sign_lane,
+                               place_planet_clusters, _intersect_area)
 
 
 class MultiWheelLayoutTests(unittest.TestCase):
