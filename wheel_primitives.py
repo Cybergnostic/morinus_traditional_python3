@@ -63,3 +63,49 @@ def paint_position_text(draw, point, text, font, colour):
     width, height = draw.textbbox((0, 0), text, font=font)[2:]
     draw.text((x - width // 2, y - height // 2), text,
               fill=colour, font=font)
+
+
+def optical_text_center(draw, point, text, font, colour):
+    """Centre the *visible ink* of a glyph or position label on its point.
+
+    PIL fonts can have different left/top bearings; the standard Morinus
+    square-based symbol placement is preserved above for GraphChart, while
+    densely packed multiwheel rings use consistent optical centring for
+    all three label tiers.
+    """
+    left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
+    x, y = point
+    draw.text((round(x - (left + right) / 2.0),
+               round(y - (top + bottom) / 2.0)),
+              text, fill=colour, font=font)
+
+
+def radial_half_extent(size, angle):
+    """Radial reach of a horizontal text bounding box at the given angle."""
+    width, height = size
+    return (abs(math.cos(angle)) * width +
+            abs(math.sin(angle)) * height) / 2.0
+
+
+def planet_cluster_radii(inner, outer, angle, glyph_box, degree_box,
+                         minute_box, spacing=1.2):
+    """Lay out one *centred* Morinus planet label group, outside to inside.
+
+    The glyph, degree and minute share an angular position.  The gap between
+    their visible boxes is computed from each label's true dimensions,
+    rather than fixed percentages of the planetary band.  A retrograde or
+    station mark belongs next to the minute label (tangentially), not on a
+    fourth radial row.
+    """
+    if outer <= inner:
+        raise ValueError('The planet band must have positive width')
+    sizes = (glyph_box, degree_box, minute_box)
+    reaches = [radial_half_extent(size, angle) for size in sizes]
+    available = outer - inner - 4.0
+    # Reduce inter-label whitespace before allowing labels to collide.
+    free = available - 2.0 * sum(reaches)
+    gap = min(spacing, max(0.0, free / 2.0))
+    glyph = outer - 2.0 - reaches[0]
+    degree = glyph - reaches[0] - reaches[1] - gap
+    minute = degree - reaches[1] - reaches[2] - gap
+    return {'glyph': glyph, 'degree': degree, 'minute': minute}
