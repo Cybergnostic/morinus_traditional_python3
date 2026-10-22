@@ -5,7 +5,8 @@ from wheel_primitives import (angle_longitudes, planet_band_radii,
                               polar_point, position_text,
                               paint_glyph, paint_position_text,
                               optical_text_center, planet_cluster_radii,
-                              compact_planet_radii, radial_half_extent)
+                              compact_planet_radii, radial_half_extent,
+                              traditional_term_markers, traditional_decan_markers)
 
 
 class SharedWheelPrimitivesTests(unittest.TestCase):
@@ -101,6 +102,25 @@ class SharedWheelPrimitivesTests(unittest.TestCase):
             self.assertGreater(outside, inside)
             self.assertGreater(inside, 111)
             self.assertLess(outside, 176)
+
+    def test_shared_traditional_terms_follow_unequal_bounds(self):
+        # A synthetic sign: the original GraphChart uses successive
+        # cumulative endpoints, not 6-degree equal partitions.
+        terms = [[(1, 4), (2, 8), (3, 6), (4, 5), (5, 7)]]
+        values = list(traditional_term_markers(terms))
+        self.assertEqual([planet for _, planet, _ in values], [1, 2, 3, 4, 5])
+        self.assertEqual([mid for mid, _, _ in values],
+                         [2.0, 8.0, 15.0, 20.5, 26.5])
+        self.assertEqual([boundary for _, _, boundary in values],
+                         [4.0, 12.0, 18.0, 23.0, 30.0])
+
+    def test_shared_decans_follow_original_morinus_centres(self):
+        ruler_sets = [[1, 2, 3], [4, 5, 6]]
+        values = list(traditional_decan_markers(ruler_sets))
+        self.assertEqual([mid for mid, _, _ in values],
+                         [5.0, 15.0, 25.0, 35.0, 45.0, 55.0])
+        self.assertEqual([boundary for _, _, boundary in values],
+                         [0.0, 10.0, 20.0, 30.0, 40.0, 50.0])
 
     def test_four_angles_match_morinus_quadrants(self):
         self.assertEqual(angle_longitudes(350, 75), (350, 170, 75, 255))
