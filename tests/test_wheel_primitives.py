@@ -3,7 +3,9 @@ import unittest
 
 from wheel_primitives import (angle_longitudes, planet_band_radii,
                               polar_point, position_text,
-                              paint_glyph, paint_position_text)
+                              paint_glyph, paint_position_text,
+                              optical_text_center, planet_cluster_radii,
+                              radial_half_extent)
 
 
 class SharedWheelPrimitivesTests(unittest.TestCase):
@@ -34,6 +36,36 @@ class SharedWheelPrimitivesTests(unittest.TestCase):
         paint_position_text(painter, (100, 80), '12°', 'font', (3, 4, 5))
         self.assertEqual(painter.calls[0], ((92, 72), 'P', (3, 4, 5), 'font'))
         self.assertEqual(painter.calls[1], ((90, 75), '12°', (3, 4, 5), 'font'))
+
+    def test_optical_centring_accounts_for_glyph_bearings(self):
+        class FakeDraw:
+            def __init__(self):
+                self.calls = []
+            def textbbox(self, xy, text, font=None):
+                return (2, 5, 22, 15)
+            def text(self, xy, text, fill=None, font=None):
+                self.calls.append((xy, text, fill))
+        painter = FakeDraw()
+        optical_text_center(painter, (100, 80), '♄', 'font', (0, 0, 0))
+        self.assertEqual(painter.calls, [((88, 70), '♄', (0, 0, 0))])
+
+    def test_measured_planet_cluster_uses_one_angular_slot(self):
+        sizes = ((12, 12), (16, 9), (13, 8))
+        for angle in (0, math.pi / 4, math.pi / 2, math.pi):
+            layout = planet_cluster_radii(130, 185, angle, *sizes)
+            self.assertGreater(layout['glyph'], layout['degree'])
+            self.assertGreater(layout['degree'], layout['minute'])
+            reaches = [radial_half_extent(size, angle) for size in sizes]
+            self.assertLessEqual(layout['glyph'] + reaches[0], 183.01)
+            self.assertGreaterEqual(layout['minute'] - reaches[2], 131.99)
+            self.assertGreaterEqual(
+                layout['glyph'] - reaches[0],
+                layout['degree'] + reaches[1] - .001)
+            self.assertGreaterEqual(
+                layout['degree'] - reaches[1],
+                layout['minute'] + reaches[2] - .001)
+        with self.assertRaises(ValueError):
+            planet_cluster_radii(80, 80, 0, *sizes)
 
     def test_four_angles_match_morinus_quadrants(self):
         self.assertEqual(angle_longitudes(350, 75), (350, 170, 75, 255))
