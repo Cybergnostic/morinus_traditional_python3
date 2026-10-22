@@ -77,6 +77,17 @@ class MultiWheelLayoutTests(unittest.TestCase):
                     for prev, next_ring in zip(rings, rings[1:]):
                         self.assertAlmostEqual(prev[1], next_ring[0])
 
+    def test_traditional_band_is_large_enough_for_original_glyphs(self):
+        # GraphChart's ruler glyphs are approximately 1/18 radius.
+        # Each strip must fit them with margin, across all ring counts.
+        radius = 300.0
+        for count in (1, 2, 3):
+            _, decans, terms, _, rings = allocate_traditional_rings(
+                radius, count, True, True)
+            for inner, outer in (decans, terms):
+                self.assertGreater(outer - inner, radius * .045)
+            self.assertAlmostEqual(rings[-1][1], radius)
+
     def test_traditional_layout_rejects_invalid_dimensions(self):
         for count in (0, 4):
             with self.assertRaises(ValueError):
