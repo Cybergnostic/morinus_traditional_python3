@@ -456,6 +456,26 @@ def main():
 					path = os.path.join(out, 'multiwheel-%d-rings.png' % count)
 					assert wnd.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG)
 					assert os.path.getsize(path) > 0
+				# Zoom must render a genuinely larger bitmap with scrolling,
+				# not enlarge the fitted bitmap.  Hiding the source sidebar
+				# must not destroy its selected charts.
+				wnd.zoom_actual()
+				wnd.redraw()
+				assert wnd.buffer.GetWidth() == wnd.natural_diameter(3)
+				assert wnd.canvas.GetVirtualSize()[0] >= wnd.buffer.GetWidth()
+				wnd.zoom_in()
+				wnd.redraw()
+				assert wnd.buffer.GetWidth() > wnd.natural_diameter(3)
+				wnd.zoom_out()
+				wnd.redraw()
+				assert wnd.buffer.GetWidth() == wnd.natural_diameter(3)
+				wnd.toggle_sidebar()
+				assert not wnd.sidebar.IsShown()
+				wnd.toggle_sidebar()
+				assert wnd.sidebar.IsShown()
+				wnd.zoom_fit()
+				wnd.redraw()
+				assert wnd.zoom_factor is None
 				# Regression: one exact-degree dial per chart, one caption
 				# in the centre, one caption inside *each* outer chart, and
 				# one set of four angle arrows per chart.
