@@ -92,7 +92,15 @@ def allocate_traditional_rings(max_radius, count, show_terms=False, show_decans=
         cursor = terms[1]
     zodiac = (cursor, cursor + zodiac_width)
     cursor = zodiac[1]
-    outer_width = (max_radius - cursor) / count
-    rings = [(cursor + i * outer_width, cursor + (i + 1) * outer_width)
-             for i in range(count)]
+    # The outer chart gets more radial space for its larger circumference
+    # and degree labels; do not introduce separate zodiac strips.
+    weights = [1.0] * count
+    if count > 1:
+        weights[-1] = 1.22
+    unit = (max_radius - cursor) / sum(weights)
+    rings = []
+    for weight in weights:
+        next_edge = cursor + unit * weight
+        rings.append((cursor, next_edge))
+        cursor = next_edge
     return core, decans, terms, zodiac, rings
