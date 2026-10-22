@@ -133,3 +133,31 @@ def compact_planet_radii(inner, outer, angle, glyph_box, position_box,
     glyph = centre + gap / 2.0 + position_reach
     position = centre - gap / 2.0 - glyph_reach
     return {'glyph': glyph, 'position': position}
+
+
+def traditional_term_markers(terms):
+    """Reproduce GraphChart's successive-bound approach to term geometry.
+
+    Return (centre longitude, planet index, segment end longitude). The
+    sign-specific rulers and unequal lengths come from Morinus's selected
+    terms system; no independently estimated equal subdivisions.
+    """
+    for sign, divisions in enumerate(terms):
+        cursor = float(sign * 30)
+        for ruler, span in divisions:
+            width = float(span)
+            centre = cursor + width / 2.0
+            cursor += width
+            yield centre, ruler, cursor
+
+
+def traditional_decan_markers(decans):
+    """Return the precise 10-degree centres, rulers, and start lines.
+
+    These are the same longitudes GraphChart.drawDecans uses (5, 15, 25
+    degrees within each sign).
+    """
+    for sign, rulers in enumerate(decans):
+        for part, ruler in enumerate(rulers):
+            start = sign * 30 + part * 10
+            yield start + 5.0, ruler, float(start)
