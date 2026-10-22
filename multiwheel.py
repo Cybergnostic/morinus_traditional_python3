@@ -196,32 +196,70 @@ class MultiWheel:
             self.stroke(self.point(lon, inner), self.point(lon, outer),
                         'divider', colour if colour is not None else self.options.clrhouses)
 
-    def draw_angles(self, chrt, inner, outer, colour=None):
-        """Draw all four chart-local axes with visible inward-based arrows.
+    def ring_background_colour(self, ring_index=None):
+        """Actual chart-field background, also used behind hollow angle ends."""
+        background = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
+        if ring_index is None:
+            return background
+        i = ring_index - 1
+        if self.bw:
+            return (249, 249, 249) if i % 2 == 0 else (240, 240, 240)
+        return chartstyle.mix(background, RING_COLOURS[i],
+                              0.065 + i * 0.015)
 
-        The normal GraphChart draws triangular ASC/MC arrowheads.  Scale the
-        same triangles to multiwheel bands; mark all four axes explicitly so
-        ASC, DSC, MC and IC remain readable in a crowded multiwheel.
+    def draw_angle_arrowhead(self, lon, tip_radius, size, colour):
+        """An outward triangular end, used only for DESC and MC."""
+        theta = self.angle(lon)
+        half_base = max(2.0, min(3.3, size * .42))
+        bx, by = self.point(lon, tip_radius - size)
+        dx, dy = -math.sin(theta) * half_base, math.cos(theta) * half_base
+        self.draw.polygon(
+            [self.scaled((bx + dx, by + dy)),
+             self.scaled((bx - dx, by - dy)),
+             self.scaled(self.point(lon, tip_radius))],
+            fill=self.stroke_colour(colour, 'major'))
+
+    def draw_angle_open_circle(self, lon, centre_radius, marker_radius,
+                               colour, ring_index=None):
+        """Hollow ASC end, with the field colour covering any cusp beneath."""
+        x, y = self.point(lon, centre_radius)
+        rect = (self.scaled((x - marker_radius, y - marker_radius)),
+                self.scaled((x + marker_radius, y + marker_radius)))
+        self.draw.ellipse(
+            rect, fill=self.ring_background_colour(ring_index),
+            outline=self.stroke_colour(colour, 'major'),
+            width=self.ink('major')[1])
+
+    def draw_angles(self, chrt, inner, outer, colour=None, ring_index=None):
+        """Chart-local angle ends: ASC open circle, DESC/MC arrows, IC line.
+
+        All four axes keep their exact ecliptic longitudes and stay inside
+        the chart's planetary field. Markers are the same for every wheel.
         """
         asc, mc = (chrt.houses.ascmc[houses.Houses.ASC],
                    chrt.houses.ascmc[houses.Houses.MC])
         colour = colour if colour is not None else self.options.clrAscMC
-        ink = self.stroke_colour(colour, 'major')
         size = min(8.5, max(5.5, (outer - inner) * .16))
-        half_base = max(2.0, min(3.3, size * .42))
-        for lon in wheel_primitives.angle_longitudes(asc, mc):
+        tip_radius = outer - 1.8
+        for kind, lon in enumerate(wheel_primitives.angle_longitudes(asc, mc)):
             display_lon = zodiac_lon(chrt, lon, self.options)
-            tip_radius = outer - 1.8
-            self.stroke(self.point(display_lon, inner),
-                        self.point(display_lon, tip_radius - size),
-                        'major', colour)
-            theta = self.angle(display_lon)
-            bx, by = self.point(display_lon, tip_radius - size)
-            dx, dy = -math.sin(theta) * half_base, math.cos(theta) * half_base
-            points = [self.scaled((bx + dx, by + dy)),
-                      self.scaled((bx - dx, by - dy)),
-                      self.scaled(self.point(display_lon, tip_radius))]
-            self.draw.polygon(points, fill=ink)
+            if kind == 0:  # ASC: hollow fishing-hook-like beginning
+                radius = min(4.0, max(2.8, (outer - inner) * .075))
+                centre_radius = tip_radius - radius
+                self.stroke(self.point(display_lon, inner),
+                            self.point(display_lon, centre_radius - radius),
+                            'major', colour)
+                self.draw_angle_open_circle(
+                    display_lon, centre_radius, radius, colour, ring_index)
+            elif kind in (1, 2):  # DESC and MC: triangular arrowheads
+                self.stroke(self.point(display_lon, inner),
+                            self.point(display_lon, tip_radius - size),
+                            'major', colour)
+                self.draw_angle_arrowhead(display_lon, tip_radius, size, colour)
+            else:  # IC: plain axis line
+                self.stroke(self.point(display_lon, inner),
+                            self.point(display_lon, tip_radius),
+                            'major', colour)
 
     @staticmethod
     def dial_width(edges):
@@ -607,7 +645,7 @@ class MultiWheel:
         chart_start = inner + separation + 1
         self.draw_sign_spokes(chart_start, outer)
         self.draw_house_spokes(chrt, chart_start, outer, border)
-        self.draw_angles(chrt, chart_start, outer, border)
+        self.draw_angles(chrt, chart_start, outer, border, ring_index=index)
         self.draw_planet_band(chrt, (chart_start, outer),
                               i18n.tr('Ring %d') % index, 'inner')
 
