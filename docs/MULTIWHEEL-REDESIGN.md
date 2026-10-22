@@ -54,3 +54,24 @@ side-by-side comparison grid must not change.
 
 Do not merge the redesign until the normal single-wheel appearance remains
 unchanged and the bi-/tri-/quad-wheel results pass visual inspection.
+
+## October 22: chart boundaries and source controls
+
+- The **radix** draws its own house cusps and four angles only inside the
+  radix. Every additional chart draws its own cusps and angles inside its
+  planetary ring. Angle arrows remain inside their own ring.
+- The single shared zodiac band contains zodiac references only: no house
+  cusps or angle spokes from any chart pass through it.
+- Sign divisions continue within each planetary ring, but stop at the
+  shared zodiac and at the chart separator gaps.
+- Chart boundaries are pairs of concentric circles with an explicitly erased,
+  background-coloured annulus between them. The gap is reserved before
+  laying out the planetary labels, and painted again last so that no strokes
+  can cross it.
+- Changing the main window's house system must preserve open multi-wheels
+  and their transit/return sources, update their cusp sets and redraw them.
+  Closing the base horoscope is *not* part of this exception.
+- Each multi-wheel ring's **Create chart...** menu offers Solar Return,
+  Lunar Return and Transits. These call the existing Morinus dialogs, attach
+  the resulting chart to the selected ring, and do nothing on cancellation.
+- Comparison grid's interface and rendering remain unchanged.
