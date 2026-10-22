@@ -42,6 +42,31 @@ class MultiWheelLayoutTests(unittest.TestCase):
                     self.assertAlmostEqual(cursor, 300)
                     self.assertGreater(core, 0)
 
+    def test_compact_biwheel_preserves_outer_boundary(self):
+        # Before the refinement, the bi-wheel radix core was .555 of the
+        # maximum radius. Increasing it makes the outer ring slimmer while
+        # keeping the chart's overall diameter the same.
+        rmax = 300.0
+        core, decans, terms, zodiac, rings = allocate_traditional_rings(
+            rmax, 1, True, True)
+        previous_width = rmax * (1 - (.555 + .08 + .10))
+        self.assertGreater(core, rmax * .60)
+        self.assertLess(rings[0][1] - rings[0][0], previous_width * .82)
+        self.assertAlmostEqual(rings[-1][1], rmax)
+        self.assertAlmostEqual(zodiac[1], rings[0][0])
+
+    def test_wider_radix_and_ordered_rings_for_all_wheel_counts(self):
+        for count in (1, 2, 3):
+            for terms in (False, True):
+                for decans in (False, True):
+                    core, dband, tband, zodiac, rings = allocate_traditional_rings(
+                        300.0, count, terms, decans)
+                    self.assertEqual(len(rings), count)
+                    self.assertTrue(all(b > a for a, b in rings))
+                    self.assertAlmostEqual(rings[-1][1], 300.0)
+                    for prev, next_ring in zip(rings, rings[1:]):
+                        self.assertAlmostEqual(prev[1], next_ring[0])
+
     def test_traditional_layout_rejects_invalid_dimensions(self):
         for count in (0, 4):
             with self.assertRaises(ValueError):
