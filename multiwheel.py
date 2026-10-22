@@ -430,7 +430,7 @@ class MultiWheel:
         if not hits:
             return ''
         _, chrt, i, lon, role = min(hits, key=lambda item: item[0])
-        sign = SIGNS[int((lon + 0.5 / 60) // 30) % 12]	# as degree_text rounds to the minute
+        sign = SIGNS[int(lon // 30) % 12]	# the Morinus degree label truncates minutes
         retro = ' (R)' if chrt.planets.planets[i].data[planets.Planet.SPLON] < 0 else ''
         return '%s: %s - %s %s%s  [%s]' % (
             role, i18n.tr(PLANET_NAMES[i]), self.degree_text(lon), i18n.tr(sign), retro, chrt.name)
