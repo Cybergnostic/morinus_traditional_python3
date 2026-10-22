@@ -64,3 +64,35 @@ def spread_longitudes(longitudes, minimum=8.0):
     for i, lon in zip(indices, pos):
         result[i] = (lon - shift) % 360.0
     return result
+
+
+def allocate_traditional_rings(max_radius, count, show_terms=False, show_decans=False):
+    """Allocate exactly one shared zodiac, terms and decans reference system.
+
+    Order from the centre: radix, decans, terms, zodiac, outer charts.
+    Optional bands are None when disabled; outer charts only contain their
+    chart-specific information. Radii are continuous and never overlap.
+    """
+    if not 1 <= count <= 3:
+        raise ValueError('Multi-wheel needs 1, 2 or 3 outer charts')
+    if max_radius <= 0:
+        raise ValueError('Radius must be positive')
+
+    core = max_radius * (0.64 - 0.085 * count)
+    band_width = max_radius * 0.04
+    zodiac_width = max_radius * 0.10
+    cursor = core
+    decans = None
+    if show_decans:
+        decans = (cursor, cursor + band_width)
+        cursor = decans[1]
+    terms = None
+    if show_terms:
+        terms = (cursor, cursor + band_width)
+        cursor = terms[1]
+    zodiac = (cursor, cursor + zodiac_width)
+    cursor = zodiac[1]
+    outer_width = (max_radius - cursor) / count
+    rings = [(cursor + i * outer_width, cursor + (i + 1) * outer_width)
+             for i in range(count)]
+    return core, decans, terms, zodiac, rings
