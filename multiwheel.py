@@ -488,6 +488,108 @@ class MultiWheel:
               int((self.cy + inner) * self.scale))
         self.draw.ellipse(xy, fill=background)
 
+    @staticmethod
+    def chart_identity(chrt, default_kind=None):
+        """Short, unmistakable chart identification for wheel screenshots."""
+        kinds = {chart.Chart.RADIX: 'Radix',
+                 chart.Chart.SOLAR: 'Solar return',
+                 chart.Chart.LUNAR: 'Lunar return',
+                 chart.Chart.REVOLUTION: 'Return',
+                 chart.Chart.TRANSIT: 'Transits',
+                 chart.Chart.HORARY: 'Horary'}
+        kind = i18n.tr(kinds.get(chrt.htype, default_kind or 'Chart'))
+        t = chrt.time
+        date = '%04d-%02d-%02d' % (
+            t.origyear, t.origmonth, t.origday)
+        if t.bc:
+            date += ' BC'
+        name = str(chrt.name or '').strip()
+        return kind, (name + ' · ' if name else '') + date
+
+    def draw_centre_identity(self):
+        """Label the inner radix inside its otherwise empty central disk."""
+        kind, detail = self.chart_identity(self.radix, 'Radix')
+        title = kind + ': ' + str(self.radix.name or '')
+        title_font = self.font(max(9, min(12, self.rmax * .036)))
+        detail_font = self.font(max(8, min(10, self.rmax * .030)))
+        # Width must remain within the small centre disk at quad-wheel sizes.
+        max_width = self.rmax * .48
+        while len(title) > 8 and self.measure(title, title_font)[0] > max_width:
+            title = title[:-2] + '…'
+        date_part = detail.rsplit(' · ', 1)[-1]
+        text_colour = (65, 65, 65) if self.bw else self.options.clrtexts
+        background = (255, 255, 255) if self.bw else self.options.clrbackground
+        # A small backing keeps the name legible even when aspects are on.
+        tw = max(self.measure(title, title_font)[0],
+                 self.measure(date_part, detail_font)[0])
+        x, y = self.cx, self.cy
+        rect = (self.scaled((x - tw / 2 - 6, y - 15)),
+                self.scaled((x + tw / 2 + 6, y + 15)))
+        self.draw.rectangle(rect, fill=self.colour(background))
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((x, y - 7)), title,
+            title_font, self.colour(text_colour))
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((x, y + 7)), date_part,
+            detail_font, self.colour(text_colour))
+
+    def draw_outer_identity(self, chrt, index, edges):
+        """Place each chart's name *inside its band* in a free field.
+
+        Candidate positions near the top/bottom offer a wide horizontal
+        chord. Prefer the one farthest from the chart's glyph positions;
+        a tiny opaque backing keeps the caption legible over house lines.
+        """
+        kind, detail = self.chart_identity(chrt)
+        inner, outer = edges
+        front = self.font(max(8, min(10, (outer - inner) * .20)))
+        secondary = self.font(max(8, min(9, (outer - inner) * .18)))
+        max_width = min(self.rmax * .38, 118.0)
+        while len(detail) > 8 and self.measure(detail, secondary)[0] > max_width:
+            detail = detail[:-2] + '…'
+        while len(kind) > 8 and self.measure(kind, front)[0] > max_width:
+            kind = kind[:-2] + '…'
+        w = max(self.measure(kind, front)[0],
+                self.measure(detail, secondary)[0]) + 10
+        h = 25.0
+        radius = (inner + outer) / 2.0
+        ring_hits = [xy for xy, extent, obj, *_ in self.hits if obj is chrt]
+        candidates = (-math.pi / 2, math.pi / 2,
+                      -math.pi * .43, math.pi * .43,
+                      -math.pi * .57, math.pi * .57)
+        ranked = []
+        for theta in candidates:
+            cx = self.cx + math.cos(theta) * radius
+            cy = self.cy + math.sin(theta) * radius
+            corners = ((cx - w / 2, cy - h / 2),
+                       (cx + w / 2, cy - h / 2),
+                       (cx - w / 2, cy + h / 2),
+                       (cx + w / 2, cy + h / 2))
+            corner_radii = [math.hypot(x - self.cx, y - self.cy)
+                            for x, y in corners]
+            if min(corner_radii) < inner + 2 or max(corner_radii) > outer - 2:
+                continue
+            nearest = min((math.hypot(cx - px, cy - py)
+                           for px, py in ring_hits), default=1000.0)
+            ranked.append((nearest, cx, cy))
+        if not ranked:
+            return  # Never spill chart labels outside their own ring.
+        _, x, y = max(ranked)
+        background = (255, 255, 255) if self.bw else chartstyle.mix(
+            tuple(self.options.clrbackground), RING_COLOURS[index - 1],
+            .065 + (index - 1) * .015)
+        self.draw.rectangle(
+            (self.scaled((x - w / 2, y - h / 2)),
+             self.scaled((x + w / 2, y + h / 2))),
+            fill=background)
+        colour = (35, 35, 35) if self.bw else RING_COLOURS[index - 1]
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((x, y - 6)), kind,
+            front, self.colour(colour))
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((x, y + 6)), detail,
+            secondary, self.colour(colour))
+
     def draw_outer_ring(self, chrt, index, edges):
         """A chart-specific ring with Morinus notation and its own axes."""
         inner, outer = edges
@@ -550,6 +652,11 @@ class MultiWheel:
         # so house/angle spokes stop cleanly at the final edge.
         self.circle(rings[-1][1] - .6, 'circle',
                     None if self.bw else RING_COLOURS[len(rings) - 1])
+        # Labels are part of the chart image (and therefore its PNG), not
+        # only the window's selectors. Add them after separators are clear.
+        self.draw_centre_identity()
+        for index, (chrt, edges) in enumerate(zip(self.others, rings), 1):
+            self.draw_outer_identity(chrt, index, edges)
         image = image.resize((self.width, self.height), Image.Resampling.LANCZOS)
         out = wx.Image(self.width, self.height)
         out.SetData(image.tobytes())
