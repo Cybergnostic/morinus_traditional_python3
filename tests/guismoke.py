@@ -456,6 +456,40 @@ def main():
 					path = os.path.join(out, 'multiwheel-%d-rings.png' % count)
 					assert wnd.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG)
 					assert os.path.getsize(path) > 0
+				# Regression: one exact-degree dial per chart, one caption
+				# in the centre, one caption inside *each* outer chart, and
+				# one set of four angle arrows per chart.
+				traces = {'dial': [], 'center': 0, 'outer': 0, 'angles': 0}
+				original_dial = multiwheel.MultiWheel.draw_degree_dial
+				original_center = multiwheel.MultiWheel.draw_centre_identity
+				original_outer = multiwheel.MultiWheel.draw_outer_identity
+				original_angles = multiwheel.MultiWheel.draw_angles
+				def trace_dial(renderer, edges, side):
+					traces['dial'].append(side)
+					return original_dial(renderer, edges, side)
+				def trace_center(renderer):
+					traces['center'] += 1
+					return original_center(renderer)
+				def trace_outer(renderer, chrt, index, edges):
+					traces['outer'] += 1
+					return original_outer(renderer, chrt, index, edges)
+				def trace_angles(renderer, *args, **kwargs):
+					traces['angles'] += 1
+					return original_angles(renderer, *args, **kwargs)
+				try:
+					multiwheel.MultiWheel.draw_degree_dial = trace_dial
+					multiwheel.MultiWheel.draw_centre_identity = trace_center
+					multiwheel.MultiWheel.draw_outer_identity = trace_outer
+					multiwheel.MultiWheel.draw_angles = trace_angles
+					wnd.redraw()
+				finally:
+					multiwheel.MultiWheel.draw_degree_dial = original_dial
+					multiwheel.MultiWheel.draw_centre_identity = original_center
+					multiwheel.MultiWheel.draw_outer_identity = original_outer
+					multiwheel.MultiWheel.draw_angles = original_angles
+				assert traces['dial'] == ['outer', 'inner', 'inner', 'inner']
+				assert traces['center'] == 1 and traces['outer'] == 3
+				assert traces['angles'] == 4
 				# Check the shared Morinus reference bands even when the normal
 				# test options have both traditional strips switched off.
 				original_terms = frame.options.showterms
