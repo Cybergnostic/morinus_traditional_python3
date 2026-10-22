@@ -44,3 +44,21 @@ def planet_band_radii(inner, outer):
         'glyph': inner + band * .79,
         'tick': outer - max(2.0, min(8.0, band * .12)),
     }
+
+
+def paint_glyph(draw, point, glyph, font, size, colour):
+    """Original GraphChart glyph positioning (font-square centered)."""
+    x, y = point
+    draw.text((x - size // 2, y - size // 2), glyph, fill=colour, font=font)
+
+
+def paint_position_text(draw, point, text, font, colour):
+    """Original GraphChart degree/minute/motion text centering.
+
+    Keep this distinct from Pillow's 'mm' anchor, which does not reproduce
+    the decompiled Morinus wheel's text placement.
+    """
+    x, y = point
+    width, height = draw.textbbox((0, 0), text, font=font)[2:]
+    draw.text((x - width // 2, y - height // 2), text,
+              fill=colour, font=font)
