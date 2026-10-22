@@ -259,19 +259,25 @@ class MultiWheel:
             self.stroke(self.point(exact, positions['tick']),
                         self.point(exact, outer - 1), 'pointer')
             xy = self.point(displayed, positions['glyph'])
-            self.label(xy, common.common.planets[i], glyph_font, colour)
-            self.label(self.point(displayed, positions['degree']),
-                       labels[i][0], degree_font, colour)
-            self.label(self.point(displayed, positions['minute']),
-                       labels[i][1], minute_font, colour)
+            wheel_primitives.paint_glyph(
+                self.draw, self.scaled(xy), common.common.planets[i],
+                glyph_font, int(glyph_size * self.scale), self.colour(colour))
+            wheel_primitives.paint_position_text(
+                self.draw, self.scaled(self.point(displayed, positions['degree'])),
+                labels[i][0], degree_font, self.colour(colour))
+            wheel_primitives.paint_position_text(
+                self.draw, self.scaled(self.point(displayed, positions['minute'])),
+                labels[i][1], minute_font, self.colour(colour))
             speed = chrt.planets.planets[i].data[planets.Planet.SPLON]
             if speed <= 0:
                 if speed == 0:
-                    self.label(self.point(displayed, positions['motion']),
-                               'S', minute_font, colour)
+                    wheel_primitives.paint_position_text(
+                        self.draw, self.scaled(self.point(displayed, positions['motion'])),
+                        'S', minute_font, self.colour(colour))
                 else:
-                    self.label(self.point(displayed, positions['motion']),
-                               common.common.retr, motion_font, colour)
+                    wheel_primitives.paint_position_text(
+                        self.draw, self.scaled(self.point(displayed, positions['motion'])),
+                        common.common.retr, motion_font, self.colour(colour))
             self.hits.append((xy, max(glyph_size * .7, 12),
                               chrt, i, exact, role))
 
