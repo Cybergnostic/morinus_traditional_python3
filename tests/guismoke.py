@@ -430,10 +430,21 @@ def main():
 				for count in (1, 2, 3):
 					wnd.count_choice.SetSelection(count - 1)
 					wnd.change_count()
-					wnd.aspect_choice.SetSelection(1)
+					# Default is no aspects; keep it in the saved reference images.
+					wnd.aspect_choice.SetSelection(0)
 					settle(0.3)
 					wnd.redraw()
+					assert wnd.renderer.aspect_ring == -1
 					assert wnd.buffer is not None and wnd.buffer.IsOk()
+					# Radix-only and radix-to-outer-ring remain available.
+					wnd.aspect_choice.SetSelection(1)
+					wnd.redraw()
+					assert wnd.renderer.aspect_ring == 0
+					wnd.aspect_choice.SetSelection(2)
+					wnd.redraw()
+					assert wnd.renderer.aspect_ring == 1
+					wnd.aspect_choice.SetSelection(0)
+					wnd.redraw()
 					assert len(wnd.renderer.others) == count
 					assert wnd.renderer.hits, 'No glyph hitboxes'
 					assert wnd.renderer.onClick(wnd.renderer.hits[0][0])
