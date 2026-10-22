@@ -4,6 +4,7 @@ the chart), the Chart tab (sect, angles, lots, rulers of the day and hour) and
 the Time lords tab (profection, firdaria, zodiacal releasing and decennials of
 today)."""
 
+import i18n
 import json
 import wx
 import wx.html
@@ -45,7 +46,7 @@ def signname(i):
 
 
 def planetname(i):
-	return mtexts.txtscommon.get(NAMES[i], NAMES[i]) if i < 7 else NAMES[i]
+	return mtexts.txtscommon.get(NAMES[i], NAMES[i]) if i < 7 else i18n.tr(NAMES[i])
 
 
 def pos(lon):
@@ -89,7 +90,7 @@ class Sidebar(wx.Panel):
 		self.grip = wx.Panel(self, -1, size=(GRIP_WIDTH, -1))
 		self.grip.SetMinSize((GRIP_WIDTH, -1))
 		self.grip.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_3DFACE))
-		self.grip.SetToolTip('Drag the divider to resize the sidebar')
+		self.grip.SetToolTip(i18n.tr('Drag the divider to resize the sidebar'))
 		self.grip.SetCursor(wx.Cursor(wx.CURSOR_SIZEWE))
 		self.grip.Bind(wx.EVT_PAINT, self.onGripPaint)
 		self.grip.Bind(wx.EVT_LEFT_DOWN, self.onGripDown)
@@ -103,7 +104,7 @@ class Sidebar(wx.Panel):
 			vs = wx.BoxSizer(wx.VERTICAL)
 			if title == 'Planet':
 				self.choice = wx.Choice(page, -1, choices=[planetname(i) for i in range(len(NAMES))])
-				self.choice.SetToolTip('The planet shown; clicking a planet in the chart chooses it too')
+				self.choice.SetToolTip(i18n.tr('The planet shown; clicking a planet in the chart chooses it too'))
 				self.choice.Bind(wx.EVT_CHOICE, lambda e: self.select(self.choice.GetSelection()))
 				self.choice.SetMinSize((-1, self.choice.GetBestSize().height))
 				vs.Add(self.choice, 0, wx.EXPAND | wx.ALL, 4)
@@ -111,7 +112,7 @@ class Sidebar(wx.Panel):
 			html.SetStandardFonts(10)
 			vs.Add(html, 1, wx.EXPAND)
 			page.SetSizer(vs)
-			self.book.AddPage(page, title)
+			self.book.AddPage(page, i18n.tr(title))
 			self.pages.append(html)
 		s = wx.BoxSizer(wx.HORIZONTAL)
 		s.Add(self.grip, 0, wx.EXPAND)
@@ -215,11 +216,11 @@ class Sidebar(wx.Panel):
 	@staticmethod
 	def rows(pairs):
 		return '<table cellspacing="0" cellpadding="4" width="100%">' + ''.join(
-			'<tr><td valign="top" width="42%%"><font color="$GREY">%s</font></td><td valign="top">%s</td></tr>' % (k, v) for k, v in pairs if v) + '</table>'
+			'<tr><td valign="top" width="42%%"><font color="$GREY">%s</font></td><td valign="top">%s</td></tr>' % (i18n.tr(k), i18n.tr(v)) for k, v in pairs if v) + '</table>'
 
 	@staticmethod
 	def head(text):
-		return '<p><font color="$SECTION"><b>%s</b></font></p>' % text
+		return '<p><font color="$SECTION"><b>%s</b></font></p>' % i18n.tr(text)
 
 	def planetHtml(self, i):
 		h = self.chart
@@ -227,17 +228,17 @@ class Sidebar(wx.Panel):
 		lon, speed = pl.data[planets.Planet.LON], pl.data[planets.Planet.SPLON]
 		ascsign = int(h.houses.ascmc[houses.Houses.ASC] // 30.0)
 		house = (int(lon // 30.0) - ascsign) % 12 + 1
-		out = ['<font size="+2"><b>%s</b></font><p>%s<br><font color="$GREY">House %d (whole sign)</font></p>' % (planetname(i), pos(lon), house)]
-		pairs = [('Motion', '%s, %.2f° a day' % ('retrograde' if speed < 0 else 'direct', abs(speed)))]
+		out = ['<font size="+2"><b>%s</b></font><p>%s<br><font color="$GREY">%s</font></p>' % (planetname(i), pos(lon), i18n.tr('House %d (whole sign)') % house)]
+		pairs = [('Motion', i18n.tr('%s, %.2f° a day') % (i18n.tr('retrograde' if speed < 0 else 'direct'), abs(speed)))]
 		rep = None
 		if self.analysis is not None and i < 7:
 			rep = next((r for r in self.analysis.reports if r.planet.name == NAMES[i]), None)
 		if rep is not None:
 			p = rep.planet
-			pairs = [('Motion', '%s, %s, %.2f° a day' % ('retrograde' if p.retrograde else 'direct', rep.speed_class, abs(p.speed_long))),
+			pairs = [('Motion', i18n.tr('%s, %s, %.2f° a day') % (i18n.tr('retrograde' if p.retrograde else 'direct'), i18n.tr(rep.speed_class), abs(p.speed_long))),
 				('Station', {'first': 'first (turning retrograde)', 'second': 'second (turning direct)'}.get(p.station or '')),
-				('Sect', '%s planet, %s' % (rep.sect_planet, 'in sect' if rep.in_sect else 'out of sect')),
-				('Hayz', ', '.join(t for t, on in (('hayz', rep.hayz), ('halb', rep.halb)) if on) or '-'),
+				('Sect', i18n.tr('%s planet, %s') % (i18n.tr(rep.sect_planet), i18n.tr('in sect' if rep.in_sect else 'out of sect'))),
+				('Hayz', ', '.join(i18n.tr(t) for t, on in (('hayz', rep.hayz), ('halb', rep.halb)) if on) or '-'),
 				('Orientation', None if p.name == 'Sun' else ('oriental' if rep.oriental else 'occidental')),
 				('Phase', traditional_phase(rep)),
 				('Latitude', {'north_strengthening': 'north, strengthening', 'south_weakening': 'south, weakening'}.get(rep.latitude_condition, 'on the ecliptic')),
@@ -252,16 +253,16 @@ class Sidebar(wx.Panel):
 			out.append(self.head('Essential dignities'))
 			own = [n for n, p in zip(('domicile', 'exaltation', 'triplicity', 'participating triplicity', 'term', 'face'), r) if p == i]
 			debil = [n for n, on in (('detriment', o.dignities[i][0][(sign + 6) % 12]), ('fall', o.dignities[i][1][(sign + 6) % 12])) if on]
-			out.append(self.rows([('Domicile', mark(r[0])), ('Exaltation', mark(r[1])), ('Triplicity (%s)' % ('night' if self.night else 'day'), mark(r[2])),
+			out.append(self.rows([('Domicile', mark(r[0])), ('Exaltation', mark(r[1])), (i18n.tr('Triplicity (%s)') % i18n.tr('night' if self.night else 'day'), mark(r[2])),
 				('Participating', mark(r[3]) if r[3] >= 0 else None), ('Term', mark(r[4])), ('Face', mark(r[5])),
-				('', 'In its ' + ', '.join(own + debil) if own or debil else 'Peregrine')]))
+				('', i18n.tr('In its %s') % ', '.join(i18n.tr(n) for n in own + debil) if own or debil else 'Peregrine')]))
 		asps = []
 		for j in range(len(NAMES)):
 			if j == i:
 				continue
 			a = h.aspmatrix[max(i, j)][min(i, j)]
 			if a.typ in ASPECTS:
-				asps.append((a.aspdif, '%s %s' % (ASPECTS[a.typ], planetname(j)), '%.2f°%s' % (a.aspdif, ', applying' if a.appl else '')))
+				asps.append((a.aspdif, '%s %s' % (i18n.tr(ASPECTS[a.typ]), planetname(j)), '%.2f°%s' % (a.aspdif, i18n.tr(', applying') if a.appl else '')))
 		if asps:
 			out.append(self.head('Aspects'))
 			out.append(self.rows([(t, d) for orb, t, d in sorted(asps)]))
@@ -277,8 +278,8 @@ class Sidebar(wx.Panel):
 			('Midheaven', pos(mc)), ('Lot of Fortune', pos(lof)), ('Lot of Spirit', pos(spirit))]
 		if self.analysis is not None:
 			t = self.analysis.technical
-			pairs += [('Ruler of the day', t.day_ruler), ('Ruler of the hour', t.hour_ruler or '- (no sunrise or sunset)'),
-				('Sunrise / sunset', '%s / %s' % tuple(x.strftime('%H:%M') if x else 'none' for x in (t.solar.sunrise_local, t.solar.sunset_local)))]
+			pairs += [('Ruler of the day', i18n.tr(t.day_ruler)), ('Ruler of the hour', i18n.tr(t.hour_ruler) or '- (no sunrise or sunset)'),
+				('Sunrise / sunset', '%s / %s' % tuple(x.strftime('%H:%M') if x else i18n.tr('none') for x in (t.solar.sunrise_local, t.solar.sunset_local)))]
 			moon = next((x for x in self.analysis.reports if x.planet.name == 'Moon'), None)
 			if moon is not None:
 				pairs.append(('Moon void of course', 'yes' if moon.is_void_of_course else 'no'))
@@ -288,9 +289,9 @@ class Sidebar(wx.Panel):
 		h = self.radix or self.chart
 		now = self.chart.time.jd if self.radix else zodiacalreleasing.now()
 		if now < h.time.jd:
-			return '<p>Before the birth: no time lords.</p>'
+			return '<p>%s</p>' % i18n.tr('Before the birth: no time lords.')
 		age = (now - h.time.jd) / 365.2425
-		out = ['<p>%s %s: age %d</p>' % ('Of the radix at this chart,' if self.radix else 'Today,', jdstr(h, now), int(age))]
+		out = ['<p>%s %s: %s</p>' % (i18n.tr('Of the radix at this chart,' if self.radix else 'Today,'), jdstr(h, now), i18n.tr('age %d') % int(age))]
 		ascsign = int(h.houses.ascmc[houses.Houses.ASC] // 30.0)
 		prof = (ascsign + int(age)) % 12
 		night = lotswnd.LotsWnd.isNightChart(h)
@@ -306,14 +307,14 @@ class Sidebar(wx.Panel):
 			cur = [p for p in periods if p.start <= now < p.end]
 			if cur:
 				out.append(self.head('Zodiacal releasing from ' + zodiacalreleasing.LOTNAMES[lot]))
-				out.append(self.rows([('Level %d' % p.level, '%s (%s, until %s)%s' % (signname(p.sign), planetname(rulers(h.options, p.sign * 30.0, night)[0]),
-					jdstr(h, p.end), ', loosing of the bond' if p.loosing else '')) for p in cur]))
+				out.append(self.rows([(i18n.tr('Level %d') % p.level, i18n.tr('%s (%s, until %s)%s') % (signname(p.sign), planetname(rulers(h.options, p.sign * 30.0, night)[0]),
+					jdstr(h, p.end), i18n.tr(', loosing of the bond') if p.loosing else '')) for p in cur]))
 		seq, periods = decennials.decennials(h, max(int(age) + 2, 1))
 		cur = [p for p in periods if p.start <= now < p.end]
 		if cur:
 			out.append(self.head('Decennials'))
-			out.append(self.rows([('Level %d' % p.level, '%s (until %s)' % (planetname(p.planet), jdstr(h, p.end))) for p in cur]))
-		out.append('<p><font color="$GREY" size="-1">Profection by whole signs from the Ascendant; the tables (Tables menu) give the full periods.</font></p>')
+			out.append(self.rows([(i18n.tr('Level %d') % p.level, i18n.tr('%s (until %s)') % (planetname(p.planet), jdstr(h, p.end))) for p in cur]))
+		out.append('<p><font color="$GREY" size="-1">%s</font></p>' % i18n.tr('Profection by whole signs from the Ascendant; the tables (Tables menu) give the full periods.'))
 		return ''.join(out)
 
 	def firdariaNow(self, h, night, age):
@@ -327,7 +328,7 @@ class Sidebar(wx.Panel):
 		t = age % total
 		for index, (planet, years) in enumerate(seq):
 			if t < years:
-				pairs = [('Period', '%s (%d years)' % (planetname(planet), years))]
+				pairs = [('Period', i18n.tr('%s (%d years)') % (planetname(planet), years))]
 				if not f.isNode(index):
 					sub = int(t / (years / 7.0))
 					k = index
@@ -340,5 +341,10 @@ class Sidebar(wx.Panel):
 
 
 def traditional_phase(rep):
+	"""The synodic phase, 'Under beams (west) (superior)', with its label and group translated."""
 	from hor_tools import output as hout
-	return hout._format_synodic(rep) or None
+	text = hout._format_synodic(rep)
+	if not text:
+		return None
+	label, _, group = text.rpartition(' (')
+	return '%s (%s)' % (i18n.tr(label), i18n.tr(group.rstrip(')')))

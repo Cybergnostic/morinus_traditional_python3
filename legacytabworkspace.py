@@ -3,13 +3,14 @@
 Each tab is constructed on demand. Table data and drawing remain in the
 legacy view classes; menu commands merely delegate to the active view.
 """
+import i18n
 import wx
 
 
 class TableWorkspace(wx.Frame):
     def __init__(self, mainfr, heading, specs, start_tab=0, size=(1050, 680),
                  attribute=None):
-        super().__init__(mainfr, -1, heading, size=size)
+        super().__init__(mainfr, -1, i18n.tr(heading), size=size)
         self.mainfr = mainfr
         self.specs = specs   # (label, description, view factory(page), standalone factory(view))
         self.attribute = attribute
@@ -21,7 +22,7 @@ class TableWorkspace(wx.Frame):
         for title, description, factory, standalone in specs:
             page = wx.Panel(self.book)
             self.pages.append(page)
-            self.book.AddPage(page, title)
+            self.book.AddPage(page, i18n.tr(title))
 
         self.explanation = wx.StaticText(self, -1, '')
         self.explanation.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
@@ -46,16 +47,16 @@ class TableWorkspace(wx.Frame):
         self.bw_id = wx.NewIdRef()
         self.separate_id = wx.NewIdRef()
         self.close_id = wx.NewIdRef()
-        menu.Append(self.save_id, 'Save table as image...')
-        menu.Append(self.copy_text_id, 'Copy table as text')
-        menu.Append(self.copy_image_id, 'Copy table as image')
-        menu.Append(self.csv_id, 'Export as CSV...')
+        menu.Append(self.save_id, i18n.tr('Save table as image...'))
+        menu.Append(self.copy_text_id, i18n.tr('Copy table as text'))
+        menu.Append(self.copy_image_id, i18n.tr('Copy table as image'))
+        menu.Append(self.csv_id, i18n.tr('Export as CSV...'))
         menu.AppendSeparator()
-        self.bw_item = menu.AppendCheckItem(self.bw_id, 'Black and white')
+        self.bw_item = menu.AppendCheckItem(self.bw_id, i18n.tr('Black and white'))
         menu.AppendSeparator()
-        menu.Append(self.separate_id, 'Open in a separate window', 'The table of this tab in a window of its own, e.g. to compare two tables')
-        menu.Append(self.close_id, 'Close workspace')
-        bar.Append(menu, 'Table')
+        menu.Append(self.separate_id, i18n.tr('Open in a separate window'), i18n.tr('The table of this tab in a window of its own, e.g. to compare two tables'))
+        menu.Append(self.close_id, i18n.tr('Close workspace'))
+        bar.Append(menu, i18n.tr('Table'))
         self.SetMenuBar(bar)
         self.Bind(wx.EVT_MENU, lambda e: self.delegate('onSaveAsBitmap', e), id=self.save_id)
         self.Bind(wx.EVT_MENU, lambda e: self.delegate('onCopyAsText', e), id=self.copy_text_id)
@@ -104,7 +105,7 @@ class TableWorkspace(wx.Frame):
             menu.Enable(command_id, hasattr(view, name))
         self.bw_item.Enable(hasattr(view, 'onBlackAndWhite'))
         self.bw_item.Check(getattr(view, 'bw', False))
-        self.explanation.SetLabel(self.specs[index][1])
+        self.explanation.SetLabel(i18n.tr(self.specs[index][1]))
         self.Layout()
 
     def delegate(self, method, event):

@@ -1,6 +1,7 @@
 """A Defaults button for Morinus's options dialogs: it fills the dialog with the
 values the program comes with (options.def_*); they are kept only with OK."""
 
+import i18n
 import copy
 import wx
 
@@ -20,9 +21,9 @@ def add(dlg, options):
 	sizer = ok.GetContainingSizer() if ok is not None else None
 	if sizer is None:
 		return
-	btn = wx.Button(dlg, -1, 'Defaults')
-	btn.SetToolTip('Fill in the values the program comes with (kept only with OK)')
-	btn.SetHelpText('Fill in the values the program comes with (kept only with OK)')
+	btn = wx.Button(dlg, -1, i18n.tr('Defaults'))
+	btn.SetToolTip(i18n.tr('Fill in the values the program comes with (kept only with OK)'))
+	btn.SetHelpText(i18n.tr('Fill in the values the program comes with (kept only with OK)'))
 	sizer.Insert(0, btn, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 20)
 	dlg.Layout()
 	dlg.Fit()

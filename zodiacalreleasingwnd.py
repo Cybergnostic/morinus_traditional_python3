@@ -1,6 +1,7 @@
 """Zodiacal releasing as native Morinus tables: levels 1 and 2 for a lifetime;
 a click on a level 2 period shows its levels 3 and 4."""
 
+import i18n
 import wx
 import tablewnd
 import zodiacalreleasing as zr
@@ -64,4 +65,4 @@ class ReleasingWnd(tablewnd.TableWnd):
 class ReleasingFrame(tablewnd.TableFrame):
 
 	def __init__(self, parent, title, chrt, options, lot):
-		tablewnd.TableFrame.__init__(self, parent, title + ' - Zodiacal releasing from ' + zr.LOTNAMES[lot], lambda f: ReleasingWnd(f, chrt, options, parent, lot))
+		tablewnd.TableFrame.__init__(self, parent, title + ' - ' + i18n.tr('Zodiacal releasing from ' + zr.LOTNAMES[lot]), lambda f: ReleasingWnd(f, chrt, options, parent, lot))

@@ -1,6 +1,7 @@
 """Decennials as native Morinus tables: levels 1 and 2 for a lifetime; a click on a
 level 2 period shows its levels 3 and 4."""
 
+import i18n
 import wx
 import common
 import tablewnd
@@ -65,4 +66,4 @@ class DecennialsWnd(tablewnd.TableWnd):
 class DecennialsFrame(tablewnd.TableFrame):
 
 	def __init__(self, parent, title, chrt, options):
-		tablewnd.TableFrame.__init__(self, parent, title + ' - Decennials', lambda f: DecennialsWnd(f, chrt, options, parent))
+		tablewnd.TableFrame.__init__(self, parent, title + ' - ' + i18n.tr('Decennials'), lambda f: DecennialsWnd(f, chrt, options, parent))

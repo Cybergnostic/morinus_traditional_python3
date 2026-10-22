@@ -2,6 +2,7 @@
 has a help text (tooltip, and the ? button), and Defaults restores the shipped
 values. The values are tradoptions'."""
 
+import i18n
 import copy
 import wx
 import tradoptions
@@ -19,7 +20,7 @@ def build(parent, fields, onchange=None):
 	for f in fields:
 		kind = f[0]
 		if kind == SECTION:
-			box = wx.StaticBoxSizer(wx.StaticBox(parent, label=f[1]), wx.VERTICAL)
+			box = wx.StaticBoxSizer(wx.StaticBox(parent, label=i18n.tr(f[1])), wx.VERTICAL)
 			grid = wx.FlexGridSizer(0, 2, 6, 10)
 			grid.AddGrowableCol(1)
 			box.Add(grid, 0, wx.EXPAND | wx.ALL, 6)
@@ -28,7 +29,7 @@ def build(parent, fields, onchange=None):
 		key, label, help = f[1], f[2], f[-1]
 		events = []
 		if kind == CHOICE:
-			ctrl = wx.Choice(parent, -1, choices=[text for value, text in f[3]])
+			ctrl = wx.Choice(parent, -1, choices=i18n.tr([text for value, text in f[3]]))
 			events = [(ctrl, wx.EVT_CHOICE)]
 		elif kind == INT:
 			ctrl = wx.SpinCtrl(parent, -1, min=f[3], max=f[4])
@@ -38,23 +39,23 @@ def build(parent, fields, onchange=None):
 			ctrl.SetDigits(f[6])
 			events = [(ctrl, wx.EVT_SPINCTRLDOUBLE)]
 		elif kind == CHECK:
-			ctrl = wx.CheckBox(parent, -1, label)
+			ctrl = wx.CheckBox(parent, -1, i18n.tr(label))
 			events = [(ctrl, wx.EVT_CHECKBOX)]
 		elif kind == CHECKS:
 			ctrl = wx.BoxSizer(wx.HORIZONTAL)
-			ctrl.boxes = [wx.CheckBox(parent, -1, t) for t in f[3]]
+			ctrl.boxes = [wx.CheckBox(parent, -1, i18n.tr(t)) for t in f[3]]
 			for b in ctrl.boxes:
 				ctrl.Add(b, 0, wx.RIGHT, 8)
-				b.SetHelpText(help)
-				b.SetToolTip(help)
+				b.SetHelpText(i18n.tr(help))
+				b.SetToolTip(i18n.tr(help))
 				events.append((b, wx.EVT_CHECKBOX))
 		else:
 			ctrl = wx.TextCtrl(parent, -1, size=(180, -1))
 			events = [(ctrl, wx.EVT_TEXT)]
 		if kind != CHECKS:
-			ctrl.SetHelpText(help)
-			ctrl.SetToolTip(help)
-		grid.Add(wx.StaticText(parent, -1, '' if kind == CHECK else label + ':'), 0, wx.ALIGN_CENTER_VERTICAL)
+			ctrl.SetHelpText(i18n.tr(help))
+			ctrl.SetToolTip(i18n.tr(help))
+		grid.Add(wx.StaticText(parent, -1, i18n.tr('' if kind == CHECK else label + ':')), 0, wx.ALIGN_CENTER_VERTICAL)
 		grid.Add(ctrl, 0, wx.EXPAND if kind == TEXT else 0)
 		ctrls[key] = (f, ctrl)
 		if onchange is not None:
@@ -98,7 +99,7 @@ class TradOptsDlg(wx.Dialog):
 	def __init__(self, parent, title, fields):
 		wx.Dialog.__init__(self)
 		self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-		self.Create(parent, -1, title, style=wx.DEFAULT_DIALOG_STYLE)
+		self.Create(parent, -1, i18n.tr(title), style=wx.DEFAULT_DIALOG_STYLE)
 		self.fields = fields
 		mvsizer, self.ctrls = build(self, fields)
 		btnsizer = wx.StdDialogButtonSizer()
@@ -109,8 +110,8 @@ class TradOptsDlg(wx.Dialog):
 		btnsizer.AddButton(ok)
 		btnsizer.AddButton(wx.Button(self, wx.ID_CANCEL))
 		btnsizer.Realize()
-		defaults = wx.Button(self, -1, 'Defaults')
-		defaults.SetToolTip('Fill in the values the program comes with (saved only with OK)')
+		defaults = wx.Button(self, -1, i18n.tr('Defaults'))
+		defaults.SetToolTip(i18n.tr('Fill in the values the program comes with (saved only with OK)'))
 		bottom = wx.BoxSizer(wx.HORIZONTAL)
 		bottom.Add(defaults, 0, wx.ALIGN_CENTER_VERTICAL)
 		bottom.AddStretchSpacer()

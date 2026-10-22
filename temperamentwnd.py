@@ -1,5 +1,6 @@
 """Temperament worksheet as a native Morinus table (the analysis comes from traditional.py)."""
 
+import i18n
 import wx
 import common
 import commonwnd
@@ -34,7 +35,7 @@ class TemperamentWnd(commonwnd.CommonWnd):
             self.dominant = 'Not available for this chart (%s)' % e
 
         # column widths from the longest texts
-        measure = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+        measure = ImageDraw.Draw(Image.new('RGB', i18n.tr((1, 1))))
         width = lambda txt: measure.textbbox((0, 0), txt, self.fntText)[2]
         self.FACTOR_WIDTH = max([width(r[0]) for r in self.rows] + [width('Highest'), width('Factor')]) + 2 * self.SPACE
         self.EVIDENCE_WIDTH = max([width(r[1]) for r in self.rows] + [width(self.dominant), width(KEY), 10 * self.FONT_SIZE]) + 2 * self.SPACE
@@ -59,7 +60,7 @@ class TemperamentWnd(commonwnd.CommonWnd):
         self.SetBackgroundColour(self.bkgclr)
         tableclr = (0, 0, 0) if self.bw else self.options.clrtable
         txtclr = (0, 0, 0) if self.bw else self.options.clrtexts
-        img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.bkgclr)
+        img = Image.new('RGB', i18n.tr((self.WIDTH, self.HEIGHT)), i18n.tr(self.bkgclr))
         draw = ImageDraw.Draw(img)
         BOR = commonwnd.CommonWnd.BORDER
 
@@ -102,7 +103,7 @@ class TemperamentWnd(commonwnd.CommonWnd):
 class TemperamentFrame(wx.Frame):
 
     def __init__(self, parent, title, chrt, options):
-        wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(640, 400))
+        wx.Frame.__init__(self, parent, -1, i18n.tr(title), wx.DefaultPosition, wx.Size(640, 400))
         self.w = TemperamentWnd(self, chrt, options, parent)
         self.SetSize((min(self.w.WIDTH + 30, 1200), min(self.w.HEIGHT + 50, 900)))
         self.SetMinSize((200, 200))

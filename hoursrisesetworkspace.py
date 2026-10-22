@@ -3,6 +3,7 @@
 Planetary-hour sunrise/sunset boundaries, astronomical rising/setting
 calculations, and their native time conventions are not changed here.
 """
+import i18n
 import hourswnd
 import hoursframe
 import risesetwnd
@@ -37,7 +38,7 @@ def show(mainfr, tab=0):
          lambda view: _open_original(risesetframe.RiseSetFrame, mainfr)),
     )
     wnd = legacytabworkspace.TableWorkspace(mainfr,
-        'Planetary Hours and Rise/Set — ' + chart.name, specs, tab,
+        i18n.tr('Planetary Hours and Rise/Set') + ' — ' + chart.name, specs, tab,
         size=(850, 650), attribute='hours_riseset_workspace')
     mainfr.hours_riseset_workspace = wnd
     wnd.Show()

@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import wx
 import chart
 import intvalidator
@@ -10,7 +11,7 @@ import util
 from auto_timezone import resolve_timezone, TimezoneLookupError
 import tradoptions
 provider = wx.SimpleHelpProvider()
-wx.HelpProvider.Set(provider)
+wx.HelpProvider.Set(i18n.tr(provider))
 
 class DataDlg(wx.Dialog):
     PLUSCHOICES = (
@@ -21,7 +22,7 @@ class DataDlg(wx.Dialog):
         self.netbook = netbook
         wx.Dialog.__init__(self)
         self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        self.Create(parent, -1, mtexts.txtsdatadlg['Data'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
+        self.Create(parent, -1, i18n.tr(mtexts.txtsdatadlg['Data']), pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         mhsizer = wx.BoxSizer(wx.HORIZONTAL)
         sname = wx.StaticBox(self, label='')
@@ -30,7 +31,7 @@ class DataDlg(wx.Dialog):
         label = wx.StaticText(self, -1, mtexts.txtsdatadlg['Name'] + ':')
         hsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         self.name = wx.TextCtrl(self, -1, '', size=(220, -1))
-        self.name.SetHelpText(mtexts.txtsdatadlg['HelpName'])
+        self.name.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpName']))
         self.name.SetMaxLength(20)
         hsizer.Add(self.name, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         vsizer = wx.BoxSizer(wx.VERTICAL)
@@ -39,16 +40,16 @@ class DataDlg(wx.Dialog):
         label = wx.StaticText(self, -1, mtexts.txtsdatadlg['Gender'] + ':')
         hsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         vsubsizer = wx.BoxSizer(wx.VERTICAL)
-        self.genderrbM = wx.RadioButton(self, -1, mtexts.txtsdatadlg['Male'], style=wx.RB_GROUP)
+        self.genderrbM = wx.RadioButton(self, -1, i18n.tr(mtexts.txtsdatadlg['Male']), style=wx.RB_GROUP)
         vsubsizer.Add(self.genderrbM, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT | wx.LEFT, 2)
-        self.genderrbF = wx.RadioButton(self, -1, mtexts.txtsdatadlg['Female'])
+        self.genderrbF = wx.RadioButton(self, -1, i18n.tr(mtexts.txtsdatadlg['Female']))
         vsubsizer.Add(self.genderrbF, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT | wx.LEFT, 2)
         hsizer.Add(vsubsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         hsubsizer = wx.BoxSizer(wx.HORIZONTAL)
         label = wx.StaticText(self, -1, mtexts.txtsdatadlg['Type'] + ':')
         hsubsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
-        self.typecb = wx.ComboBox(self, -1, mtexts.typeList[0], size=(140, -1), choices=mtexts.typeList, style=wx.CB_DROPDOWN | wx.CB_READONLY)
-        self.typecb.SetHelpText(mtexts.txtsdatadlg['HelpType'])
+        self.typecb = wx.ComboBox(self, -1, mtexts.typeList[0], size=(140, -1), choices=i18n.tr(mtexts.typeList), style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.typecb.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpType']))
         hsubsizer.Add(self.typecb, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         hsizer.Add(hsubsizer, 0, wx.ALIGN_LEFT | wx.ALL, 0)
         vsizer.Add(hsizer, 0, wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, 5)
@@ -63,7 +64,7 @@ class DataDlg(wx.Dialog):
         self.stime = wx.StaticBox(self, label='')
         timesizer = wx.StaticBoxSizer(self.stime, wx.VERTICAL)
         vsizer = wx.BoxSizer(wx.VERTICAL)
-        self.timeckb = wx.CheckBox(self, -1, mtexts.txtsdatadlg['BC'])
+        self.timeckb = wx.CheckBox(self, -1, i18n.tr(mtexts.txtsdatadlg['BC']))
         vsizer.Add(self.timeckb, 0, wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT | wx.TOP, 5)
         fgsizer = wx.FlexGridSizer(0, 3, 0, 0)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
@@ -73,9 +74,9 @@ class DataDlg(wx.Dialog):
                                                                                                   -1))
         vvsizer.Add(self.year, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         if checker.isExtended():
-            self.year.SetHelpText(mtexts.txtsdatadlg['HelpYear'])
+            self.year.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpYear']))
         else:
-            self.year.SetHelpText(mtexts.txtsdatadlg['HelpYear2'])
+            self.year.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpYear2']))
         self.year.SetMaxLength(4)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
@@ -83,7 +84,7 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         self.month = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(1, 12), size=(50,
                                                                                                  -1))
-        self.month.SetHelpText(mtexts.txtsdatadlg['HelpMonth'])
+        self.month.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpMonth']))
         self.month.SetMaxLength(2)
         vvsizer.Add(self.month, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -92,7 +93,7 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         self.day = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(1, 31), size=(50,
                                                                                                -1))
-        self.day.SetHelpText(mtexts.txtsdatadlg['HelpDay'])
+        self.day.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpDay']))
         self.day.SetMaxLength(2)
         vvsizer.Add(self.day, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -101,7 +102,7 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         self.hour = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 23), size=(50,
                                                                                                 -1))
-        self.hour.SetHelpText(mtexts.txtsdatadlg['HelpHour'])
+        self.hour.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpHour']))
         self.hour.SetMaxLength(2)
         vvsizer.Add(self.hour, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -110,7 +111,7 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         self.minute = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 59), size=(50,
                                                                                                   -1))
-        self.minute.SetHelpText(mtexts.txtsdatadlg['HelpMin'])
+        self.minute.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpMin']))
         self.minute.SetMaxLength(2)
         vvsizer.Add(self.minute, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -119,7 +120,7 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         self.sec = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 59), size=(50,
                                                                                                -1))
-        self.sec.SetHelpText(mtexts.txtsdatadlg['HelpMin'])
+        self.sec.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpMin']))
         self.sec.SetMaxLength(2)
         vvsizer.Add(self.sec, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 0)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -138,7 +139,7 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         self.londeg = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 180), size=(40,
                                                                                                    -1))
-        self.londeg.SetHelpText(mtexts.txtsdatadlg['HelpLonDeg'])
+        self.londeg.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpLonDeg']))
         self.londeg.SetMaxLength(3)
         vvsizer.Add(self.londeg, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -147,14 +148,14 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         self.lonmin = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 59), size=(40,
                                                                                                   -1))
-        self.lonmin.SetHelpText(mtexts.txtsdatadlg['HelpMin'])
+        self.lonmin.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpMin']))
         self.lonmin.SetMaxLength(2)
         vvsizer.Add(self.lonmin, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
-        self.placerbE = wx.RadioButton(self, -1, mtexts.txtsdatadlg['E'], style=wx.RB_GROUP)
+        self.placerbE = wx.RadioButton(self, -1, i18n.tr(mtexts.txtsdatadlg['E']), style=wx.RB_GROUP)
         vvsizer.Add(self.placerbE, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT | wx.LEFT, 2)
-        self.placerbW = wx.RadioButton(self, -1, mtexts.txtsdatadlg['W'])
+        self.placerbW = wx.RadioButton(self, -1, i18n.tr(mtexts.txtsdatadlg['W']))
         vvsizer.Add(self.placerbW, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT | wx.LEFT, 2)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         label = wx.StaticText(self, -1, mtexts.txtsdatadlg['Lat'] + ':')
@@ -164,7 +165,7 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         self.latdeg = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 90), size=(40,
                                                                                                   -1))
-        self.latdeg.SetHelpText(mtexts.txtsdatadlg['HelpLatDeg'])
+        self.latdeg.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpLatDeg']))
         self.latdeg.SetMaxLength(2)
         vvsizer.Add(self.latdeg, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -173,14 +174,14 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(label, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         self.latmin = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 59), size=(40,
                                                                                                   -1))
-        self.latmin.SetHelpText(mtexts.txtsdatadlg['HelpMin'])
+        self.latmin.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpMin']))
         self.latmin.SetMaxLength(2)
         vvsizer.Add(self.latmin, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
-        self.placerbN = wx.RadioButton(self, -1, mtexts.txtsdatadlg['N'], style=wx.RB_GROUP)
+        self.placerbN = wx.RadioButton(self, -1, i18n.tr(mtexts.txtsdatadlg['N']), style=wx.RB_GROUP)
         vvsizer.Add(self.placerbN, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT | wx.LEFT, 2)
-        self.placerbS = wx.RadioButton(self, -1, mtexts.txtsdatadlg['S'])
+        self.placerbS = wx.RadioButton(self, -1, i18n.tr(mtexts.txtsdatadlg['S']))
         vvsizer.Add(self.placerbS, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT | wx.LEFT, 2)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         vsizer.Add(fgsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -189,7 +190,7 @@ class DataDlg(wx.Dialog):
                                                                                             -1))
         vsizer.Add(placebtn, 0, wx.ALIGN_LEFT | wx.TOP | wx.LEFT | wx.RIGHT, 5)
         self.birthplace = wx.TextCtrl(self, -1, '', size=(170, -1))
-        self.birthplace.SetHelpText(mtexts.txtsdatadlg['HelpPlace'])
+        self.birthplace.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpPlace']))
         self.birthplace.SetMaxLength(20)
         vsizer.Add(self.birthplace, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         placesizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 0)
@@ -197,14 +198,14 @@ class DataDlg(wx.Dialog):
         hsubsizer.Add(vvsubsizer, 0, wx.ALIGN_LEFT | wx.ALL, 0)
         self.szone = wx.StaticBox(self, label='')
         zonesizer = wx.StaticBoxSizer(self.szone, wx.VERTICAL)
-        self.calcb = wx.ComboBox(self, -1, mtexts.calList[0], size=(80, -1), choices=mtexts.calList, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.calcb = wx.ComboBox(self, -1, mtexts.calList[0], size=(80, -1), choices=i18n.tr(mtexts.calList), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         zonesizer.Add(self.calcb, 0, wx.GROW | wx.ALIGN_LEFT | wx.ALL, 5)
-        self.zonecb = wx.ComboBox(self, -1, mtexts.zoneList[0], size=(80, -1), choices=mtexts.zoneList, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.zonecb = wx.ComboBox(self, -1, mtexts.zoneList[0], size=(80, -1), choices=i18n.tr(mtexts.zoneList), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         zonesizer.Add(self.zonecb, 0, wx.GROW | wx.ALIGN_LEFT | wx.ALL, 5)
         hhsizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.gmtlabel = wx.StaticText(self, -1, mtexts.txtsdatadlg['GMT'])
+        self.gmtlabel = wx.StaticText(self, -1, i18n.tr(mtexts.txtsdatadlg['GMT']))
         hhsizer.Add(self.gmtlabel, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
-        self.pluscb = wx.ComboBox(self, -1, DataDlg.PLUSCHOICES[0], size=(50, -1), choices=DataDlg.PLUSCHOICES, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.pluscb = wx.ComboBox(self, -1, DataDlg.PLUSCHOICES[0], size=(50, -1), choices=i18n.tr(DataDlg.PLUSCHOICES), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         hhsizer.Add(self.pluscb, 0, wx.LEFT, 5)
         zonesizer.Add(hhsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         fgsizer = wx.FlexGridSizer(0, 2, 0, 0)
@@ -213,7 +214,7 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(self.zhourlabel, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         self.zhour = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 12), size=(40,
                                                                                                  -1))
-        self.zhour.SetHelpText(mtexts.txtsdatadlg['HelpZoneHour'])
+        self.zhour.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpZoneHour']))
         self.zhour.SetMaxLength(2)
         vvsizer.Add(self.zhour, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -222,26 +223,26 @@ class DataDlg(wx.Dialog):
         vvsizer.Add(self.zminutelabel, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         self.zminute = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 59), size=(40,
                                                                                                    -1))
-        self.zminute.SetHelpText(mtexts.txtsdatadlg['HelpMin'])
+        self.zminute.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpMin']))
         self.zminute.SetMaxLength(2)
         vvsizer.Add(self.zminute, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         zonesizer.Add(fgsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        self.daylightckb = wx.CheckBox(self, -1, mtexts.txtsdatadlg['Daylight'])
+        self.daylightckb = wx.CheckBox(self, -1, i18n.tr(mtexts.txtsdatadlg['Daylight']))
         zonesizer.Add(self.daylightckb, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-        auto_zone_btn = wx.Button(self, -1, 'Auto time zone (date + location)')
+        auto_zone_btn = wx.Button(self, -1, i18n.tr('Auto time zone (date + location)'))
         zonesizer.Add(auto_zone_btn, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         self.Bind(wx.EVT_BUTTON, self.onAutoTimezone, auto_zone_btn)
-        self.daylightckb.SetHelpText(mtexts.txtsdatadlg['HelpDaylight'])
+        self.daylightckb.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpDaylight']))
         vvsubsizer = wx.BoxSizer(wx.VERTICAL)
         vvsubsizer.Add(zonesizer, 2, wx.ALIGN_LEFT | wx.ALL, 0)
-        self.sphs = wx.StaticBox(self, label=mtexts.txtsdatadlg['PlanetaryHour'])
+        self.sphs = wx.StaticBox(self, label=i18n.tr(mtexts.txtsdatadlg['PlanetaryHour']))
         hourssizer = wx.StaticBoxSizer(self.sphs, wx.VERTICAL)
         label = wx.StaticText(self, -1, mtexts.txtsdatadlg['Altitude'] + ':')
         hourssizer.Add(label, 0, wx.ALIGN_CENTER | wx.TOP, 10)
         self.alt = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 10000), size=(60,
                                                                                                   -1))
-        self.alt.SetHelpText(mtexts.txtsdatadlg['HelpAltitude'])
+        self.alt.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpAltitude']))
         self.alt.SetMaxLength(5)
         hhsubsizer = wx.BoxSizer(wx.HORIZONTAL)
         hhsubsizer.Add(self.alt, 0, wx.ALIGN_CENTER | wx.ALL, 5)
@@ -252,10 +253,10 @@ class DataDlg(wx.Dialog):
         hsubsizer.Add(vvsubsizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.ALL, 0)
         vsubsizer.Add(hsubsizer, 0, wx.ALIGN_LEFT | wx.ALL, 0)
         mhsizer.Add(vsubsizer, 0, wx.ALIGN_LEFT | wx.LEFT | wx.RIGHT, 5)
-        self.snotes = wx.StaticBox(self, label=mtexts.txtsdatadlg['Notes'])
+        self.snotes = wx.StaticBox(self, label=i18n.tr(mtexts.txtsdatadlg['Notes']))
         notessizer = wx.StaticBoxSizer(self.snotes, wx.VERTICAL)
         self.notes = wx.TextCtrl(self, -1, '', style=wx.TE_MULTILINE, size=(250, -1))
-        self.notes.SetHelpText(mtexts.txtsdatadlg['HelpNotes'])
+        self.notes.SetHelpText(i18n.tr(mtexts.txtsdatadlg['HelpNotes']))
         # GTK cannot limit the length of multiline text
         if wx.Platform == '__WXMSW__':
             self.notes.SetMaxLength(500)
@@ -266,12 +267,12 @@ class DataDlg(wx.Dialog):
         if wx.Platform != '__WXMSW__':
             btn = wx.ContextHelpButton(self)
             btnsizer.AddButton(btn)
-        btnOk = wx.Button(self, wx.ID_OK, mtexts.txtscommon['Ok'])
-        btnOk.SetHelpText(mtexts.txtscommon['HelpOk'])
+        btnOk = wx.Button(self, wx.ID_OK, i18n.tr(mtexts.txtscommon['Ok']))
+        btnOk.SetHelpText(i18n.tr(mtexts.txtscommon['HelpOk']))
         btnOk.SetDefault()
         btnsizer.AddButton(btnOk)
-        btn = wx.Button(self, wx.ID_CANCEL, mtexts.txtscommon['Cancel'])
-        btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
+        btn = wx.Button(self, wx.ID_CANCEL, i18n.tr(mtexts.txtscommon['Cancel']))
+        btn.SetHelpText(i18n.tr(mtexts.txtscommon['HelpCancel']))
         btnsizer.AddButton(btn)
         btnsizer.Realize()
         DIFF = 10
@@ -291,7 +292,7 @@ class DataDlg(wx.Dialog):
                 self.Close()
                 self.SetReturnCode(wx.ID_OK)
             else:
-                dlgm = wx.MessageDialog(None, mtexts.txtsdatadlg['InvalidDate'] + ' (' + self.year.GetValue() + '.' + self.month.GetValue() + '.' + self.day.GetValue() + '.)', mtexts.txtsdatadlg['Error'], wx.OK | wx.ICON_EXCLAMATION)
+                dlgm = wx.MessageDialog(None, mtexts.txtsdatadlg['InvalidDate'] + ' (' + self.year.GetValue() + '.' + self.month.GetValue() + '.' + self.day.GetValue() + '.)', i18n.tr(mtexts.txtsdatadlg['Error']), wx.OK | wx.ICON_EXCLAMATION)
                 dlgm.ShowModal()
                 dlgm.Destroy()
         return
@@ -302,14 +303,14 @@ class DataDlg(wx.Dialog):
         if self.timeckb.GetValue():
             if quiet:
                 return
-            wx.MessageBox('Automatic time zones require an AD/CE date. Use manual settings for BC dates.',
-                          'Automatic time zone', wx.OK | wx.ICON_WARNING, self)
+            wx.MessageBox(i18n.tr('Automatic time zones require an AD/CE date. Use manual settings for BC dates.'),
+                          i18n.tr('Automatic time zone'), wx.OK | wx.ICON_WARNING, self)
             return
         if self.calcb.GetCurrentSelection() != chart.Time.GREGORIAN:
             if quiet:
                 return
-            wx.MessageBox('Automatic time zones require a Gregorian calendar date. Use manual settings for Julian dates.',
-                          'Automatic time zone', wx.OK | wx.ICON_WARNING, self)
+            wx.MessageBox(i18n.tr('Automatic time zones require a Gregorian calendar date. Use manual settings for Julian dates.'),
+                          i18n.tr('Automatic time zone'), wx.OK | wx.ICON_WARNING, self)
             return
         try:
             lat = int(self.latdeg.GetValue()) + int(self.latmin.GetValue()) / 60.0
@@ -325,7 +326,7 @@ class DataDlg(wx.Dialog):
         except (TimezoneLookupError, ValueError) as exc:
             if quiet:
                 return
-            wx.MessageBox(str(exc), 'Automatic time zone',
+            wx.MessageBox(str(exc), i18n.tr('Automatic time zone'),
                           wx.OK | wx.ICON_WARNING, self)
             return
         sign = '+' if offset_minutes >= 0 else '-'
@@ -334,7 +335,7 @@ class DataDlg(wx.Dialog):
                         'Daylight saving: %s\n\n%s\n\nApply to chart?'
                         % (name, sign, hours, minutes, 'Yes' if dst else 'No',
                            warning or 'Please confirm the offset is correct.'))
-        if wx.MessageBox(confirmation, 'Automatic time zone',
+        if wx.MessageBox(i18n.tr(confirmation), i18n.tr('Automatic time zone'),
                          wx.YES_NO | wx.ICON_QUESTION, self) != wx.YES:
             return
         self.zonecb.SetSelection(chart.Time.ZONE)

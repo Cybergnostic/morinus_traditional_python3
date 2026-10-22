@@ -1,6 +1,7 @@
 """Stepper for a solar or lunar return window: previous / next return
 (a year for solar returns, a lunar month for lunar returns)."""
 
+import i18n
 import wx
 import chart
 import returnslist
@@ -10,13 +11,12 @@ import util
 class ReturnStepperDlg(wx.Dialog):
     def __init__(self, parent, radix):
         self.solar = parent.chart.htype == chart.Chart.SOLAR
-        wx.Dialog.__init__(self, parent, -1, 'Solar returns' if self.solar else 'Lunar returns', style=wx.DEFAULT_DIALOG_STYLE)
+        wx.Dialog.__init__(self, parent, -1, i18n.tr('Solar returns' if self.solar else 'Lunar returns'), style=wx.DEFAULT_DIALOG_STYLE)
         self.parent = parent
         self.radix = radix
-        unit = 'year' if self.solar else 'return'
         self.label = wx.StaticText(self, -1, '', style=wx.ALIGN_CENTRE_HORIZONTAL)
-        prev = wx.Button(self, -1, '<  Previous '+unit, size=(170, 36))
-        nxt = wx.Button(self, -1, 'Next '+unit+'  >', size=(170, 36))
+        prev = wx.Button(self, -1, '<  ' + i18n.tr('Previous year' if self.solar else 'Previous return'), size=(170, 36))
+        nxt = wx.Button(self, -1, i18n.tr('Next year' if self.solar else 'Next return') + '  >', size=(170, 36))
         close = wx.Button(self, wx.ID_CLOSE)
         buttons = wx.BoxSizer(wx.HORIZONTAL)
         buttons.Add(prev, 0, wx.ALL, 5)
@@ -36,14 +36,14 @@ class ReturnStepperDlg(wx.Dialog):
     def updateLabel(self):
         t = self.parent.chart.time
         h, m, s = util.decToDeg(t.time)
-        self.label.SetLabel('%s return  %04d-%02d-%02d  %02d:%02d:%02d UT' % ('Solar' if self.solar else 'Lunar', t.year, t.month, t.day, h, m, s))
+        self.label.SetLabel('%s  %04d-%02d-%02d  %02d:%02d:%02d UT' % (i18n.tr('Solar return' if self.solar else 'Lunar return'), t.year, t.month, t.day, h, m, s))
         self.Layout()
 
     def step(self, forward):
         wait = wx.BusyCursor()
         chrt = returnslist.step_return(self.radix, self.parent.chart, forward)
         if chrt is None:
-            wx.MessageBox('The %s return could not be computed.' % ('next' if forward else 'previous'), '', wx.OK | wx.ICON_INFORMATION, self)
+            wx.MessageBox(i18n.tr('The next return could not be computed.' if forward else 'The previous return could not be computed.'), '', wx.OK | wx.ICON_INFORMATION, self)
             return
         self.parent.change(chrt)
         self.updateLabel()

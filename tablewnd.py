@@ -2,6 +2,7 @@
 tables: lines in the table colour, FreeSans text, Morinus symbols), used by the
 tables added to this version."""
 
+import i18n
 import wx
 import common
 import commonwnd
@@ -39,9 +40,9 @@ class TableWnd(commonwnd.CommonWnd):
 
 	def layout(self):
 		"""Sizes the table to self.sections and self.notes and draws it."""
-		measure = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+		measure = ImageDraw.Draw(Image.new('RGB', i18n.tr((1, 1))))
 		self.cols = []
-		width = max([measure.textbbox((0, 0), n, self.fntText)[2] for n in self.notes] + [0])
+		width = max([measure.textbbox((0, 0), i18n.tr(n), self.fntText)[2] for n in self.notes] + [0])
 		height = commonwnd.CommonWnd.BORDER
 		for sec in self.sections:
 			lines = ([sec.headers] if sec.headers else []) + sec.rows
@@ -71,7 +72,7 @@ class TableWnd(commonwnd.CommonWnd):
 			txt, sign = self.position(cell[1])
 			w = draw.textbbox((0, 0), txt + ' ', self.fntText)[2] + draw.textbbox((0, 0), sign, self.fntMorinus)[2]
 		else:
-			w = draw.textbbox((0, 0), cell, self.fntText)[2]
+			w = draw.textbbox((0, 0), i18n.tr(cell), self.fntText)[2]
 		return w + 2 * self.SPACE
 
 	def drawCell(self, draw, x, y, width, cell, clr):
@@ -87,6 +88,7 @@ class TableWnd(commonwnd.CommonWnd):
 			draw.text((x, y + (self.LINE_HEIGHT - h) // 2), txt, fill=clr, font=self.fntText)
 			draw.text((x + w, y + (self.LINE_HEIGHT - hsg) // 2), sign, fill=clr, font=self.fntMorinus)
 		elif cell:
+			cell = i18n.tr(cell)	# the texts of the added tables are English in the code
 			w, h = draw.textbbox((0, 0), cell, self.fntText)[2:]
 			draw.text((x + (width - w) // 2, y + (self.LINE_HEIGHT - h) // 2), cell, fill=clr, font=self.fntText)
 
@@ -98,7 +100,7 @@ class TableWnd(commonwnd.CommonWnd):
 		self.SetBackgroundColour(self.bkgclr)
 		tableclr = (0, 0, 0) if self.bw else self.options.clrtable
 		txtclr = (0, 0, 0) if self.bw else self.options.clrtexts
-		img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.bkgclr)
+		img = Image.new('RGB', i18n.tr((self.WIDTH, self.HEIGHT)), i18n.tr(self.bkgclr))
 		draw = ImageDraw.Draw(img)
 		x0 = commonwnd.CommonWnd.BORDER
 		y = commonwnd.CommonWnd.BORDER
@@ -127,6 +129,7 @@ class TableWnd(commonwnd.CommonWnd):
 			draw.line((x0, y, x0 + width, y), fill=tableclr)
 			y += self.LINE_HEIGHT
 		for note in self.notes:
+			note = i18n.tr(note)
 			w, h = draw.textbbox((0, 0), note, self.fntText)[2:]
 			draw.text((x0, y - self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), note, fill=txtclr, font=self.fntText)
 			y += self.LINE_HEIGHT
@@ -148,7 +151,7 @@ class TableFrame(wx.Frame):
 	"""A frame sized to its table."""
 
 	def __init__(self, parent, title, make):
-		wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(640, 400))
+		wx.Frame.__init__(self, parent, -1, i18n.tr(title), wx.DefaultPosition, wx.Size(640, 400))
 		self.w = make(self)
 		self.SetSize((min(self.w.WIDTH + 30, 1600), min(self.w.HEIGHT + 50, 900)))
 		self.SetMinSize((200, 200))

@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import os
 import wx
 import chart
@@ -235,7 +236,7 @@ class GraphEphemWnd(wx.Window):
                     self.bdc.DrawLine(int(x), int(y1), int(x), int(y2))
 
         wxImag = self.buffer.ConvertToImage()
-        img = Image.new('RGB', (wxImag.GetWidth(), wxImag.GetHeight()))
+        img = Image.new('RGB', i18n.tr((wxImag.GetWidth(), wxImag.GetHeight())))
         img.frombytes(wxImag.GetData())
         draw = ImageDraw.Draw(img)
         x = 2 * self.BORDER
@@ -316,7 +317,7 @@ class GraphEphemWnd(wx.Window):
 
     def onSaveAsBitmap(self, event):
         name = mtexts.txtsabbrevs['Ephem'] + str(self.year)
-        dlg = wx.FileDialog(self, mtexts.txtsfiles['SaveAsBmp'], '', name, mtexts.txtsfiles['BMPFiles'], wx.FD_SAVE)
+        dlg = wx.FileDialog(self, i18n.tr(mtexts.txtsfiles['SaveAsBmp']), '', name, mtexts.txtsfiles['BMPFiles'], wx.FD_SAVE)
         if os.path.isdir(self.mainfr.fpathimgs):
             dlg.SetDirectory(self.mainfr.fpathimgs)
         else:
@@ -327,7 +328,7 @@ class GraphEphemWnd(wx.Window):
             if not fpath.endswith('.png'):
                 fpath += '.png'
             if os.path.isfile(fpath):
-                dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['FileExists']), i18n.tr(mtexts.txtsfiles['Message']), wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:
                     dlgm.Destroy()
                     dlg.Destroy()

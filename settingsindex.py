@@ -25,5 +25,5 @@ def label(entry):
 def search(records, query, limit=60):
     """Return exact setting results, ranked by name, group and description."""
     commands = [(rec['title'], ' '.join((rec['category'], rec.get('group', ''))),
-                 rec.get('description', ''), rec) for rec in records]
+                 rec.get('description', '') + ' ' + rec.get('english', ''), rec) for rec in records]
     return [item[3] for item in ranked_search(commands, query, limit)]

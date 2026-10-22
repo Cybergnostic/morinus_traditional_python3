@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import os
 import csv
 import tradoptions
@@ -32,10 +33,10 @@ class CommonWnd(wx.ScrolledWindow):
         menubars.later(self, 'Table')
         self.ID_SaveAsBitmap = wx.NewId()
         self.ID_BlackAndWhite = wx.NewId()
-        self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveTable'])
-        mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['TableBW'], wx.ITEM_CHECK)
+        self.pmenu.Append(self.ID_SaveAsBitmap, i18n.tr(mtexts.txtspopupmenu['SaveAsBmp']), i18n.tr(mtexts.txtspopupmenu['SaveTable']))
+        mbw = self.pmenu.Append(self.ID_BlackAndWhite, i18n.tr(mtexts.txtspopupmenu['BlackAndWhite']), i18n.tr(mtexts.txtspopupmenu['TableBW']), wx.ITEM_CHECK)
         self.ID_CopyAsText = wx.NewIdRef()
-        self.pmenu.Append(self.ID_CopyAsText, 'Copy as text', 'Copy the table to the clipboard as text (tab-separated)')
+        self.pmenu.Append(self.ID_CopyAsText, i18n.tr('Copy as text'), i18n.tr('Copy the table to the clipboard as text (tab-separated)'))
         self.Bind(wx.EVT_MENU, self.onCopyAsText, id=self.ID_CopyAsText)
         # copying as an image, CSV, and zoom (scaling the drawn table; the zoom is kept for all tables)
         for label, help, handler in (('Copy as image', 'Copy the table to the clipboard as a picture', self.onCopyAsImage),
@@ -46,11 +47,11 @@ class CommonWnd(wx.ScrolledWindow):
             if label is None:
                 self.pmenu.AppendSeparator()
                 continue
-            item = self.pmenu.Append(wx.NewIdRef(), label, help)
+            item = self.pmenu.Append(wx.NewIdRef(), i18n.tr(label), i18n.tr(help))
             self.Bind(wx.EVT_MENU, handler, id=item.GetId())
         self.zoom = 1.0
         self.zoomed = None
-        self.zoom_state = self.pmenu.Append(wx.NewIdRef(), 'Zoom: 100%')
+        self.zoom_state = self.pmenu.Append(wx.NewIdRef(), i18n.tr('Zoom: 100%'))
         self.zoom_state.Enable(False)
         self.Bind(wx.EVT_MOUSEWHEEL, self.onWheel)
         self.Bind(wx.EVT_CHAR_HOOK, self.onZoomKey)
@@ -67,7 +68,7 @@ class CommonWnd(wx.ScrolledWindow):
 
     def onSaveAsBitmap(self, event):
         name = self.chart.name + self.getExt()
-        dlg = wx.FileDialog(self, mtexts.txtsfiles['SaveAsBmp'], '', name, mtexts.txtsfiles['BMPFiles'], wx.FD_SAVE)
+        dlg = wx.FileDialog(self, i18n.tr(mtexts.txtsfiles['SaveAsBmp']), '', name, mtexts.txtsfiles['BMPFiles'], wx.FD_SAVE)
         if os.path.isdir(self.mainfr.fpathimgs):
             dlg.SetDirectory(self.mainfr.fpathimgs)
         else:
@@ -78,7 +79,7 @@ class CommonWnd(wx.ScrolledWindow):
             if not fpath.endswith('.png'):
                 fpath += '.png'
             if os.path.isfile(fpath):
-                dlgm = wx.MessageDialog(self, mtexts.txtsfiles['FileExists'], mtexts.txtsfiles['Message'], wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+                dlgm = wx.MessageDialog(self, i18n.tr(mtexts.txtsfiles['FileExists']), i18n.tr(mtexts.txtsfiles['Message']), wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
                 if dlgm.ShowModal() == wx.ID_NO:
                     dlgm.Destroy()
                     dlg.Destroy()
@@ -143,7 +144,7 @@ class CommonWnd(wx.ScrolledWindow):
         self.SetVirtualSize(tablepresentation.pixel_size(self.buffer.GetWidth(), self.buffer.GetHeight(), new))
         if units[0] and units[1]:
             self.Scroll(round(target[0] / units[0]), round(target[1] / units[1]))
-        self.zoom_state.SetItemLabel('Zoom: %d%%' % round(new * 100))
+        self.zoom_state.SetItemLabel(i18n.tr('Zoom: %d%%') % round(new * 100))
         if keep:
             tradoptions.set({'table_zoom': new})
             if self.options.autosave:
@@ -187,7 +188,7 @@ class CommonWnd(wx.ScrolledWindow):
 
     def onExportCSV(self, event):
         name = self.chart.name + self.getExt() + '.csv'
-        dlg = wx.FileDialog(self, 'Export as CSV', '', name, 'CSV files (*.csv)|*.csv', wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+        dlg = wx.FileDialog(self, i18n.tr('Export as CSV'), '', name, 'CSV files (*.csv)|*.csv', wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
         if os.path.isdir(self.mainfr.fpathimgs):
             dlg.SetDirectory(self.mainfr.fpathimgs)
         if dlg.ShowModal() == wx.ID_OK:

@@ -1,5 +1,6 @@
 """Dodecatemoria calculator: the dodecatemorion (twelfth part) of any degree."""
 
+import i18n
 import wx
 
 SIGNS = ('Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces')
@@ -22,8 +23,8 @@ def lonstr(lon):
 class DodecaCalcDlg(wx.Dialog):
 
 	def __init__(self, parent):
-		wx.Dialog.__init__(self, parent, -1, 'Dodecatemoria calculator', style=wx.DEFAULT_DIALOG_STYLE)
-		self.sign = wx.Choice(self, -1, choices=SIGNS)
+		wx.Dialog.__init__(self, parent, -1, i18n.tr('Dodecatemoria calculator'), style=wx.DEFAULT_DIALOG_STYLE)
+		self.sign = wx.Choice(self, -1, choices=i18n.tr(SIGNS))
 		self.sign.SetSelection(0)
 		self.deg = wx.SpinCtrl(self, -1, min=0, max=29, initial=0)
 		self.min = wx.SpinCtrl(self, -1, min=0, max=59, initial=0)
@@ -32,7 +33,7 @@ class DodecaCalcDlg(wx.Dialog):
 		for ctrl, label in ((self.deg, '\xb0'), (self.min, "'"), (self.sign, '')):
 			row.Add(ctrl, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 3)
 			if label:
-				row.Add(wx.StaticText(self, -1, label), 0, wx.ALIGN_CENTER_VERTICAL)
+				row.Add(wx.StaticText(self, -1, i18n.tr(label)), 0, wx.ALIGN_CENTER_VERTICAL)
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(row, 0, wx.ALL, 8)
 		sizer.Add(self.result, 0, wx.ALL, 10)
@@ -47,5 +48,5 @@ class DodecaCalcDlg(wx.Dialog):
 
 	def update(self, event):
 		lon = self.sign.GetSelection() * 30.0 + self.deg.GetValue() + self.min.GetValue() / 60.0
-		self.result.SetLabel('Dodecatemorion of %s:  %s' % (lonstr(lon), lonstr(dodecatemorion(lon))))
+		self.result.SetLabel(i18n.tr('Dodecatemorion of %s:  %s') % (lonstr(lon), lonstr(dodecatemorion(lon))))
 		self.Fit()

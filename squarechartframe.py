@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import wx
 import menubars
 import squarechartwnd
@@ -10,7 +11,7 @@ class SquareChartFrame(wx.Frame):
     YSIZE = 512
 
     def __init__(self, parent, title, chrt, opts):
-        wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(SquareChartFrame.XSIZE, SquareChartFrame.YSIZE))
+        wx.Frame.__init__(self, parent, -1, i18n.tr(title), wx.DefaultPosition, wx.Size(SquareChartFrame.XSIZE, SquareChartFrame.YSIZE))
         self.chart = chrt
         self.options = opts
         self.parent = parent
@@ -18,8 +19,8 @@ class SquareChartFrame(wx.Frame):
         menubars.later(self, 'Chart')
         self.ID_SaveAsBitmap = wx.NewId()
         self.ID_BlackAndWhite = wx.NewId()
-        self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveChart'])
-        self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['ChartBW'], wx.ITEM_CHECK)
+        self.pmenu.Append(self.ID_SaveAsBitmap, i18n.tr(mtexts.txtspopupmenu['SaveAsBmp']), i18n.tr(mtexts.txtspopupmenu['SaveChart']))
+        self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, i18n.tr(mtexts.txtspopupmenu['BlackAndWhite']), i18n.tr(mtexts.txtspopupmenu['ChartBW']), wx.ITEM_CHECK)
         self.w = squarechartwnd.SquareChartWnd(self, self.chart, opts, parent)
         self.SetMinSize((200, 200))
         self.Bind(wx.EVT_RIGHT_UP, self.onPopupMenu)

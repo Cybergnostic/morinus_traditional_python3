@@ -3,7 +3,7 @@
 # assertion failures. Run it against a scratch copy of the program, since
 # confirmed option dialogs save into Opts/:
 #
-#   xvfb-run python3 guismoke.py <morinus-copy> <outdir> [--shots] [--trace-div]
+#   xvfb-run python3 guismoke.py <morinus-copy> <outdir> [--shots] [--trace-div] [--lang N]
 #
 # --exercise also selects list rows, changes choices and check boxes, types
 # into fields and presses the buttons inside every dialog it opens.
@@ -166,6 +166,7 @@ def main():
 
 	import options
 	import mtexts
+	import i18n
 	import morin
 
 	errors = []
@@ -350,6 +351,8 @@ def main():
 		for k, v in VARIANTS[int(sys.argv[sys.argv.index('--variant')+1])].items():
 			assert hasattr(opts, k), k
 			setattr(opts, k, v)
+	if '--lang' in sys.argv:	# e.g. 3: Serbian
+		opts.langid = int(sys.argv[sys.argv.index('--lang')+1])
 	mtexts.setLang(opts.langid)
 	frame = morin.MFrame(None, -1, mtexts.txtscommon['ProgramTitle'], opts)
 	frame.Show(True)
@@ -632,7 +635,7 @@ def main():
 				        ('Zodiacal releasing years shown', 'Years shown', 'Time lords')):
 				    wnd.search.SetValue(query)
 				    settle(0.1)
-				    match = next((r for r in wnd.shown if r['title'] == title and r['category'] == category), None)
+				    match = next((r for r in wnd.shown if r['title'] == i18n.tr(title) and r['category'] == i18n.tr(category)), None)
 				    assert match is not None, 'Settings search failed: %s' % query
 				    wnd.showEntry(match)
 				    assert wnd.book.GetSelection() == match['category_index']

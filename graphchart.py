@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import wx
 from PIL import Image
 from PIL import ImageDraw
@@ -358,7 +359,7 @@ class GraphChart:
                 self.drawHouses(self.chart2.houses, self.r30, self.rOuterMax)
         self.closeDC()
         wxImag = self.buffer.ConvertToImage()
-        self.img = Image.new('RGB', (wxImag.GetWidth(), wxImag.GetHeight()))
+        self.img = Image.new('RGB', i18n.tr((wxImag.GetWidth(), wxImag.GetHeight())))
         self.img.frombytes(wxImag.GetData())
         self.draw = ImageDraw.Draw(self.img)
         if self.options.houses:
@@ -532,7 +533,7 @@ class GraphChart:
             self.drawObjLines(self.dodecshift2, lonsdodec2, self.rOuterMax, self.rDodecLines)
         self.closeDC()
         wxImag = self.buffer.ConvertToImage()
-        self.img = Image.new('RGB', (wxImag.GetWidth(), wxImag.GetHeight()))
+        self.img = Image.new('RGB', i18n.tr((wxImag.GetWidth(), wxImag.GetHeight())))
         self.img.frombytes(wxImag.GetData())
         self.draw = ImageDraw.Draw(self.img)
         if self.options.showdata:
@@ -909,7 +910,7 @@ class GraphChart:
 
     def drawRotatedText(self, text, fnt, angle, fill=None):
         size = fnt.getbbox(text)[2:]
-        im = Image.new('RGBA', size, (0, 0, 0, 0))
+        im = Image.new('RGBA', i18n.tr(size), i18n.tr((0, 0, 0, 0)))
         draw = ImageDraw.Draw(im)
         draw.text((0, 0), text, font=fnt, fill=fill)
         return im.rotate(angle, expand=True)

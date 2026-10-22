@@ -3,6 +3,7 @@ menu, so that its commands can be found without knowing to right-click.
 Choosing a copied item sends the original item's command to the window, and
 the copy takes the checks and enabled states of the original when opened."""
 
+import i18n
 import wx
 
 
@@ -14,7 +15,7 @@ def mirror(frame, popup, target, label, skip=()):
 		return
 	links = []
 	bar = wx.MenuBar()
-	bar.Append(_copy(popup, frame, target, skip, links), label)
+	bar.Append(_copy(popup, frame, target, skip, links), i18n.tr(label))
 	frame.SetMenuBar(bar)
 
 	def sync(event):

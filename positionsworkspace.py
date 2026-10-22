@@ -6,6 +6,7 @@ the Placidian and Regiomontanian speculum (without changing the primary-directio
 settings) and the columns of Appearance II. The window is the shared
 legacytabworkspace.TableWorkspace.
 """
+import i18n
 import wx
 import positionswnd
 import positionsframe
@@ -51,13 +52,13 @@ class SpeculumPanel(wx.Panel):
         self.view = None
         self.choice = wx.Choice(self, -1, choices=list(SPECULUMS))
         self.choice.SetSelection(self.method)
-        self.choice.SetToolTip('Change the table, not the primary-directions settings')
+        self.choice.SetToolTip(i18n.tr('Change the table, not the primary-directions settings'))
         self.choice.Bind(wx.EVT_CHOICE, lambda e: self.setMethod(self.choice.GetSelection()))
-        configure = wx.Button(self, -1, 'Configure columns...')
-        configure.SetToolTip('Choose the speculum columns (Appearance II)')
+        configure = wx.Button(self, -1, i18n.tr('Configure columns...'))
+        configure.SetToolTip(i18n.tr('Choose the speculum columns (Appearance II)'))
         configure.Bind(wx.EVT_BUTTON, self.onConfigure)
         selector = wx.BoxSizer(wx.HORIZONTAL)
-        selector.Add(wx.StaticText(self, -1, 'Speculum method:'), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        selector.Add(wx.StaticText(self, -1, i18n.tr('Speculum method:')), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         selector.Add(self.choice, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 12)
         selector.Add(configure, 0, wx.ALIGN_CENTER_VERTICAL)
         # PositionsWnd reads parent.mbw and calls parent.onPopupMenu
@@ -82,7 +83,7 @@ class SpeculumPanel(wx.Panel):
                 self.view.bw = bw
                 self.view.drawBkg()
         else:
-            self.view = wx.StaticText(self.area, -1, '\n  No columns are selected for this speculum: choose them with Configure columns.')
+            self.view = wx.StaticText(self.area, -1, i18n.tr('\n  No columns are selected for this speculum: choose them with Configure columns.'))
         self.area.GetSizer().Add(self.view, 1, wx.EXPAND)
         self.area.Layout()
         workspace = self.GetTopLevelParent()
@@ -110,7 +111,7 @@ class SpeculumPanel(wx.Panel):
         menu = wx.Menu()
         for label, method in (('Save table as image...', 'onSaveAsBitmap'), ('Copy table as text', 'onCopyAsText'),
                               ('Copy table as image', 'onCopyAsImage'), ('Export as CSV...', 'onExportCSV')):
-            item = menu.Append(wx.ID_ANY, label)
+            item = menu.Append(wx.ID_ANY, i18n.tr(label))
             self.Bind(wx.EVT_MENU, lambda e, m=method: self.forward(m, e), id=item.GetId())
         self.PopupMenu(menu)
         menu.Destroy()
@@ -144,7 +145,7 @@ class SpeculumPanel(wx.Panel):
 def _open_speculum(mainfr, chart, options, panel):
     method = panel.method if panel is not None else initial_speculum(options)
     if not has_columns(options, method):
-        wx.MessageBox(mtexts.txtspositions['SelectColumn'], 'Positions', wx.OK | wx.ICON_INFORMATION, parent=mainfr)
+        wx.MessageBox(i18n.tr(mtexts.txtspositions['SelectColumn']), i18n.tr('Positions'), wx.OK | wx.ICON_INFORMATION, parent=mainfr)
         return None
     frame = positionsframe.PositionsFrame(mainfr, mainfr.title, chart, options, speculum_index=method, userpoint=userpoint(chart))
     frame.Show()
@@ -170,7 +171,7 @@ def show(mainfr, tab=0):
             (TABS[1], DESCRIPTIONS[1], lambda page: SpeculumPanel(page, chart, options, mainfr),
              lambda view: _open_speculum(mainfr, chart, options, view)),
         )
-        wnd = legacytabworkspace.TableWorkspace(mainfr, 'Positions and data — ' + chart.name, specs, tab,
+        wnd = legacytabworkspace.TableWorkspace(mainfr, i18n.tr('Positions and data') + ' — ' + chart.name, specs, tab,
                                                 size=(1110, 730), attribute='positions_workspace')
         mainfr.positions_workspace = wnd
     wnd.Show(True)

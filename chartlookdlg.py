@@ -1,6 +1,7 @@
 """Chart look: the colour theme, the weight of the lines and smooth drawing,
 with a preview of the open chart."""
 
+import i18n
 import copy
 import wx
 import tradoptions
@@ -16,26 +17,26 @@ PREVIEW = 380
 class ChartLookDlg(wx.Dialog):
 
 	def __init__(self, parent, options, horoscope):
-		wx.Dialog.__init__(self, parent, -1, 'Chart look', style=wx.DEFAULT_DIALOG_STYLE)
+		wx.Dialog.__init__(self, parent, -1, i18n.tr('Chart look'), style=wx.DEFAULT_DIALOG_STYLE)
 		self.options = options
 		self.horoscope = horoscope
 		self.custom = themes.current(options) is None
 		self.names = ([CUSTOM] if self.custom else []) + list(themes.NAMES)
 
 		grid = wx.FlexGridSizer(0, 2, 8, 10)
-		self.theme = wx.Choice(self, -1, choices=self.names)
-		self.theme.SetToolTip('Ink: black on white. Instrument: soft ink lines, muted planet colours. Classic: the colours of Morinus 6. '
-			'A theme sets all the colours of Options > Colors, where they can still be changed one by one.')
-		self.lines = wx.Choice(self, -1, choices=[text for value, text in LINES])
-		self.lines.SetToolTip('Fine lines keep the circles and the house cusps strong and draw the degree ticks and the dividers of terms and decans lighter.')
-		self.smooth = wx.CheckBox(self, -1, 'Smooth (antialiased) lines')
-		self.smooth.SetToolTip('Draws the wheel with antialiasing on Windows; on Linux and macOS lines are always smooth.')
+		self.theme = wx.Choice(self, -1, choices=i18n.tr(self.names))
+		self.theme.SetToolTip(i18n.tr('Ink: black on white. Instrument: soft ink lines, muted planet colours. Classic: the colours of Morinus 6. '
+			'A theme sets all the colours of Options > Colors, where they can still be changed one by one.'))
+		self.lines = wx.Choice(self, -1, choices=i18n.tr([text for value, text in LINES]))
+		self.lines.SetToolTip(i18n.tr('Fine lines keep the circles and the house cusps strong and draw the degree ticks and the dividers of terms and decans lighter.'))
+		self.smooth = wx.CheckBox(self, -1, i18n.tr('Smooth (antialiased) lines'))
+		self.smooth.SetToolTip(i18n.tr('Draws the wheel with antialiasing on Windows; on Linux and macOS lines are always smooth.'))
 		self.quality = wx.Choice(self, -1, choices=[title for value, title in QUALITY])
-		self.quality.SetToolTip('High quality draws at twice the resolution, then reduces to the same size. '
+		self.quality.SetToolTip(i18n.tr('High quality draws at twice the resolution, then reduces to the same size. '
 			'It improves symbols and labels, but uses more memory and is slower on large charts. '
-			'Very large or tiny windows automatically use standard quality.')
+			'Very large or tiny windows automatically use standard quality.'))
 		for label, ctrl in (('Theme', self.theme), ('Lines', self.lines), ('', self.smooth), ('Rendering', self.quality)):
-			grid.Add(wx.StaticText(self, -1, label + ':' if label else ''), 0, wx.ALIGN_CENTER_VERTICAL)
+			grid.Add(wx.StaticText(self, -1, i18n.tr(label + ':' if label else '')), 0, wx.ALIGN_CENTER_VERTICAL)
 			grid.Add(ctrl, 0)
 
 		left = wx.BoxSizer(wx.VERTICAL)
@@ -53,8 +54,8 @@ class ChartLookDlg(wx.Dialog):
 		btnsizer.AddButton(ok)
 		btnsizer.AddButton(wx.Button(self, wx.ID_CANCEL))
 		btnsizer.Realize()
-		defaults = wx.Button(self, -1, 'Defaults')
-		defaults.SetToolTip('Ink theme, fine and smooth lines (saved only with OK)')
+		defaults = wx.Button(self, -1, i18n.tr('Defaults'))
+		defaults.SetToolTip(i18n.tr('Ink theme, fine and smooth lines (saved only with OK)'))
 		bottom = wx.BoxSizer(wx.HORIZONTAL)
 		bottom.Add(defaults, 0, wx.ALIGN_CENTER_VERTICAL)
 		bottom.AddStretchSpacer()

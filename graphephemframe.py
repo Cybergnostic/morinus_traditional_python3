@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import wx
 import menubars
 import graphephemwnd
@@ -10,15 +11,15 @@ class GraphEphemFrame(wx.Frame):
     YSIZE = 480
 
     def __init__(self, parent, title, year, posArr, opts):
-        wx.Frame.__init__(self, parent, -1, title, wx.DefaultPosition, wx.Size(GraphEphemFrame.XSIZE, GraphEphemFrame.YSIZE))
+        wx.Frame.__init__(self, parent, -1, i18n.tr(title), wx.DefaultPosition, wx.Size(GraphEphemFrame.XSIZE, GraphEphemFrame.YSIZE))
         self.options = opts
         self.parent = parent
         self.pmenu = wx.Menu()
         menubars.later(self, 'Chart')
         self.ID_SaveAsBitmap = wx.NewId()
         self.ID_BlackAndWhite = wx.NewId()
-        self.pmenu.Append(self.ID_SaveAsBitmap, mtexts.txtspopupmenu['SaveAsBmp'], mtexts.txtspopupmenu['SaveChart'])
-        self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, mtexts.txtspopupmenu['BlackAndWhite'], mtexts.txtspopupmenu['ChartBW'], wx.ITEM_CHECK)
+        self.pmenu.Append(self.ID_SaveAsBitmap, i18n.tr(mtexts.txtspopupmenu['SaveAsBmp']), i18n.tr(mtexts.txtspopupmenu['SaveChart']))
+        self.mbw = self.pmenu.Append(self.ID_BlackAndWhite, i18n.tr(mtexts.txtspopupmenu['BlackAndWhite']), i18n.tr(mtexts.txtspopupmenu['ChartBW']), wx.ITEM_CHECK)
         self.w = graphephemwnd.GraphEphemWnd(self, year, posArr, opts, parent)
         self.SetMinSize((200, 200))
         self.Bind(wx.EVT_RIGHT_UP, self.onPopupMenu)

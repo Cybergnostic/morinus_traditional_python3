@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import wx
 import chart
 import planets
@@ -39,7 +40,7 @@ class AntisciaWnd(commonwnd.CommonWnd):
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.hits = self.planetsOnAntiscia()
-        measure = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+        measure = ImageDraw.Draw(Image.new('RGB', i18n.tr((1, 1))))
         self.HITS_WIDTH = max([self.hitsWidth(measure, h) for row in self.hits for h in row] + [measure.textbbox((0, 0), PLANETS_ON, self.fntText)[2], 3 * self.FONT_SIZE]) + 2 * self.SPACE
         self.TITLE_HEIGHT = 2 * self.LINE_HEIGHT
         self.TITLE_WIDTH = self.COLUMN_NUM * self.CELL_WIDTH + 2 * self.HITS_WIDTH
@@ -126,7 +127,7 @@ class AntisciaWnd(commonwnd.CommonWnd):
         if self.bw:
             tableclr = (
              0, 0, 0)
-        img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.bkgclr)
+        img = Image.new('RGB', i18n.tr((self.WIDTH, self.HEIGHT)), i18n.tr(self.bkgclr))
         draw = ImageDraw.Draw(img)
         BOR = commonwnd.CommonWnd.BORDER
         draw.rectangle(((BOR + self.SMALL_CELL_WIDTH, BOR), (BOR + self.SMALL_CELL_WIDTH + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)

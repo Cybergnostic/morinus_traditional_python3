@@ -4,6 +4,7 @@ the planets with their motion and houses, the angles and lots, and the chart's
 data. The values are the chart's own (the same as the specialist tables)."""
 
 import wx
+import i18n
 import astrology
 import common
 import houses
@@ -31,7 +32,7 @@ def hms(x):
 def mundane(pos):
 	"""A house position (1.0-12.99) as '12th, 22%'."""
 	house = int(pos)
-	return '%s, %.1f%%' % (ORDINALS[(house - 1) % 12], int((pos - house) * 1000) / 10.0)
+	return '%s, %.1f%%' % (i18n.tr(ORDINALS[(house - 1) % 12]), int((pos - house) * 1000) / 10.0)
 
 
 class OverviewWnd(tablewnd.TableWnd):
@@ -51,12 +52,12 @@ class OverviewWnd(tablewnd.TableWnd):
 		for i, name in enumerate(NAMES):
 			p = h.planets.planets[i]
 			lon, lat, speed, latspeed = (p.data[k] for k in (planets.Planet.LON, planets.Planet.LAT, planets.Planet.SPLON, planets.Planet.SPLAT))
-			motion = 'retrograde' if speed < 0 else 'direct'
+			motion = i18n.tr('retrograde' if speed < 0 else 'direct')
 			rep = reports.get(name)
 			if rep is not None:
-				motion += ', ' + rep.speed_class
+				motion += ', ' + i18n.tr(rep.speed_class)
 				if rep.planet.station:
-					motion = 'stationary (%s station)' % rep.planet.station
+					motion = i18n.tr('stationary (%s station)') % i18n.tr(rep.planet.station)
 			house = h.houses.getHousePos(lon, o, True) + 1
 			rows.append([(tablewnd.GLYPH, common.common.planets[i]), (tablewnd.POSITION, lon), dms(lat, True),
 				ra(p.dataEqu[planets.Planet.RAEQU]), dms(p.dataEqu[planets.Planet.DECLEQU], True),
@@ -89,11 +90,11 @@ class OverviewWnd(tablewnd.TableWnd):
 
 
 def mundane_name(letter):
-	return {'P': 'Placidus', 'K': 'Koch', 'R': 'Regiomontanus', 'C': 'Campanus', 'E': 'Equal', 'W': 'Whole sign', 'X': 'Axial rotation',
-		'M': 'Morinus', 'H': 'Horizontal', 'T': 'Page-Polich', 'B': 'Alcabitius', 'O': 'Porphyry'}.get(letter, letter)
+	return i18n.tr({'P': 'Placidus', 'K': 'Koch', 'R': 'Regiomontanus', 'C': 'Campanus', 'E': 'Equal', 'W': 'Whole sign', 'X': 'Axial rotation',
+		'M': 'Morinus', 'H': 'Horizontal', 'T': 'Page-Polich', 'B': 'Alcabitius', 'O': 'Porphyry'}.get(letter, letter))
 
 
 class OverviewFrame(tablewnd.TableFrame):
 
 	def __init__(self, parent, title, chrt, options):
-		tablewnd.TableFrame.__init__(self, parent, title + ' - Positions', lambda f: OverviewWnd(f, chrt, options, parent))
+		tablewnd.TableFrame.__init__(self, parent, title + ' - ' + i18n.tr('Positions'), lambda f: OverviewWnd(f, chrt, options, parent))

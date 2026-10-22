@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import sys
 import os
 import wx
@@ -36,7 +37,7 @@ class FixedStars:
 
 
 provider = wx.SimpleHelpProvider()
-wx.HelpProvider.Set(provider)
+wx.HelpProvider.Set(i18n.tr(provider))
 
 class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl):
     NUM = 0
@@ -68,7 +69,7 @@ class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl
 
     def Populate(self):
         self.InsertColumn(FixedStarListCtrl.NUM, '')
-        self.InsertColumn(FixedStarListCtrl.NAME, mtexts.txtsfixedstarspddlg['Name'])
+        self.InsertColumn(FixedStarListCtrl.NAME, i18n.tr(mtexts.txtsfixedstarspddlg['Name']))
         self.InsertColumn(FixedStarListCtrl.NOMNAME, mtexts.txtsfixedstarspddlg['Nomencl'] + '.')
         items = list(self.fixedstardata.items())
         cnt = 0
@@ -76,8 +77,8 @@ class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl
             cnt += 1
             index = self.InsertStringItem(self.GetItemCount(), data[0])
             self.SetItem(index, FixedStarListCtrl.NUM, str(cnt) + '.')
-            self.SetItem(index, FixedStarListCtrl.NAME, data[0])
-            self.SetItem(index, FixedStarListCtrl.NOMNAME, data[1])
+            self.SetItem(index, FixedStarListCtrl.NAME, i18n.tr(data[0]))
+            self.SetItem(index, FixedStarListCtrl.NOMNAME, i18n.tr(data[1]))
             self.SetItemData(index, key)
 
         self.SetColumnWidth(FixedStarListCtrl.NUM, 50)
@@ -110,7 +111,7 @@ class FixedStarListCtrl(limchecklistctrlmixin.LimCheckListCtrlMixin, wx.ListCtrl
 
         else:
             txt = mtexts.txtsfiles['FileError'] + '(' + fs.fname + ')'
-            dlgm = wx.MessageDialog(self, txt, mtexts.txtsfiles['Error'], wx.OK | wx.ICON_EXCLAMATION)
+            dlgm = wx.MessageDialog(self, i18n.tr(txt), i18n.tr(mtexts.txtsfiles['Error']), wx.OK | wx.ICON_EXCLAMATION)
             dlgm.ShowModal()
             dlgm.Destroy()
 
@@ -120,7 +121,7 @@ class FixedStarsPDDlg(wx.Dialog):
     def __init__(self, parent, options, pdfixedstarssel, ephepath):
         wx.Dialog.__init__(self)
         self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        self.Create(parent, -1, mtexts.txtsfixedstarspddlg['FixedStars'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
+        self.Create(parent, -1, i18n.tr(mtexts.txtsfixedstarspddlg['FixedStars']), pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         mvsizer = wx.BoxSizer(wx.VERTICAL)
         self.sstars = wx.StaticBox(self, label='')
         starssizer = wx.StaticBoxSizer(self.sstars, wx.VERTICAL)
@@ -130,10 +131,10 @@ class FixedStarsPDDlg(wx.Dialog):
         self.li.fill(options.fixedstars, pdfixedstarssel)
         hbtnsizer = wx.BoxSizer(wx.HORIZONTAL)
         ID_SelectAll = wx.NewId()
-        btnSelectAll = wx.Button(self, ID_SelectAll, mtexts.txtsfixedstarspddlg['SelectAll'])
+        btnSelectAll = wx.Button(self, ID_SelectAll, i18n.tr(mtexts.txtsfixedstarspddlg['SelectAll']))
         hbtnsizer.Add(btnSelectAll, 0)
         ID_DeselectAll = wx.NewId()
-        btnDeselectAll = wx.Button(self, ID_DeselectAll, mtexts.txtsfixedstarspddlg['Reset'])
+        btnDeselectAll = wx.Button(self, ID_DeselectAll, i18n.tr(mtexts.txtsfixedstarspddlg['Reset']))
         hbtnsizer.Add(btnDeselectAll, 0)
         starssizer.Add(hbtnsizer, 0)
         mvsizer.Add(starssizer, 0, wx.LEFT | wx.RIGHT, 5)
@@ -143,12 +144,12 @@ class FixedStarsPDDlg(wx.Dialog):
         if wx.Platform != '__WXMSW__':
             btn = wx.ContextHelpButton(self)
             btnsizer.AddButton(btn)
-        btnOk = wx.Button(self, wx.ID_OK, mtexts.txtscommon['Ok'])
-        btnOk.SetHelpText(mtexts.txtscommon['HelpOk'])
+        btnOk = wx.Button(self, wx.ID_OK, i18n.tr(mtexts.txtscommon['Ok']))
+        btnOk.SetHelpText(i18n.tr(mtexts.txtscommon['HelpOk']))
         btnOk.SetDefault()
         btnsizer.AddButton(btnOk)
-        btn = wx.Button(self, wx.ID_CANCEL, mtexts.txtscommon['Cancel'])
-        btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
+        btn = wx.Button(self, wx.ID_CANCEL, i18n.tr(mtexts.txtscommon['Cancel']))
+        btn.SetHelpText(i18n.tr(mtexts.txtscommon['HelpCancel']))
         btnsizer.AddButton(btn)
         btnsizer.Realize()
         mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)

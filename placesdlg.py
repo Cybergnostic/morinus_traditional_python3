@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 import sys
 import wx
 import intvalidator
@@ -11,7 +12,7 @@ import tradoptions
 import mtexts
 import util
 provider = wx.SimpleHelpProvider()
-wx.HelpProvider.Set(provider)
+wx.HelpProvider.Set(i18n.tr(provider))
 
 class PlaceListCtrl(wx.ListCtrl):
     PLACE = 0
@@ -30,19 +31,19 @@ class PlaceListCtrl(wx.ListCtrl):
         self.changed = False
 
     def Populate(self):
-        self.InsertColumn(PlaceListCtrl.PLACE, mtexts.txtsplacesdlg['Place'])
+        self.InsertColumn(PlaceListCtrl.PLACE, i18n.tr(mtexts.txtsplacesdlg['Place']))
         self.InsertColumn(PlaceListCtrl.LON, mtexts.txtsplacesdlg['Long'] + '.')
         self.InsertColumn(PlaceListCtrl.LAT, mtexts.txtsplacesdlg['Lat'] + '.')
-        self.InsertColumn(PlaceListCtrl.ZONE, mtexts.txtsplacesdlg['Zone'])
+        self.InsertColumn(PlaceListCtrl.ZONE, i18n.tr(mtexts.txtsplacesdlg['Zone']))
         self.InsertColumn(PlaceListCtrl.ALT, mtexts.txtsplacesdlg['Alt'] + '.')
         items = list(self.placedata.items())
         for key, data in items:
-            index = self.InsertItem(self.GetItemCount(), data[0])
-            self.SetItem(index, PlaceListCtrl.PLACE, data[0])
-            self.SetItem(index, PlaceListCtrl.LON, data[1])
-            self.SetItem(index, PlaceListCtrl.LAT, data[2])
-            self.SetItem(index, PlaceListCtrl.ZONE, data[3])
-            self.SetItem(index, PlaceListCtrl.ALT, data[4])
+            index = self.InsertItem(self.GetItemCount(), i18n.tr(data[0]))
+            self.SetItem(index, PlaceListCtrl.PLACE, i18n.tr(data[0]))
+            self.SetItem(index, PlaceListCtrl.LON, i18n.tr(data[1]))
+            self.SetItem(index, PlaceListCtrl.LAT, i18n.tr(data[2]))
+            self.SetItem(index, PlaceListCtrl.ZONE, i18n.tr(data[3]))
+            self.SetItem(index, PlaceListCtrl.ALT, i18n.tr(data[4]))
             self.SetItemData(index, key)
 
         self.SetColumnWidth(PlaceListCtrl.PLACE, 200)
@@ -73,9 +74,9 @@ class PlaceListCtrl(wx.ListCtrl):
 
     def OnAdd(self, item):
         num = self.GetItemCount()
-        self.InsertItem(num, item[PlaceListCtrl.PLACE])
+        self.InsertItem(num, i18n.tr(item[PlaceListCtrl.PLACE]))
         for i in range(1, len(item)):
-            self.SetItem(num, i, item[i])
+            self.SetItem(num, i, i18n.tr(item[i]))
 
         self.currentItem = num
         self.EnsureVisible(self.currentItem)
@@ -84,7 +85,7 @@ class PlaceListCtrl(wx.ListCtrl):
 
     def OnRemove(self):
         if self.currentItem != -1:
-            dlg = wx.MessageDialog(self, mtexts.txtscommon['AreYouSure'], mtexts.txtscommon['Confirm'], wx.YES_NO | wx.ICON_QUESTION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['AreYouSure']), i18n.tr(mtexts.txtscommon['Confirm']), wx.YES_NO | wx.ICON_QUESTION)
             val = dlg.ShowModal()
             if val == wx.ID_YES:
                 self.DeleteItem(self.currentItem)
@@ -100,7 +101,7 @@ class PlaceListCtrl(wx.ListCtrl):
 
     def OnRemoveAll(self):
         if self.currentItem != -1:
-            dlg = wx.MessageDialog(self, mtexts.txtscommon['AreYouSure'], mtexts.txtscommon['Confirm'], wx.YES_NO | wx.ICON_QUESTION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtscommon['AreYouSure']), i18n.tr(mtexts.txtscommon['Confirm']), wx.YES_NO | wx.ICON_QUESTION)
             val = dlg.ShowModal()
             if val == wx.ID_YES:
                 self.DeleteAllItems()
@@ -134,7 +135,7 @@ class PlacesDlg(wx.Dialog):
     def __init__(self, parent, langid, netbook):
         wx.Dialog.__init__(self)
         self.SetExtraStyle(wx.DIALOG_EX_CONTEXTHELP)
-        self.Create(parent, -1, mtexts.txtsplacesdlg['Places'], pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
+        self.Create(parent, -1, i18n.tr(mtexts.txtsplacesdlg['Places']), pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.DEFAULT_DIALOG_STYLE)
         self.langid = langid
         self.netbook = netbook
         mvsizer = wx.BoxSizer(wx.VERTICAL)
@@ -151,7 +152,7 @@ class PlacesDlg(wx.Dialog):
         self.londeg = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 180), size=(40,
                                                                                                    -1))
         self.londeg.SetValue('0')
-        self.londeg.SetHelpText(mtexts.txtsplacesdlg['HelpLonDeg'])
+        self.londeg.SetHelpText(i18n.tr(mtexts.txtsplacesdlg['HelpLonDeg']))
         self.londeg.SetMaxLength(3)
         vvsizer.Add(self.londeg, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -161,14 +162,14 @@ class PlacesDlg(wx.Dialog):
         self.lonmin = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 59), size=(40,
                                                                                                   -1))
         self.lonmin.SetValue('0')
-        self.lonmin.SetHelpText(mtexts.txtsplacesdlg['HelpMin'])
+        self.lonmin.SetHelpText(i18n.tr(mtexts.txtsplacesdlg['HelpMin']))
         self.lonmin.SetMaxLength(2)
         vvsizer.Add(self.lonmin, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
-        self.placerbE = wx.RadioButton(self, -1, mtexts.txtsplacesdlg['E'], style=wx.RB_GROUP)
+        self.placerbE = wx.RadioButton(self, -1, i18n.tr(mtexts.txtsplacesdlg['E']), style=wx.RB_GROUP)
         vvsizer.Add(self.placerbE, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT | wx.LEFT, 2)
-        self.placerbW = wx.RadioButton(self, -1, mtexts.txtsplacesdlg['W'])
+        self.placerbW = wx.RadioButton(self, -1, i18n.tr(mtexts.txtsplacesdlg['W']))
         vvsizer.Add(self.placerbW, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT | wx.LEFT, 2)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         label = wx.StaticText(self, -1, mtexts.txtsplacesdlg['Lat'] + ':')
@@ -179,7 +180,7 @@ class PlacesDlg(wx.Dialog):
         self.latdeg = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 90), size=(40,
                                                                                                   -1))
         self.latdeg.SetValue('0')
-        self.latdeg.SetHelpText(mtexts.txtsplacesdlg['HelpLatDeg'])
+        self.latdeg.SetHelpText(i18n.tr(mtexts.txtsplacesdlg['HelpLatDeg']))
         self.latdeg.SetMaxLength(2)
         vvsizer.Add(self.latdeg, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -189,42 +190,42 @@ class PlacesDlg(wx.Dialog):
         self.latmin = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 59), size=(40,
                                                                                                   -1))
         self.latmin.SetValue('0')
-        self.latmin.SetHelpText(mtexts.txtsplacesdlg['HelpMin'])
+        self.latmin.SetHelpText(i18n.tr(mtexts.txtsplacesdlg['HelpMin']))
         self.latmin.SetMaxLength(2)
         vvsizer.Add(self.latmin, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         vvsizer = wx.BoxSizer(wx.VERTICAL)
-        self.placerbN = wx.RadioButton(self, -1, mtexts.txtsplacesdlg['N'], style=wx.RB_GROUP)
+        self.placerbN = wx.RadioButton(self, -1, i18n.tr(mtexts.txtsplacesdlg['N']), style=wx.RB_GROUP)
         vvsizer.Add(self.placerbN, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT | wx.LEFT, 2)
-        self.placerbS = wx.RadioButton(self, -1, mtexts.txtsplacesdlg['S'])
+        self.placerbS = wx.RadioButton(self, -1, i18n.tr(mtexts.txtsplacesdlg['S']))
         vvsizer.Add(self.placerbS, 0, wx.ALIGN_LEFT | wx.TOP | wx.RIGHT | wx.LEFT, 2)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         vsizer.Add(fgsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         label = wx.StaticText(self, -1, mtexts.txtsplacesdlg['Place'] + ':')
         vsizer.Add(label, 0, wx.ALIGN_LEFT | wx.TOP | wx.LEFT | wx.RIGHT, 5)
         self.birthplace = wx.TextCtrl(self, -1, '', size=(170, -1))
-        self.birthplace.SetHelpText(mtexts.txtsplacesdlg['HelpPlace'])
+        self.birthplace.SetHelpText(i18n.tr(mtexts.txtsplacesdlg['HelpPlace']))
         self.birthplace.SetMaxLength(20)
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         hsizer.Add(self.birthplace, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         ID_Search = wx.NewId()
-        btnSearch = wx.Button(self, ID_Search, mtexts.txtsplacesdlg['Search'])
+        btnSearch = wx.Button(self, ID_Search, i18n.tr(mtexts.txtsplacesdlg['Search']))
         hsizer.Add(btnSearch, 0, wx.ALIGN_CENTER)
         vsizer.Add(hsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         placesizer.Add(vsizer, 0, wx.ALIGN_LEFT | wx.ALL, 0)
         vsubsizer = wx.BoxSizer(wx.VERTICAL)
         vsubsizer.Add(placesizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.RIGHT, 5)
-        maxonlinesize = wx.StaticBox(self, label=mtexts.txtsplacesdlg['MaxNumberOnlineSearch'])
+        maxonlinesize = wx.StaticBox(self, label=i18n.tr(mtexts.txtsplacesdlg['MaxNumberOnlineSearch']))
         maxonlinesizesizer = wx.StaticBoxSizer(maxonlinesize, wx.VERTICAL)
         self.sizeslider = wx.Slider(self, -1, 2, 2, 100, size=(250, -1), style=wx.SL_LABELS)
         maxonlinesizesizer.Add(self.sizeslider, 1, wx.ALIGN_CENTRE, 5)
         vsubsizer.Add(maxonlinesizesizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.RIGHT, 5)
-        self.szone = wx.StaticBox(self, label=mtexts.txtsplacesdlg['Zone'])
+        self.szone = wx.StaticBox(self, label=i18n.tr(mtexts.txtsplacesdlg['Zone']))
         zonesizer = wx.StaticBoxSizer(self.szone, wx.VERTICAL)
         hhsizer = wx.BoxSizer(wx.HORIZONTAL)
-        label = wx.StaticText(self, -1, mtexts.txtsplacesdlg['GMT'])
+        label = wx.StaticText(self, -1, i18n.tr(mtexts.txtsplacesdlg['GMT']))
         hhsizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
-        self.pluscb = wx.ComboBox(self, -1, PlacesDlg.PLUSCHOICES[0], size=(50, -1), choices=PlacesDlg.PLUSCHOICES, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.pluscb = wx.ComboBox(self, -1, PlacesDlg.PLUSCHOICES[0], size=(50, -1), choices=i18n.tr(PlacesDlg.PLUSCHOICES), style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.pluscb.SetStringSelection(PlacesDlg.PLUSCHOICES[0])
         hhsizer.Add(self.pluscb, 0, wx.LEFT, 5)
         zonesizer.Add(hhsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -235,7 +236,7 @@ class PlacesDlg(wx.Dialog):
         self.zhour = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 12), size=(40,
                                                                                                  -1))
         self.zhour.SetValue('0')
-        self.zhour.SetHelpText(mtexts.txtsplacesdlg['HelpZoneHour'])
+        self.zhour.SetHelpText(i18n.tr(mtexts.txtsplacesdlg['HelpZoneHour']))
         self.zhour.SetMaxLength(2)
         vvsizer.Add(self.zhour, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
@@ -245,18 +246,18 @@ class PlacesDlg(wx.Dialog):
         self.zminute = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 59), size=(40,
                                                                                                    -1))
         self.zminute.SetValue('0')
-        self.zminute.SetHelpText(mtexts.txtsplacesdlg['HelpMin'])
+        self.zminute.SetHelpText(i18n.tr(mtexts.txtsplacesdlg['HelpMin']))
         self.zminute.SetMaxLength(2)
         vvsizer.Add(self.zminute, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT, 5)
         fgsizer.Add(vvsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         zonesizer.Add(fgsizer, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         hhsubsizer = wx.BoxSizer(wx.HORIZONTAL)
         hhsubsizer.Add(zonesizer, 0, wx.ALIGN_LEFT | wx.RIGHT, 5)
-        self.salt = wx.StaticBox(self, label=mtexts.txtsplacesdlg['Alt'])
+        self.salt = wx.StaticBox(self, label=i18n.tr(mtexts.txtsplacesdlg['Alt']))
         altsizer = wx.StaticBoxSizer(self.salt, wx.VERTICAL)
         self.alt = wx.TextCtrl(self, -1, '', validator=intvalidator.IntValidator(0, 10000), size=(60,
                                                                                                   -1))
-        self.alt.SetHelpText(mtexts.txtsplacesdlg['HelpAltitude'])
+        self.alt.SetHelpText(i18n.tr(mtexts.txtsplacesdlg['HelpAltitude']))
         self.alt.SetMaxLength(5)
         self.alt.SetValue('0')
         hhhsubsizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -270,14 +271,14 @@ class PlacesDlg(wx.Dialog):
         btnssizer = wx.StaticBoxSizer(sbtns, wx.VERTICAL)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         ID_Add = wx.NewId()
-        btnAdd = wx.Button(self, ID_Add, mtexts.txtsplacesdlg['Add'])
+        btnAdd = wx.Button(self, ID_Add, i18n.tr(mtexts.txtsplacesdlg['Add']))
         vsizer.Add(btnAdd, 0, wx.GROW | wx.ALL, 5)
         if not self.netbook:
             ID_Remove = wx.NewId()
-            btnRemove = wx.Button(self, ID_Remove, mtexts.txtsplacesdlg['Remove'])
+            btnRemove = wx.Button(self, ID_Remove, i18n.tr(mtexts.txtsplacesdlg['Remove']))
             vsizer.Add(btnRemove, 0, wx.GROW | wx.ALL, 5)
             ID_RemoveAll = wx.NewId()
-            btnRemoveAll = wx.Button(self, ID_RemoveAll, mtexts.txtsplacesdlg['RemoveAll'])
+            btnRemoveAll = wx.Button(self, ID_RemoveAll, i18n.tr(mtexts.txtsplacesdlg['RemoveAll']))
             vsizer.Add(btnRemoveAll, 0, wx.GROW | wx.ALL, 5)
         btnssizer.Add(vsizer, 0, wx.GROW | wx.ALL, 5)
         vsubsizer.Add(btnssizer, 0, wx.GROW | wx.ALIGN_LEFT | wx.RIGHT, 5)
@@ -298,13 +299,13 @@ class PlacesDlg(wx.Dialog):
         if wx.Platform != '__WXMSW__':
             btn = wx.ContextHelpButton(self)
             btnsizer.AddButton(btn)
-        btnOk = wx.Button(self, wx.ID_OK, mtexts.txtscommon['Ok'])
-        btnOk.SetHelpText(mtexts.txtscommon['HelpOk'])
+        btnOk = wx.Button(self, wx.ID_OK, i18n.tr(mtexts.txtscommon['Ok']))
+        btnOk.SetHelpText(i18n.tr(mtexts.txtscommon['HelpOk']))
         btnOk.SetDefault()
         btnsizer.AddButton(btnOk)
         self.Bind(wx.EVT_BUTTON, self.onOK, id=wx.ID_OK)
-        btn = wx.Button(self, wx.ID_CANCEL, mtexts.txtscommon['Cancel'])
-        btn.SetHelpText(mtexts.txtscommon['HelpCancel'])
+        btn = wx.Button(self, wx.ID_CANCEL, i18n.tr(mtexts.txtscommon['Cancel']))
+        btn.SetHelpText(i18n.tr(mtexts.txtscommon['HelpCancel']))
         btnsizer.AddButton(btn)
         btnsizer.Realize()
         mvsizer.Add(btnsizer, 0, wx.GROW | wx.ALL, 10)
@@ -315,12 +316,12 @@ class PlacesDlg(wx.Dialog):
     def OnSearch(self, event):
         txt = self.birthplace.GetValue()
         if txt == '':
-            dlg = wx.MessageDialog(self, mtexts.txtsplacesdlg['PlaceEmpty'], '', wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtsplacesdlg['PlaceEmpty']), '', wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             dlg.Destroy()
             return
         if len(txt) < 3:
-            dlg = wx.MessageDialog(self, mtexts.txtsplacesdlg['TooFewChars'], '', wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtsplacesdlg['TooFewChars']), '', wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             dlg.Destroy()
             return
@@ -335,7 +336,7 @@ class PlacesDlg(wx.Dialog):
                 pldlg.Destroy()
                 return
         if not tradoptions.get('place_online'):
-            dlg = wx.MessageDialog(self, mtexts.txtsplacesdlg['NotFound'], '', wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtsplacesdlg['NotFound']), '', wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
             dlg.Destroy()
             return
@@ -356,7 +357,7 @@ class PlacesDlg(wx.Dialog):
                         self.OnAdd(None)
                 pldlg.Destroy()
         else:
-            dlg = wx.MessageDialog(self, mtexts.txtsplacesdlg['NotFound'], '', wx.OK | wx.ICON_EXCLAMATION)
+            dlg = wx.MessageDialog(self, i18n.tr(mtexts.txtsplacesdlg['NotFound']), '', wx.OK | wx.ICON_EXCLAMATION)
             dlg.ShowModal()
 
     def fillFields(self, it):

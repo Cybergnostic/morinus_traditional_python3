@@ -1,5 +1,6 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
+import i18n
 from datetime import datetime, timedelta
 import wx
 import tablepresentation
@@ -56,7 +57,7 @@ class FirdariaWnd(commonwnd.CommonWnd):
         tableclr = self.options.clrtable
         if self.bw:
             tableclr = (0, 0, 0)
-        img = Image.new('RGB', (self.WIDTH, self.HEIGHT), self.bkgclr)
+        img = Image.new('RGB', i18n.tr((self.WIDTH, self.HEIGHT)), i18n.tr(self.bkgclr))
         draw = ImageDraw.Draw(img)
         BOR = commonwnd.CommonWnd.BORDER
         draw.rectangle(((BOR, BOR), (BOR + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=tablepresentation.header_colour(self.bkgclr, tableclr, self.bw))

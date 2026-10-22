@@ -4,6 +4,7 @@ chosen by transiting planet, aspect and the natal points they reach. The
 transits are those of Morinus's own calculation (transits.Transits); a
 double-click opens the transit chart around the radix."""
 
+import i18n
 import csv
 import os
 import wx
@@ -60,14 +61,15 @@ def search(radix, start, end, planets_, aspects, targets, progress=None):
 
 def describe(tr):
 	"""'Saturn (R) square Sun', 'Mars enters Leo', 'Jupiter conjunct the antiscion of Venus'..."""
-	who = PLANETS[tr.plt] + (' (R)' if tr.pltretr == T.RETR else ' (S)' if tr.pltretr == T.STAT else '')
+	# whole phrases are translated ('natal Sun', 'enters Leo'): Serbian declines them
+	who = i18n.tr(PLANETS[tr.plt]) + (' (R)' if tr.pltretr == T.RETR else ' (S)' if tr.pltretr == T.STAT else '')
 	if tr.objtype == T.SIGN:
-		return '%s enters %s' % (who, SIGNS[tr.obj])
+		return '%s %s' % (who, i18n.tr('enters ' + SIGNS[tr.obj]))
 	verb = ASPECTVERBS[tr.aspect] if 0 <= tr.aspect < len(ASPECTVERBS) else 'conjunct'
 	target = {T.PLANET: lambda: 'natal ' + BODIES[tr.obj], T.ASCMC: lambda: ('the Ascendant', 'the Midheaven')[tr.obj],
 		T.LOF: lambda: 'the Lot of Fortune', T.ANTISCION: lambda: 'the antiscion of ' + BODIES[tr.obj],
 		T.CONTRAANTISCION: lambda: 'the contra-antiscion of ' + BODIES[tr.obj]}[tr.objtype]()
-	return '%s %s %s' % (who, verb, target)
+	return '%s %s %s' % (who, i18n.tr(verb), i18n.tr(target))
 
 
 class TransitSearch(wx.Frame):
@@ -75,7 +77,7 @@ class TransitSearch(wx.Frame):
 	def __init__(self, mainfr, sun=False):
 		self.mainfr = mainfr
 		self.radix = radix = mainfr.horoscope
-		wx.Frame.__init__(self, mainfr, -1, 'Transit search — ' + radix.name, size=(980, 680))
+		wx.Frame.__init__(self, mainfr, -1, i18n.tr('Transit search') + ' — ' + radix.name, size=(980, 680))
 		self.SetMinSize((760, 480))
 		panel = wx.Panel(self)
 		year = zodiacalreleasing.datestr(radix, zodiacalreleasing.now())[:4]
@@ -83,35 +85,35 @@ class TransitSearch(wx.Frame):
 		self.fromyear = wx.SpinCtrl(panel, -1, min=1, max=5000, initial=year, size=(130, -1))
 		self.toyear = wx.SpinCtrl(panel, -1, min=1, max=5000, initial=year, size=(130, -1))
 		names = ('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December')
-		self.frommonth = wx.Choice(panel, -1, choices=names)
-		self.tomonth = wx.Choice(panel, -1, choices=names)
+		self.frommonth = wx.Choice(panel, -1, choices=i18n.tr(names))
+		self.tomonth = wx.Choice(panel, -1, choices=i18n.tr(names))
 		self.frommonth.SetSelection(0)
 		self.tomonth.SetSelection(11)
-		self.planets = [wx.CheckBox(panel, -1, p) for p in PLANETS]
-		self.aspects = [wx.CheckBox(panel, -1, a) for a in ASPECTS]
-		self.targets = [(typ, wx.CheckBox(panel, -1, label)) for typ, label in TARGETS]
+		self.planets = [wx.CheckBox(panel, -1, i18n.tr(p)) for p in PLANETS]
+		self.aspects = [wx.CheckBox(panel, -1, i18n.tr(a)) for a in ASPECTS]
+		self.targets = [(typ, wx.CheckBox(panel, -1, i18n.tr(label))) for typ, label in TARGETS]
 		self.preset(sun)
-		go = wx.Button(panel, -1, 'Search')
+		go = wx.Button(panel, -1, i18n.tr('Search'))
 		go.SetDefault()
 		go.Bind(wx.EVT_BUTTON, self.onSearch)
-		self.status = wx.StaticText(panel, -1, 'Choose the months and the transits, then Search.')
+		self.status = wx.StaticText(panel, -1, i18n.tr('Choose the months and the transits, then Search.'))
 		self.list = wx.ListCtrl(panel, -1, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
 		for i, (name, width) in enumerate((('Date and time (chart\'s zone)', 190), ('Transit', 430), ('In natal house', 120))):
-			self.list.InsertColumn(i, name, width=width)
+			self.list.InsertColumn(i, i18n.tr(name), width=width)
 		self.list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.onOpen)
-		self.openbtn = wx.Button(panel, -1, 'Open transit chart')
+		self.openbtn = wx.Button(panel, -1, i18n.tr('Open transit chart'))
 		self.openbtn.Bind(wx.EVT_BUTTON, self.onOpen)
-		csvbtn = wx.Button(panel, -1, 'Export as CSV...')
+		csvbtn = wx.Button(panel, -1, i18n.tr('Export as CSV...'))
 		csvbtn.Bind(wx.EVT_BUTTON, self.onCSV)
 		close = wx.Button(panel, wx.ID_CLOSE)
 		close.Bind(wx.EVT_BUTTON, lambda e: self.Close())
 
 		grid = wx.FlexGridSizer(0, 2, 8, 12)
 		span = wx.BoxSizer(wx.HORIZONTAL)
-		for w, gap in ((wx.StaticText(panel, -1, 'From'), 6), (self.frommonth, 4), (self.fromyear, 18),
-		               (wx.StaticText(panel, -1, 'to'), 6), (self.tomonth, 4), (self.toyear, 0)):
+		for w, gap in ((wx.StaticText(panel, -1, i18n.tr('From')), 6), (self.frommonth, 4), (self.fromyear, 18),
+		               (wx.StaticText(panel, -1, i18n.tr('to')), 6), (self.tomonth, 4), (self.toyear, 0)):
 			span.Add(w, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, gap)
-		presets = wx.Choice(panel, -1, choices=['All transits', 'Sun to the angles and natal planets', 'Slow planets: hard aspects'])
+		presets = wx.Choice(panel, -1, choices=i18n.tr(['All transits', 'Sun to the angles and natal planets', 'Slow planets: hard aspects']))
 		presets.SetSelection(1 if sun else 0)
 		presets.Bind(wx.EVT_CHOICE, lambda e: self.preset(*{0: (False,), 1: (True,), 2: (False, True)}[presets.GetSelection()]))
 		for label, items in (('Months', [span]), ('Preset', [presets]), ('Transiting', self.planets), ('Aspects', self.aspects),
@@ -161,10 +163,10 @@ class TransitSearch(wx.Frame):
 			start, end = end, start
 		span = len(list(months(start, end)))
 		if span > MAXMONTHS:
-			wx.MessageBox('Search at most %d years at a time.' % (MAXMONTHS // 12), 'Transit search', wx.OK | wx.ICON_INFORMATION, self)
+			wx.MessageBox(i18n.tr('Search at most %d years at a time.') % (MAXMONTHS // 12), i18n.tr('Transit search'), wx.OK | wx.ICON_INFORMATION, self)
 			return
 		planets_, aspects, targets = self.choices()
-		dlg = wx.ProgressDialog('Transit search', 'Searching %d months...' % span, maximum=span, parent=self,
+		dlg = wx.ProgressDialog(i18n.tr('Transit search'), i18n.tr('Searching %d months...') % span, maximum=span, parent=self,
 		                        style=wx.PD_APP_MODAL | wx.PD_CAN_ABORT | wx.PD_AUTO_HIDE)
 		try:
 			self.results = search(self.radix, start, end, planets_, aspects, targets,
@@ -178,8 +180,8 @@ class TransitSearch(wx.Frame):
 		for n, (jd, tr) in enumerate(self.results):
 			self.list.InsertItem(n, zodiacalreleasing.datestr(self.radix, jd, hours=True))
 			self.list.SetItem(n, 1, describe(tr))
-			self.list.SetItem(n, 2, ORDINALS[tr.house] if 0 <= tr.house < 12 else '')
-		self.status.SetLabel('%d transits' % len(self.results))
+			self.list.SetItem(n, 2, i18n.tr(ORDINALS[tr.house] if 0 <= tr.house < 12 else ''))
+		self.status.SetLabel(i18n.tr('%d transits') % len(self.results))
 		self.openbtn.Enable(bool(self.results))
 		if self.results:
 			self.list.Select(0)
@@ -201,7 +203,7 @@ class TransitSearch(wx.Frame):
 		frame.Show(True)
 
 	def onCSV(self, event):
-		dlg = wx.FileDialog(self, 'Export as CSV', '', self.radix.name + '_Transits.csv', 'CSV files (*.csv)|*.csv', wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+		dlg = wx.FileDialog(self, i18n.tr('Export as CSV'), '', self.radix.name + '_Transits.csv', 'CSV files (*.csv)|*.csv', wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 		if dlg.ShowModal() == wx.ID_OK:
 			path = dlg.GetPath()
 			if not path.lower().endswith('.csv'):
@@ -223,7 +225,7 @@ def show(mainfr, sun=False):
 	if mainfr.splash:
 		return None
 	if mainfr.horoscope.time.bc:
-		wx.MessageBox('The transit search is not available for BC charts.', 'Transit search', wx.OK | wx.ICON_INFORMATION, mainfr)
+		wx.MessageBox(i18n.tr('The transit search is not available for BC charts.'), i18n.tr('Transit search'), wx.OK | wx.ICON_INFORMATION, mainfr)
 		return None
 	wnd = getattr(mainfr, 'transit_search', None)
 	if not wnd:

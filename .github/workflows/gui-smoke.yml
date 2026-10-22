@@ -44,6 +44,13 @@ jobs:
           xvfb-run -a -s "-screen 0 1600x1000x24" python3 tests/guismoke.py "$RUNNER_TEMP/copy" "$RUNNER_TEMP/out" --exercise
           python3 tests/check_smoke.py "$RUNNER_TEMP/out/guismoke.json"
 
+      - name: Smoke test in Serbian
+        if: ${{ always() && steps.focused_smoke.outcome == 'success' }}
+        run: |
+          cp -r . "$RUNNER_TEMP/copy-sr"
+          xvfb-run -a -s "-screen 0 1600x1000x24" python3 tests/guismoke.py "$RUNNER_TEMP/copy-sr" "$RUNNER_TEMP/out-sr" --exercise --lang 3
+          python3 tests/check_smoke.py "$RUNNER_TEMP/out-sr/guismoke.json"
+
       - uses: actions/upload-artifact@v6
         if: always()
         with:
