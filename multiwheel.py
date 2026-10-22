@@ -268,8 +268,11 @@ class MultiWheel:
                   for i in range(count)]
         motions = [('S' if speed == 0 else common.common.retr)
                    if speed <= 0 else '' for speed in speeds]
-        motion_boxes = [self.measure(text, motion_font) if text else (0, 0)
-                        for text in motions]
+        motion_fonts = [minute_font if speed == 0 else motion_font
+                        for speed in speeds]
+        motion_boxes = [self.measure(text, motion_fonts[i])
+                        if text else (0, 0)
+                        for i, text in enumerate(motions)]
 
         # Consider the complete planet+position group while separating
         # neighbouring longitudes, including room for the motion marker
@@ -318,7 +321,7 @@ class MultiWheel:
                              minute_xy[1] + math.cos(theta) * shift)
                 wheel_primitives.optical_text_center(
                     self.draw, self.scaled(motion_xy),
-                    motions[i], motion_font, colour)
+                    motions[i], motion_fonts[i], colour)
             self.hits.append((glyph_xy, max(glyph_size * .7, 12),
                               chrt, i, exact, role))
 
