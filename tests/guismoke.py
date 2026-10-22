@@ -445,6 +445,11 @@ def main():
 					assert wnd.renderer.aspect_ring == 1
 					wnd.aspect_choice.SetSelection(0)
 					wnd.redraw()
+					# Thin chart boundaries are local to multiwheel; do not
+					# weaken the normal Morinus chart's global pen settings.
+					assert 2.0 < wnd.renderer.separator_width((100, 165)) < 3.5
+					assert wnd.renderer.ink('major')[1] <= 3
+					assert wnd.renderer.ink('divider')[1] <= 2
 					assert len(wnd.renderer.others) == count
 					assert wnd.renderer.hits, 'No glyph hitboxes'
 					assert wnd.renderer.onClick(wnd.renderer.hits[0][0])
