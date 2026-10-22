@@ -16,6 +16,7 @@ import common
 import comparegrid
 import houses
 import multiwheel_layout
+import wheel_primitives
 import planets
 import util
 
@@ -88,9 +89,9 @@ class MultiWheel:
         return math.pi + math.radians(asc - lon)
 
     def point(self, lon, radius):
-        theta = self.angle(lon)
-        return (self.cx + math.cos(theta) * radius,
-                self.cy + math.sin(theta) * radius)
+        asc = zodiac_lon(self.radix,
+                         self.radix.houses.ascmc[houses.Houses.ASC], self.options)
+        return wheel_primitives.polar_point(self.cx, self.cy, asc, lon, radius)
 
     def colour(self, value):
         return (0, 0, 0) if self.bw else tuple(value)
@@ -137,12 +138,14 @@ class MultiWheel:
                           self.options)
 
     def degree_text(self, lon):
-        n = int(lon % 30)
-        minute = int(round((lon % 1) * 60))
-        if minute == 60:
-            n = (n + 1) % 30
-            minute = 0
-        return '%02d\N{DEGREE SIGN}%02d' % (n, minute)
+        degree, minute = wheel_primitives.position_text(lon, '\N{DEGREE SIGN}')
+        return degree + minute[:-1]
+
+    def planet_colour(self, index):
+        """Match GraphChart's planet colours, including its node fallback."""
+        colors = self.options.clrplanets
+        colour_index = min(index, planets.Planets.BODIES_NUM - 2)
+        return colors[colour_index] if colour_index < len(colors) else self.options.clrtexts
 
     def draw_aspects(self, core):
         """Draw no aspects by default; optionally radix or one selected ring."""
@@ -166,41 +169,120 @@ class MultiWheel:
                 self.stroke(self.point(a, r), self.point(b, r), 'divider',
                             self.options.clraspect[kind])
 
+    def draw_house_spokes(self, chrt, inner, outer, colour=None):
+        """The same twelve cusp longitudes used by GraphChart.drawHouses."""
+        if not self.options.houses:
+            return
+        for house in range(1, houses.Houses.HOUSE_NUM + 1):
+            lon = zodiac_lon(chrt, chrt.houses.cusps[house], self.options)
+            self.stroke(self.point(lon, inner), self.point(lon, outer),
+                        'divider', colour if colour is not None else self.options.clrhouses)
+
+    def draw_angles(self, chrt, inner, outer, colour=None):
+        """ASC/DSC/MC/IC for this chart, in the radix's shared orientation."""
+        asc, mc = (chrt.houses.ascmc[houses.Houses.ASC],
+                   chrt.houses.ascmc[houses.Houses.MC])
+        colour = colour if colour is not None else self.options.clrAscMC
+        for i, lon in enumerate(wheel_primitives.angle_longitudes(asc, mc)):
+            display_lon = zodiac_lon(chrt, lon, self.options)
+            a, b = self.point(display_lon, inner), self.point(display_lon, outer)
+            self.stroke(a, b, 'major', colour)
+            # Like GraphChart.drawAscMC, arrowheads mark ASC and MC only.
+            if i in (0, 2):
+                theta = self.angle(display_lon)
+                delta = math.pi / 360.0
+                x, y = self.cx, self.cy
+                left = (x + math.cos(theta + delta) * (outer - 3),
+                        y + math.sin(theta + delta) * (outer - 3))
+                right = (x + math.cos(theta - delta) * (outer - 3),
+                         y + math.sin(theta - delta) * (outer - 3))
+                tip = self.point(display_lon, outer + min(5, (outer - inner) * .11))
+                self.stroke(left, tip, 'pointer', colour)
+                self.stroke(right, tip, 'pointer', colour)
+
+    def draw_shared_spokes(self, core, zodiac, rings):
+        """Continue the radix cusps and sign boundaries through *all* charts."""
+        edge = rings[-1][1]
+        # Cusp lines are lighter than the four axes drawn over them.
+        self.draw_house_spokes(self.radix, core * .55, edge)
+        for sign in range(12):
+            lon = sign * 30.0
+            self.stroke(self.point(lon, zodiac[0]),
+                        self.point(lon, edge), 'major')
+        self.draw_angles(self.radix, core * .55, edge)
+
     def draw_houses(self, core):
+        """House numbers retain the inner Morinus chart's house-number ring."""
         if not self.options.houses:
             return
         cusps = self.radix.houses.cusps
-        fnt = self.font(max(8, core * 0.06))
+        font = self.font(max(8, core * .06))
         for index in range(1, 13):
             lon = zodiac_lon(self.radix, cusps[index], self.options)
-            nextlon = zodiac_lon(self.radix, cusps[index % 12 + 1], self.options)
-            # as in Morinus's wheel: the cusps and the house numbers outside the aspects
-            self.stroke(self.point(lon, core * 0.55),
-                        self.point(lon, core), 'major' if index in (1, 4, 7, 10) else 'divider')
-            mid = (lon + (nextlon - lon) % 360 / 2) % 360
-            self.label(self.point(mid, core * 0.61), str(index), fnt,
-                       self.options.clrhousenumbers)
+            next_lon = zodiac_lon(self.radix, cusps[index % 12 + 1], self.options)
+            mid = (lon + (next_lon - lon) % 360 / 2) % 360
+            self.label(self.point(mid, core * .61), str(index),
+                       font, self.options.clrhousenumbers)
+
+    def draw_planet_band(self, chrt, edges, role):
+        """Draw all planets using the same glyph / degree / minute hierarchy.
+
+        The one-line degree-minute label of the first prototype is replaced
+        with Morinus's two inward text lines, including station and retrograde.
+        """
+        inner, outer = edges
+        width = outer - inner
+        positions = wheel_primitives.planet_band_radii(inner, outer)
+        glyph_size = max(10, min(width * .27, self.rmax * .052))
+        glyph_font = self.font(glyph_size, symbol=True)
+        degree_font = self.font(max(8, glyph_size * .72))
+        minute_font = self.font(max(8, glyph_size * .61))
+        motion_font = self.font(max(8, glyph_size * .55), symbol=True)
+        lons = [self.longitude(chrt, i) for i in range(planets.Planets.BODIES_NUM)]
+        labels = [wheel_primitives.position_text(lon, '\N{DEGREE SIGN}') for lon in lons]
+
+        # All three label rows participate in angular collision avoidance.
+        tier_widths = (
+            (positions['glyph'], glyph_font,
+             [common.common.planets[i] for i in range(len(lons))]),
+            (positions['degree'], degree_font, [p[0] for p in labels]),
+            (positions['minute'], minute_font, [p[1] for p in labels]),
+        )
+        gap = max(
+            math.degrees((max(self.measure(s, font)[0] for s in texts) + 4)
+                         / max(radius, 1))
+            for radius, font, texts in tier_widths)
+        minimum = min(max(6.0, gap), 359.0 / len(lons))
+        spread = multiwheel_layout.spread_longitudes(lons, minimum)
+        for i, (exact, displayed) in enumerate(zip(lons, spread)):
+            colour = self.planet_colour(i)
+            self.stroke(self.point(exact, positions['tick']),
+                        self.point(exact, outer - 1), 'pointer')
+            xy = self.point(displayed, positions['glyph'])
+            self.label(xy, common.common.planets[i], glyph_font, colour)
+            self.label(self.point(displayed, positions['degree']),
+                       labels[i][0], degree_font, colour)
+            self.label(self.point(displayed, positions['minute']),
+                       labels[i][1], minute_font, colour)
+            speed = chrt.planets.planets[i].data[planets.Planet.SPLON]
+            if speed <= 0:
+                if speed == 0:
+                    self.label(self.point(displayed, positions['motion']),
+                               'S', minute_font, colour)
+                else:
+                    self.label(self.point(displayed, positions['motion']),
+                               common.common.retr, motion_font, colour)
+            self.hits.append((xy, max(glyph_size * .7, 12),
+                              chrt, i, exact, role))
 
     def draw_radix(self, core):
         self.draw_aspects(core)
         self.draw_houses(core)
-        self.circle(core * 0.55)
+        self.circle(core * .55)
         if self.options.houses:
-            self.circle(core * 0.67, 'divider')	# the ring of the house numbers
+            self.circle(core * .67, 'divider')
         self.circle(core)
-        lons = [self.longitude(self.radix, i) for i in range(planets.Planets.BODIES_NUM)]
-        radius = core * 0.78
-        glyph = max(11, core * 0.115)
-        spread = multiwheel_layout.spread_longitudes(
-            lons, max(7.0, math.degrees((glyph + 3) / max(1, radius))))
-        symbol_font = self.font(glyph, symbol=True)
-        for i, (exact, displayed) in enumerate(zip(lons, spread)):
-            self.stroke(self.point(exact, core * 0.89),
-                        self.point(exact, core), 'pointer')
-            xy = self.point(displayed, radius)
-            clr = self.options.clrplanets[i] if i < len(self.options.clrplanets) else self.options.clrtexts
-            self.label(xy, common.common.planets[i], symbol_font, clr)
-            self.hits.append((xy, max(10, glyph * .65), self.radix, i, lons[i], i18n.tr('Radix')))
+        self.draw_planet_band(self.radix, (core * .67, core), i18n.tr('Radix'))
 
     def draw_decans(self, edges):
         """The one shared decan band, using Morinus's selected rulers."""
@@ -298,53 +380,16 @@ class MultiWheel:
         self.draw.ellipse(xy, fill=background)
 
     def draw_outer_ring(self, chrt, index, edges):
-        """Each planet: a tick at its exact longitude on the inner edge, its glyph
-        next to it and its degree (with the retrograde mark) at the outer edge,
-        both placed by their real size so that they stay inside the band."""
+        """A chart-specific ring with Morinus notation and its own axes."""
         inner, outer = edges
         border = None if self.bw else RING_COLOURS[index - 1]
+        # Thin double concentric dividers separate the charts.
         self.circle(inner, 'major', border)
+        self.circle(inner + min(4.0, (outer - inner) * .075), 'divider', border)
         self.circle(outer, 'major', border)
-        width = outer - inner
-        tick = min(10, width * .15)
-        glyph = max(10, min(width * 0.36, self.rmax * 0.05))
-        glyph_font = self.font(glyph, symbol=True)
-        n = planets.Planets.BODIES_NUM
-        sizes = [self.measure(common.common.planets[i], glyph_font) for i in range(n)]
-        gw = max(w for w, h in sizes)
-        # the degree must fit beside the glyph across the band (at the sides of the wheel)
-        dsize = max(7, min(glyph * 0.62, (width - tick - gw - 8) / 3.4))
-        degree_font = self.font(dsize)
-        retro_font = self.font(dsize, symbol=True)
-        lons = [self.longitude(chrt, i) for i in range(n)]
-        texts = [self.degree_text(lon) for lon in lons]
-        retro = [chrt.planets.planets[i].data[planets.Planet.SPLON] < 0 for i in range(n)]
-        rw, rh = self.measure(common.common.retr, retro_font)
-        boxes = []
-        for i in range(n):
-            tw, th = self.measure(texts[i], degree_font)
-            boxes.append((tw + (rw + 2 if retro[i] else 0), max(th, rh if retro[i] else 0), tw))
-        widest = max(gw, max(b[0] for b in boxes))
-        separation = math.degrees((widest + 4) / max(inner + width / 2.0, 1))
-        spread = multiwheel_layout.spread_longitudes(lons, min(max(6.0, separation), 359.0 / n))
-        for i, (exact, displayed) in enumerate(zip(lons, spread)):
-            self.stroke(self.point(exact, inner + 1), self.point(exact, inner + tick), 'pointer')
-            theta = self.angle(displayed)
-            gw_i, gh_i = sizes[i]
-            g_reach = self.reach(theta, gw_i, gh_i)
-            cw, ch, tw = boxes[i]
-            t_reach = self.reach(theta, cw, ch)
-            g_r = inner + tick + 2 + g_reach
-            t_r = max(outer - 3 - t_reach, g_r + g_reach + t_reach + 1)
-            colour = (self.options.clrplanets[i] if i < len(self.options.clrplanets)
-                      else self.options.clrtexts)
-            xy = self.point(displayed, g_r)
-            self.label(xy, common.common.planets[i], glyph_font, colour)
-            cx, cy = self.point(displayed, t_r)
-            self.label((cx - (cw - tw) / 2.0, cy), texts[i], degree_font, self.options.clrtexts)
-            if retro[i]:
-                self.label((cx + cw / 2.0 - rw / 2.0, cy), common.common.retr, retro_font, colour)
-            self.hits.append((xy, max(glyph * .7, 12), chrt, i, exact, i18n.tr('Ring %d') % index))
+        self.draw_house_spokes(chrt, inner + 4, outer - 2, border)
+        self.draw_angles(chrt, inner + 4, outer - 5, border)
+        self.draw_planet_band(chrt, edges, i18n.tr('Ring %d') % index)
 
     def drawChart(self):
         self.scale = 2  # crisp curves and glyphs after Lanczos downsampling
@@ -358,6 +403,7 @@ class MultiWheel:
         self.draw = ImageDraw.Draw(image)
         self.hits = []
         self.draw_ring_backgrounds(zodiac, rings)
+        self.draw_shared_spokes(core, zodiac, rings)
         self.draw_radix(core)
         self.draw_decans(decans)
         self.draw_terms(terms)
