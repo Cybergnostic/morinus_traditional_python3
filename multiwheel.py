@@ -792,18 +792,20 @@ class MultiWheelFrame(wx.Frame):
             self, choices=i18n.tr(['None', 'Radix only', 'Radix and ring 1']))
         self.aspect_choice.SetSelection(0)
         row.Add(self.aspect_choice, 0, wx.RIGHT, 15)
+        outer.Add(row, 0, wx.LEFT | wx.RIGHT | wx.TOP, 7)
+        viewrow = wx.BoxSizer(wx.HORIZONTAL)
         self.fit_button = wx.Button(self, label=i18n.tr('Fit'))
         self.actual_button = wx.Button(self, label='100%')
         self.out_button = wx.Button(self, label='-')
         self.in_button = wx.Button(self, label='+')
         for control in (self.fit_button, self.actual_button,
                         self.out_button, self.in_button):
-            row.Add(control, 0, wx.RIGHT, 4)
+            viewrow.Add(control, 0, wx.RIGHT, 4)
         self.side_button = wx.Button(self, label=i18n.tr('Hide charts'))
-        row.Add(self.side_button, 0, wx.RIGHT, 8)
+        viewrow.Add(self.side_button, 0, wx.RIGHT, 8)
         self.savebutton = wx.Button(self, label=i18n.tr('Save image (PNG)...'))
-        row.Add(self.savebutton)
-        outer.Add(row, 0, wx.ALL, 7)
+        viewrow.Add(self.savebutton)
+        outer.Add(viewrow, 0, wx.ALL, 7)
 
         # Put chart-source controls beside, not above, the drawing. This
         # recovers valuable vertical canvas space for the wheel itself.
