@@ -366,7 +366,7 @@ class MultiWheel:
         width = outer - inner
         # The degree ticks have their own inner lane; this third circle
         # closes it and frames the sign glyphs in a properly centred lane.
-        sign_inner = inner + width * .38
+        sign_inner, _ = multiwheel_layout.zodiac_sign_lane(edges)
         self.circle(sign_inner, 'circle')
         for degree in range(360):
             if degree % 30 == 0:
