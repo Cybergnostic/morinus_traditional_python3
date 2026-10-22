@@ -1,7 +1,7 @@
 import unittest
 
 from multiwheel_layout import (allocate_rings, allocate_traditional_rings,
-                               spread_longitudes)
+                               spread_longitudes, zodiac_sign_lane)
 
 
 class MultiWheelLayoutTests(unittest.TestCase):
@@ -17,6 +17,16 @@ class MultiWheelLayoutTests(unittest.TestCase):
             self.assertAlmostEqual(rings[-1][1], 300)
             descending = [rings[-1][1], rings[-1][0], zodiac[0], 0]
             self.assertTrue(all(a > b for a, b in zip(descending, descending[1:])))
+
+    def test_zodiac_sign_lane_follows_degree_ticks(self):
+        for inner, outer in ((80, 100), (180, 220), (0, 40)):
+            lane, end = zodiac_sign_lane((inner, outer))
+            self.assertGreater(lane, inner + .28 * (outer - inner))
+            self.assertLess(lane, outer)
+            self.assertAlmostEqual((lane + end) / 2,
+                                   inner + .69 * (outer - inner))
+        with self.assertRaises(ValueError):
+            zodiac_sign_lane((100, 100))
 
     def test_invalid_rings(self):
         for value in (0, 4):
