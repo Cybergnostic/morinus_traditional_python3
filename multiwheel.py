@@ -283,16 +283,18 @@ class MultiWheel:
             self.label(self.point(mid, core * .61), str(index),
                        font, self.options.clrhousenumbers)
 
-    def draw_planet_band(self, chrt, edges, role):
+    def draw_planet_band(self, chrt, edges, role, dial_side):
         """Draw each planet as one compact glyph-and-position unit.
 
         One angular slot contains a glyph followed inward by a horizontal
         degree+minute label. Stations and retrogradation stay alongside
         that label; they never create another radial row.
         """
-        inner, outer = edges
+        # The dial occupies a distinct radial strip, leaving a centered
+        # content band for glyphs and numeric longitudes.
+        (inner, outer), dial_anchor = self.draw_degree_dial(edges, dial_side)
         width = outer - inner
-        glyph_size = max(8, min(width * .26, self.rmax * .05))
+        glyph_size = max(8, min(width * .30, self.rmax * .05))
         glyph_font = self.font(glyph_size, symbol=True)
         position_font = self.font(max(8, glyph_size * .68))
         motion_font = self.font(max(8, glyph_size * .58), symbol=True)
@@ -331,9 +333,25 @@ class MultiWheel:
             radii = wheel_primitives.compact_planet_radii(
                 inner, outer, theta, glyph_boxes[i], text_boxes[i])
             colour = self.colour(self.planet_colour(i))
-            tick_in = outer - max(3.0, min(7.0, width * .11))
-            self.stroke(self.point(exact, tick_in),
-                        self.point(exact, outer - 1.0), 'pointer')
+            # The exact longitude is marked on the separate dial.  Join
+            # that point to the shifted label, following GraphChart's
+            # exact-to-spread planet pointer convention.
+            if dial_side == 'inner':
+                reach = wheel_primitives.radial_half_extent(
+                    text_boxes[i], theta)
+                label_end = radii['position'] - reach - 1.0
+            else:
+                reach = wheel_primitives.radial_half_extent(
+                    glyph_boxes[i], theta)
+                label_end = radii['glyph'] + reach + 1.0
+            self.stroke(self.point(exact, dial_anchor),
+                        self.point(displayed, label_end),
+                        'pointer', self.planet_colour(i))
+            # Darker short tick anchors the leader to the exact degree.
+            mark = 2.8 if dial_side == 'inner' else -2.8
+            self.stroke(self.point(exact, dial_anchor),
+                        self.point(exact, dial_anchor + mark),
+                        'major', self.planet_colour(i))
             glyph_xy = self.point(displayed, radii['glyph'])
             wheel_primitives.optical_text_center(
                 self.draw, self.scaled(glyph_xy),
@@ -368,7 +386,8 @@ class MultiWheel:
         if self.options.houses:
             self.circle(core * .67, 'divider')
         self.circle(core)
-        self.draw_planet_band(self.radix, (core * .67, core), i18n.tr('Radix'))
+        self.draw_planet_band(self.radix, (core * .67, core), i18n.tr('Radix'),
+                              'outer')
 
     def draw_decans(self, edges):
         """The one shared decan band, using Morinus's selected rulers."""
@@ -478,7 +497,8 @@ class MultiWheel:
         self.draw_sign_spokes(chart_start, outer)
         self.draw_house_spokes(chrt, chart_start, outer, border)
         self.draw_angles(chrt, chart_start, outer, border)
-        self.draw_planet_band(chrt, (chart_start, outer), i18n.tr('Ring %d') % index)
+        self.draw_planet_band(chrt, (chart_start, outer),
+                              i18n.tr('Ring %d') % index, 'inner')
 
     @staticmethod
     def separator_width(edges):
