@@ -511,7 +511,9 @@ def main():
 					for gen_window in generated_windows:
 						gen_window.Close()
 				# Restore our reference image to the original smoke transit.
-				picker.choice.SetSelection(len(picker.sources) - len(generated_windows) - 1)
+				picker.refresh()
+				picker.choice.SetSelection(next(i for i, (_, selected) in
+					enumerate(picker.sources) if selected is secondary))
 				wnd.redraw()
 				capture_window(wnd, 'multiwheel-window.png')
 				wnd.SetSize((1050, 790))
