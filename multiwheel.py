@@ -695,7 +695,17 @@ class OuterChartPicker(comparegrid.ChartPicker):
         self.generated_labels = {}
         super().__init__(parent, mainfr, on_change, prefer)
         self.create_button = wx.Button(self, label=i18n.tr('Create chart...'))
-        self.GetSizer().Add(self.create_button, 0, wx.LEFT, 5)
+        # Reflow only the multiwheel picker: a full-width chart choice above
+        # the two source buttons fits a useful, compact left sidebar.
+        old = self.GetSizer()
+        old.Clear(delete_windows=False)
+        controls = wx.BoxSizer(wx.HORIZONTAL)
+        controls.Add(self.openbutton, 1, wx.RIGHT, 4)
+        controls.Add(self.create_button, 1)
+        column = wx.BoxSizer(wx.VERTICAL)
+        column.Add(self.choice, 0, wx.EXPAND | wx.BOTTOM, 4)
+        column.Add(controls, 0, wx.EXPAND)
+        self.SetSizer(column)
         self.create_button.Bind(wx.EVT_BUTTON, self.show_create_menu)
 
     def refresh(self, event=None):
@@ -763,56 +773,91 @@ class MultiWheelFrame(wx.Frame):
         self.renderer = None
         self.pending = None
         self._alive = True
+        self.zoom_factor = None  # None = fit window; 1.0 = natural chart size
+        self.sidebar_visible = True
+        self.bitmap_origin = (0, 0)
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
-        self.SetMinSize((650, 660))
+        self.SetMinSize((760, 600))
         outer = wx.BoxSizer(wx.VERTICAL)
         row = wx.BoxSizer(wx.HORIZONTAL)
         row.Add(wx.StaticText(self, label=i18n.tr('Outer charts:')), 0,
                 wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
-        self.count_choice = wx.Choice(self, choices=i18n.tr(['1 (bi-wheel)', '2 (tri-wheel)', '3 (quad-wheel)']))
+        self.count_choice = wx.Choice(
+            self, choices=i18n.tr(['1 (bi-wheel)', '2 (tri-wheel)', '3 (quad-wheel)']))
         self.count_choice.SetSelection(0)
-        row.Add(self.count_choice, 0, wx.RIGHT, 20)
+        row.Add(self.count_choice, 0, wx.RIGHT, 15)
         row.Add(wx.StaticText(self, label=i18n.tr('Aspects between:')), 0,
                 wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
         self.aspect_choice = wx.Choice(
             self, choices=i18n.tr(['None', 'Radix only', 'Radix and ring 1']))
         self.aspect_choice.SetSelection(0)
         row.Add(self.aspect_choice, 0, wx.RIGHT, 15)
+        self.fit_button = wx.Button(self, label=i18n.tr('Fit'))
+        self.actual_button = wx.Button(self, label='100%')
+        self.out_button = wx.Button(self, label='-')
+        self.in_button = wx.Button(self, label='+')
+        for control in (self.fit_button, self.actual_button,
+                        self.out_button, self.in_button):
+            row.Add(control, 0, wx.RIGHT, 4)
+        self.side_button = wx.Button(self, label=i18n.tr('Hide charts'))
+        row.Add(self.side_button, 0, wx.RIGHT, 8)
         self.savebutton = wx.Button(self, label=i18n.tr('Save image (PNG)...'))
         row.Add(self.savebutton)
-        outer.Add(row, 0, wx.ALL, 9)
+        outer.Add(row, 0, wx.ALL, 7)
+
+        # Put chart-source controls beside, not above, the drawing. This
+        # recovers valuable vertical canvas space for the wheel itself.
+        content = wx.BoxSizer(wx.HORIZONTAL)
+        self.sidebar = wx.ScrolledWindow(self, style=wx.VSCROLL)
+        self.sidebar.SetMinSize((302, 250))
+        self.sidebar.SetScrollRate(0, 15)
+        controls = wx.BoxSizer(wx.VERTICAL)
         self.radix_label = wx.StaticText(
-            self, label=i18n.tr('Inner radix') + ': ' + comparegrid.caption(mainfr.horoscope))
-        outer.Add(self.radix_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
+            self.sidebar, label=i18n.tr('Inner radix') + ': ' +
+            comparegrid.caption(mainfr.horoscope))
+        self.radix_label.Wrap(292)
+        controls.Add(self.radix_label, 0, wx.EXPAND | wx.BOTTOM, 12)
         self.pickers = []
         self.picker_rows = []
         for i in range(3):
-            strip = wx.Panel(self)
-            line = wx.BoxSizer(wx.HORIZONTAL)
-            tag = wx.StaticText(strip, label=i18n.tr('Ring %d') % (i + 1) + ':')
-            tag.SetMinSize((75, -1))
+            strip = wx.Panel(self.sidebar)
+            line = wx.BoxSizer(wx.VERTICAL)
+            tag = wx.StaticText(
+                strip, label=i18n.tr('Ring %d') % (i + 1) + ':')
             if not self.options.bw:
                 tag.SetForegroundColour(wx.Colour(*RING_COLOURS[i]))
-            line.Add(tag, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
+            line.Add(tag, 0, wx.BOTTOM, 4)
             picker = OuterChartPicker(strip, mainfr, self.queue_draw, i + 1)
-            line.Add(picker, 1, wx.EXPAND)
+            line.Add(picker, 0, wx.EXPAND)
             strip.SetSizer(line)
             self.pickers.append(picker)
             self.picker_rows.append(strip)
-            outer.Add(strip, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
+            controls.Add(strip, 0, wx.EXPAND | wx.BOTTOM, 14)
             if i:
                 strip.Hide()
-        self.selection_note = wx.StaticText(self, label='')
-        outer.Add(self.selection_note, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
-        self.canvas = wx.Panel(self)
-        self.canvas.SetMinSize((420, 420))
+        self.selection_note = wx.StaticText(self.sidebar, label='')
+        self.selection_note.Wrap(290)
+        controls.Add(self.selection_note, 0, wx.EXPAND | wx.BOTTOM, 8)
+        self.sidebar.SetSizer(controls)
+        content.Add(self.sidebar, 0, wx.EXPAND | wx.ALL, 7)
+
+        # Real panning, not a bitmap scaled back into a small panel.
+        self.canvas = wx.ScrolledWindow(self, style=wx.HSCROLL | wx.VSCROLL)
+        self.canvas.SetMinSize((390, 390))
+        self.canvas.SetScrollRate(20, 20)
         self.canvas.SetBackgroundStyle(wx.BG_STYLE_PAINT)
-        outer.Add(self.canvas, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        content.Add(self.canvas, 1, wx.EXPAND | wx.TOP | wx.RIGHT | wx.BOTTOM, 7)
+        outer.Add(content, 1, wx.EXPAND)
         self.SetSizer(outer)
         self.CreateStatusBar()
         self.Bind(wx.EVT_CHOICE, self.change_count, self.count_choice)
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.aspect_choice)
         self.Bind(wx.EVT_BUTTON, self.onSaveAsBitmap, self.savebutton)
+        self.Bind(wx.EVT_BUTTON, self.zoom_fit, self.fit_button)
+        self.Bind(wx.EVT_BUTTON, self.zoom_actual, self.actual_button)
+        self.Bind(wx.EVT_BUTTON, self.zoom_in, self.in_button)
+        self.Bind(wx.EVT_BUTTON, self.zoom_out, self.out_button)
+        self.Bind(wx.EVT_BUTTON, self.toggle_sidebar, self.side_button)
         self.canvas.Bind(wx.EVT_PAINT, self.paint)
         self.canvas.Bind(wx.EVT_SIZE, self.resize)
         self.canvas.Bind(wx.EVT_LEFT_UP, self.on_click)
@@ -831,8 +876,46 @@ class MultiWheelFrame(wx.Frame):
         for i in range(count):
             self.aspect_choice.Append(i18n.tr('Radix and ring %d') % (i + 1))
         self.aspect_choice.SetSelection(min(max(prior, 0), count + 1))
+        self.sidebar.Layout()
+        self.sidebar.FitInside()
         self.Layout()
         self.queue_draw()
+
+    def toggle_sidebar(self, event=None):
+        self.sidebar_visible = not self.sidebar_visible
+        self.sidebar.Show(self.sidebar_visible)
+        self.side_button.SetLabel(i18n.tr(
+            'Hide charts' if self.sidebar_visible else 'Show charts'))
+        self.Layout()
+        self.queue_draw()
+
+    def zoom_fit(self, event=None):
+        self.zoom_factor = None
+        self.queue_draw()
+
+    def zoom_actual(self, event=None):
+        self.zoom_factor = 1.0
+        self.queue_draw()
+
+    def zoom_in(self, event=None):
+        self.zoom_factor = min(3.0, (self.zoom_factor or .8) * 1.25)
+        self.queue_draw()
+
+    def zoom_out(self, event=None):
+        self.zoom_factor = max(.4, (self.zoom_factor or 1.0) / 1.25)
+        self.queue_draw()
+
+    @staticmethod
+    def natural_diameter(count):
+        # Minimum useful pixel diameters for the three density levels.
+        return {1: 920, 2: 1080, 3: 1280}[count]
+
+    def canvas_size(self, count):
+        w, h = self.canvas.GetClientSize()
+        if self.zoom_factor is None:
+            return max(100, w), max(100, h)
+        diameter = int(self.natural_diameter(count) * self.zoom_factor)
+        return diameter, diameter
 
     def resize(self, event):
         self.queue_draw()
@@ -859,10 +942,11 @@ class MultiWheelFrame(wx.Frame):
                 return
         except RuntimeError:
             return
-        w, h = self.canvas.GetClientSize()
-        if w < 100 or h < 100:
+        vw, vh = self.canvas.GetClientSize()
+        if vw < 100 or vh < 100:
             return
         count = self.count_choice.GetSelection() + 1
+        w, h = self.canvas_size(count)
         charts = [picker.selected() for picker in self.pickers[:count]]
         repeated = []
         seen = {id(self.mainfr.horoscope): i18n.tr('Radix')}
@@ -871,23 +955,38 @@ class MultiWheelFrame(wx.Frame):
                 repeated.append(i18n.tr('Ring %d') % i + ' = ' + seen[id(selected)])
             else:
                 seen[id(selected)] = i18n.tr('Ring %d') % i
-        self.selection_note.SetLabel(
-            i18n.tr('Repeated charts') + ': ' + ', '.join(repeated) if repeated else '')
         self.renderer = MultiWheel(self.mainfr.horoscope, charts,
                                    (w, h), self.options, self.options.bw)
-        self.renderer.aspect_ring = aspect_ring_from_choice(self.aspect_choice.GetSelection())
+        self.renderer.aspect_ring = aspect_ring_from_choice(
+            self.aspect_choice.GetSelection())
         self.buffer = self.renderer.drawChart()
+        notes = []
+        if repeated:
+            notes.append(i18n.tr('Repeated charts') + ': ' + ', '.join(repeated))
+        if self.renderer.layout_issues:
+            notes.append(i18n.tr('Crowded planetary labels: use 100% or zoom in'))
+        self.selection_note.SetLabel('\n'.join(notes))
+        self.selection_note.Wrap(290)
+        self.sidebar.Layout()
+        self.sidebar.FitInside()
+        self.bitmap_origin = (max(0, (vw - w) // 2),
+                              max(0, (vh - h) // 2))
+        self.canvas.SetVirtualSize((max(vw, w), max(vh, h)))
         self.canvas.Refresh(False)
 
     def paint(self, event):
-        if self.buffer is None:
-            wx.PaintDC(self.canvas)
-        else:
-            wx.BufferedPaintDC(self.canvas, self.buffer)
+        dc = wx.AutoBufferedPaintDC(self.canvas)
+        self.canvas.PrepareDC(dc)
+        dc.Clear()
+        if self.buffer is not None:
+            dc.DrawBitmap(self.buffer, *self.bitmap_origin)
 
     def on_click(self, event):
         if self.renderer is not None:
-            self.SetStatusText(self.renderer.onClick(event.GetPosition()))
+            x, y = self.canvas.CalcUnscrolledPosition(event.GetPosition())
+            x -= self.bitmap_origin[0]
+            y -= self.bitmap_origin[1]
+            self.SetStatusText(self.renderer.onClick((x, y)))
 
     def onSaveAsBitmap(self, event):
         if self.buffer is None:
@@ -905,7 +1004,18 @@ class MultiWheelFrame(wx.Frame):
             path = dlg.GetPath()
             if not path.lower().endswith('.png'):
                 path += '.png'
-            if self.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG):
+            # Export from a fresh high-resolution render. Never export
+            # the reduced Fit-to-window bitmap.
+            count = self.count_choice.GetSelection() + 1
+            diameter = {1: 1600, 2: 2000, 3: 2400}[count]
+            charts = [p.selected() for p in self.pickers[:count]]
+            exporter = MultiWheel(self.mainfr.horoscope, charts,
+                                  (diameter, diameter),
+                                  self.options, self.options.bw)
+            exporter.aspect_ring = aspect_ring_from_choice(
+                self.aspect_choice.GetSelection())
+            bitmap = exporter.drawChart()
+            if bitmap.SaveFile(path, wx.BITMAP_TYPE_PNG):
                 self.mainfr.fpathimgs = os.path.dirname(path)
         finally:
             dlg.Destroy()
