@@ -2,7 +2,8 @@ import unittest
 
 from multiwheel_layout import (allocate_rings, allocate_traditional_rings,
                                spread_longitudes, zodiac_sign_lane,
-                               place_planet_clusters, _intersect_area)
+                               place_planet_clusters, _intersect_area,
+                               shared_planet_font_sizes)
 
 
 class MultiWheelLayoutTests(unittest.TestCase):
@@ -146,6 +147,29 @@ class MultiWheelLayoutTests(unittest.TestCase):
             place_planet_clusters([1], self.boxes(1), (100, 100), 0)
         with self.assertRaises(ValueError):
             place_planet_clusters([1], self.boxes(1), (100, 200), 0, -1)
+
+    def test_planet_font_sizes_are_shared_across_every_ring(self):
+        # Unlike the previous renderer, outer bands do not choose their
+        # font size separately. The smallest content band sets the scale.
+        for widths in ([40, 65], [65, 40], [80, 40, 65]):
+            sizes = shared_planet_font_sizes(300, widths)
+            self.assertEqual(sizes['glyph'], 12)
+            self.assertGreaterEqual(sizes['degree'], 9)
+            self.assertGreaterEqual(sizes['minute'], 9)
+            self.assertGreaterEqual(sizes['motion'], 9)
+            self.assertGreater(sizes['glyph'], sizes['degree'])
+        # Zooming the chart makes it possible to use larger shared glyphs.
+        sizes = shared_planet_font_sizes(800, [115, 136, 122, 128])
+        self.assertGreater(sizes['glyph'], 12)
+        self.assertEqual(sizes, shared_planet_font_sizes(
+            800, [128, 115, 136, 122]))
+
+    def test_shared_planet_fonts_reject_invalid_dimensions(self):
+        for widths in ([], [0], [-3, 65]):
+            with self.assertRaises(ValueError):
+                shared_planet_font_sizes(300, widths)
+        with self.assertRaises(ValueError):
+            shared_planet_font_sizes(0, [50])
 
     def test_spreading_keeps_order_across_aries(self):
         longitudes = [359, 1, 3, 15, 210]
