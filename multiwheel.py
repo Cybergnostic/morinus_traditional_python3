@@ -392,12 +392,12 @@ class MultiWheel:
         self.draw_sign_spokes(chart_start, outer)
         self.draw_house_spokes(chrt, chart_start, outer, border)
         self.draw_angles(chrt, chart_start, outer, border)
-        self.draw_planet_band(chrt, edges, i18n.tr('Ring %d') % index)
+        self.draw_planet_band(chrt, (chart_start, outer), i18n.tr('Ring %d') % index)
 
     @staticmethod
     def separator_width(edges):
         inner, outer = edges
-        return min(4.0, (outer - inner) * .075)
+        return min(7.0, max(5.0, (outer - inner) * .15))
 
     def draw_separator_gaps(self, rings):
         """Erase the entire separator annulus, then draw its two borders.
