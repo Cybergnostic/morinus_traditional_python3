@@ -123,6 +123,26 @@ def zodiac_sign_lane(edges):
     return inner + (outer - inner) * .38, outer
 
 
+def shared_planet_font_sizes(max_radius, content_band_widths):
+    """One measured font scale shared by radix and every outer chart.
+
+    Use the narrowest *usable* content band after removing its degree dial
+    and separator. The 12px minimum keeps glyphs legible in Fit mode;
+    the viewer's zoom is available if the groups cannot physically fit.
+    """
+    if max_radius <= 0 or not content_band_widths or any(
+            width <= 0 for width in content_band_widths):
+        raise ValueError('Need a radius and positive planetary content widths')
+    glyph = max(12, int(min(max_radius * .055,
+                            min(content_band_widths) * .28)))
+    return {
+        'glyph': glyph,
+        'degree': max(9, int(glyph * .67)),
+        'minute': max(9, int(glyph * .62)),
+        'motion': max(9, int(glyph * .58)),
+    }
+
+
 def _polar_point(asc, longitude, radius):
     """Cartesian offset in Morinus's left-Ascendant orientation."""
     import math
