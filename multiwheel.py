@@ -160,7 +160,7 @@ class MultiWheel:
                         b = self.longitude(self.radix, j)
                         self.stroke(self.point(a, r), self.point(b, r), 'divider',
                                     self.options.clraspect[kind])
-        if self.aspect_ring:
+        if self.aspect_ring > 0:
             other = self.others[self.aspect_ring - 1]
             for i, j, kind, a, b in cross_aspects(self.radix, other, self.options):
                 self.stroke(self.point(a, r), self.point(b, r), 'divider',
