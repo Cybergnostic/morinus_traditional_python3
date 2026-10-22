@@ -261,7 +261,7 @@ class MultiWheel:
                 length, role = width * .21, 'tick1'
             self.stroke(self.point(degree, base),
                         self.point(degree, base + direction * length), role)
-        return label_edges, far
+        return label_edges, base
 
     def draw_sign_spokes(self, inner, outer):
         """Continue sign divisions inside a planetary ring, never the zodiac."""
@@ -504,19 +504,20 @@ class MultiWheel:
         if t.bc:
             date += ' BC'
         name = str(chrt.name or '').strip()
-        return kind, (name + ' · ' if name else '') + date
+        title = kind + (': ' + name if name else '')
+        return title, '%s %02d:%02d' % (date, t.hour, t.minute)
 
     def draw_centre_identity(self):
         """Label the inner radix inside its otherwise empty central disk."""
         kind, detail = self.chart_identity(self.radix, 'Radix')
-        title = kind + ': ' + str(self.radix.name or '')
+        title = kind
         title_font = self.font(max(9, min(12, self.rmax * .036)))
         detail_font = self.font(max(8, min(10, self.rmax * .030)))
         # Width must remain within the small centre disk at quad-wheel sizes.
-        max_width = self.rmax * .48
+        max_width = self.core_radius * .95
         while len(title) > 8 and self.measure(title, title_font)[0] > max_width:
             title = title[:-2] + '…'
-        date_part = detail.rsplit(' · ', 1)[-1]
+        date_part = detail
         text_colour = (65, 65, 65) if self.bw else self.options.clrtexts
         background = (255, 255, 255) if self.bw else self.options.clrbackground
         # A small backing keeps the name legible even when aspects are on.
@@ -635,6 +636,7 @@ class MultiWheel:
         self.rmax = min(self.width, self.height) * .465
         core, decans, terms, zodiac, rings = multiwheel_layout.allocate_traditional_rings(
             self.rmax, len(self.others), self.options.showterms, self.options.showdecans)
+        self.core_radius = core
         bg = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
         image = Image.new('RGB', i18n.tr((self.width * self.scale,
                                   self.height * self.scale)), i18n.tr(bg))
