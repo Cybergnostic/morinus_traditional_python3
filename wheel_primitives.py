@@ -11,7 +11,8 @@ import util
 
 def polar_point(cx, cy, asc, longitude, radius):
     """Morinus orientation: the reference Ascendant is at the left."""
-    angle = math.pi + math.radians(asc - longitude)
+    # Exactly the same normalisation used by GraphChart.drawHouses.
+    angle = math.pi + math.radians(util.normalize(asc - longitude))
     return cx + math.cos(angle) * radius, cy + math.sin(angle) * radius
 
 
