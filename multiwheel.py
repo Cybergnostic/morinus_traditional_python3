@@ -239,60 +239,87 @@ class MultiWheel:
                        font, self.options.clrhousenumbers)
 
     def draw_planet_band(self, chrt, edges, role):
-        """Draw all planets using the same glyph / degree / minute hierarchy.
+        """One optical planet / degree / minute cluster per longitude.
 
-        The one-line degree-minute label of the first prototype is replaced
-        with Morinus's two inward text lines, including station and retrograde.
+        All three labels share their angular slot. The radial distance
+        between them is based on their ink bounds rather than arbitrary
+        percentages; motion indicators sit beside minutes, not in a
+        disconnected fourth row.
         """
         inner, outer = edges
         width = outer - inner
-        positions = wheel_primitives.planet_band_radii(inner, outer)
-        glyph_size = max(10, min(width * .27, self.rmax * .052))
+        # Leave enough room for all three text tiers on crowded quad-wheels.
+        glyph_size = max(8, min(width * .22, self.rmax * .05))
         glyph_font = self.font(glyph_size, symbol=True)
-        degree_font = self.font(max(8, glyph_size * .72))
-        minute_font = self.font(max(8, glyph_size * .61))
-        motion_font = self.font(max(8, glyph_size * .55), symbol=True)
-        lons = [self.longitude(chrt, i) for i in range(planets.Planets.BODIES_NUM)]
-        labels = [wheel_primitives.position_text(lon, '\N{DEGREE SIGN}') for lon in lons]
+        degree_font = self.font(max(8, glyph_size * .68))
+        minute_font = self.font(max(8, glyph_size * .60))
+        motion_font = self.font(max(8, glyph_size * .58), symbol=True)
+        count = planets.Planets.BODIES_NUM
+        lons = [self.longitude(chrt, i) for i in range(count)]
+        labels = [wheel_primitives.position_text(lon, '\\N{DEGREE SIGN}')
+                  for lon in lons]
+        glyph_boxes = [self.measure(common.common.planets[i], glyph_font)
+                       for i in range(count)]
+        degree_boxes = [self.measure(degree, degree_font)
+                        for degree, minute in labels]
+        minute_boxes = [self.measure(minute, minute_font)
+                        for degree, minute in labels]
+        speeds = [chrt.planets.planets[i].data[planets.Planet.SPLON]
+                  for i in range(count)]
+        motions = [('S' if speed == 0 else common.common.retr)
+                   if speed <= 0 else '' for speed in speeds]
+        motion_boxes = [self.measure(text, motion_font) if text else (0, 0)
+                        for text in motions]
 
-        # All three label rows participate in angular collision avoidance.
-        tier_widths = (
-            (positions['glyph'], glyph_font,
-             [common.common.planets[i] for i in range(len(lons))]),
-            (positions['degree'], degree_font, [p[0] for p in labels]),
-            (positions['minute'], minute_font, [p[1] for p in labels]),
-        )
-        gap = max(
-            math.degrees((max(self.measure(s, font)[0] for s in texts) + 4)
-                         / max(radius, 1))
-            for radius, font, texts in tier_widths)
-        minimum = min(max(6.0, gap), 359.0 / len(lons))
+        # Consider the complete planet+position group while separating
+        # neighbouring longitudes, including room for the motion marker
+        # next to the minutes where one exists.
+        widest = max(
+            max(glyph_boxes[i][0], degree_boxes[i][0],
+                minute_boxes[i][0] + motion_boxes[i][0] +
+                (2.0 if motions[i] else 0))
+            for i in range(count))
+        separation = math.degrees((widest + 4.0) /
+                                  max(inner + width * .56, 1.0))
+        minimum = min(max(6.0, separation), 359.0 / count)
         spread = multiwheel_layout.spread_longitudes(lons, minimum)
+
         for i, (exact, displayed) in enumerate(zip(lons, spread)):
-            colour = self.planet_colour(i)
-            self.stroke(self.point(exact, positions['tick']),
-                        self.point(exact, outer - 1), 'pointer')
-            xy = self.point(displayed, positions['glyph'])
-            wheel_primitives.paint_glyph(
-                self.draw, self.scaled(xy), common.common.planets[i],
-                glyph_font, int(glyph_size * self.scale), self.colour(colour))
-            wheel_primitives.paint_position_text(
-                self.draw, self.scaled(self.point(displayed, positions['degree'])),
-                labels[i][0], degree_font, self.colour(colour))
-            wheel_primitives.paint_position_text(
-                self.draw, self.scaled(self.point(displayed, positions['minute'])),
-                labels[i][1], minute_font, self.colour(colour))
-            speed = chrt.planets.planets[i].data[planets.Planet.SPLON]
-            if speed <= 0:
-                if speed == 0:
-                    wheel_primitives.paint_position_text(
-                        self.draw, self.scaled(self.point(displayed, positions['motion'])),
-                        'S', minute_font, self.colour(colour))
-                else:
-                    wheel_primitives.paint_position_text(
-                        self.draw, self.scaled(self.point(displayed, positions['motion'])),
-                        common.common.retr, motion_font, self.colour(colour))
-            self.hits.append((xy, max(glyph_size * .7, 12),
+            theta = self.angle(displayed)
+            radii = wheel_primitives.planet_cluster_radii(
+                inner, outer, theta, glyph_boxes[i],
+                degree_boxes[i], minute_boxes[i])
+            colour = self.colour(self.planet_colour(i))
+            tick_in = outer - max(3.0, min(7.0, width * .11))
+            self.stroke(self.point(exact, tick_in),
+                        self.point(exact, outer - 1.0), 'pointer')
+            glyph_xy = self.point(displayed, radii['glyph'])
+            wheel_primitives.optical_text_center(
+                self.draw, self.scaled(glyph_xy), common.common.planets[i],
+                glyph_font, colour)
+            wheel_primitives.optical_text_center(
+                self.draw, self.scaled(self.point(displayed, radii['degree'])),
+                labels[i][0], degree_font, colour)
+            minute_xy = self.point(displayed, radii['minute'])
+            wheel_primitives.optical_text_center(
+                self.draw, self.scaled(minute_xy),
+                labels[i][1], minute_font, colour)
+            if motions[i]:
+                # Follow the tangent to the wheel: the marker belongs
+                # to the minute, without forcing every planet into a
+                # fourth radial text row.
+                def tangential_half_extent(size):
+                    w, h = size
+                    return (abs(math.sin(theta)) * w +
+                            abs(math.cos(theta)) * h) / 2.0
+                shift = (tangential_half_extent(minute_boxes[i]) +
+                         tangential_half_extent(motion_boxes[i]) + 1.3)
+                motion_xy = (minute_xy[0] - math.sin(theta) * shift,
+                             minute_xy[1] + math.cos(theta) * shift)
+                wheel_primitives.optical_text_center(
+                    self.draw, self.scaled(motion_xy),
+                    motions[i], motion_font, colour)
+            self.hits.append((glyph_xy, max(glyph_size * .7, 12),
                               chrt, i, exact, role))
 
     def draw_radix(self, core):
