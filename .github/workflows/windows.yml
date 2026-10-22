@@ -28,7 +28,11 @@ jobs:
       - name: Version
         shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then v=${GITHUB_REF##*/}; v=${v#traditional-}; v=${v#v}; else v=0.0.0-${GITHUB_SHA::7}; fi
+          file=$(python -c "import version; print(version.VERSION)")
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            v=${GITHUB_REF##*/}; v=${v#traditional-}; v=${v#v}
+            if [[ "$v" != "$file" ]]; then echo "::error::tag $v but version.py says $file"; exit 1; fi
+          else v=$file-dev-${GITHUB_SHA::7}; fi
           echo "VERSION=$v" >> "$GITHUB_ENV"
 
       - name: Build

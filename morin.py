@@ -1,6 +1,7 @@
 # Recovered from morinus.exe (Morinus 6.2, March 2014) by decompiling its Python 2.7
 # bytecode; verified against the original bytecode. Original comments are not recoverable.
 import i18n
+import version
 import wx
 import wx.adv
 import conditionswnd
@@ -2215,13 +2216,17 @@ class MFrame(wx.Frame):
 
     def onAbout(self, event):
         info = wx.adv.AboutDialogInfo()
-        info.Name = mtexts.txtscommon['ProgramTitle']
-        info.Version = '6.2'
+        info.Name = 'Morinus Traditional'
+        info.Version = version.VERSION + i18n.tr(' (based on Morinus 6.2 by Robert Nagy)')
         info.Copyright = mtexts.txtscommon['FreeSoft']
         info.Description = mtexts.txtscommon['Description'] + str(astrology.swe_version())
-        info.WebSite = ('http://sites.google.com/site/pymorinus/', 'http://sites.google.com/site/pymorinus/')
-        info.Developers = ['Robert Nagy (Hungary); robert.pluto@gmail.com (programming and astrology)\nPhilippe Epaud(France); philipeau@free.fr (french translation)\nMargherita Fiorello (Italy); margherita.fiorello@gmail.com (astrology)\nMartin Gansten (Sweden); http://www.martingansten.com/ (astrology)\nRoberto Luporini (Italy); roberto.luporini@tiscali.it (Astrological astronomy)\nPetr Radek (Czech Rep.); petr_radek@raz-dva.cz (astrology)\nEndre Csaba Simon (Finland); secsaba@gmail.com (programming and astrology)\nDenis Steinhoff (Israel); denis@steindan.com (astrology, russian translation)\nV\xc3\xa1clav Jan \xc5\xa0pirhanzl (Czech Rep.); vjs.morinus@gmail.com (MacOS version)']
-        info.License = mtexts.licensetxt
+        info.WebSite = ('https://github.com/Cybergnostic/morinus_traditional_python3', 'GitHub')
+        info.Developers = [
+            'Jovan Veljković (Cybergnostic), Serbia; cybergnostic6@gmail.com\n'
+            + i18n.tr('(Python 3 and Linux port, traditional techniques, new interface)') + '\n\nMorinus 6.2:',
+            'Robert Nagy (Hungary); robert.pluto@gmail.com (programming and astrology)\nPhilippe Epaud(France); philipeau@free.fr (french translation)\nMargherita Fiorello (Italy); margherita.fiorello@gmail.com (astrology)\nMartin Gansten (Sweden); http://www.martingansten.com/ (astrology)\nRoberto Luporini (Italy); roberto.luporini@tiscali.it (Astrological astronomy)\nPetr Radek (Czech Rep.); petr_radek@raz-dva.cz (astrology)\nEndre Csaba Simon (Finland); secsaba@gmail.com (programming and astrology)\nDenis Steinhoff (Israel); denis@steindan.com (astrology, russian translation)\nVáclav Jan Špirhanzl (Czech Rep.); vjs.morinus@gmail.com (MacOS version)']
+        info.License = ('Morinus Traditional\nCopyright (C) 2026  Jovan Veljković (cybergnostic6@gmail.com)\n'
+                        'based on\n' + mtexts.licensetxt)
         wx.adv.AboutBox(info)
 
     def setHouse(self):

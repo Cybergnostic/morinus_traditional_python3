@@ -331,6 +331,8 @@ TEXTS.update({
 	'Automatic time zones require a Gregorian calendar date. Use manual settings for Julian dates.': 'Automatska vremenska zona traži datum po gregorijanskom kalendaru. Za julijanske datume unesite zonu ručno.',
 	'IANA zone: %s\nStandard GMT offset: %s%02d:%02d\nDaylight saving: %s\n\n%s\n\nApply to chart?': 'IANA zona: %s\nStandardni pomak od GMT: %s%02d:%02d\nLetnje računanje vremena: %s\n\n%s\n\nPrimeniti na kartu?',
 	'Restart Morinus to see the new language.': 'Ponovo pokrenite Morinus da biste videli novi jezik.', 'Language': 'Jezik',
+	' (based on Morinus 6.2 by Robert Nagy)': ' (zasnovan na Morinusu 6.2, autor Robert Nagy)',
+	'(Python 3 and Linux port, traditional techniques, new interface)': '(prenos na Python 3 i Linux, tradicionalne tehnike, novi interfejs)',
 	'Yes': 'Da', 'No': 'Ne', '%d BC': '%d. p. n. e.', 'Please confirm the offset is correct.': 'Proverite da li je pomak tačan.',
 	# misc
 	'Ink': 'Ink', 'Instrument': 'Instrument', 'Classic': 'Classic', 'Formulas': 'Formule', 'Images': 'Slike',
