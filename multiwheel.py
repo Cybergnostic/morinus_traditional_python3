@@ -266,6 +266,30 @@ class MultiWheel:
         inner, outer = edges
         return min(8.5, max(5.5, (outer - inner) * .14))
 
+    @classmethod
+    def planet_label_edges(cls, edges, side):
+        """Usable planetary text band after reserving a local degree dial."""
+        inner, outer = edges
+        width = cls.dial_width(edges)
+        if side == 'outer':
+            return inner + 1.0, outer - width - 2.0
+        if side == 'inner':
+            return inner + width + 2.0, outer - 2.0
+        raise ValueError('Unknown planetary dial orientation')
+
+    def prepare_planet_fonts(self, core, rings):
+        """Choose exactly one glyph/degree/minute size for all chart layers."""
+        label_widths = []
+        core_edges = self.planet_label_edges((core * .67, core), 'outer')
+        label_widths.append(core_edges[1] - core_edges[0])
+        for edges in rings:
+            inner, outer = edges
+            chart_start = inner + self.separator_width(edges) + 1
+            text_edges = self.planet_label_edges((chart_start, outer), 'inner')
+            label_widths.append(text_edges[1] - text_edges[0])
+        self.planet_fonts = multiwheel_layout.shared_planet_font_sizes(
+            self.rmax, label_widths)
+
     def draw_degree_dial(self, edges, side):
         """A chart's own 360-degree dial, with 1/5/10-degree tick hierarchy.
 
@@ -278,11 +302,11 @@ class MultiWheel:
         width = self.dial_width(edges)
         if side == 'outer':
             base, far = outer - 1.0, outer - width
-            label_edges = (inner + 1.0, far - 2.0)
+
             direction = -1.0
         elif side == 'inner':
             base, far = inner + 1.0, inner + width
-            label_edges = (far + 2.0, outer - 2.0)
+
             direction = 1.0
         else:
             raise ValueError('Unknown planetary dial orientation')
@@ -299,7 +323,7 @@ class MultiWheel:
                 length, role = width * .21, 'tick1'
             self.stroke(self.point(degree, base),
                         self.point(degree, base + direction * length), role)
-        return label_edges, base
+        return self.planet_label_edges(edges, side), base
 
     def draw_sign_spokes(self, inner, outer):
         """Continue sign divisions inside a planetary ring, never the zodiac."""
@@ -328,14 +352,14 @@ class MultiWheel:
         positions. A conjunction must stay visibly within its zodiac sign.
         """
         (inner, outer), dial_anchor = self.draw_degree_dial(edges, dial_side)
-        width = outer - inner
-        # Multiwheel uses the same radial hierarchy as GraphChart.  Reduce
-        # font sizes only within reasonable bounds; zoom provides extra room.
-        glyph_size = max(12, min(width * .26, self.rmax * .055))
+        # Fonts are calculated once from the narrowest usable ring.
+        # Radix, solar/lunar returns and transit glyphs remain identical.
+        sizes = self.planet_fonts
+        glyph_size = sizes['glyph']
         glyph_font = self.font(glyph_size, symbol=True)
-        degree_font = self.font(max(9, glyph_size * .67))
-        minute_font = self.font(max(9, glyph_size * .62))
-        motion_font = self.font(max(9, glyph_size * .58), symbol=True)
+        degree_font = self.font(sizes['degree'])
+        minute_font = self.font(sizes['minute'])
+        motion_font = self.font(sizes['motion'], symbol=True)
 
         count = planets.Planets.BODIES_NUM
         lons = [self.longitude(chrt, i) for i in range(count)]
@@ -683,6 +707,7 @@ class MultiWheel:
         core, decans, terms, zodiac, rings = multiwheel_layout.allocate_traditional_rings(
             self.rmax, len(self.others), self.options.showterms, self.options.showdecans)
         self.core_radius = core
+        self.prepare_planet_fonts(core, rings)
         bg = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
         image = Image.new('RGB', i18n.tr((self.width * self.scale,
                                   self.height * self.scale)), i18n.tr(bg))
