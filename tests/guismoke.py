@@ -466,6 +466,53 @@ def main():
 					frame.options.showterms = original_terms
 					frame.options.showdecans = original_decans
 				wnd.redraw()
+				# Changing house systems must keep the multiwheel open, and
+				# refresh all the retained charts rather than destroying it.
+				previous_hsys = frame.options.hsys
+				next_hsys = 5 if previous_hsys != 5 else 2
+				frame.onHouseSystem(wx.CommandEvent(wx.wxEVT_MENU,
+					frame.hsbase + next_hsys))
+				settle(0.2)
+				assert not wnd.IsBeingDeleted() and wnd.IsShown()
+				wnd.redraw()
+				assert wnd.buffer is not None and wnd.buffer.IsOk()
+				assert wnd.renderer.radix is frame.horoscope
+				frame.onHouseSystem(wx.CommandEvent(wx.wxEVT_MENU,
+					frame.hsbase + previous_hsys))
+				settle(0.2)
+				assert not wnd.IsBeingDeleted()
+				wnd.redraw()
+				# The multiwheel's chart-creation menu reuses the existing
+				# Morinus return/transit workflows, then picks the result.
+				import transitframe
+				original_revolutions = frame.onRevolutions
+				original_transits = frame.onTransits
+				generated_windows = []
+				def fake_generate(kind):
+					created = chart.Chart(frame.horoscope.name, frame.horoscope.male,
+						frame.horoscope.time, frame.horoscope.place, kind, '',
+						frame.options, False)
+					new_window = transitframe.TransitFrame(
+						frame, 'Smoke generated', created, frame.horoscope, frame.options)
+					new_window.Show(True)
+					generated_windows.append(new_window)
+				try:
+					frame.onRevolutions = lambda event, planet=None: fake_generate(
+						chart.Chart.SOLAR if planet == 3 else chart.Chart.LUNAR)
+					frame.onTransits = lambda event: fake_generate(chart.Chart.TRANSIT)
+					for requested, htype in ((3, chart.Chart.SOLAR),
+							(6, chart.Chart.LUNAR), (None, chart.Chart.TRANSIT)):
+						picker.create_chart(requested)
+						assert picker.selected().htype == htype
+						assert picker.choice.GetStringSelection() != ''
+				finally:
+					frame.onRevolutions = original_revolutions
+					frame.onTransits = original_transits
+					for gen_window in generated_windows:
+						gen_window.Close()
+				# Restore our reference image to the original smoke transit.
+				picker.choice.SetSelection(len(picker.sources) - len(generated_windows) - 1)
+				wnd.redraw()
 				capture_window(wnd, 'multiwheel-window.png')
 				wnd.SetSize((1050, 790))
 				settle(0.2)
