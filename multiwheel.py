@@ -268,7 +268,7 @@ class MultiWheel:
         for sign in range(12):
             lon = sign * 30.0
             self.stroke(self.point(lon, inner),
-                        self.point(lon, outer), 'major')
+                        self.point(lon, outer), 'divider')
 
     def draw_houses(self, core):
         """House numbers retain the inner Morinus chart's house-number ring."""
@@ -386,8 +386,8 @@ class MultiWheel:
         actual height for tri- and quad-wheels.
         """
         inner, outer = edges
-        pixels = max(8, int(min((outer - inner) * .78,
-                                 self.rmax / 18.0)))
+        pixels = max(8, int(min((outer - inner) * .62,
+                                 self.rmax / 24.0)))
         return self.font(pixels, symbol=True), pixels * self.scale
 
     def draw_decans(self, edges):
@@ -410,7 +410,7 @@ class MultiWheel:
             wheel_primitives.paint_glyph(
                 self.draw, self.scaled(self.point(centre, middle)),
                 common.common.planets[ruler], font, size,
-                self.colour(self.options.clrsigns))
+                self.stroke_colour(self.options.clrsigns, 'divider'))
 
     def draw_terms(self, edges):
         """Use the *same unequal bounds* and glyph positioning as GraphChart."""
@@ -428,7 +428,7 @@ class MultiWheel:
             wheel_primitives.paint_glyph(
                 self.draw, self.scaled(self.point(centre, middle)),
                 common.common.planets[ruler], font, size,
-                self.colour(self.options.clrsigns))
+                self.stroke_colour(self.options.clrsigns, 'divider'))
 
     def draw_zodiac(self, edges):
         """One zodiac band for every chart, including Morinus degree ticks."""
@@ -551,16 +551,16 @@ class MultiWheel:
         """
         kind, detail = self.chart_identity(chrt)
         inner, outer = edges
-        front = self.font(max(8, min(10, (outer - inner) * .20)))
-        secondary = self.font(max(8, min(9, (outer - inner) * .18)))
-        max_width = min(self.rmax * .38, 118.0)
+        front = self.font(max(10, min(13, (outer - inner) * .20)))
+        secondary = self.font(max(9, min(11, (outer - inner) * .17)))
+        max_width = min(self.rmax * .44, 180.0)
         while len(detail) > 8 and self.measure(detail, secondary)[0] > max_width:
             detail = detail[:-2] + '…'
         while len(kind) > 8 and self.measure(kind, front)[0] > max_width:
             kind = kind[:-2] + '…'
         w = max(self.measure(kind, front)[0],
                 self.measure(detail, secondary)[0]) + 10
-        h = 25.0
+        h = 30.0
         radius = (inner + outer) / 2.0
         ring_hits = [xy for xy, extent, obj, *_ in self.hits if obj is chrt]
         candidates = (-math.pi / 2, math.pi / 2,
