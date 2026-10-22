@@ -75,3 +75,26 @@ unchanged and the bi-/tri-/quad-wheel results pass visual inspection.
   Lunar Return and Transits. These call the existing Morinus dialogs, attach
   the resulting chart to the selected ring, and do nothing on cancellation.
 - Comparison grid's interface and rendering remain unchanged.
+
+
+## October 22: true-longitude pointers, chart dials and identity labels
+
+- Every planetary ring (including the radix) draws a **360-degree dial**.
+  Degree ticks are local to the ring and do not duplicate the one zodiac.
+  The radial dial is on the outside of the radix planetary band and the
+  inside of the extra chart bands.
+- Every planet's exact longitude is marked on its own dial and a visible
+  leader joins that exact location to the displayed glyph/degree-minute
+  cluster. The glyph can move angularly to avoid collisions without losing
+  the true longitude reference.
+- Each glyph and its combined degree-minute text form a **centrally balanced**
+  two-tier cluster, not one pushed against the outside of its ring.
+- Chart-local ASC, DSC, MC and IC axes end in distinct triangular arrowheads.
+  No arrow crosses the shared zodiac or separator gap.
+- The inner disk contains the radix identity and date/time. Each outer ring
+  contains its own chart type, name, and date/time, printed into the chart
+  image and PNG (not just the picker controls). Captions prefer fields far
+  from planet glyphs.
+- GUI regression covers one dial per wheel, each ring's identity field,
+  and a four-angle rendering pass for each chart. Full screenshot review is
+  still required before the draft pull request may be merged.
