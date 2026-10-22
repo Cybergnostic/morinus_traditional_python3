@@ -202,15 +202,61 @@ class MultiWheel:
             self.label(xy, common.common.planets[i], symbol_font, clr)
             self.hits.append((xy, max(10, glyph * .65), self.radix, i, lons[i], i18n.tr('Radix')))
 
+    def draw_decans(self, edges):
+        """The one shared decan band, using Morinus's selected rulers."""
+        if edges is None:
+            return
+        inner, outer = edges
+        self.circle(inner, 'divider')
+        self.circle(outer, 'divider')
+        font = self.font(max(8, (outer - inner) * .72), symbol=True)
+        for sign, rulers in enumerate(self.options.decans[self.options.seldecan]):
+            for part, ruler in enumerate(rulers):
+                start = sign * 30 + part * 10
+                self.stroke(self.point(start, inner), self.point(start, outer), 'divider')
+                self.label(self.point(start + 5, (inner + outer) / 2),
+                           common.common.planets[ruler], font, self.options.clrsigns)
+
+    def draw_terms(self, edges):
+        """The one shared term band, using the existing selected terms."""
+        if edges is None:
+            return
+        inner, outer = edges
+        self.circle(inner, 'divider')
+        self.circle(outer, 'divider')
+        font = self.font(max(8, (outer - inner) * .72), symbol=True)
+        for sign, divisions in enumerate(self.options.terms[self.options.selterm]):
+            cursor = sign * 30.0
+            for ruler, width in divisions:
+                span = float(width)
+                self.stroke(self.point(cursor, inner),
+                            self.point(cursor, outer), 'divider')
+                self.label(self.point(cursor + span / 2, (inner + outer) / 2),
+                           common.common.planets[ruler], font, self.options.clrsigns)
+                cursor += span
+
     def draw_zodiac(self, edges):
+        """One zodiac band for every chart, including Morinus degree ticks."""
         inner, outer = edges
         self.circle(inner, 'major')
         self.circle(outer, 'major')
-        font = self.font(max(10, (outer - inner) * 0.58), symbol=True)
+        width = outer - inner
+        for degree in range(360):
+            if degree % 30 == 0:
+                continue
+            if degree % 10 == 0:
+                length, role = .28, 'tick10'
+            elif degree % 5 == 0:
+                length, role = .17, 'tick10'
+            else:
+                length, role = .09, 'tick1'
+            self.stroke(self.point(degree, inner),
+                        self.point(degree, inner + width * length), role)
+        font = self.font(max(10, width * 0.58), symbol=True)
         for sign in range(12):
             lon = sign * 30
             self.stroke(self.point(lon, inner), self.point(lon, outer), 'major')
-            self.label(self.point(lon + 15, (inner + outer) / 2),
+            self.label(self.point(lon + 15, inner + width * 0.65),
                        common.common.signs[sign], font, self.options.clrsigns)
 
     def measure(self, text, font):
@@ -239,7 +285,6 @@ class MultiWheel:
             else:
                 accent = RING_COLOURS[i]
                 shade = chartstyle.mix(background, accent, 0.065 + i * 0.015)
-            r = outer * self.scale
             xy = (int((self.cx - outer) * self.scale),
                   int((self.cy - outer) * self.scale),
                   int((self.cx + outer) * self.scale),
@@ -305,8 +350,8 @@ class MultiWheel:
         self.scale = 2  # crisp curves and glyphs after Lanczos downsampling
         self.cx, self.cy = self.width / 2.0, self.height / 2.0
         self.rmax = min(self.width, self.height) * .465
-        core, zodiac, rings = multiwheel_layout.allocate_rings(
-            self.rmax, len(self.others))
+        core, decans, terms, zodiac, rings = multiwheel_layout.allocate_traditional_rings(
+            self.rmax, len(self.others), self.options.showterms, self.options.showdecans)
         bg = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
         image = Image.new('RGB', i18n.tr((self.width * self.scale,
                                   self.height * self.scale)), i18n.tr(bg))
@@ -314,6 +359,8 @@ class MultiWheel:
         self.hits = []
         self.draw_ring_backgrounds(zodiac, rings)
         self.draw_radix(core)
+        self.draw_decans(decans)
+        self.draw_terms(terms)
         self.draw_zodiac(zodiac)
         for index, (chrt, edges) in enumerate(zip(self.others, rings), 1):
             self.draw_outer_ring(chrt, index, edges)
