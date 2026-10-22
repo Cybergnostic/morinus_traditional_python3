@@ -120,3 +120,34 @@ This improves parity **without claiming the full multiwheel is yet
 pixel-identical** to a single GraphChart. Houses, collision placement and
 other chart-specific layers still need visual comparison and targeted reuse
 rather than independent approximations.
+
+## October 22: measured layouts, scrollable high-resolution viewer
+
+The crowded bi-wheel screenshot exposed a structural mismatch: a large radix
+core and narrowly allocated outer planetary band meant a dense chart could not
+fit its labels. This stage corrects the **multiwheel renderer only**.
+
+- Rebalanced the radius allocations: the bi-wheel now reserves more than 24%
+  of the radius for the first outer chart even with terms and decans shown.
+  Tri- and quad-wheel allocations likewise favour usable planetary labels.
+- Replaced angular-only planet spreading in the multiwheel with actual
+  glyph/degree/minute/retrograde rectangle measurements. Candidate positions
+  vary both around the circle and along its radius, and remain in the
+  planet's source zodiac sign. Exact degree-dial positions and leaders are
+  still anchored to unchanged source longitude.
+- Restored the normal Morinus three-tier glyph, degree, minute visual order.
+  Reference rulers are smaller/lighter than the real planetary glyphs.
+- When labels physically cannot fit, the viewer warns rather than claiming
+  to have achieved a collision-free layout.
+- Chart selection moved into a hideable left sidebar. The drawing has
+  Fit, 100%, +/- controls and scrollable panning without bitmap magnification.
+  A PNG is rendered at a separate 1600/2000/2400-pixel diameter depending on
+  the number of chart rings.
+- Extended pure geometry tests and the GUI smoke scenario to cover crowded
+  positions, Aries and sign boundaries, zoom, sidebar, and viewport size.
+
+**Still required before merging:** pass Linux/Windows CI and inspect actual
+screenshots for all wheel counts. In particular, exact single-wheel visual
+parity, optional chart-specific objects, and the remaining dense conjunction
+cases are not yet guaranteed. Single-wheel GraphChart and comparison-grid
+rendering have deliberately not been changed in this phase.
