@@ -84,6 +84,24 @@ class SharedWheelPrimitivesTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             compact_planet_radii(100, 100, 0, glyph_box, text_box)
 
+    def test_compact_planet_group_is_actually_centered(self):
+        # Before the fix, glyphs were pushed to the outer boundary. The
+        # ink-box envelope should straddle the band midpoint.
+        glyph_box, position_box = (11.0, 11.0), (29.0, 10.0)
+        for angle in (0, math.pi / 4, math.pi / 2, math.pi):
+            radii = compact_planet_radii(
+                110.0, 177.0, angle, glyph_box, position_box)
+            gr = radial_half_extent(glyph_box, angle)
+            pr = radial_half_extent(position_box, angle)
+            outside = radii['glyph'] + gr
+            inside = radii['position'] - pr
+            self.assertAlmostEqual(
+                (outside + inside) / 2.0, (110 + 177) / 2.0,
+                places=6)
+            self.assertGreater(outside, inside)
+            self.assertGreater(inside, 111)
+            self.assertLess(outside, 176)
+
     def test_four_angles_match_morinus_quadrants(self):
         self.assertEqual(angle_longitudes(350, 75), (350, 170, 75, 255))
 
