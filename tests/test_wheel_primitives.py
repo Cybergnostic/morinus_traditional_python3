@@ -5,7 +5,7 @@ from wheel_primitives import (angle_longitudes, planet_band_radii,
                               polar_point, position_text,
                               paint_glyph, paint_position_text,
                               optical_text_center, planet_cluster_radii,
-                              radial_half_extent)
+                              compact_planet_radii, radial_half_extent)
 
 
 class SharedWheelPrimitivesTests(unittest.TestCase):
@@ -66,6 +66,23 @@ class SharedWheelPrimitivesTests(unittest.TestCase):
                 layout['minute'] + reaches[2] - .001)
         with self.assertRaises(ValueError):
             planet_cluster_radii(80, 80, 0, *sizes)
+
+    def test_single_position_row_stays_inward_of_glyph(self):
+        glyph_box = (13.0, 13.0)
+        text_box = (30.0, 10.0)  # e.g. 07°05'
+        for angle in (0, math.pi / 4, math.pi / 2, math.pi):
+            radii = compact_planet_radii(
+                100.0, 161.0, angle, glyph_box, text_box)
+            self.assertGreater(radii['glyph'], radii['position'])
+            glyph_reach = radial_half_extent(glyph_box, angle)
+            text_reach = radial_half_extent(text_box, angle)
+            self.assertLessEqual(radii['glyph'] + glyph_reach, 159.01)
+            self.assertGreaterEqual(radii['position'] - text_reach, 101.99)
+            self.assertGreaterEqual(
+                radii['glyph'] - glyph_reach,
+                radii['position'] + text_reach)
+        with self.assertRaises(ValueError):
+            compact_planet_radii(100, 100, 0, glyph_box, text_box)
 
     def test_four_angles_match_morinus_quadrants(self):
         self.assertEqual(angle_longitudes(350, 75), (350, 170, 75, 255))
