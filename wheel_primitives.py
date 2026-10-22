@@ -109,3 +109,22 @@ def planet_cluster_radii(inner, outer, angle, glyph_box, degree_box,
     degree = glyph - reaches[0] - reaches[1] - gap
     minute = degree - reaches[1] - reaches[2] - gap
     return {'glyph': glyph, 'degree': degree, 'minute': minute}
+
+
+def compact_planet_radii(inner, outer, angle, glyph_box, position_box,
+                        spacing=1.5):
+    """Position a glyph over a single horizontal degree-minute label.
+
+    The two rows share one longitude (the second row is closer to the
+    centre). Use their actual font bounds to keep the visible ink together,
+    without the variable gaps caused by percentage-based radii.
+    """
+    if outer <= inner:
+        raise ValueError('The planet band must have positive width')
+    glyph_reach = radial_half_extent(glyph_box, angle)
+    position_reach = radial_half_extent(position_box, angle)
+    free = outer - inner - 4.0 - 2.0 * (glyph_reach + position_reach)
+    gap = min(spacing, max(0.0, free))
+    glyph = outer - 2.0 - glyph_reach
+    position = glyph - glyph_reach - position_reach - gap
+    return {'glyph': glyph, 'position': position}
