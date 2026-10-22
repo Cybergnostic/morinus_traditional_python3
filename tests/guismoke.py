@@ -451,6 +451,21 @@ def main():
 					path = os.path.join(out, 'multiwheel-%d-rings.png' % count)
 					assert wnd.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG)
 					assert os.path.getsize(path) > 0
+				# Check the shared Morinus reference bands even when the normal
+				# test options have both traditional strips switched off.
+				original_terms = frame.options.showterms
+				original_decans = frame.options.showdecans
+				try:
+					frame.options.showterms = True
+					frame.options.showdecans = True
+					wnd.redraw()
+					assert wnd.buffer is not None and wnd.buffer.IsOk()
+					path = os.path.join(out, 'multiwheel-shared-traditional-bands.png')
+					assert wnd.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG)
+				finally:
+					frame.options.showterms = original_terms
+					frame.options.showdecans = original_decans
+				wnd.redraw()
 				capture_window(wnd, 'multiwheel-window.png')
 				wnd.SetSize((1050, 790))
 				settle(0.2)
