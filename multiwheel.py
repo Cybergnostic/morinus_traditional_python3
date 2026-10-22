@@ -458,6 +458,70 @@ class MultiWheel:
             role, i18n.tr(PLANET_NAMES[i]), self.degree_text(lon), i18n.tr(sign), retro, chrt.name)
 
 
+class OuterChartPicker(comparegrid.ChartPicker):
+    """Multi-wheel picker with Morinus's own return/transit creation dialogs."""
+
+    def __init__(self, parent, mainfr, on_change, prefer=0):
+        self.generated_labels = {}
+        super().__init__(parent, mainfr, on_change, prefer)
+        self.create_button = wx.Button(self, label=i18n.tr('Create chart...'))
+        self.GetSizer().Add(self.create_button, 0, wx.LEFT, 5)
+        self.create_button.Bind(wx.EVT_BUTTON, self.show_create_menu)
+
+    def refresh(self, event=None):
+        super().refresh(event)
+        # Preserve generated chart identities in the list, even when their
+        # independent transit/revolution windows are later closed.
+        for i, (_, chrt) in enumerate(self.sources):
+            label = self.generated_labels.get(id(chrt))
+            if label:
+                title = label + ': ' + comparegrid.caption(chrt)
+                self.sources[i] = (title, chrt)
+                self.choice.SetString(i, title)
+
+    def show_create_menu(self, event):
+        menu = wx.Menu()
+        for label, kind in ((i18n.tr('Solar return...'), 3),
+                            (i18n.tr('Lunar return...'), 6),
+                            (i18n.tr('Transits...'), None)):
+            item = menu.Append(wx.ID_ANY, label)
+            menu.Bind(wx.EVT_MENU,
+                      lambda e, requested=kind: self.create_chart(requested),
+                      id=item.GetId())
+        try:
+            self.PopupMenu(menu)
+        finally:
+            menu.Destroy()
+
+    def create_chart(self, kind):
+        """Attach a chart returned by the existing Morinus dialogs.
+
+        If the user cancels either dialog, no chart is created or selected.
+        """
+        import transitframe
+        before = {id(w) for w in wx.GetTopLevelWindows()
+                  if isinstance(w, transitframe.TransitFrame)}
+        if kind is None:
+            self.mainfr.onTransits(None)
+        else:
+            self.mainfr.onRevolutions(None, planet=kind)
+        new = [w for w in wx.GetTopLevelWindows()
+               if isinstance(w, transitframe.TransitFrame)
+               and not w.IsBeingDeleted() and id(w) not in before]
+        if not new:
+            return
+        chrt = new[-1].chart
+        labels = {chart.Chart.SOLAR: i18n.tr('Solar return'),
+                  chart.Chart.LUNAR: i18n.tr('Lunar return'),
+                  chart.Chart.TRANSIT: i18n.tr('Transits')}
+        label = labels.get(chrt.htype, i18n.tr('Return'))
+        self.generated_labels[id(chrt)] = label
+        self.loaded.append((label, chrt))
+        self.refresh()
+        self.choice.SetSelection(len(self.sources) - 1)
+        self.on_change()
+
+
 class MultiWheelFrame(wx.Frame):
     """Chart selection, aspect controls and a resizable multi-wheel canvas."""
 
@@ -500,7 +564,7 @@ class MultiWheelFrame(wx.Frame):
             if not self.options.bw:
                 tag.SetForegroundColour(wx.Colour(*RING_COLOURS[i]))
             line.Add(tag, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
-            picker = comparegrid.ChartPicker(strip, mainfr, self.queue_draw, i + 1)
+            picker = OuterChartPicker(strip, mainfr, self.queue_draw, i + 1)
             line.Add(picker, 1, wx.EXPAND)
             strip.SetSizer(line)
             self.pickers.append(picker)
