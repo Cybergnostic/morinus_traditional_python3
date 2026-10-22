@@ -925,26 +925,20 @@ class GraphChart:
                     clr = self.options.clrplanets[i]
                 else:
                     clr = self.options.clrplanets[(i - 1)]
-            self.draw.text((x - self.symbolSize // 2, y - self.symbolSize // 2), common.common.planets[i], fill=clr, font=self.fntMorinus)
+            wheel_primitives.paint_glyph(self.draw, (x, y), common.common.planets[i], self.fntMorinus, self.symbolSize, clr)
             if not outer:
                 alon = lon
                 if self.options.ayanamsha != 0:
                     alon -= self.chart.ayanamsha
                     alon = util.normalize(alon)
                 degtxt, mintxt = wheel_primitives.position_text(alon, self.deg_symbol)
-                wdeg, hdeg = self.draw.textbbox((0, 0), degtxt, self.fntText)[2:]
                 x = cx + math.cos(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosDeg
                 y = cy + math.sin(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosDeg
-                xdeg = x - wdeg // 2
-                ydeg = y - hdeg // 2
-                self.draw.text((xdeg, ydeg), degtxt, fill=clr, font=self.fntText)
+                wheel_primitives.paint_position_text(self.draw, (x, y), degtxt, self.fntText, clr)
 
-                wdeg, hdeg = self.draw.textbbox((0, 0), mintxt, self.fntSmallText2)[2:]
                 x = cx + math.cos(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosMin
                 y = cy + math.sin(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosMin
-                xdeg = x - wdeg // 2
-                ydeg = y - hdeg // 2
-                self.draw.text((xdeg, ydeg), mintxt.zfill(2), fill=clr, font=self.fntSmallText2)
+                wheel_primitives.paint_position_text(self.draw, (x, y), mintxt.zfill(2), self.fntSmallText2, clr)
                 if chrt.planets.planets[i].data[planets.Planet.SPLON] <= 0.0:
                     if chrt.planets.planets[i].data[planets.Planet.SPLON] == 0.0:
                         t = 'S'
@@ -952,12 +946,9 @@ class GraphChart:
                     elif chrt.planets.planets[i].data[planets.Planet.SPLON] < 0.0:
                         t = common.common.retr
                         rfnt = self.fntRetr
-                    wdeg, hdeg = self.draw.textbbox((0, 0), t, rfnt)[2:]
                     x = cx + math.cos(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - chrt.planets.planets[i].data[planets.Planet.LON] - pshift[i])) * rRetr
                     y = cy + math.sin(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - chrt.planets.planets[i].data[planets.Planet.LON] - pshift[i])) * rRetr
-                    xdeg = x - wdeg // 2
-                    ydeg = y - hdeg // 2
-                    self.draw.text((xdeg, ydeg), t, fill=clr, font=rfnt)
+                    wheel_primitives.paint_position_text(self.draw, (x, y), t, rfnt, clr)
             elif i < planets.Planets.BODIES_NUM:
                 if chrt.planets.planets[i].data[planets.Planet.SPLON] <= 0.0:
                     t = 'S'
