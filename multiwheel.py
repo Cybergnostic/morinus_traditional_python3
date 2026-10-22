@@ -256,7 +256,7 @@ class MultiWheel:
         motion_font = self.font(max(8, glyph_size * .58), symbol=True)
         count = planets.Planets.BODIES_NUM
         lons = [self.longitude(chrt, i) for i in range(count)]
-        labels = [wheel_primitives.position_text(lon, '\\N{DEGREE SIGN}')
+        labels = [wheel_primitives.position_text(lon, '°')
                   for lon in lons]
         glyph_boxes = [self.measure(common.common.planets[i], glyph_font)
                        for i in range(count)]
