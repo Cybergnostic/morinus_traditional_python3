@@ -456,6 +456,25 @@ def main():
 					path = os.path.join(out, 'multiwheel-%d-rings.png' % count)
 					assert wnd.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG)
 					assert os.path.getsize(path) > 0
+				# The default label hierarchy prioritizes planetary glyphs.
+				assert wnd.labels_choice.GetSelection() == 1
+				assert wnd.renderer.label_mode == 1
+				assert wnd.renderer.planet_fonts['glyph'] > wnd.renderer.planet_fonts['degree']
+				assert wnd.renderer.drawn_degree_labels
+				# Numeric annotations can be switched off without removing planets
+				# or changing their exact-longitude hit targets.
+				previous_hits = len(wnd.renderer.hits)
+				wnd.labels_choice.SetSelection(0)
+				wnd.redraw()
+				assert len(wnd.renderer.hits) == previous_hits
+				assert not wnd.renderer.drawn_degree_labels
+				wnd.labels_choice.SetSelection(2)
+				wnd.redraw()
+				assert wnd.renderer.label_mode == 2
+				wnd.labels_choice.SetSelection(1)
+				wnd.redraw()
+				assert wnd.renderer.label_mode == 1
+				assert "'" in wnd.renderer.onClick(wnd.renderer.hits[0][0])
 				# Zoom must render a genuinely larger bitmap with scrolling,
 				# not enlarge the fitted bitmap.  Hiding the source sidebar
 				# must not destroy its selected charts.
