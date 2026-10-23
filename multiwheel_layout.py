@@ -133,13 +133,15 @@ def shared_planet_font_sizes(max_radius, content_band_widths):
     if max_radius <= 0 or not content_band_widths or any(
             width <= 0 for width in content_band_widths):
         raise ValueError('Need a radius and positive planetary content widths')
-    glyph = max(12, int(min(max_radius * .055,
-                            min(content_band_widths) * .28)))
+    # The symbol is the primary information. Numeric annotations no longer
+    # have to fit inside its bounding box, so they cannot shrink the glyph.
+    glyph = max(17, int(min(max_radius * .060,
+                            min(content_band_widths) * .75)))
     return {
         'glyph': glyph,
-        'degree': max(9, int(glyph * .67)),
-        'minute': max(9, int(glyph * .62)),
-        'motion': max(9, int(glyph * .58)),
+        'degree': max(9, int(glyph * .46)),
+        'minute': max(9, int(glyph * .42)),
+        'motion': max(9, int(glyph * .42)),
     }
 
 
@@ -298,3 +300,171 @@ def place_planet_clusters(longitudes, box_groups, edges, asc,
             unresolved.append(i)
         placed[i] = best
     return [placed[i] for i in range(n)], sorted(unresolved)
+
+
+def house_sector(longitude, cusps):
+    """Zero-based house containing a zodiac longitude; cusps in house order.
+
+    Houses are chart-specific. At a cusp, the planet belongs to the house
+    beginning there. Works across the Aries wrap (e.g. 350° to 18°).
+    """
+    if len(cusps) != 12:
+        raise ValueError('House layout requires twelve ordered cusps')
+    lon = longitude % 360.0
+    for i, beginning in enumerate(cusps):
+        span = (cusps[(i + 1) % 12] - beginning) % 360.0
+        if span > 0 and (lon - beginning) % 360.0 < span:
+            return i
+    # Degenerate cusp sets (e.g. collapsed house systems near the poles):
+    # use the most recent cusp in zodiacal longitude deterministically.
+    return min(range(12), key=lambda i: (lon - cusps[i]) % 360.0)
+
+
+def place_planet_glyphs(longitudes, glyph_boxes, edges, asc,
+                        house_cusps=None, maximum_shift=7.5):
+    """Lay out glyphs *without* considering degree/minute text.
+
+    Exact longitude, sign and chart-local house are protected. Move the
+    glyph radially before moving it around the zodiac. Return positions in
+    source order plus unresolved indices (never silently hide a planet).
+    """
+    import math
+    if len(longitudes) != len(glyph_boxes):
+        raise ValueError('Each glyph requires a measured box')
+    if edges[1] <= edges[0] or maximum_shift < 0:
+        raise ValueError('Invalid glyph band or maximum shift')
+    if house_cusps is not None and len(house_cusps) != 12:
+        raise ValueError('Expected twelve chart-specific house cusps')
+    if not longitudes:
+        return [], []
+
+    longitudes = [float(lon) % 360.0 for lon in longitudes]
+    neighbours = [min((abs((lon - other + 180) % 360 - 180)
+                       for j, other in enumerate(longitudes) if j != i),
+                      default=360) for i, lon in enumerate(longitudes)]
+    order = sorted(range(len(longitudes)),
+                   key=lambda i: (neighbours[i], longitudes[i], i))
+    placed = {}
+    unresolved = []
+    inner, outer = edges
+    base_radius = (inner + outer) / 2.0
+    angular_trials = (0, -0.5, 0.5, -1, 1, -2, 2, -3.5, 3.5,
+                      -5, 5, -6.5, 6.5, -7.5, 7.5)
+    for i in order:
+        original = longitudes[i]
+        original_sign = int(original // 30)
+        original_house = (house_sector(original, house_cusps)
+                          if house_cusps is not None else None)
+        box = glyph_boxes[i]
+        if box[0] <= 0 or box[1] <= 0:
+            raise ValueError('Glyph box dimensions must be positive')
+        best = None
+        best_score = float('inf')
+        for shift in angular_trials:
+            if abs(shift) > maximum_shift:
+                continue
+            displayed = (original + shift) % 360
+            if int(displayed // 30) != original_sign:
+                continue
+            if (original_house is not None and
+                    house_sector(displayed, house_cusps) != original_house):
+                continue
+            theta = math.pi + math.radians(asc - displayed)
+            reach = _radial_reach(box, theta)
+            slack = max(0, (outer - inner) / 2 - reach - 2.0)
+            radial_trials = (0, -slack * .33, slack * .33,
+                             -slack * .66, slack * .66,
+                             -slack, slack)
+            for offset in radial_trials:
+                radius = base_radius + offset
+                point = _polar_point(asc, displayed, radius)
+                box_rect = _rect(point, box, margin=1.2)
+                fits = (radius - reach >= inner + 1 and
+                        radius + reach <= outer - 1)
+                overlap = sum(_intersect_area(box_rect, p['rect'])
+                              for p in placed.values())
+                score = ((0 if fits else 100000) + overlap * 1000 +
+                         abs(shift) * 6.0 + abs(offset) * .28)
+                if score < best_score:
+                    best_score = score
+                    best = {'longitude': displayed, 'exact': original,
+                            'glyph': point, 'rect': box_rect, 'radius': radius,
+                            'fits': fits, 'offset': offset}
+        if best is None:
+            raise ValueError('No valid glyph candidate')
+        if not best['fits'] or any(
+                _intersect_area(best['rect'], p['rect']) > 0
+                for p in placed.values()):
+            unresolved.append(i)
+        placed[i] = best
+    return [placed[i] for i in range(len(longitudes))], sorted(unresolved)
+
+
+def place_degree_annotations(glyphs, longitudes, text_boxes, edges, asc,
+                             direction, house_cusps=None):
+    """Fit optional degree text around fixed glyphs, never move a glyph.
+
+    Returns optional Cartesian label centres and hidden indices. Label
+    collisions never affect the primary glyph positions. The centre of a
+    numeric annotation stays in its planet's sign and house.
+    """
+    import math
+    if not (len(glyphs) == len(longitudes) == len(text_boxes)):
+        raise ValueError('Degree labels must match glyphs and longitudes')
+    if edges[1] <= edges[0] or direction not in (-1, 1):
+        raise ValueError('Invalid degree band or direction')
+    if house_cusps is not None and len(house_cusps) != 12:
+        raise ValueError('Expected twelve chart-specific house cusps')
+    glyph_rects = [p['rect'] for p in glyphs]
+    placed_rects = []
+    points = []
+    hidden = []
+    for i, (glyph, source_lon, box) in enumerate(
+            zip(glyphs, longitudes, text_boxes)):
+        if box[0] <= 0 or box[1] <= 0:
+            points.append(None)
+            continue
+        original_sign = int((source_lon % 360) // 30)
+        original_house = (house_sector(source_lon, house_cusps)
+                          if house_cusps is not None else None)
+        base_longitude = glyph['longitude']
+        theta = math.pi + math.radians(asc - base_longitude)
+        glyph_w = glyph_rects[i][2] - glyph_rects[i][0] - 2.4
+        glyph_h = glyph_rects[i][3] - glyph_rects[i][1] - 2.4
+        glyph_reach = _radial_reach((glyph_w, glyph_h), theta)
+        text_reach = _radial_reach(box, theta)
+        ideal_radius = glyph['radius'] + direction * (
+            glyph_reach + text_reach + 3.0)
+        best = None
+        best_score = float('inf')
+        for shift in (0, -0.6, 0.6, -1.4, 1.4, -2.5, 2.5):
+            label_lon = (base_longitude + shift) % 360.0
+            if int(label_lon // 30) != original_sign:
+                continue
+            if (original_house is not None and
+                    house_sector(label_lon, house_cusps) != original_house):
+                continue
+            label_theta = math.pi + math.radians(asc - label_lon)
+            reach = _radial_reach(box, label_theta)
+            for radial in (0, direction * 3, -direction * 3,
+                           direction * 6, -direction * 6,
+                           direction * 10, -direction * 10):
+                r = ideal_radius + radial
+                if r - reach < edges[0] + 2 or r + reach > edges[1] - 2:
+                    continue
+                point = _polar_point(asc, label_lon, r)
+                rect = _rect(point, box, margin=.7)
+                if any(_intersect_area(rect, other) > 0 for other in
+                       glyph_rects + placed_rects):
+                    continue
+                score = abs(shift) * 6 + abs(radial)
+                if score < best_score:
+                    best = (point, rect)
+                    best_score = score
+        if best is None:
+            points.append(None)
+            hidden.append(i)
+        else:
+            points.append(best[0])
+            placed_rects.append(best[1])
+    return points, hidden
