@@ -666,21 +666,58 @@ def main():
 				assert traces['asc_circle'] == 4  # 1 per chart: ASC
 				assert len(traces['planet_fonts']) == 4
 				assert len(set(traces['planet_fonts'])) == 1
-				# Check the shared Morinus reference bands even when the normal
-				# test options have both traditional strips switched off.
+				# Both orders of the same shared zodiac/terms/decans reference
+				# system must render. The option changes only presentation,
+				# never the selected charts, angular positions or ink scale.
+				assert wnd.reference_choice.GetSelection() == 0
 				original_terms = frame.options.showterms
 				original_decans = frame.options.showdecans
+				original_sources = [picker.selected() for picker in wnd.pickers]
 				try:
 					frame.options.showterms = True
 					frame.options.showdecans = True
-					wnd.redraw()
-					assert wnd.buffer is not None and wnd.buffer.IsOk()
-					path = os.path.join(out, 'multiwheel-shared-traditional-bands.png')
-					assert wnd.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG)
+					for number in (1, 2, 3):
+						wnd.count_choice.SetSelection(number - 1)
+						wnd.change_count()
+						for mode in (0, 1):
+							wnd.reference_choice.SetSelection(mode)
+							wnd.redraw()
+							renderer = wnd.renderer
+							assert renderer.reference_outside == bool(mode)
+							assert renderer.buffer is not None and renderer.buffer.IsOk()
+							assert len(renderer.hits) == (number + 1) * 9
+							core, decans, terms, zodiac, chart_rings = (
+								multiwheel.multiwheel_layout.allocate_traditional_rings(
+									renderer.rmax, number, True, True,
+									reference_outside=bool(mode)))
+							assert decans is not None and terms is not None
+							if mode:
+								assert core == chart_rings[0][0]
+								assert chart_rings[-1][1] == decans[0]
+								assert decans[1] == terms[0]
+								assert terms[1] == zodiac[0]
+								assert abs(zodiac[1] - renderer.rmax) < 1e-6
+							else:
+								assert core == decans[0]
+								assert decans[1] == terms[0]
+								assert terms[1] == zodiac[0]
+								assert zodiac[1] == chart_rings[0][0]
+							path = os.path.join(
+								out, 'multiwheel-%d-rings-%s-reference.png' % (
+									number, 'exterior' if mode else 'classic'))
+							assert wnd.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG)
+							assert os.path.getsize(path) > 0
+						assert all(picker.selected() is previous
+								   for picker, previous in zip(wnd.pickers,
+																 original_sources))
 				finally:
+					wnd.reference_choice.SetSelection(0)
+					wnd.count_choice.SetSelection(2)
+					wnd.change_count()
 					frame.options.showterms = original_terms
 					frame.options.showdecans = original_decans
 				wnd.redraw()
+				assert not wnd.renderer.reference_outside
 				# Changing house systems must keep the multiwheel open, and
 				# refresh all the retained charts rather than destroying it.
 				previous_hsys = frame.options.hsys
