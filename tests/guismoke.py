@@ -427,6 +427,54 @@ def main():
 				picker.loaded.append(('Smoke transit', secondary))
 				picker.refresh()
 				picker.choice.SetSelection(len(picker.sources) - 1)
+				# House separators must be LOCAL to their chart field.
+				# Give the outer chart deliberately different cusps, then
+				# trace the actual strokes. Sign spokes should never appear
+				# as extra chart-wide spokes in the outer planetary band.
+				import math, houses, wheel_primitives
+				saved_cusps = secondary.houses.cusps[:]
+				saved_houses = frame.options.houses
+				saved_spokes = multiwheel.MultiWheel.draw_house_spokes
+				house_records = []
+				def trace_house_spokes(renderer, chrt, inner, outer, colour=None):
+					ink_segments = []
+					original_stroke = renderer.stroke
+					def collect_house_stroke(a, b, role='divider', colour=None):
+						ink_segments.append((a, b))
+						return original_stroke(a, b, role, colour)
+					renderer.stroke = collect_house_stroke
+					try:
+						return saved_spokes(renderer, chrt, inner, outer, colour)
+					finally:
+						del renderer.stroke
+						cusps = tuple(multiwheel.zodiac_lon(
+							chrt, chrt.houses.cusps[h], renderer.options)
+							for h in range(1, houses.Houses.HOUSE_NUM + 1))
+						for (a, b), (lon, start, end) in zip(
+								ink_segments,
+								wheel_primitives.house_spoke_segments(cusps, inner, outer)):
+							for actual, expected in ((a, renderer.point(lon, start)),
+													 (b, renderer.point(lon, end))):
+								assert math.dist(actual, expected) < 1e-5
+						house_records.append((chrt, inner, outer, cusps, len(ink_segments)))
+				try:
+					frame.options.houses = True
+					for h in range(1, houses.Houses.HOUSE_NUM + 1):
+						secondary.houses.cusps[h] = (saved_cusps[h] + 11) % 360
+					multiwheel.MultiWheel.draw_house_spokes = trace_house_spokes
+					wnd.redraw()
+				finally:
+					multiwheel.MultiWheel.draw_house_spokes = saved_spokes
+					secondary.houses.cusps[:] = saved_cusps
+					frame.options.houses = saved_houses
+				assert not hasattr(multiwheel.MultiWheel, 'draw_sign_spokes')
+				assert len(house_records) == 2
+				assert house_records[0][0] is frame.horoscope
+				assert house_records[1][0] is secondary
+				assert house_records[0][3] != house_records[1][3]
+				assert house_records[0][4] == house_records[1][4] == 12
+				assert house_records[0][2] < house_records[1][1]
+				wnd.redraw()
 				for count in (1, 2, 3):
 					wnd.count_choice.SetSelection(count - 1)
 					wnd.change_count()
