@@ -845,6 +845,7 @@ class MultiWheelFrame(wx.Frame):
         self.zoom_factor = None  # None = fit window; 1.0 = natural chart size
         self.sidebar_visible = True
         self.bitmap_origin = (0, 0)
+        self._last_hover = ''
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
         self.SetMinSize((760, 600))
         outer = wx.BoxSizer(wx.VERTICAL)
@@ -873,7 +874,14 @@ class MultiWheelFrame(wx.Frame):
         self.side_button = wx.Button(self, label=i18n.tr('Hide charts'))
         viewrow.Add(self.side_button, 0, wx.RIGHT, 8)
         self.savebutton = wx.Button(self, label=i18n.tr('Save image (PNG)...'))
-        viewrow.Add(self.savebutton)
+        viewrow.Add(self.savebutton, 0, wx.RIGHT, 10)
+        viewrow.Add(wx.StaticText(self, label=i18n.tr('Planet labels:')),
+                    0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        self.labels_choice = wx.Choice(
+            self, choices=i18n.tr(['Glyphs only', 'Glyphs + degrees',
+                                   'Full positions']))
+        self.labels_choice.SetSelection(1)
+        viewrow.Add(self.labels_choice, 0, wx.ALIGN_CENTER_VERTICAL)
         outer.Add(viewrow, 0, wx.ALL, 7)
 
         # Put chart-source controls beside, not above, the drawing. This
@@ -923,6 +931,7 @@ class MultiWheelFrame(wx.Frame):
         self.CreateStatusBar()
         self.Bind(wx.EVT_CHOICE, self.change_count, self.count_choice)
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.aspect_choice)
+        self.Bind(wx.EVT_CHOICE, self.queue_draw, self.labels_choice)
         self.Bind(wx.EVT_BUTTON, self.onSaveAsBitmap, self.savebutton)
         self.Bind(wx.EVT_BUTTON, self.zoom_fit, self.fit_button)
         self.Bind(wx.EVT_BUTTON, self.zoom_actual, self.actual_button)
@@ -932,6 +941,8 @@ class MultiWheelFrame(wx.Frame):
         self.canvas.Bind(wx.EVT_PAINT, self.paint)
         self.canvas.Bind(wx.EVT_SIZE, self.resize)
         self.canvas.Bind(wx.EVT_LEFT_UP, self.on_click)
+        self.canvas.Bind(wx.EVT_MOTION, self.on_motion)
+        self.canvas.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave)
         self.Bind(wx.EVT_ACTIVATE, lambda e: (comparegrid.refresh_pickers(self.pickers) if e.GetActive() else None, e.Skip()))
         self.CentreOnParent()
         wx.CallAfter(self.queue_draw)
@@ -1030,12 +1041,15 @@ class MultiWheelFrame(wx.Frame):
                                    (w, h), self.options, self.options.bw)
         self.renderer.aspect_ring = aspect_ring_from_choice(
             self.aspect_choice.GetSelection())
+        self.renderer.label_mode = self.labels_choice.GetSelection()
         self.buffer = self.renderer.drawChart()
         notes = []
         if repeated:
             notes.append(i18n.tr('Repeated charts') + ': ' + ', '.join(repeated))
         if self.renderer.layout_issues:
-            notes.append(i18n.tr('Crowded planetary labels: use 100% or zoom in'))
+            notes.append(i18n.tr('Crowded planetary glyphs: use 100% or zoom in'))
+        if self.renderer.hidden_positions:
+            notes.append(i18n.tr('Some small positions are hidden: hover or click a planet'))
         self.selection_note.SetLabel('\n'.join(notes))
         self.selection_note.Wrap(290)
         self.sidebar.Layout()
@@ -1052,12 +1066,29 @@ class MultiWheelFrame(wx.Frame):
         if self.buffer is not None:
             dc.DrawBitmap(self.buffer, *self.bitmap_origin)
 
+    def position_details(self, point):
+        if self.renderer is None:
+            return ''
+        x, y = self.canvas.CalcUnscrolledPosition(point)
+        return self.renderer.onClick(
+            (x - self.bitmap_origin[0], y - self.bitmap_origin[1]))
+
     def on_click(self, event):
-        if self.renderer is not None:
-            x, y = self.canvas.CalcUnscrolledPosition(event.GetPosition())
-            x -= self.bitmap_origin[0]
-            y -= self.bitmap_origin[1]
-            self.SetStatusText(self.renderer.onClick((x, y)))
+        self.SetStatusText(self.position_details(event.GetPosition()))
+
+    def on_motion(self, event):
+        # Give the complete degree, minute, motion and sign on hover,
+        # including for planets whose small visible label could not fit.
+        details = self.position_details(event.GetPosition())
+        if details != self._last_hover:
+            self._last_hover = details
+            self.canvas.SetToolTip(details)
+        event.Skip()
+
+    def on_leave(self, event):
+        self._last_hover = ''
+        self.canvas.SetToolTip('')
+        event.Skip()
 
     def onSaveAsBitmap(self, event):
         if self.buffer is None:
@@ -1085,6 +1116,7 @@ class MultiWheelFrame(wx.Frame):
                                   self.options, self.options.bw)
             exporter.aspect_ring = aspect_ring_from_choice(
                 self.aspect_choice.GetSelection())
+            exporter.label_mode = self.labels_choice.GetSelection()
             bitmap = exporter.drawChart()
             if bitmap.SaveFile(path, wx.BITMAP_TYPE_PNG):
                 self.mainfr.fpathimgs = os.path.dirname(path)
