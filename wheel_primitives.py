@@ -44,6 +44,26 @@ def house_spoke_segments(cusps, inner, outer, inset=1.25):
                  for lon in cusps)
 
 
+
+def zodiac_guide_longitudes(cusps=None, tolerance=.02):
+    """Sign divisions not already represented by this chart's house cusps.
+
+    A cusp is equivalent when its distance to a sign boundary is within
+    tolerance in degrees, including the 0/360 wrap. In Whole Sign houses
+    every boundary coincides, leaving only house lines to draw.
+    When house lines are switched off, pass None to keep all sign guides.
+    """
+    if tolerance < 0 or tolerance >= 15:
+        raise ValueError('Invalid zodiac division tolerance')
+    if cusps is not None and len(cusps) != 12:
+        raise ValueError('Expected twelve chart-local cusps')
+    def distance(a, b):
+        return abs((a - b + 180.0) % 360.0 - 180.0)
+    return tuple(float(boundary) for boundary in range(0, 360, 30)
+                 if cusps is None or all(distance(boundary, cusp) > tolerance
+                                         for cusp in cusps))
+
+
 def planet_band_radii(inner, outer):
     """Morinus order, from the centre: motion, minutes, degrees, glyph.
 
