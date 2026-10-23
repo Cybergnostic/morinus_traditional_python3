@@ -262,3 +262,34 @@ stop inside its own field rather than extending between the two charts.
   Whole Sign situations.
 - This change affects only the multiwheel drawing and tests; the
   single-wheel GraphChart, calculations and comparison grid stay untouched.
+
+## October 23: selectable exterior zodiac and dignity bands
+
+The multiwheel window now offers **Reference bands** with two options:
+- **Inside (classic)** (default): radix -> decans -> terms -> zodiac ->
+  ring 1 -> ring 2 -> ring 3.
+- **Outside (experimental)**: radix -> ring 1 -> ring 2 -> ring 3 ->
+  decans -> terms -> zodiac (the zodiac is the outermost perimeter).
+
+The shared reference system is still drawn exactly once. Disabled terms
+or decans are omitted in either arrangement, and the existing Morinus
+zodiac divisions remain visible. The planetary ring widths, original
+chart selections and exact positions are unchanged between layouts.
+Planetary identity captions, individual house cusps, angle markers,
+degree dials and glyph collision handling continue to belong to their
+own chart only.
+
+The alternative requires a different background fill: when the zodiac
+is outermost, only the radix interior is cleared after planetary tints,
+otherwise the new reference position would erase every planetary field.
+The final perimeter also follows the zodiac in this mode. The switch
+is applied both to the screen renderer and independent high-resolution
+PNG export.
+
+Pure tests cover both radial orders, with any combination of optional
+reference strips, and 1/2/3 added charts. GUI smoke creates screenshots
+for all six inside/outside and wheel-count combinations with both
+traditional dignity strips switched on.
+
+Keep the existing view as default until the experimental exterior wheel
+has been reviewed visually, particularly at quad-wheel density.
