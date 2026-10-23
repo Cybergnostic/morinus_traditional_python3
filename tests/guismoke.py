@@ -426,6 +426,8 @@ def main():
 				assert len(wnd.pickers) == 4
 				assert wnd.splitter.IsSplit()
 				assert wnd.inspector.GetParent() is wnd.view_surface
+				assert isinstance(wnd.inspector, wx.Notebook)
+				assert wnd.inspector.GetPageCount() == 2
 				wnd.toggle_sidebar()
 				assert not wnd.splitter.IsSplit()
 				wnd.toggle_sidebar()
@@ -510,6 +512,10 @@ def main():
 					chart.Chart.TRANSIT) and source is not created
 					for _, source in inner.sources)
 				assert wnd.active_transit_ring == 3
+				assert wnd.transit_section.IsShown()
+				assert wnd.return_section.IsShown()
+				wnd.inspector.SetSelection(1)
+				assert wnd.inspector.GetSelection() == 1
 				before = transit_picker.selected()
 				wnd.step_transit('Sec', True)
 				assert transit_picker.selected() is not before

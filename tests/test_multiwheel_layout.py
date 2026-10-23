@@ -357,13 +357,40 @@ class MultiWheelLayoutTests(unittest.TestCase):
                              house_sector(placement['longitude'],
                                           self.twelve_cusps()))
 
-    def test_isolated_degree_is_under_the_glyph_when_space_allows(self):
+    def test_degrees_are_radially_inward_above_and_below_wheel_centre(self):
+        import math
+        for direction in (-1, 1):
+            for longitude in (105, 285):
+                placements, unresolved = place_planet_label_groups(
+                    [longitude], [(19, 21)], [(31, 9)],
+                    (100, 215), 90, direction)
+                self.assertFalse(unresolved)
+                placement = placements[0]
+                self.assertEqual(placement['style'], 'radial-inward')
+                self.assertLess(math.hypot(*placement['position']),
+                                math.hypot(*placement['glyph']))
+                # In the lower half of the wheel the degree is physically
+                # above the glyph, and in the top half it is below it.
+                if placement['glyph'][1] > 0:
+                    self.assertLess(placement['position'][1],
+                                    placement['glyph'][1])
+                else:
+                    self.assertGreater(placement['position'][1],
+                                       placement['glyph'][1])
+
+    def test_degree_can_cross_ring_border_without_touching_other_labels(self):
+        import math
         placements, unresolved = place_planet_label_groups(
-            [105], [(19, 21)], [(31, 9)], (100, 215), 90, -1)
+            [12, 12.7, 13.4, 55], [(18, 19)] * 4, [(23, 9)] * 4,
+            (160, 245), 90, 1)
         self.assertFalse(unresolved)
-        self.assertEqual(placements[0]['style'], 'below')
-        self.assertGreater(placements[0]['position'][1],
-                           placements[0]['glyph'][1])
+        self.assertTrue(any(math.hypot(*p['position']) < 160
+                            for p in placements))
+        for i, placement in enumerate(placements):
+            for other in placements[i + 1:]:
+                self.assertTrue(all(_intersect_area(a, b) == 0
+                                    for a in placement['rects']
+                                    for b in other['rects']))
 
     def test_impossible_label_group_does_not_hide_degrees(self):
         placements, unresolved = place_planet_label_groups(

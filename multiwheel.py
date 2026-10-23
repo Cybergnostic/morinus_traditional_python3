@@ -459,12 +459,35 @@ class MultiWheel:
             direction = -1 if dial_side == 'outer' else 1
             placements, unresolved = multiwheel_layout.place_planet_label_groups(
                 lons, glyph_boxes, text_boxes, (inner, outer), asc,
-                direction, house_cusps=cusps)
+                direction, house_cusps=cusps,
+                occupied_rects=self.planet_occupied)
         else:
             placements, unresolved = multiwheel_layout.place_planet_glyphs(
                 lons, glyph_boxes, (inner, outer), asc, house_cusps=cusps)
         if unresolved:
             self.layout_issues.append((role, len(unresolved)))
+
+        # Numbers are allowed to cover guide strokes and ring separators,
+        # but never another number or a planetary glyph. Prepare their
+        # placements now and paint them after the structural rings are done.
+        visible_positions = set()
+        reserved = list(self.planet_occupied)
+        glyph_ink = [placement['rect'] for placement in placements]
+        for i, placement in enumerate(placements):
+            if not label_mode:
+                break
+            number = placement['rects'][1]
+            obstacles = reserved + glyph_ink
+            if any(multiwheel_layout._intersect_area(number, rect) > 0
+                   for rect in obstacles):
+                if i not in unresolved:
+                    self.layout_issues.append((role, 1))
+                continue
+            visible_positions.add(i)
+            reserved.append(number)
+        self.planet_occupied.extend(glyph_ink)
+        self.planet_occupied.extend(placements[i]['rects'][1]
+                                    for i in sorted(visible_positions))
 
         for i, (exact, placement) in enumerate(zip(lons, placements)):
             gx, gy = placement['glyph']
@@ -492,12 +515,12 @@ class MultiWheel:
             wheel_primitives.optical_text_center(
                 self.draw, self.scaled(glyph_xy),
                 common.common.planets[i], glyph_font, colour)
-            if label_mode:
+            if label_mode and i in visible_positions:
                 dx, dy = placement['position']
                 label_xy = (self.cx + dx, self.cy + dy)
-                self.draw_position_label(
-                    label_xy, labels[i], marks[i], degree_font,
-                    mark_fonts[i], colour)
+                self.pending_planet_positions.append(
+                    (label_xy, labels[i], marks[i], degree_font,
+                     mark_fonts[i], colour))
                 self.drawn_degree_labels.append((role, i, labels[i]))
                 if marks[i] == common.common.retr:
                     self.drawn_retrograde_glyphs.append(
@@ -802,6 +825,8 @@ class MultiWheel:
         self.hidden_positions = []
         self.drawn_degree_labels = []
         self.drawn_retrograde_glyphs = []
+        self.pending_planet_positions = []
+        self.planet_occupied = []
         self.draw_ring_backgrounds(zodiac, rings)
         self.draw_radix(core)
         if not self.reference_outside:
@@ -829,6 +854,10 @@ class MultiWheel:
         self.draw_centre_identity()
         for index, (chrt, edges) in enumerate(zip(self.others, rings), 1):
             self.draw_outer_identity(chrt, index, edges)
+        # Render metadata above reference lines and separator masks. These
+        # annotations are permitted to cross both without being erased.
+        for args in self.pending_planet_positions:
+            self.draw_position_label(*args)
         image = image.resize((self.width, self.height), Image.Resampling.LANCZOS)
         out = wx.Image(self.width, self.height)
         out.SetData(image.tobytes())
@@ -1246,24 +1275,38 @@ class MultiWheelFrame(wx.Frame):
         self.canvas.SetScrollRate(20, 20)
         self.canvas.SetBackgroundStyle(wx.BG_STYLE_PAINT)
         workspace.Add(self.canvas, 1, wx.EXPAND)
-        self.inspector = wx.ScrolledWindow(self.view_surface, style=wx.VSCROLL)
+        # Keep chart identity separate from the time/navigation workspace.
+        # Both pages scroll independently on small laptop screens.
+        self.inspector = wx.Notebook(self.view_surface)
         self.inspector.SetBackgroundColour(wx.WHITE)
         self.inspector.SetForegroundColour(wx.Colour(35, 42, 51))
-        self.inspector.SetMinSize((254, 260))
-        self.inspector.SetScrollRate(0, 14)
-        rail = wx.BoxSizer(wx.VERTICAL)
-        self.add_rail_heading(rail, 'Chart details')
+        self.inspector.SetMinSize((270, 260))
+        self.info_page = wx.ScrolledWindow(self.inspector, style=wx.VSCROLL)
+        self.controls_page = wx.ScrolledWindow(self.inspector, style=wx.VSCROLL)
+        for page in (self.info_page, self.controls_page):
+            page.SetBackgroundColour(wx.WHITE)
+            page.SetScrollRate(0, 14)
+        self.inspector.AddPage(self.info_page, i18n.tr('Charts'))
+        self.inspector.AddPage(self.controls_page, i18n.tr('Returns + transits'))
+
+        info_rail = wx.BoxSizer(wx.VERTICAL)
+        self.add_rail_heading(info_rail, 'Chart details', self.info_page)
         self.chart_details = []
         for i in range(4):
-            label = wx.StaticText(self.inspector, label='')
+            label = wx.StaticText(self.info_page, label='')
             label.SetForegroundColour(wx.Colour(50, 58, 68))
             self.chart_details.append(label)
-            rail.Add(label, 0, wx.EXPAND | wx.BOTTOM, 11)
-        rail.Add(wx.StaticLine(self.inspector), 0, wx.EXPAND | wx.BOTTOM, 9)
-        self.add_rail_heading(rail, 'Return controls')
+            info_rail.Add(label, 0, wx.EXPAND | wx.BOTTOM, 11)
+        self.info_page.SetSizer(info_rail)
+
+        controls_rail = wx.BoxSizer(wx.VERTICAL)
+        self.return_section = wx.Panel(self.controls_page)
+        self.return_section.SetBackgroundColour(wx.WHITE)
+        return_rail = wx.BoxSizer(wx.VERTICAL)
+        self.add_rail_heading(return_rail, 'Return controls', self.return_section)
         self.return_controls = []
         for i in range(4):
-            line = wx.Panel(self.inspector)
+            line = wx.Panel(self.return_section)
             line.SetBackgroundColour(wx.WHITE)
             row_controls = wx.BoxSizer(wx.HORIZONTAL)
             caption = wx.StaticText(line, label='')
@@ -1276,16 +1319,21 @@ class MultiWheelFrame(wx.Frame):
             row_controls.Add(previous, 0, wx.LEFT, 3)
             row_controls.Add(following, 0, wx.LEFT, 3)
             line.SetSizer(row_controls)
-            rail.Add(line, 0, wx.EXPAND | wx.BOTTOM, 5)
+            return_rail.Add(line, 0, wx.EXPAND | wx.BOTTOM, 5)
             self.return_controls.append((line, previous, following, caption))
             previous.Bind(wx.EVT_BUTTON,
                           lambda e, index=i: self.step_return_ring(index, False))
             following.Bind(wx.EVT_BUTTON,
                            lambda e, index=i: self.step_return_ring(index, True))
-        rail.Add(wx.StaticLine(self.inspector), 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 9)
-        self.add_rail_heading(rail, 'Transit controller')
-        self.transit_ring_choice = wx.Choice(self.inspector)
-        rail.Add(self.transit_ring_choice, 0, wx.EXPAND | wx.BOTTOM, 6)
+        self.return_section.SetSizer(return_rail)
+        controls_rail.Add(self.return_section, 0, wx.EXPAND | wx.BOTTOM, 12)
+
+        self.transit_section = wx.Panel(self.controls_page)
+        self.transit_section.SetBackgroundColour(wx.WHITE)
+        transit_rail = wx.BoxSizer(wx.VERTICAL)
+        self.add_rail_heading(transit_rail, 'Transit controller', self.transit_section)
+        self.transit_ring_choice = wx.Choice(self.transit_section)
+        transit_rail.Add(self.transit_ring_choice, 0, wx.EXPAND | wx.BOTTOM, 6)
         self.transit_slots = []
         self.active_transit_ring = None
         self.transit_buttons = []
@@ -1294,13 +1342,13 @@ class MultiWheelFrame(wx.Frame):
         self._transit_fields_ring = None
         for unit in multiwheel_time.UNITS:
             row_controls = wx.BoxSizer(wx.HORIZONTAL)
-            label = wx.StaticText(self.inspector, label=i18n.tr(unit))
+            label = wx.StaticText(self.transit_section, label=i18n.tr(unit))
             label.SetForegroundColour(wx.Colour(50, 58, 68))
-            plus = wx.Button(self.inspector, label='++', size=(39, -1))
-            minus = wx.Button(self.inspector, label='--', size=(39, -1))
+            plus = wx.Button(self.transit_section, label='++', size=(34, -1))
+            minus = wx.Button(self.transit_section, label='--', size=(34, -1))
             row_controls.Add(label, 1, wx.ALIGN_CENTER_VERTICAL)
             if unit != 'Sec':
-                entry = wx.TextCtrl(self.inspector, size=(64, -1),
+                entry = wx.TextCtrl(self.transit_section, size=(64, -1),
                                     style=wx.TE_PROCESS_ENTER)
                 entry.SetToolTip(i18n.tr('Enter a value, then apply the date and time'))
                 entry.Bind(wx.EVT_TEXT_ENTER, self.apply_transit_time)
@@ -1308,19 +1356,21 @@ class MultiWheelFrame(wx.Frame):
                 self.transit_inputs[unit] = entry
             row_controls.Add(plus, 0, wx.LEFT, 3)
             row_controls.Add(minus, 0, wx.LEFT, 3)
-            rail.Add(row_controls, 0, wx.EXPAND | wx.BOTTOM, 4)
+            transit_rail.Add(row_controls, 0, wx.EXPAND | wx.BOTTOM, 4)
             plus.Bind(wx.EVT_BUTTON,
                       lambda e, part=unit: self.step_transit(part, True))
             minus.Bind(wx.EVT_BUTTON,
                        lambda e, part=unit: self.step_transit(part, False))
             self.transit_buttons.extend((plus, minus))
-        self.transit_apply = wx.Button(self.inspector, label=i18n.tr('Apply date/time'))
-        rail.Add(self.transit_apply, 0, wx.EXPAND | wx.TOP, 6)
+        self.transit_apply = wx.Button(self.transit_section, label=i18n.tr('Apply date/time'))
+        transit_rail.Add(self.transit_apply, 0, wx.EXPAND | wx.TOP, 6)
         self.transit_apply.Bind(wx.EVT_BUTTON, self.apply_transit_time)
-        self.transit_now = wx.Button(self.inspector, label=i18n.tr('Now (UTC)'))
-        rail.Add(self.transit_now, 0, wx.EXPAND | wx.TOP, 7)
+        self.transit_now = wx.Button(self.transit_section, label=i18n.tr('Now (UTC)'))
+        transit_rail.Add(self.transit_now, 0, wx.EXPAND | wx.TOP, 7)
         self.transit_now.Bind(wx.EVT_BUTTON, self.transit_to_now)
-        self.inspector.SetSizer(rail)
+        self.transit_section.SetSizer(transit_rail)
+        controls_rail.Add(self.transit_section, 0, wx.EXPAND)
+        self.controls_page.SetSizer(controls_rail)
         workspace.Add(self.inspector, 0, wx.EXPAND | wx.LEFT, 9)
         self.view_surface.SetSizer(workspace)
         self.splitter.SplitVertically(self.sidebar, self.view_surface,
@@ -1355,14 +1405,20 @@ class MultiWheelFrame(wx.Frame):
         self.refresh_return_navigation()
         wx.CallAfter(self.queue_draw)
 
-    def add_rail_heading(self, rail, label):
-        heading = wx.StaticText(self.inspector, label=i18n.tr(label))
+    def add_rail_heading(self, rail, label, parent):
+        heading = wx.StaticText(parent, label=i18n.tr(label))
         font = heading.GetFont()
         font.SetWeight(wx.FONTWEIGHT_BOLD)
         heading.SetFont(font)
         heading.SetForegroundColour(wx.Colour(35, 42, 51))
         rail.Add(heading, 0, wx.EXPAND | wx.BOTTOM, 7)
         return heading
+
+    def refresh_inspector(self):
+        for page in (self.info_page, self.controls_page):
+            page.Layout()
+            page.FitInside()
+        self.inspector.Layout()
 
     def on_sidebar_resized(self, event):
         if self.splitter.IsSplit():
@@ -1375,6 +1431,7 @@ class MultiWheelFrame(wx.Frame):
         if not hasattr(self, 'return_controls'):
             return
         count = self.count_choice.GetSelection() + 1
+        has_returns = False
         for i, (line, previous, following, caption) in enumerate(self.return_controls):
             selected = self.pickers[i].selected()
             is_return = (i <= count and
@@ -1383,11 +1440,12 @@ class MultiWheelFrame(wx.Frame):
             if is_return:
                 kind = ('SR' if selected.htype == chart.Chart.SOLAR else 'LR')
                 caption.SetLabel('%s  %s' % (self.ring_label(i), kind))
+                has_returns = True
             line.Show(is_return)
             previous.Enable(is_return)
             following.Enable(is_return)
-        self.inspector.Layout()
-        self.inspector.FitInside()
+        self.return_section.Show(has_returns)
+        self.refresh_inspector()
 
     def refresh_transit_controls(self):
         """Choose which of the visible transit rings the stepper will move."""
@@ -1421,6 +1479,8 @@ class MultiWheelFrame(wx.Frame):
             self._transit_fields_ring = self.active_transit_ring
         for entry in self.transit_inputs.values():
             entry.Enable(bool(slots))
+        self.transit_section.Show(bool(slots))
+        self.refresh_inspector()
 
     def on_transit_ring_choice(self, event):
         index = self.transit_ring_choice.GetSelection()
@@ -1546,8 +1606,7 @@ class MultiWheelFrame(wx.Frame):
             label.SetLabel(contents)
             label.Wrap(238)
             label.Show()
-        self.inspector.Layout()
-        self.inspector.FitInside()
+        self.refresh_inspector()
 
     def maybe_autofill_rings(self):
         """Natal -> SR implies in-force LR and, on a quad-wheel, transits.

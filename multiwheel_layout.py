@@ -430,14 +430,16 @@ def place_planet_glyphs(longitudes, glyph_boxes, edges, asc,
 
 
 def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
-                              direction, house_cusps=None, maximum_shift=7.5):
-    """Place each glyph and its position as an inseparable two-part label.
+                              direction, house_cusps=None, maximum_shift=7.5,
+                              occupied_rects=()):
+    """Place glyphs near their dial and their numbers radially *inward*.
 
-    The text can sit beside the glyph in the tangential direction when the
-    band is too narrow to stack it radially. Both move *together*, never in
-    separate placement passes. A small beam search considers neighbours
-    globally, and even in an impossible conjunction no position is hidden.
-    The exact longitude remains available for a leader on the degree dial.
+    A degree always lies closer to the wheel centre than its own glyph,
+    including in the bottom half of the chart. Only the glyph is constrained
+    to its chart's planetary annulus: numbers may cover dials, ring borders
+    and house/sign spokes to make use of otherwise wasted room. The whole
+    wheel is searched for non-overlapping ink boxes; the original longitude
+    remains fixed at the dial pointer.
     """
     import math
 
@@ -474,86 +476,66 @@ def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
                 continue
             theta = math.pi + math.radians(asc - displayed)
             radial = (math.cos(theta), math.sin(theta))
-            tangent = (-radial[1], radial[0])
             reach_g = _radial_reach(glyph_box, theta)
             reach_t = _radial_reach(text_box, theta)
-            tangent_g = _radial_reach(glyph_box, theta + math.pi / 2)
-            tangent_t = _radial_reach(text_box, theta + math.pi / 2)
-            # Tangential pairs make good compact labels: the text remains
-            # next to its glyph without consuming another radial row.
-            side = 1 if tangent[1] >= 0 else -1
-            tangential_distance = tangent_g + tangent_t + 2.5
-            radial_distance = reach_g + reach_t + 2.5
-            layouts = (
-                # Like the normal Morinus chart, prefer degree text just
-                # beneath the planet whenever the annulus accommodates it.
-                ('below', 0.0, 0.0,
-                 (glyph_box[1] + text_box[1]) / 2 + 2.5, 0.0),
-                ('beside', side * tangential_distance, 0.0, 0.0, 2.0),
-                ('beside', -side * tangential_distance, 0.0, 0.0, 5.0),
-                ('stacked', 0.0, direction * radial_distance, 0.0, 5.5),
-                ('stacked', 0.0, -direction * radial_distance, 0.0, 10.0),
-            )
-            for style, tangential_offset, radial_offset, downward, style_cost in layouts:
-                # Offsets are relative to the glyph: the leader always
-                # terminates at the glyph and never at a floating number.
-                # Centre the combined pair, accounting for its two boxes.
-                dx = (tangential_offset * tangent[0] +
-                      radial_offset * radial[0])
-                dy = (tangential_offset * tangent[1] +
-                      radial_offset * radial[1] + downward)
-                gx, gy = -dx / 2, -dy / 2
-                tx, ty = dx / 2, dy / 2
-                group_extent = max(_radial_reach(glyph_box, theta) +
-                                   gx * radial[0] + gy * radial[1],
-                                   _radial_reach(text_box, theta) +
-                                   tx * radial[0] + ty * radial[1])
-                group_inset = min(-_radial_reach(glyph_box, theta) +
-                                  gx * radial[0] + gy * radial[1],
-                                  -_radial_reach(text_box, theta) +
-                                  tx * radial[0] + ty * radial[1])
-                minimum = inner + 2.0 - group_inset
-                maximum = outer - 2.0 - group_extent
-                middle = (minimum + maximum) / 2.0
-                if minimum <= maximum:
-                    centres = (middle, minimum, maximum,
-                               (2 * minimum + maximum) / 3,
-                               (minimum + 2 * maximum) / 3)
-                else:
-                    # Still show every numeric label at the best possible
-                    # centre when a narrow wheel cannot physically fit it.
-                    centres = ((inner + outer - group_inset - group_extent) / 2,)
-                for radius in centres:
-                    cx, cy = _polar_point(asc, displayed, radius)
-                    glyph = (cx + gx, cy + gy)
-                    position = (cx + tx, cy + ty)
+            # The dial lies outside the radix but inside an outer chart.
+            # Prefer glyphs close to that edge, and displace them only when
+            # needed for a conjunction. Numbers always point toward centre.
+            min_glyph = inner + reach_g + 2.0
+            max_glyph = outer - reach_g - 2.0
+            if min_glyph > max_glyph:
+                # Report impossible bands, but still return a place for each
+                # body so the renderer can show its longitude on hover.
+                preferred = other_edge = (inner + outer) / 2.0
+            else:
+                preferred = max_glyph if direction == -1 else min_glyph
+                other_edge = min_glyph if direction == -1 else max_glyph
+            for fraction in (0, .12, .25, .4, .6, .8, 1):
+                radius = preferred + (other_edge - preferred) * fraction
+                glyph = _polar_point(asc, displayed, radius)
+                # Several inward gaps help near-conjunctions. They may
+                # extend across field guides and ring separator circles.
+                for extra_gap in (0, 3, 7, 12, 19):
+                    distance = reach_g + reach_t + 3.0 + extra_gap
+                    position = (glyph[0] - radial[0] * distance,
+                                glyph[1] - radial[1] * distance)
                     glyph_rect = _rect(glyph, glyph_box, margin=1.0)
                     text_rect = _rect(position, text_box, margin=1.0)
-                    fits = (radius >= minimum - .01 and
-                            radius <= maximum + .01 and
-                            _rect_inside_annulus(glyph_rect, inner, outer) and
-                            _rect_inside_annulus(text_rect, inner, outer))
-                    # The *text*, not just the glyph, should remain inside
-                    # the planet's sign whenever geometrically possible.
-                    label_angle = (asc - math.degrees(math.atan2(
-                        position[1], position[0])) + 180) % 360
-                    wrong_sign = int(label_angle // 30) != original_sign
-                    wrong_house = (original_house is not None and
-                                   house_sector(label_angle, house_cusps) != original_house)
-                    score = (abs(shift) * 6.0 + style_cost +
-                             abs(radius - (inner + outer) / 2) * .15 +
-                             (55 if wrong_sign else 0) +
-                             (30 if wrong_house else 0) +
-                             (12000 if not fits else 0))
+                    fits = _rect_inside_annulus(glyph_rect, inner, outer)
+                    # Allow number spill over surrounding guide strokes,
+                    # but do not send it deep into the preceding chart.
+                    text_radius = math.hypot(*position)
+                    bleed = max(14.0, reach_t + 7.0)
+                    text_fits = text_radius - reach_t >= inner - bleed
+                    score = (abs(shift) * 8.0 +
+                             abs(radius - preferred) * .23 +
+                             extra_gap * .65 +
+                             sum(_intersect_area(rect, fixed) * 1000
+                                 for fixed in occupied_rects
+                                 for rect in (glyph_rect, text_rect)) +
+                             (12000 if not fits or not text_fits else 0))
                     candidates.append((score, {
                         'longitude': displayed, 'exact': original,
                         'glyph': glyph, 'position': position,
                         'rect': glyph_rect, 'rects': (glyph_rect, text_rect),
                         'radius': math.hypot(*glyph), 'fits': fits,
-                        'style': style,
+                        'style': 'radial-inward',
                     }))
         candidates.sort(key=lambda item: item[0])
-        candidate_sets.append(candidates[:90])
+        # Reserve alternatives at *every* allowed longitude shift. Keeping
+        # only the cheapest candidates overall loses the wider spreading
+        # needed by three or four very close conjunctions.
+        per_shift = {}
+        varied = []
+        for candidate in candidates:
+            shift_key = round((candidate[1]['longitude'] - original +
+                               180) % 360 - 180, 3)
+            if per_shift.get(shift_key, 0) >= 13:
+                continue
+            varied.append(candidate)
+            per_shift[shift_key] = per_shift.get(shift_key, 0) + 1
+        varied.sort(key=lambda item: item[0])
+        candidate_sets.append(varied)
 
     # Constrained bodies first; retaining several complete alternatives is
     # much better for conjunctions than a greedy placement one planet at a time.
@@ -563,6 +545,7 @@ def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
     order = sorted(range(len(sources)), key=lambda i: (
         neighbours[i], len(candidate_sets[i]), i))
     beams = [(0.0, {})]
+    beam_width = 64 if min(neighbours) < 2.0 else 24
     for i in order:
         expanded = []
         for total, picked in beams:
@@ -576,13 +559,16 @@ def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
                 updated[i] = candidate
                 expanded.append((total + own_score + overlap * 1000, updated))
         expanded.sort(key=lambda item: item[0])
-        beams = expanded[:24]
+        beams = expanded[:beam_width]
     selected = beams[0][1]
     unresolved = sorted(i for i, current in selected.items()
                         if not current['fits'] or any(
                             _intersect_area(a, b) > 0
                             for j, previous in selected.items() if j != i
-                            for a in current['rects'] for b in previous['rects']))
+                            for a in current['rects'] for b in previous['rects'])
+                        or any(_intersect_area(a, b) > 0
+                               for a in current['rects']
+                               for b in occupied_rects))
     return [selected[i] for i in range(len(sources))], unresolved
 
 

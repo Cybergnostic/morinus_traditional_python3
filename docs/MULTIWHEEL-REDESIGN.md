@@ -293,3 +293,24 @@ traditional dignity strips switched on.
 
 Keep the existing view as default until the experimental exterior wheel
 has been reviewed visually, particularly at quad-wheel density.
+
+## October 23: radially inward degrees and two-tab inspector
+
+- The planetary glyph is the primary object. Keep it close to its exact
+  longitude dial marker while avoiding overlaps with other glyphs; the
+  unchanged leader still connects the dial to its glyph.
+- The degree annotation is always **closer to the wheel centre** than its
+  own glyph. It is not screen-below the glyph in the bottom half of the
+  wheel. Keep the annotation on the same radial ray, with adjustable spacing.
+- A degree may cover house and zodiac spokes, local degree dials, or chart
+  separator lines. Such structural lines may not erase the degree ink.
+  Other planetary glyphs and degree annotations remain collision obstacles.
+- When space is genuinely insufficient, do not paint one annotation over
+  another planet or annotation; report the omitted number and retain the
+  exact full position in the hover/click information.
+- The right-side workspace has **Charts** and **Returns + transits** tabs.
+  The latter contains both solar/lunar navigation and manual transit
+  stepping/date entry, showing only sections relevant to selected rings.
+  Each page scrolls independently on short screens.
+
+GUI verification remains required on Linux and Windows before merging.
