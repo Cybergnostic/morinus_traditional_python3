@@ -66,48 +66,67 @@ def spread_longitudes(longitudes, minimum=8.0):
     return result
 
 
-def allocate_traditional_rings(max_radius, count, show_terms=False, show_decans=False):
-    """Allocate exactly one shared zodiac, terms and decans reference system.
+def allocate_traditional_rings(max_radius, count, show_terms=False, show_decans=False,
+                               reference_outside=False):
+    """Allocate one shared zodiac and optional dignity bands.
 
-    Order from the centre: radix, decans, terms, zodiac, outer charts.
-    Optional bands are None when disabled; outer charts only contain their
-    chart-specific information. Radii are continuous and never overlap.
+    Normal:   radix -> decans -> terms -> zodiac -> outer charts
+    Exterior: radix -> outer charts -> decans -> terms -> zodiac
+
+    The core size, band widths and planetary space are identical between
+    modes: only the radial ordering changes. This lets users compare the
+    two without changing the scaling of symbols or ring thicknesses.
     """
     if not 1 <= count <= 3:
         raise ValueError('Multi-wheel needs 1, 2 or 3 outer charts')
     if max_radius <= 0:
         raise ValueError('Radius must be positive')
 
-    # A planetary label needs at least three radial rows.  The old bi-wheel
-    # reserved 61.5% for the radix and left only 15.5% for its outer chart.
-    # These allocations balance the available ink space across the charts.
-    # When the available screen is smaller than a readable layout, the viewer
-    # renders on a larger scrollable canvas instead of shrinking the text.
     core_factor = {1: .53, 2: .42, 3: .32}[count]
     core = max_radius * core_factor
     band_fraction = {1: .065, 2: .058, 3: .050}[count]
     band_width = max_radius * band_fraction
     zodiac_width = max_radius * {1: .09, 2: .085, 3: .08}[count]
-    cursor = core
-    decans = None
-    if show_decans:
-        decans = (cursor, cursor + band_width)
-        cursor = decans[1]
-    terms = None
-    if show_terms:
-        terms = (cursor, cursor + band_width)
-        cursor = terms[1]
-    zodiac = (cursor, cursor + zodiac_width)
-    cursor = zodiac[1]
+    reference_total = ((int(bool(show_decans)) + int(bool(show_terms))) *
+                       band_width + zodiac_width)
+    available_planets = max_radius - core - reference_total
+    # The last chart gets a little more room, regardless of which layout
+    # is being previewed.
     weights = [1.0] * count
     if count > 1:
         weights[-1] = 1.12
-    unit = (max_radius - cursor) / sum(weights)
+    planet_unit = available_planets / sum(weights)
+
+    cursor = core
+    def allocate_reference(start):
+        decans = terms = None
+        position = start
+        if show_decans:
+            decans = (position, position + band_width)
+            position = decans[1]
+        if show_terms:
+            terms = (position, position + band_width)
+            position = terms[1]
+        zodiac = (position, position + zodiac_width)
+        return decans, terms, zodiac, zodiac[1]
+
+    if not reference_outside:
+        decans, terms, zodiac, cursor = allocate_reference(cursor)
+
     rings = []
     for weight in weights:
-        next_edge = cursor + unit * weight
-        rings.append((cursor, next_edge))
-        cursor = next_edge
+        following = cursor + planet_unit * weight
+        rings.append((cursor, following))
+        cursor = following
+
+    if reference_outside:
+        decans, terms, zodiac, cursor = allocate_reference(cursor)
+
+    # Absorb floating-point accumulation into the very outer boundary.
+    if reference_outside:
+        zodiac = (zodiac[0], max_radius)
+    else:
+        rings[-1] = (rings[-1][0], max_radius)
     return core, decans, terms, zodiac, rings
 
 
