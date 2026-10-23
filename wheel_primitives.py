@@ -29,6 +29,21 @@ def angle_longitudes(ascendant, mc):
             mc % 360, (mc + 180) % 360)
 
 
+def house_spoke_segments(cusps, inner, outer, inset=1.25):
+    """Return chart-local (longitude, inner, outer) house line segments.
+
+    Cusp longitudes must come from the *current* chart, already converted
+    to display longitude. Inset each end so anti-aliased strokes stop inside
+    the field and cannot bleed into adjacent rings or the zodiac strip.
+    """
+    if len(cusps) != 12:
+        raise ValueError('Expected twelve chart-specific house cusps')
+    if inner < 0 or outer <= inner or inset < 0 or 2 * inset >= outer - inner:
+        raise ValueError('Invalid house-line annulus')
+    return tuple((float(lon) % 360.0, inner + inset, outer - inset)
+                 for lon in cusps)
+
+
 def planet_band_radii(inner, outer):
     """Morinus order, from the centre: motion, minutes, degrees, glyph.
 
