@@ -415,10 +415,9 @@ class MultiWheel:
             marker, marker_font, colour)
 
     def draw_planet_band(self, chrt, edges, role, dial_side):
-        """Large primary glyphs, independently placed small optional positions.
+        """Treat each planet, its position and motion as one movable label.
 
-        Neither degrees nor minutes constrain the glyph size or the glyph
-        collision solver. Its exact ecliptic longitude stays on the dial.
+        The degree dial and leaders always preserve the exact longitude.
         """
         (inner, outer), dial_anchor = self.draw_degree_dial(edges, dial_side)
         fonts = self.planet_fonts
@@ -437,14 +436,8 @@ class MultiWheel:
         asc = zodiac_lon(
             self.radix, self.radix.houses.ascmc[houses.Houses.ASC],
             self.options)
-        placements, unresolved = multiwheel_layout.place_planet_glyphs(
-            lons, glyph_boxes, (inner, outer), asc, house_cusps=cusps)
-        if unresolved:
-            self.layout_issues.append((role, len(unresolved)))
-
-        # Numeric positions are placed after the glyphs. The retrograde
-        # character uses the Morinus symbol font, independently of the
-        # normal text font used by the degrees and minutes.
+        # The retrograde character uses the original Morinus symbol font;
+        # it is measured as part of the *same* box as the position number.
         label_mode = self.label_mode
         labels = []
         marks = []
@@ -464,53 +457,44 @@ class MultiWheel:
                 zip(labels, marks, mark_fonts)
             ]
             direction = -1 if dial_side == 'outer' else 1
-            label_points, hidden = multiwheel_layout.place_degree_annotations(
-                placements, lons, text_boxes, (inner, outer), asc,
+            placements, unresolved = multiwheel_layout.place_planet_label_groups(
+                lons, glyph_boxes, text_boxes, (inner, outer), asc,
                 direction, house_cusps=cusps)
-            if hidden:
-                self.hidden_positions.append((role, len(hidden)))
         else:
-            label_points = [None] * count
+            placements, unresolved = multiwheel_layout.place_planet_glyphs(
+                lons, glyph_boxes, (inner, outer), asc, house_cusps=cusps)
+        if unresolved:
+            self.layout_issues.append((role, len(unresolved)))
 
         for i, (exact, placement) in enumerate(zip(lons, placements)):
-            displayed = placement['longitude']
-            theta = self.angle(displayed)
-            glyph_radius = placement['radius']
+            gx, gy = placement['glyph']
+            glyph_radius = math.hypot(gx, gy)
+            theta = math.atan2(gy, gx)
             reach = wheel_primitives.radial_half_extent(
                 glyph_boxes[i], theta)
             label_end = (glyph_radius - reach - 1.0
                          if dial_side == 'inner'
                          else glyph_radius + reach + 1.0)
-            # Thin, exact-angle leader reaches the displaced glyph. This
-            # line is independent of where its numeric annotation ended up.
+            # A tangentially grouped glyph may not sit precisely on its
+            # displayed radius. Aim the leader at the *actual glyph ink*,
+            # from its immutable exact-longitude tick on the degree dial.
+            glyph_edge = (self.cx + gx * label_end / glyph_radius,
+                          self.cy + gy * label_end / glyph_radius)
             self.stroke(self.point(exact, dial_anchor),
-                        self.point(displayed, label_end),
+                        glyph_edge,
                         'pointer', self.planet_colour(i))
             mark = 2.8 if dial_side == 'inner' else -2.8
             self.stroke(self.point(exact, dial_anchor),
                         self.point(exact, dial_anchor + mark),
                         'major', self.planet_colour(i))
-            gx, gy = placement['glyph']
             glyph_xy = (self.cx + gx, self.cy + gy)
             colour = self.colour(self.planet_colour(i))
             wheel_primitives.optical_text_center(
                 self.draw, self.scaled(glyph_xy),
                 common.common.planets[i], glyph_font, colour)
-            if label_points[i] is not None:
-                dx, dy = label_points[i]
+            if label_mode:
+                dx, dy = placement['position']
                 label_xy = (self.cx + dx, self.cy + dy)
-                displacement = math.hypot(label_xy[0] - glyph_xy[0],
-                                          label_xy[1] - glyph_xy[1])
-                # If a number uses an alternate lane, a quiet connector
-                # avoids making it look like another planet's degree.
-                if displacement > max(29.0, fonts['glyph'] * 1.7):
-                    ux = (label_xy[0] - glyph_xy[0]) / displacement
-                    uy = (label_xy[1] - glyph_xy[1]) / displacement
-                    begin = (glyph_xy[0] + ux * fonts['glyph'] * .58,
-                             glyph_xy[1] + uy * fonts['glyph'] * .58)
-                    end = (label_xy[0] - ux * fonts['degree'] * .7,
-                           label_xy[1] - uy * fonts['degree'] * .7)
-                    self.stroke(begin, end, 'pointer', self.planet_colour(i))
                 self.draw_position_label(
                     label_xy, labels[i], marks[i], degree_font,
                     mark_fonts[i], colour)
@@ -2065,9 +2049,7 @@ class MultiWheelFrame(wx.Frame):
         if repeated:
             notes.append(i18n.tr('Repeated charts') + ': ' + ', '.join(repeated))
         if self.renderer.layout_issues:
-            notes.append(i18n.tr('Crowded planetary glyphs: use 100% or zoom in'))
-        if self.renderer.hidden_positions:
-            notes.append(i18n.tr('Some small positions are hidden: hover or click a planet'))
+            notes.append(i18n.tr('Crowded planet labels: zoom in for clarity'))
         self.selection_note.SetLabel('\n'.join(notes))
         self.selection_note.Wrap(290)
         self.sidebar.Layout()

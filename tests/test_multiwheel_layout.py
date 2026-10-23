@@ -4,7 +4,8 @@ from multiwheel_layout import (allocate_rings, allocate_traditional_rings,
                                spread_longitudes, zodiac_sign_lane,
                                place_planet_clusters, _intersect_area,
                                shared_planet_font_sizes, house_sector,
-                               place_planet_glyphs, place_degree_annotations)
+                               place_planet_glyphs, place_degree_annotations,
+                               place_planet_label_groups)
 
 
 class MultiWheelLayoutTests(unittest.TestCase):
@@ -315,6 +316,73 @@ class MultiWheelLayoutTests(unittest.TestCase):
             (270, 375), 78, 1)
         self.assertEqual(hidden, [])
         self.assertTrue(all(point is not None for point in points))
+
+    def test_degree_text_and_glyph_move_as_one_group(self):
+        # A crowded realistic wheel includes two planets almost conjunct.
+        # Every annotation must be present, near its glyph and unambiguous.
+        longitudes = [.4, 12.6, 19.2, 20.4, 58, 88, 174, 251, 359]
+        for direction, edges in ((-1, (175, 251)), (1, (270, 375))):
+            placements, unresolved = place_planet_label_groups(
+                longitudes, [(19, 21)] * 9, [(34, 9)] * 9,
+                edges, 78, direction)
+            self.assertEqual(unresolved, [])
+            for i, placement in enumerate(placements):
+                self.assertEqual(placement['exact'], longitudes[i])
+                self.assertTrue(placement['fits'])
+                self.assertEqual(len(placement['rects']), 2)
+                self.assertEqual(int(placement['longitude'] // 30),
+                                 int(longitudes[i] // 30))
+                self.assertLessEqual(abs((placement['longitude'] -
+                                          longitudes[i] + 180) % 360 - 180),
+                                     7.501)
+                import math
+                self.assertLess(math.dist(placement['glyph'],
+                                          placement['position']), 50)
+                for later in placements[i + 1:]:
+                    self.assertTrue(all(_intersect_area(a, b) == 0
+                                        for a in placement['rects']
+                                        for b in later['rects']))
+
+    def test_label_group_follows_own_house_not_radix_house(self):
+        longitudes = [19.8, 20.0, 20.2, 359.8, .1, 120]
+        placements, _ = place_planet_label_groups(
+            longitudes, [(18, 20)] * 6, [(28, 9)] * 6,
+            (110, 200), 350, -1, house_cusps=self.twelve_cusps())
+        self.assertEqual(len(placements), len(longitudes))
+        for original, placement in zip(longitudes, placements):
+            self.assertEqual(placement['exact'], original)
+            self.assertEqual(int(original // 30),
+                             int(placement['longitude'] // 30))
+            self.assertEqual(house_sector(original, self.twelve_cusps()),
+                             house_sector(placement['longitude'],
+                                          self.twelve_cusps()))
+
+    def test_isolated_degree_is_under_the_glyph_when_space_allows(self):
+        placements, unresolved = place_planet_label_groups(
+            [105], [(19, 21)], [(31, 9)], (100, 215), 90, -1)
+        self.assertFalse(unresolved)
+        self.assertEqual(placements[0]['style'], 'below')
+        self.assertGreater(placements[0]['position'][1],
+                           placements[0]['glyph'][1])
+
+    def test_impossible_label_group_does_not_hide_degrees(self):
+        placements, unresolved = place_planet_label_groups(
+            [15] * 5, [(19, 21)] * 5, [(34, 10)] * 5,
+            (100, 119), 180, 1)
+        self.assertEqual(len(placements), 5)
+        self.assertTrue(unresolved)
+        self.assertTrue(all(p['position'] is not None for p in placements))
+
+    def test_group_layout_validates_dimensions(self):
+        with self.assertRaises(ValueError):
+            place_planet_label_groups([10], [(18, 18)], [], (100, 200),
+                                      0, -1)
+        with self.assertRaises(ValueError):
+            place_planet_label_groups([10], [(18, 18)], [(30, 9)],
+                                      (100, 100), 0, -1)
+        with self.assertRaises(ValueError):
+            place_planet_label_groups([10], [(18, 18)], [(30, 9)],
+                                      (100, 200), 0, 0)
 
     def test_primary_glyph_layout_rejects_invalid_inputs(self):
         with self.assertRaises(ValueError):
