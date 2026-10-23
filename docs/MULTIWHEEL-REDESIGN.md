@@ -170,3 +170,28 @@ rendering have deliberately not been changed in this phase.
   tests verify narrow-ring font selection and zoom behaviour.
 
 Do not merge until the multiwheel screenshots have been checked.
+
+
+## October 23: glyph-first visual hierarchy (current default)
+
+- The multiwheel opens in **Glyphs + degrees** mode. All planetary symbols
+  are calculated at one shared, larger size; small degree labels (plus R/S)
+  are laid out *after* the glyphs and never constrain their size or positions.
+- A new label selector provides **Glyphs only**, **Glyphs + degrees** and
+  **Full positions**. The last mode displays degrees and minutes wherever
+  they can fit without covering planets. PNG export respects the selection.
+- Glyphs prefer exact longitude and move radially before angular movement.
+  Placement stays in the correct zodiac sign and the selected chart's own
+  house, including wraparound at 0 Aries. Dial markers always show original
+  longitudes even for displaced labels.
+- An optional numeric annotation is omitted when no collision-free space is
+  available; the planet itself is never omitted. Hover and click show the
+  full degree/minute, sign, motion and chart identity regardless.
+- New geometry tests cover house cusp transitions, independent annotation
+  placement, impossible narrow labels and shared font scaling. GUI smoke
+  covers default/optional modes in addition to previous angle-marker tests.
+- The standard GraphChart and all astrology calculation modules are untouched.
+
+Before merging, review fit and 100% screenshots for bi-, tri-, quad-wheels,
+including tight conjunctions close to house cusps. The numeric annotation
+suppression is intentional only when fit is mathematically impossible.
