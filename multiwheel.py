@@ -89,6 +89,8 @@ class MultiWheel:
         self.reference_outside = True  # Exterior reference bands are the default.
         self.hits = []
         self.buffer = None
+        self._ink_cache = {}
+        self._font_cache = {}
 
     def angle(self, lon):
         asc = zodiac_lon(self.radix,
@@ -120,12 +122,17 @@ class MultiWheel:
                               self.LINE_FADE.get(role, 0.0))
 
     def ink(self, role):
+        cached = self._ink_cache.get(role)
+        if cached is not None:
+            return cached
         pen = chartstyle.frame_pen(self.options, self.bw,
                                    min(self.width, self.height), role)
         c = pen.GetColour()
         colour = self.stroke_colour((c.Red(), c.Green(), c.Blue()), role)
         weight = self.LINE_WEIGHTS.get(role, 1.0)
-        return colour, max(1, round(weight * self.scale))
+        result = colour, max(1, round(weight * self.scale))
+        self._ink_cache[role] = result
+        return result
 
     def stroke(self, a, b, role='divider', colour=None):
         ink, width = self.ink(role)
@@ -151,7 +158,13 @@ class MultiWheel:
 
     def font(self, size, symbol=False):
         path = common.common.symbols if symbol else common.common.abc
-        return util.truetype(path, max(8, int(size)) * self.scale)
+        pixels = max(8, int(size)) * self.scale
+        key = (path, pixels)
+        font = self._font_cache.get(key)
+        if font is None:
+            font = util.truetype(path, pixels)
+            self._font_cache[key] = font
+        return font
 
     def label(self, xy, value, font, colour):
         self.draw.text(self.scaled(xy), value, font=font, anchor='mm',
@@ -893,6 +906,10 @@ class MultiWheel:
 
     def drawChart(self):
         self.scale = 2  # crisp curves and glyphs after Lanczos downsampling
+        # Rendering a chart reuses the same size, style and glyph fonts for
+        # thousands of draw calls. Resolve native pens and font files once.
+        self._ink_cache.clear()
+        self._font_cache.clear()
         self.cx, self.cy = self.width / 2.0, self.height / 2.0
         self.rmax = min(self.width, self.height) * .465
         core, decans, terms, zodiac, rings = multiwheel_layout.allocate_traditional_rings(

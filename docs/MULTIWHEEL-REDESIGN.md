@@ -357,3 +357,26 @@ screenshot check before this redesign is merged.
 Check the radix Sun/Saturn conjunction from the October 23 screenshot and
 confirm the labels remain unmistakably associated at fit and 100% zoom.
 Local GUI performance and Windows rendering still need verification.
+
+## October 23: bounded placement and drawing-cost reduction
+
+The original single-wheel `graphchart.py` sorts objects by longitude,
+iteratively shifts neighbouring glyphs until they separate, and places
+longitude annotations afterward. It does not search complete joint
+glyph/degree layouts. Multiwheel's measured-group solver uses a more
+costly search to honour each ring's own house and sign constraints.
+
+- Limit candidate choices per angular shift and keep at most 16 partial
+  layouts for close conjunctions (8 for less crowded charts). The search
+  no longer expands the former 64/24 competing layouts at every planet.
+- Preserve the fixed glyph-degree gap and one shared planetary font size.
+  The exact longitude marker and chart-local sign/house restrictions stay.
+- Cache each chart-render's wx pen style and PIL font object. Drawing
+  hundreds of dial ticks must not recreate the same native pen repeatedly.
+- A deterministic test limits the number of rectangle intersection checks
+  on a representative congested ten-planet wheel, independently of CPU speed.
+
+This is a deliberately **bounded** placement method: extreme conjunctions
+may still require later visual refinement, but they must not force an
+unbounded layout search or stall the interface. Local GUI timing remains
+to be checked before merging into `main`.

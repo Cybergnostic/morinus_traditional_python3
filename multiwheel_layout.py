@@ -545,15 +545,15 @@ def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
                     'style': 'radial-inward',
                 }))
         candidates.sort(key=lambda item: item[0])
-        # Reserve alternatives at *every* allowed longitude shift. Keeping
-        # only the cheapest candidates overall loses the wider spreading
-        # needed by three or four very close conjunctions.
+        # Reserve a small, fixed number of alternatives for each angular
+        # shift. More than this makes four-wheel redraws expensive without
+        # improving readable placement in the restricted ring widths.
         per_shift = {}
         varied = []
         for candidate in candidates:
             shift_key = round((candidate[1]['longitude'] - original +
                                180) % 360 - 180, 3)
-            if per_shift.get(shift_key, 0) >= 13:
+            if per_shift.get(shift_key, 0) >= 8:
                 continue
             varied.append(candidate)
             per_shift[shift_key] = per_shift.get(shift_key, 0) + 1
@@ -580,15 +580,15 @@ def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
                 possible_contacts[i].add(j)
                 possible_contacts[j].add(i)
 
-    # Constrained bodies first; retaining several complete alternatives is
-    # much better for conjunctions than a greedy placement one planet at a time.
+    # Constrained bodies first. Unlike an exhaustive multi-planet search,
+    # this beam has a strict, small work bound even at exact conjunctions.
     neighbours = [min((abs((lon - other + 180) % 360 - 180)
                        for j, other in enumerate(sources) if j != i),
                       default=360) for i, lon in enumerate(sources)]
     order = sorted(range(len(sources)), key=lambda i: (
         neighbours[i], len(candidate_sets[i]), i))
     beams = [(0.0, {})]
-    beam_width = 64 if min(neighbours) < 2.0 else 24
+    beam_width = 16 if min(neighbours) < 2.0 else 8
     for i in order:
         expanded = []
         for total, picked in beams:

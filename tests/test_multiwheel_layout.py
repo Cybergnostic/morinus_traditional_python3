@@ -403,6 +403,23 @@ class MultiWheelLayoutTests(unittest.TestCase):
             place_planet_label_groups([10], [glyph_box], [degree_box],
                                       (110, 200), 84, -1, glyph_degree_gap=-1)
 
+    def test_group_search_is_bounded_for_a_crowded_wheel(self):
+        # This is a deterministic work-budget check, not a fragile timer.
+        # The earlier wide search made hundreds of thousands to millions of
+        # rectangle comparisons whenever conjunctions were present.
+        from unittest.mock import patch
+        import multiwheel_layout
+
+        positions = [96, 99, 100, 113, 175, 183, 220, 280, 325, 15]
+        original = multiwheel_layout._intersect_area
+        with patch('multiwheel_layout._intersect_area', wraps=original) as intersections:
+            placed, unresolved = place_planet_label_groups(
+                positions, [(17, 19)] * 10, [(26, 10)] * 10,
+                (120, 200), 78, -1)
+        self.assertEqual(len(placed), len(positions))
+        self.assertEqual(unresolved, [])
+        self.assertLess(intersections.call_count, 100_000)
+
     def test_label_group_follows_own_house_not_radix_house(self):
         longitudes = [19.8, 20.0, 20.2, 359.8, .1, 120]
         placements, _ = place_planet_label_groups(
