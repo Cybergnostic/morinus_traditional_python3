@@ -556,15 +556,7 @@ class MFrame(wx.Frame):
         val = dlg.ShowModal()
         if val == wx.ID_OK:
             self.dirty = True
-            direc = dlg.placerbE.GetValue()
-            hemis = dlg.placerbN.GetValue()
-            place = chart.Place(dlg.birthplace.GetValue(), int(dlg.londeg.GetValue()), int(dlg.lonmin.GetValue()), 0, direc, int(dlg.latdeg.GetValue()), int(dlg.latmin.GetValue()), 0, hemis, int(dlg.alt.GetValue()))
-            plus = True
-            if dlg.pluscb.GetCurrentSelection() == 1:
-                plus = False
-            time = chart.Time(int(dlg.year.GetValue()), int(dlg.month.GetValue()), int(dlg.day.GetValue()), int(dlg.hour.GetValue()), int(dlg.minute.GetValue()), int(dlg.sec.GetValue()), dlg.timeckb.GetValue(), dlg.calcb.GetCurrentSelection(), dlg.zonecb.GetCurrentSelection(), plus, int(dlg.zhour.GetValue()), int(dlg.zminute.GetValue()), dlg.daylightckb.GetValue(), place)
-            male = dlg.genderrbM.GetValue()
-            self.horoscope = chart.Chart(dlg.name.GetValue(), male, time, place, dlg.typecb.GetCurrentSelection(), dlg.notes.GetValue(), self.options)
+            self.horoscope = self.chartFromDataDialog(dlg)
             self.splash = False
             self.enableMenus(True)
             self.clickedPlId = None
@@ -574,6 +566,29 @@ class MFrame(wx.Frame):
             self.destroyDlgs()
         dlg.Destroy()
         return
+
+    def chartFromDataDialog(self, dlg):
+        """Build an independent horoscope using the existing New Chart dialog.
+
+        The multiwheel calls this without replacing the main natal chart.
+        """
+        place = chart.Place(
+            dlg.birthplace.GetValue(), int(dlg.londeg.GetValue()),
+            int(dlg.lonmin.GetValue()), 0, dlg.placerbE.GetValue(),
+            int(dlg.latdeg.GetValue()), int(dlg.latmin.GetValue()), 0,
+            dlg.placerbN.GetValue(), int(dlg.alt.GetValue()))
+        time = chart.Time(
+            int(dlg.year.GetValue()), int(dlg.month.GetValue()),
+            int(dlg.day.GetValue()), int(dlg.hour.GetValue()),
+            int(dlg.minute.GetValue()), int(dlg.sec.GetValue()),
+            dlg.timeckb.GetValue(), dlg.calcb.GetCurrentSelection(),
+            dlg.zonecb.GetCurrentSelection(),
+            dlg.pluscb.GetCurrentSelection() != 1,
+            int(dlg.zhour.GetValue()), int(dlg.zminute.GetValue()),
+            dlg.daylightckb.GetValue(), place)
+        return chart.Chart(
+            dlg.name.GetValue(), dlg.genderrbM.GetValue(), time, place,
+            dlg.typecb.GetCurrentSelection(), dlg.notes.GetValue(), self.options)
 
     def onData(self, event):
         dlg = datadlg.DataDlg(self, self.options.langid, self.options.netbook)
@@ -612,10 +627,7 @@ class MFrame(wx.Frame):
 
     def onHereAndNow(self, event):
         self.dirty = True
-        place = chart.Place(self.options.deflocname, self.options.defloclondeg, self.options.defloclonmin, 0, self.options.defloceast, self.options.defloclatdeg, self.options.defloclatmin, 0, self.options.deflocnorth, self.options.deflocalt)
-        now = datetime.datetime.now()
-        time = chart.Time(now.year, now.month, now.day, now.hour, now.minute, now.second, False, chart.Time.GREGORIAN, chart.Time.ZONE, self.options.deflocplus, self.options.defloczhour, self.options.defloczminute, self.options.deflocdst, place)
-        self.horoscope = chart.Chart(mtexts.txtsdeflocdlgopts['HereAndNow'], True, time, place, chart.Chart.HORARY, '', self.options)
+        self.horoscope = self.makeHereAndNowChart()
         self.splash = False
         self.enableMenus(True)
         self.clickedPlId = None
@@ -623,6 +635,13 @@ class MFrame(wx.Frame):
         self.Refresh()
         self.handleCaption(True)
         return
+
+    def makeHereAndNowChart(self):
+        """Create a horary without changing the current main horoscope."""
+        place = chart.Place(self.options.deflocname, self.options.defloclondeg, self.options.defloclonmin, 0, self.options.defloceast, self.options.defloclatdeg, self.options.defloclatmin, 0, self.options.deflocnorth, self.options.deflocalt)
+        now = datetime.datetime.now()
+        time = chart.Time(now.year, now.month, now.day, now.hour, now.minute, now.second, False, chart.Time.GREGORIAN, chart.Time.ZONE, self.options.deflocplus, self.options.defloczhour, self.options.defloczminute, self.options.deflocdst, place)
+        return chart.Chart(mtexts.txtsdeflocdlgopts['HereAndNow'], True, time, place, chart.Chart.HORARY, '', self.options)
 
     def showFindTime(self, bc, fnd, arplac):
         place = chart.Place('London, GBR', 0, 6, 0, False, 51, 31, 0, True, 10)

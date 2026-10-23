@@ -16,6 +16,7 @@ import common
 import comparegrid
 import houses
 import multiwheel_layout
+import multiwheel_sources
 import wheel_primitives
 import planets
 import util
@@ -31,7 +32,7 @@ RING_COLOURS = ((45, 96, 143), (150, 100, 44), (111, 80, 130))
 
 
 def aspect_ring_from_choice(selection):
-    """-1 means no aspect lines, 0 radix only, 1..3 radix to outer ring."""
+    """-1 means none, 0 inner chart, 1..3 inner to an outer ring."""
     return selection - 1
 
 
@@ -68,7 +69,7 @@ def cross_aspects(radix, secondary, options):
 
 
 class MultiWheel:
-    """Draw a radix and one to three further charts as concentric rings."""
+    """Draw any inner chart and one to three others as concentric rings."""
 
     def __init__(self, radix, others, size, options, bw):
         if not 1 <= len(others) <= 3:
@@ -79,7 +80,7 @@ class MultiWheel:
         self.height = max(1, int(size[1]))
         self.options = options
         self.bw = bool(bw)
-        self.aspect_ring = -1  # -1 = none; 0 = radix only; 1..3 = radix to ring
+        self.aspect_ring = -1  # -1 = none; 0 = inner; 1..3 = inner to ring
         self.reference_outside = False  # False = original; True = exterior bands
         self.hits = []
         self.buffer = None
@@ -525,7 +526,7 @@ class MultiWheel:
         if self.options.houses:
             self.circle(core * .67, 'divider')
         self.circle(core)
-        self.draw_planet_band(self.radix, (core * .67, core), i18n.tr('Radix'),
+        self.draw_planet_band(self.radix, (core * .67, core), i18n.tr('Inner chart'),
                               'outer')
 
     def traditional_font(self, edges):
@@ -670,7 +671,7 @@ class MultiWheel:
         return title, '%s %02d:%02d' % (date, t.hour, t.minute)
 
     def draw_centre_identity(self):
-        """Label the inner radix inside its otherwise empty central disk."""
+        """Label the selected inner chart in its otherwise empty centre."""
         kind, detail = self.chart_identity(self.radix, 'Radix')
         title = kind
         title_font = self.font(max(9, min(12, self.rmax * .036)))
@@ -859,11 +860,11 @@ class MultiWheel:
             role, i18n.tr(PLANET_NAMES[i]), self.degree_text(lon), i18n.tr(sign), retro, chrt.name)
 
 
-class OuterChartPicker(comparegrid.ChartPicker):
-    """Multi-wheel picker with Morinus's own return/transit creation dialogs."""
+class RingChartPicker(comparegrid.ChartPicker):
+    """Select or create a chart in any ring, including the inner one."""
 
-    def __init__(self, parent, mainfr, on_change, prefer=0):
-        self.generated_labels = {}
+    def __init__(self, parent, mainfr, owner, on_change, prefer=0):
+        self.owner = owner
         super().__init__(parent, mainfr, on_change, prefer)
         self.create_button = wx.Button(self, label=i18n.tr('Create chart...'))
         # Reflow only the multiwheel picker: a full-width chart choice above
@@ -880,61 +881,155 @@ class OuterChartPicker(comparegrid.ChartPicker):
         self.create_button.Bind(wx.EVT_BUTTON, self.show_create_menu)
 
     def refresh(self, event=None):
-        super().refresh(event)
-        # Preserve generated chart identities in the list, even when their
-        # independent transit/revolution windows are later closed.
-        for i, (_, chrt) in enumerate(self.sources):
-            label = self.generated_labels.get(id(chrt))
-            if label:
-                title = label + ': ' + comparegrid.caption(chrt)
-                self.sources[i] = (title, chrt)
-                self.choice.SetString(i, title)
+        previous = self.selected()
+        opened = []
+        for wnd in wx.GetTopLevelWindows():
+            if wnd.IsBeingDeleted() or not wnd.IsShown():
+                continue
+            # TransitFrame subclasses also represent elections, secondary
+            # directions and profections. Other top-level chart windows may
+            # have a horoscope but no .chart attribute.
+            for attribute in ('chart', 'horoscope'):
+                chrt = getattr(wnd, attribute, None)
+                if isinstance(chrt, chart.Chart):
+                    opened.append((i18n.tr('Open'), chrt))
+            # Include charts opened in another comparison/multiwheel viewer.
+            for picker in getattr(wnd, 'pickers', ()):
+                if picker is self:
+                    continue
+                chrt = picker.selected()
+                if isinstance(chrt, chart.Chart):
+                    opened.append((i18n.tr('Open'), chrt))
+            for cell in getattr(wnd, 'cells', ()):
+                chrt = cell.picker.selected()
+                if isinstance(chrt, chart.Chart):
+                    opened.append((i18n.tr('Open'), chrt))
+            for label, chrt in getattr(wnd, 'registered_charts', ()):
+                opened.append((label, chrt))
+        sources = multiwheel_sources.merge_chart_sources(
+            self.mainfr.horoscope, opened, self.owner.registered_charts)
+        self.sources = [(self.chart_caption(label, chrt), chrt)
+                        for label, chrt in sources]
+        self.choice.Clear()
+        for label, _ in self.sources:
+            self.choice.Append(label)
+        selected = next((i for i, (_, chrt) in enumerate(self.sources)
+                         if chrt is previous), 0)
+        self.choice.SetSelection(selected)
+        if event is not None or self.selected() is not previous:
+            self.on_change()
+
+    @staticmethod
+    def chart_caption(label, chrt):
+        kind, _ = MultiWheel.chart_identity(chrt)
+        if label in ('Active', i18n.tr('Open'), i18n.tr('File')):
+            label = i18n.tr(label) + ' (' + kind.split(': ', 1)[0] + ')'
+        return label + ': ' + comparegrid.caption(chrt)
+
+    def select_chart(self, chrt):
+        self.refresh()
+        for index, (_, source) in enumerate(self.sources):
+            if source is chrt:
+                self.choice.SetSelection(index)
+                self.on_change()
+                return
+
+    def open_file(self, event):
+        dlg = wx.FileDialog(self, i18n.tr('Open chart'),
+                            self.mainfr.fpathhors, '',
+                            'Morinus charts (*.hor)|*.hor',
+                            wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+        try:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            path = dlg.GetPath()
+        finally:
+            dlg.Destroy()
+        chrt = self.mainfr.subLoad(path, os.path.dirname(path), dontclose=True)
+        if chrt is not None:
+            self.owner.register_chart(chrt, i18n.tr('File'), self)
 
     def show_create_menu(self, event):
         menu = wx.Menu()
-        for label, kind in ((i18n.tr('Solar return...'), 3),
-                            (i18n.tr('Lunar return...'), 6),
-                            (i18n.tr('Transits...'), None)):
-            item = menu.Append(wx.ID_ANY, label)
-            menu.Bind(wx.EVT_MENU,
-                      lambda e, requested=kind: self.create_chart(requested),
-                      id=item.GetId())
+        for group, actions in multiwheel_sources.CREATE_GROUPS:
+            submenu = wx.Menu()
+            for label, action in actions:
+                item = submenu.Append(wx.ID_ANY, i18n.tr(label))
+                menu.Bind(wx.EVT_MENU,
+                          lambda e, requested=action: self.create_chart(requested),
+                          id=item.GetId())
+            menu.AppendSubMenu(submenu, i18n.tr(group))
         try:
             self.PopupMenu(menu)
         finally:
             menu.Destroy()
 
-    def create_chart(self, kind):
-        """Attach a chart returned by the existing Morinus dialogs.
+    def create_new_chart(self):
+        import datadlg
+        dlg = datadlg.DataDlg(self.owner, self.mainfr.options.langid,
+                              self.mainfr.options.netbook)
+        try:
+            dlg.CenterOnParent()
+            dlg.initialize()
+            if dlg.ShowModal() != wx.ID_OK:
+                return None
+            return self.mainfr.chartFromDataDialog(dlg)
+        finally:
+            dlg.Destroy()
 
-        If the user cancels either dialog, no chart is created or selected.
+    def create_chart(self, action):
+        """Use existing Morinus chart dialogs, then select only this ring.
+
+        A cancelled dialog must leave both its chart and selection untouched.
+        New natal and horary charts are constructed independently: they do
+        not replace the main horoscope or close any existing windows.
         """
-        import transitframe
-        before = {id(w) for w in wx.GetTopLevelWindows()
-                  if isinstance(w, transitframe.TransitFrame)}
-        if kind is None:
-            self.mainfr.onTransits(None)
+        if action == 'new':
+            chrt = self.create_new_chart()
+        elif action == 'here_now':
+            chrt = self.mainfr.makeHereAndNowChart()
         else:
-            self.mainfr.onRevolutions(None, planet=kind)
-        new = [w for w in wx.GetTopLevelWindows()
-               if isinstance(w, transitframe.TransitFrame)
-               and not w.IsBeingDeleted() and id(w) not in before]
-        if not new:
-            return
-        chrt = new[-1].chart
-        labels = {chart.Chart.SOLAR: i18n.tr('Solar return'),
-                  chart.Chart.LUNAR: i18n.tr('Lunar return'),
-                  chart.Chart.TRANSIT: i18n.tr('Transits')}
-        label = labels.get(chrt.htype, i18n.tr('Return'))
-        self.generated_labels[id(chrt)] = label
-        self.loaded.append((label, chrt))
-        self.refresh()
-        self.choice.SetSelection(len(self.sources) - 1)
-        self.on_change()
+            before = {id(w) for w in wx.GetTopLevelWindows()}
+            returns = {
+                'saturn': 0, 'jupiter': 1, 'mars': 2, 'solar': 3,
+                'venus': 4, 'mercury': 5, 'lunar': 6}
+            if action in returns:
+                self.mainfr.onRevolutions(None, planet=returns[action])
+            else:
+                methods = {
+                    'transits': 'onTransits',
+                    'sun_transits': 'onSunTransits',
+                    'secondary': 'onSecondaryDirs',
+                    'profections': 'onProfectionsChart',
+                    'elections': 'onElections',
+                    'syzygy': 'onSyzygyChart',
+                    'syzygy_other': 'onSyzygyChart2',
+                    'synastry': 'onSynastry',
+                }
+                getattr(self.mainfr, methods[action])(None)
+            created = [getattr(w, 'chart', None)
+                       for w in wx.GetTopLevelWindows()
+                       if id(w) not in before and not w.IsBeingDeleted()]
+            chrt = next((item for item in reversed(created)
+                         if isinstance(item, chart.Chart)), None)
+        if chrt is not None:
+            labels = {
+                'new': 'New chart', 'here_now': 'Here and now',
+                'synastry': 'Synastry', 'solar': 'Solar return',
+                'lunar': 'Lunar return', 'saturn': 'Saturn return',
+                'jupiter': 'Jupiter return', 'mars': 'Mars return',
+                'venus': 'Venus return', 'mercury': 'Mercury return',
+                'transits': 'Transits', 'sun_transits': 'Sun transits',
+                'secondary': 'Secondary directions',
+                'profections': 'Profections', 'elections': 'Elections',
+                'syzygy': 'Prenatal syzygy',
+                'syzygy_other': 'Other prenatal syzygy',
+            }
+            self.owner.register_chart(chrt, i18n.tr(labels[action]), self)
 
 
 class MultiWheelFrame(wx.Frame):
-    """Chart selection, aspect controls and a resizable multi-wheel canvas."""
+    """Independent chart selection for every field of a multi-wheel."""
 
     def __init__(self, mainfr):
         wx.Frame.__init__(self, mainfr, title=i18n.tr('Multi-wheel'), size=(950, 900))
@@ -946,13 +1041,14 @@ class MultiWheelFrame(wx.Frame):
         self._alive = True
         self.zoom_factor = None  # None = fit window; 1.0 = natural chart size
         self.sidebar_visible = True
+        self.registered_charts = []
         self.bitmap_origin = (0, 0)
         self._last_hover = ''
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
         self.SetMinSize((760, 600))
         outer = wx.BoxSizer(wx.VERTICAL)
         row = wx.BoxSizer(wx.HORIZONTAL)
-        row.Add(wx.StaticText(self, label=i18n.tr('Outer charts:')), 0,
+        row.Add(wx.StaticText(self, label=i18n.tr('Outer rings:')), 0,
                 wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
         self.count_choice = wx.Choice(
             self, choices=i18n.tr(['1 (bi-wheel)', '2 (tri-wheel)', '3 (quad-wheel)']))
@@ -961,7 +1057,7 @@ class MultiWheelFrame(wx.Frame):
         row.Add(wx.StaticText(self, label=i18n.tr('Aspects between:')), 0,
                 wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
         self.aspect_choice = wx.Choice(
-            self, choices=i18n.tr(['None', 'Radix only', 'Radix and ring 1']))
+            self, choices=i18n.tr(['None', 'Inner chart only', 'Inner and ring 1']))
         self.aspect_choice.SetSelection(0)
         row.Add(self.aspect_choice, 0, wx.RIGHT, 15)
         row.Add(wx.StaticText(self, label=i18n.tr('Reference bands:')),
@@ -999,28 +1095,25 @@ class MultiWheelFrame(wx.Frame):
         self.sidebar.SetMinSize((302, 250))
         self.sidebar.SetScrollRate(0, 15)
         controls = wx.BoxSizer(wx.VERTICAL)
-        self.radix_label = wx.StaticText(
-            self.sidebar, label=i18n.tr('Inner radix') + ': ' +
-            comparegrid.caption(mainfr.horoscope))
-        self.radix_label.Wrap(292)
-        controls.Add(self.radix_label, 0, wx.EXPAND | wx.BOTTOM, 12)
         self.pickers = []
         self.picker_rows = []
-        for i in range(3):
+        for i in range(4):
             strip = wx.Panel(self.sidebar)
             line = wx.BoxSizer(wx.VERTICAL)
             tag = wx.StaticText(
-                strip, label=i18n.tr('Ring %d') % (i + 1) + ':')
-            if not self.options.bw:
-                tag.SetForegroundColour(wx.Colour(*RING_COLOURS[i]))
+                strip, label=(i18n.tr('Inner chart') if i == 0
+                              else i18n.tr('Ring %d') % i) + ':')
+            if i and not self.options.bw:
+                tag.SetForegroundColour(wx.Colour(*RING_COLOURS[i - 1]))
             line.Add(tag, 0, wx.BOTTOM, 4)
-            picker = OuterChartPicker(strip, mainfr, self.queue_draw, i + 1)
+            picker = RingChartPicker(strip, mainfr, self,
+                                     self.queue_draw, i)
             line.Add(picker, 0, wx.EXPAND)
             strip.SetSizer(line)
             self.pickers.append(picker)
             self.picker_rows.append(strip)
             controls.Add(strip, 0, wx.EXPAND | wx.BOTTOM, 14)
-            if i:
+            if i > 1:
                 strip.Hide()
         self.selection_note = wx.StaticText(self.sidebar, label='')
         self.selection_note.Wrap(290)
@@ -1059,18 +1152,29 @@ class MultiWheelFrame(wx.Frame):
     def change_count(self, event=None):
         count = self.count_choice.GetSelection() + 1
         for i, strip in enumerate(self.picker_rows):
-            strip.Show(i < count)
+            strip.Show(i <= count)
         prior = self.aspect_choice.GetSelection()
         self.aspect_choice.Clear()
         self.aspect_choice.Append(i18n.tr('None'))
-        self.aspect_choice.Append(i18n.tr('Radix only'))
+        self.aspect_choice.Append(i18n.tr('Inner chart only'))
         for i in range(count):
-            self.aspect_choice.Append(i18n.tr('Radix and ring %d') % (i + 1))
+            self.aspect_choice.Append(i18n.tr('Inner and ring %d') % (i + 1))
         self.aspect_choice.SetSelection(min(max(prior, 0), count + 1))
         self.sidebar.Layout()
         self.sidebar.FitInside()
         self.Layout()
         self.queue_draw()
+
+    def register_chart(self, chrt, label, picker):
+        """Retain a newly created/loaded chart for all ring dropdowns.
+
+        Only the ring whose button was used changes its selection.
+        """
+        if not any(source is chrt for _, source in self.registered_charts):
+            self.registered_charts.append((label, chrt))
+        for item in self.pickers:
+            item.refresh()
+        picker.select_chart(chrt)
 
     def toggle_sidebar(self, event=None):
         self.sidebar_visible = not self.sidebar_visible
@@ -1138,15 +1242,16 @@ class MultiWheelFrame(wx.Frame):
             return
         count = self.count_choice.GetSelection() + 1
         w, h = self.canvas_size(count)
-        charts = [picker.selected() for picker in self.pickers[:count]]
+        inner = self.pickers[0].selected()
+        charts = [picker.selected() for picker in self.pickers[1:count + 1]]
         repeated = []
-        seen = {id(self.mainfr.horoscope): i18n.tr('Radix')}
+        seen = {id(inner): i18n.tr('Inner chart')}
         for i, selected in enumerate(charts, 1):
             if id(selected) in seen:
                 repeated.append(i18n.tr('Ring %d') % i + ' = ' + seen[id(selected)])
             else:
                 seen[id(selected)] = i18n.tr('Ring %d') % i
-        self.renderer = MultiWheel(self.mainfr.horoscope, charts,
+        self.renderer = MultiWheel(inner, charts,
                                    (w, h), self.options, self.options.bw)
         self.renderer.aspect_ring = aspect_ring_from_choice(
             self.aspect_choice.GetSelection())
@@ -1220,8 +1325,9 @@ class MultiWheelFrame(wx.Frame):
             # the reduced Fit-to-window bitmap.
             count = self.count_choice.GetSelection() + 1
             diameter = {1: 1600, 2: 2000, 3: 2400}[count]
-            charts = [p.selected() for p in self.pickers[:count]]
-            exporter = MultiWheel(self.mainfr.horoscope, charts,
+            inner = self.pickers[0].selected()
+            charts = [p.selected() for p in self.pickers[1:count + 1]]
+            exporter = MultiWheel(inner, charts,
                                   (diameter, diameter),
                                   self.options, self.options.bw)
             exporter.aspect_ring = aspect_ring_from_choice(

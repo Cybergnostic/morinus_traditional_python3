@@ -423,10 +423,43 @@ def main():
 					'', frame.options, False)
 				wnd = multiwheel.show(frame)
 				settle(0.3)
-				picker = wnd.pickers[0]
-				picker.loaded.append(('Smoke transit', secondary))
-				picker.refresh()
-				picker.choice.SetSelection(len(picker.sources) - 1)
+				assert len(wnd.pickers) == 4
+				inner = wnd.pickers[0]
+				picker = wnd.pickers[1]
+				assert inner.selected() is frame.horoscope
+				wnd.register_chart(secondary, 'Smoke transit', picker)
+				assert picker.selected() is secondary
+				assert inner.selected() is frame.horoscope
+				assert all(any(source is secondary for _, source in p.sources)
+					for p in wnd.pickers)
+				# All rings have independent selectors, including the centre.
+				inner.select_chart(secondary)
+				wnd.redraw()
+				assert wnd.renderer.radix is secondary
+				assert picker.selected() is secondary
+				inner.select_chart(frame.horoscope)
+				# Creation through one ring selects that chart in that ring only.
+				created = chart.Chart(frame.horoscope.name, frame.horoscope.male,
+					frame.horoscope.time, frame.horoscope.place, chart.Chart.HORARY,
+					'', frame.options, False)
+				create_new = picker.create_new_chart
+				try:
+					picker.create_new_chart = lambda: created
+					picker.create_chart('new')
+				finally:
+					picker.create_new_chart = create_new
+				assert picker.selected() is created
+				assert inner.selected() is frame.horoscope
+				assert frame.horoscope is not created
+				picker.select_chart(secondary)
+				wnd.count_choice.SetSelection(2)
+				wnd.change_count()
+				wnd.pickers[2].select_chart(created)
+				assert wnd.pickers[2].selected() is created
+				assert picker.selected() is secondary
+				assert inner.selected() is frame.horoscope
+				wnd.count_choice.SetSelection(0)
+				wnd.change_count()
 				# House separators must be LOCAL to their chart field.
 				# Give the outer chart deliberately different cusps, then
 				# trace the actual strokes. Sign spokes should never appear
