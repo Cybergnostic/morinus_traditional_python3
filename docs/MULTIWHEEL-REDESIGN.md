@@ -222,13 +222,12 @@ unplaceable labels are still reported rather than drawn over a glyph.
 
 ## October 23: chart-local house lines (latest)
 
-- Eliminated the duplicate 30° zodiac sign spokes from outer planetary
-  bands. These spokes were visually indistinguishable from house separators
-  and gave the impression that radix cusps extended through other charts.
-- Only the single shared zodiac/reference band contains zodiac sign
-  division spokes. Each planetary field now contains **only that chart's
-  own 12 house cusp lines and its own angle axes** (plus its local degree
-  dial and planet leaders).
+- Initial fix removed the 30° zodiac spokes from the planetary rings
+  because they were indistinguishable from house separators. The following
+  revision restores these spokes in a much lighter style.
+- Each planetary ring contains its own chart's house cusps and angles,
+  plus independently styled zodiac sign guides when not coincident with
+  those house cusps. All spokes remain confined to their respective fields.
 - All house segments use their selected chart's cusp longitudes and an
   inward 1.25 px inset at both ring edges. This avoids antialias spill
   into the shared zodiac, separator gaps and neighbouring charts.
@@ -242,3 +241,24 @@ unplaceable labels are still reported rather than drawn over a glyph.
 Note: if the user intentionally selects the same chart twice, both charts
 will correctly have the same house longitudes, but each line will still
 stop inside its own field rather than extending between the two charts.
+
+## October 23: faint zodiac guides, Whole Sign cusp priority
+
+- Keep zodiac divisions visible throughout planetary rings in a muted,
+  thin, neutral-grey style mixed with the actual local ring background.
+  These are **not** house cusps, which keep the stronger ring-specific
+  colour and remain confined to their chart's boundaries.
+- Zodiac guides never cross the chart's annulus or its empty separator
+  gaps. The radix retains its inner house-number spokes; its faint zodiac
+  references appear only in the planetary zone.
+- Each chart independently compares its own displayed cusps to all 12
+  sign boundaries. When a cusp matches a sign boundary within 0.02°,
+  omit that zodiac guide; the house line already marks the division.
+- In Whole Sign houses, all twelve sign guides are redundant and all are
+  omitted. For other systems, non-coincident zodiac guides remain visible.
+  If houses are hidden, all 12 zodiac guides are still drawn.
+- Tests cover cusp/sign angular wrap, mixed coincidences, different
+  house cusp arrays, and a GUI renderer check of non-coincident versus
+  Whole Sign situations.
+- This change affects only the multiwheel drawing and tests; the
+  single-wheel GraphChart, calculations and comparison grid stay untouched.
