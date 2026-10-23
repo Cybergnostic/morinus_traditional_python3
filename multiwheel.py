@@ -188,13 +188,20 @@ class MultiWheel:
                             self.options.clraspect[kind])
 
     def draw_house_spokes(self, chrt, inner, outer, colour=None):
-        """The same twelve cusp longitudes used by GraphChart.drawHouses."""
+        """Only this chart's house cusps, ending inside its own field.
+
+        The shared zodiac/reference strips never inherit these spokes,
+        and another chart never receives a projected set of radix cusps.
+        """
         if not self.options.houses:
             return
-        for house in range(1, houses.Houses.HOUSE_NUM + 1):
-            lon = zodiac_lon(chrt, chrt.houses.cusps[house], self.options)
-            self.stroke(self.point(lon, inner), self.point(lon, outer),
-                        'divider', colour if colour is not None else self.options.clrhouses)
+        cusps = [zodiac_lon(chrt, chrt.houses.cusps[house], self.options)
+                 for house in range(1, houses.Houses.HOUSE_NUM + 1)]
+        ink = colour if colour is not None else self.options.clrhouses
+        for lon, start, finish in wheel_primitives.house_spoke_segments(
+                cusps, inner, outer):
+            self.stroke(self.point(lon, start), self.point(lon, finish),
+                        'divider', ink)
 
     def ring_background_colour(self, ring_index=None):
         """Actual chart-field background, also used behind hollow angle ends."""
@@ -732,7 +739,9 @@ class MultiWheel:
         border = None if self.bw else RING_COLOURS[index - 1]
         separation = self.separator_width(edges)
         chart_start = inner + separation + 1
-        self.draw_sign_spokes(chart_start, outer)
+        # Zodiac meridians belong only in the shared zodiac band.
+        # Drawing them in this chart's field made them look like projected
+        # house cusps from the radix/other rings.
         self.draw_house_spokes(chrt, chart_start, outer, border)
         self.draw_angles(chrt, chart_start, outer, border, ring_index=index)
         self.draw_planet_band(chrt, (chart_start, outer),
