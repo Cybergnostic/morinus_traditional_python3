@@ -240,6 +240,38 @@ class MultiWheelLayoutTests(unittest.TestCase):
             self.assertTrue(all(_intersect_area(rect, g['rect']) == 0
                                 for g in glyphs))
 
+    def test_all_degree_labels_fit_in_typical_biwheel_band(self):
+        # A real-looking wheel: nine bodies, including close neighbours,
+        # positioned around the circle. Each must get a degree annotation.
+        longitudes = [0.4, 12.6, 19.2, 20.4, 58.0,
+                      88.0, 174.0, 251.0, 359.0]
+        glyphs, _ = place_planet_glyphs(
+            longitudes, [(19, 21)] * 9, (175, 251), 78)
+        degree_points, hidden = place_degree_annotations(
+            glyphs, longitudes, [(19, 9)] * 9,
+            (175, 251), 78, -1)
+        self.assertEqual(hidden, [])
+        self.assertTrue(all(point is not None for point in degree_points))
+        for i, point in enumerate(degree_points):
+            label_rect = (point[0] - 10.3, point[1] - 5.3,
+                          point[0] + 10.3, point[1] + 5.3)
+            for glyph in glyphs:
+                self.assertEqual(_intersect_area(label_rect,
+                                                  glyph['rect']), 0)
+
+    def test_full_position_labels_use_both_radial_sides(self):
+        # The full degree+minute text is wider, but has sufficient space
+        # in a typical outer ring without colliding with the glyphs.
+        longitudes = [0.4, 12.6, 19.2, 20.4, 58.0,
+                      88.0, 174.0, 251.0, 359.0]
+        glyphs, _ = place_planet_glyphs(
+            longitudes, [(19, 21)] * 9, (270, 375), 78)
+        points, hidden = place_degree_annotations(
+            glyphs, longitudes, [(34, 9)] * 9,
+            (270, 375), 78, 1)
+        self.assertEqual(hidden, [])
+        self.assertTrue(all(point is not None for point in points))
+
     def test_primary_glyph_layout_rejects_invalid_inputs(self):
         with self.assertRaises(ValueError):
             place_planet_glyphs([10], [], (110, 195), 40)
