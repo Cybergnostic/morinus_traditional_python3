@@ -6,7 +6,8 @@ from wheel_primitives import (angle_longitudes, planet_band_radii,
                               paint_glyph, paint_position_text,
                               optical_text_center, planet_cluster_radii,
                               compact_planet_radii, radial_half_extent,
-                              traditional_term_markers, traditional_decan_markers)
+                              traditional_term_markers, traditional_decan_markers,
+                              house_spoke_segments)
 
 
 class SharedWheelPrimitivesTests(unittest.TestCase):
@@ -121,6 +122,39 @@ class SharedWheelPrimitivesTests(unittest.TestCase):
                          [5.0, 15.0, 25.0, 35.0, 45.0, 55.0])
         self.assertEqual([boundary for _, _, boundary in values],
                          [0.0, 10.0, 20.0, 30.0, 40.0, 50.0])
+
+    def test_house_cusps_are_clipped_to_their_own_chart_field(self):
+        # Radix and solar return can have entirely different cusp sets.
+        radix_cusps = [4 + 30 * i for i in range(12)]
+        return_cusps = [17 + 30 * i for i in range(12)]
+        radix = house_spoke_segments(radix_cusps, 65, 143)
+        outer = house_spoke_segments(return_cusps, 217, 290)
+        self.assertEqual(len(radix), 12)
+        self.assertEqual(len(outer), 12)
+        self.assertEqual([lon for lon, _, _ in radix], radix_cusps)
+        self.assertEqual([lon for lon, _, _ in outer], return_cusps)
+        self.assertTrue(all(65 < start < finish < 143
+                            for _, start, finish in radix))
+        self.assertTrue(all(217 < start < finish < 290
+                            for _, start, finish in outer))
+        self.assertLess(max(end for _, _, end in radix),
+                        min(start for _, start, _ in outer))
+        self.assertAlmostEqual(radix[0][1], 66.25)
+        self.assertAlmostEqual(outer[0][2], 288.75)
+
+    def test_house_spokes_validate_widths_and_wrap_longitude(self):
+        cusp_set = [360.0, 391.0] + [30.0 * i for i in range(2, 12)]
+        spokes = house_spoke_segments(cusp_set, 100, 130)
+        self.assertEqual(spokes[0][0], 0.0)
+        self.assertEqual(spokes[1][0], 31.0)
+        for cusps, inner, outer, inset in (
+                ([0, 1], 100, 150, 1),
+                ([30 * i for i in range(12)], 100, 100, 1),
+                ([30 * i for i in range(12)], 100, 102, 1),
+                ([30 * i for i in range(12)], -1, 150, 1),
+                ([30 * i for i in range(12)], 100, 150, -1)):
+            with self.assertRaises(ValueError):
+                house_spoke_segments(cusps, inner, outer, inset)
 
     def test_four_angles_match_morinus_quadrants(self):
         self.assertEqual(angle_longitudes(350, 75), (350, 170, 75, 255))
