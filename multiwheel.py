@@ -1236,6 +1236,9 @@ class MultiWheelFrame(wx.Frame):
         self.transit_slots = []
         self.active_transit_ring = None
         self.transit_buttons = []
+        self.transit_inputs = {}
+        self._transit_fields_chart = None
+        self._transit_fields_ring = None
         for unit in multiwheel_time.UNITS:
             row_controls = wx.BoxSizer(wx.HORIZONTAL)
             label = wx.StaticText(self.inspector, label=i18n.tr(unit))
@@ -1243,6 +1246,13 @@ class MultiWheelFrame(wx.Frame):
             plus = wx.Button(self.inspector, label='++', size=(39, -1))
             minus = wx.Button(self.inspector, label='--', size=(39, -1))
             row_controls.Add(label, 1, wx.ALIGN_CENTER_VERTICAL)
+            if unit != 'Sec':
+                entry = wx.TextCtrl(self.inspector, size=(64, -1),
+                                    style=wx.TE_PROCESS_ENTER)
+                entry.SetToolTip(i18n.tr('Enter a value, then apply the date and time'))
+                entry.Bind(wx.EVT_TEXT_ENTER, self.apply_transit_time)
+                row_controls.Add(entry, 0, wx.LEFT, 3)
+                self.transit_inputs[unit] = entry
             row_controls.Add(plus, 0, wx.LEFT, 3)
             row_controls.Add(minus, 0, wx.LEFT, 3)
             rail.Add(row_controls, 0, wx.EXPAND | wx.BOTTOM, 4)
@@ -1251,6 +1261,9 @@ class MultiWheelFrame(wx.Frame):
             minus.Bind(wx.EVT_BUTTON,
                        lambda e, part=unit: self.step_transit(part, False))
             self.transit_buttons.extend((plus, minus))
+        self.transit_apply = wx.Button(self.inspector, label=i18n.tr('Apply date/time'))
+        rail.Add(self.transit_apply, 0, wx.EXPAND | wx.TOP, 6)
+        self.transit_apply.Bind(wx.EVT_BUTTON, self.apply_transit_time)
         self.transit_now = wx.Button(self.inspector, label=i18n.tr('Now (UTC)'))
         rail.Add(self.transit_now, 0, wx.EXPAND | wx.TOP, 7)
         self.transit_now.Bind(wx.EVT_BUTTON, self.transit_to_now)
@@ -1341,11 +1354,26 @@ class MultiWheelFrame(wx.Frame):
         for button in self.transit_buttons:
             button.Enable(bool(slots))
         self.transit_now.Enable(bool(slots))
+        self.transit_apply.Enable(bool(slots))
+        selected = (self.pickers[self.active_transit_ring].selected()
+                    if self.active_transit_ring is not None else None)
+        if (selected is not self._transit_fields_chart or
+                self.active_transit_ring != self._transit_fields_ring):
+            t = selected.time if selected is not None else None
+            values = ((t.origyear, t.origmonth, t.origday, t.hour, t.minute)
+                      if t is not None else ('',) * 5)
+            for unit, value in zip(multiwheel_time.UNITS, values):
+                self.transit_inputs[unit].ChangeValue(str(value))
+            self._transit_fields_chart = selected
+            self._transit_fields_ring = self.active_transit_ring
+        for entry in self.transit_inputs.values():
+            entry.Enable(bool(slots))
 
     def on_transit_ring_choice(self, event):
         index = self.transit_ring_choice.GetSelection()
         if 0 <= index < len(self.transit_slots):
             self.active_transit_ring = self.transit_slots[index]
+            self.refresh_transit_controls()
 
     def create_current_transit(self, radix):
         """An independent transit chart for the present UTC instant."""
@@ -1373,6 +1401,33 @@ class MultiWheelFrame(wx.Frame):
         if changed is None:
             self.SetStatusText(i18n.tr('The requested date is out of range.'))
             return
+        self.set_transit_time(index, changed)
+
+    def apply_transit_time(self, event=None):
+        """Apply all five entered values at once; preserve transit seconds."""
+        index = self.active_transit_ring
+        if index is None:
+            return
+        selected = self.pickers[index].selected()
+        if selected.htype != chart.Chart.TRANSIT:
+            return
+        try:
+            fields = [int(self.transit_inputs[unit].GetValue().strip())
+                      for unit in multiwheel_time.UNITS[:5]]
+            parts = tuple(fields + [selected.time.second])
+            multiwheel_time.validate(
+                parts, julian=selected.time.cal == chart.Time.JULIAN)
+        except (TypeError, ValueError):
+            self.SetStatusText(i18n.tr('Please enter a valid date and time.'))
+            return
+        self.set_transit_time(index, parts)
+
+    def set_transit_time(self, index, changed):
+        """Build an independent transit chart at the requested civil time."""
+        previous = self.pickers[index].selected()
+        if previous.htype != chart.Chart.TRANSIT:
+            return
+        t = previous.time
         try:
             instant = chart.Time(*changed, t.bc, t.cal, t.zt, t.plus,
                                  t.zh, t.zm, t.daylightsaving, previous.place)

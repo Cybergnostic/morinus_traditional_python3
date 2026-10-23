@@ -509,6 +509,19 @@ def main():
 				assert transit_picker.selected().time.jd > before.time.jd
 				assert not any(source is before for _, source in wnd.registered_charts)
 				assert len(wnd.transit_slots) == 1
+				# Direct entry changes five fields in one operation; seconds stay.
+				earlier = transit_picker.selected()
+				for unit, value in (('Year', 2027), ('Month', 2), ('Day', 28),
+					('Hour', 19), ('Min', 44)):
+					wnd.transit_inputs[unit].ChangeValue(str(value))
+				wnd.apply_transit_time()
+				manual = transit_picker.selected().time
+				assert (manual.origyear, manual.origmonth, manual.origday,
+					manual.hour, manual.minute, manual.second) == (
+					2027, 2, 28, 19, 44, earlier.time.second)
+				wnd.transit_inputs['Day'].ChangeValue('30')
+				wnd.apply_transit_time()
+				assert transit_picker.selected().time is manual
 				assert picker.selected() is solar
 				wnd.count_choice.SetSelection(1)
 				wnd.change_count()
