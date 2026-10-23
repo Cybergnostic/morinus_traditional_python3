@@ -459,13 +459,15 @@ def main():
 						house_records.append((chrt, inner, outer, cusps, len(ink_segments)))
 				try:
 					frame.options.houses = True
+					shifted_cusps = list(saved_cusps)
 					for h in range(1, houses.Houses.HOUSE_NUM + 1):
-						secondary.houses.cusps[h] = (saved_cusps[h] + 11) % 360
+						shifted_cusps[h] = (saved_cusps[h] + 11) % 360
+					secondary.houses.cusps = tuple(shifted_cusps)
 					multiwheel.MultiWheel.draw_house_spokes = trace_house_spokes
 					wnd.redraw()
 				finally:
 					multiwheel.MultiWheel.draw_house_spokes = saved_spokes
-					secondary.houses.cusps[:] = saved_cusps
+					secondary.houses.cusps = saved_cusps
 					frame.options.houses = saved_houses
 				assert not hasattr(multiwheel.MultiWheel, 'draw_sign_spokes')
 				assert len(house_records) == 2
