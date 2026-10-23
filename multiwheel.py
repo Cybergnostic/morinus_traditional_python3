@@ -157,7 +157,7 @@ class MultiWheel:
 
     def degree_text(self, lon):
         degree, minute = wheel_primitives.position_text(lon, '\N{DEGREE SIGN}')
-        return degree + minute[:-1]
+        return degree + minute
 
     def planet_colour(self, index):
         """Match GraphChart's planet colours, including its node fallback."""
@@ -346,86 +346,90 @@ class MultiWheel:
                        font, self.options.clrhousenumbers)
 
     def draw_planet_band(self, chrt, edges, role, dial_side):
-        """Morinus's glyph / degree / minute tiers with measured collision handling.
+        """Large primary glyphs, independently placed small optional positions.
 
-        Exact-longitude dials and leader lines are separate from displayed
-        positions. A conjunction must stay visibly within its zodiac sign.
+        Neither degrees nor minutes constrain the glyph size or the glyph
+        collision solver. Its exact ecliptic longitude stays on the dial.
         """
         (inner, outer), dial_anchor = self.draw_degree_dial(edges, dial_side)
-        # Fonts are calculated once from the narrowest usable ring.
-        # Radix, solar/lunar returns and transit glyphs remain identical.
-        sizes = self.planet_fonts
-        glyph_size = sizes['glyph']
-        glyph_font = self.font(glyph_size, symbol=True)
-        degree_font = self.font(sizes['degree'])
-        minute_font = self.font(sizes['minute'])
-        motion_font = self.font(sizes['motion'], symbol=True)
-
+        fonts = self.planet_fonts
+        glyph_font = self.font(fonts['glyph'], symbol=True)
+        degree_font = self.font(fonts['degree'])
         count = planets.Planets.BODIES_NUM
         lons = [self.longitude(chrt, i) for i in range(count)]
-        positions = [wheel_primitives.position_text(lon, '°') for lon in lons]
-        speeds = [chrt.planets.planets[i].data[planets.Planet.SPLON]
-                  for i in range(count)]
-        motions = [('S' if speed == 0 else common.common.retr)
-                   if speed <= 0 else '' for speed in speeds]
-        boxes = [
-            (self.measure(common.common.planets[i], glyph_font),
-             self.measure(positions[i][0], degree_font),
-             self.measure(positions[i][1], minute_font),
-             self.measure(motions[i], motion_font) if motions[i] else (0, 0))
-            for i in range(count)
-        ]
-        asc = zodiac_lon(self.radix,
-                         self.radix.houses.ascmc[houses.Houses.ASC],
-                         self.options)
-        placed, unresolved = multiwheel_layout.place_planet_clusters(
-            lons, boxes, (inner, outer), asc)
+        glyph_boxes = [
+            self.measure(common.common.planets[i], glyph_font)
+            for i in range(count)]
+        # A chart uses its *own* house system, not the radix house spokes
+        # appearing beneath it. Sign membership is always tested as well.
+        cusps = ([zodiac_lon(chrt, chrt.houses.cusps[j], self.options)
+                  for j in range(1, houses.Houses.HOUSE_NUM + 1)]
+                 if self.options.houses else None)
+        asc = zodiac_lon(
+            self.radix, self.radix.houses.ascmc[houses.Houses.ASC],
+            self.options)
+        placements, unresolved = multiwheel_layout.place_planet_glyphs(
+            lons, glyph_boxes, (inner, outer), asc, house_cusps=cusps)
         if unresolved:
             self.layout_issues.append((role, len(unresolved)))
 
-        for i, (exact, location) in enumerate(zip(lons, placed)):
-            displayed = location['longitude']
+        # Positions are a separate, optional annotation layer. Only the
+        # full-positions view includes minutes; clicking/hovering always
+        # reports exact positions, even when a label must be suppressed.
+        label_mode = self.label_mode
+        labels = []
+        if label_mode:
+            for i, lon in enumerate(lons):
+                degrees, minutes = wheel_primitives.position_text(lon, '°')
+                text = degrees + (minutes if label_mode == 2 else '')
+                speed = chrt.planets.planets[i].data[planets.Planet.SPLON]
+                if speed < 0:
+                    text += ' R'
+                elif speed == 0:
+                    text += ' S'
+                labels.append(text)
+            text_boxes = [self.measure(label, degree_font)
+                          for label in labels]
+            direction = -1 if dial_side == 'outer' else 1
+            label_points, hidden = multiwheel_layout.place_degree_annotations(
+                placements, lons, text_boxes, (inner, outer), asc,
+                direction, house_cusps=cusps)
+            if hidden:
+                self.hidden_positions.append((role, len(hidden)))
+        else:
+            label_points = [None] * count
+
+        for i, (exact, placement) in enumerate(zip(lons, placements)):
+            displayed = placement['longitude']
             theta = self.angle(displayed)
-            gx, gy = location['glyph']
-            dx, dy = location['degree']
-            mx, my = location['minute']
-            # The pure layout returns Cartesian offsets from the wheel's
-            # centre. Keep hit testing in display pixel coordinates.
-            glyph_xy = (self.cx + gx, self.cy + gy)
-            degree_xy = (self.cx + dx, self.cy + dy)
-            minute_xy = (self.cx + mx, self.cy + my)
-            g_radius = math.hypot(gx, gy)
-            m_radius = math.hypot(mx, my)
-            if dial_side == 'inner':
-                reach = wheel_primitives.radial_half_extent(boxes[i][2], theta)
-                label_end = m_radius - reach - 1.0
-            else:
-                reach = wheel_primitives.radial_half_extent(boxes[i][0], theta)
-                label_end = g_radius + reach + 1.0
+            glyph_radius = placement['radius']
+            reach = wheel_primitives.radial_half_extent(
+                glyph_boxes[i], theta)
+            label_end = (glyph_radius - reach - 1.0
+                         if dial_side == 'inner'
+                         else glyph_radius + reach + 1.0)
+            # Thin, exact-angle leader reaches the displaced glyph. This
+            # line is independent of where its numeric annotation ended up.
             self.stroke(self.point(exact, dial_anchor),
                         self.point(displayed, label_end),
                         'pointer', self.planet_colour(i))
-            tick = 2.8 if dial_side == 'inner' else -2.8
+            mark = 2.8 if dial_side == 'inner' else -2.8
             self.stroke(self.point(exact, dial_anchor),
-                        self.point(exact, dial_anchor + tick),
+                        self.point(exact, dial_anchor + mark),
                         'major', self.planet_colour(i))
+            gx, gy = placement['glyph']
+            glyph_xy = (self.cx + gx, self.cy + gy)
             colour = self.colour(self.planet_colour(i))
             wheel_primitives.optical_text_center(
                 self.draw, self.scaled(glyph_xy),
                 common.common.planets[i], glyph_font, colour)
-            wheel_primitives.optical_text_center(
-                self.draw, self.scaled(degree_xy),
-                positions[i][0], degree_font, colour)
-            wheel_primitives.optical_text_center(
-                self.draw, self.scaled(minute_xy),
-                positions[i][1], minute_font, colour)
-            if motions[i] and location['motion'] is not None:
-                motion_xy = (self.cx + location['motion'][0],
-                             self.cy + location['motion'][1])
+            if label_points[i] is not None:
+                dx, dy = label_points[i]
                 wheel_primitives.optical_text_center(
-                    self.draw, self.scaled(motion_xy),
-                    motions[i], motion_font, colour)
-            self.hits.append((glyph_xy, max(glyph_size * .7, 12),
+                    self.draw, self.scaled((self.cx + dx, self.cy + dy)),
+                    labels[i], degree_font, colour)
+                self.drawn_degree_labels.append((role, i, labels[i]))
+            self.hits.append((glyph_xy, max(fonts['glyph'] * .75, 12),
                               chrt, i, exact, role))
 
     def draw_radix(self, core):
@@ -714,6 +718,8 @@ class MultiWheel:
         self.draw = ImageDraw.Draw(image)
         self.hits = []
         self.layout_issues = []
+        self.hidden_positions = []
+        self.drawn_degree_labels = []
         self.draw_ring_backgrounds(zodiac, rings)
         self.draw_radix(core)
         self.draw_decans(decans)
