@@ -219,3 +219,26 @@ if they were actual planet glyphs.
 
 Verify the actual chart screenshots again before merging. Exceptional
 unplaceable labels are still reported rather than drawn over a glyph.
+
+## October 23: chart-local house lines (latest)
+
+- Eliminated the duplicate 30° zodiac sign spokes from outer planetary
+  bands. These spokes were visually indistinguishable from house separators
+  and gave the impression that radix cusps extended through other charts.
+- Only the single shared zodiac/reference band contains zodiac sign
+  division spokes. Each planetary field now contains **only that chart's
+  own 12 house cusp lines and its own angle axes** (plus its local degree
+  dial and planet leaders).
+- All house segments use their selected chart's cusp longitudes and an
+  inward 1.25 px inset at both ring edges. This avoids antialias spill
+  into the shared zodiac, separator gaps and neighbouring charts.
+- Added pure geometry tests with different radix and outer cusps, and
+  a GUI regression that deliberately offsets an outer chart's cusps,
+  records each actual house stroke, and asserts the longitude/source and
+  radial limits for both radix and outer chart.
+- This affects multiwheel drawing only, not the traditional single
+  chart, comparison grid or any astrology calculation code.
+
+Note: if the user intentionally selects the same chart twice, both charts
+will correctly have the same house longitudes, but each line will still
+stop inside its own field rather than extending between the two charts.
