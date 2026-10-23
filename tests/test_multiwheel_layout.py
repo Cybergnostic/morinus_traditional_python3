@@ -369,6 +369,40 @@ class MultiWheelLayoutTests(unittest.TestCase):
                                         for a in placement['rects']
                                         for b in later['rects']))
 
+    def test_fixed_radial_gap_anchors_every_degree_to_its_glyph(self):
+        import math
+
+        # Close Sun/Saturn-style conjunction: every pair must preserve the
+        # same visible edge-to-edge gap, even as their positions move apart.
+        lons = [9.8, 10.1, 10.7, 13.2, 75, 210]
+        glyph_box, degree_box, gap = (17, 19), (25, 10), 5.0
+        for dial_side in (-1, 1):
+            placed, unresolved = place_planet_label_groups(
+                lons, [glyph_box] * len(lons),
+                [degree_box] * len(lons), (110, 200), 84,
+                dial_side, glyph_degree_gap=gap)
+            self.assertEqual(unresolved, [])
+            for item in placed:
+                glyph, degree = item['glyph'], item['position']
+                theta = math.atan2(glyph[1], glyph[0])
+                radial_extent = lambda box: (
+                    abs(math.cos(theta)) * box[0] +
+                    abs(math.sin(theta)) * box[1]) / 2
+                actual_gap = (math.dist(glyph, degree) -
+                              radial_extent(glyph_box) -
+                              radial_extent(degree_box))
+                self.assertAlmostEqual(actual_gap, gap, places=6)
+                self.assertLess(math.hypot(*degree), math.hypot(*glyph))
+            for i, item in enumerate(placed):
+                for other in placed[i + 1:]:
+                    self.assertTrue(all(_intersect_area(a, b) == 0
+                                        for a in item['rects']
+                                        for b in other['rects']))
+
+        with self.assertRaises(ValueError):
+            place_planet_label_groups([10], [glyph_box], [degree_box],
+                                      (110, 200), 84, -1, glyph_degree_gap=-1)
+
     def test_label_group_follows_own_house_not_radix_house(self):
         longitudes = [19.8, 20.0, 20.2, 359.8, .1, 120]
         placements, _ = place_planet_label_groups(

@@ -454,7 +454,7 @@ def place_planet_glyphs(longitudes, glyph_boxes, edges, asc,
 
 def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
                               direction, house_cusps=None, maximum_shift=7.5,
-                              occupied_rects=()):
+                              occupied_rects=(), glyph_degree_gap=4.0):
     """Place glyphs near their dial and their numbers radially *inward*.
 
     A degree always lies closer to the wheel centre than its own glyph,
@@ -468,7 +468,8 @@ def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
 
     if not (len(longitudes) == len(glyph_boxes) == len(text_boxes)):
         raise ValueError('Each planet needs a glyph and position box')
-    if edges[1] <= edges[0] or direction not in (-1, 1) or maximum_shift < 0:
+    if (edges[1] <= edges[0] or direction not in (-1, 1) or
+            maximum_shift < 0 or glyph_degree_gap < 0):
         raise ValueError('Invalid planetary band, direction or shift')
     if house_cusps is not None and len(house_cusps) != 12:
         raise ValueError('Expected twelve chart-specific house cusps')
@@ -513,37 +514,36 @@ def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
             else:
                 preferred = max_glyph if direction == -1 else min_glyph
                 other_edge = min_glyph if direction == -1 else max_glyph
-            for fraction in (0, .12, .25, .4, .6, .8, 1):
+            for fraction in (0, .10, .20, .30, .40, .50, .65, .80, 1):
                 radius = preferred + (other_edge - preferred) * fraction
                 glyph = _polar_point(asc, displayed, radius)
-                # Several inward gaps help near-conjunctions. They may
-                # extend across field guides and ring separator circles.
-                for extra_gap in (0, 3, 7, 12, 19):
-                    distance = reach_g + reach_t + 3.0 + extra_gap
-                    position = (glyph[0] - radial[0] * distance,
-                                glyph[1] - radial[1] * distance)
-                    glyph_rect = _rect(glyph, glyph_box, margin=1.0)
-                    text_rect = _rect(position, text_box, margin=1.0)
-                    fits = _rect_inside_annulus(glyph_rect, inner, outer)
-                    # Allow number spill over surrounding guide strokes,
-                    # but do not send it deep into the preceding chart.
-                    text_radius = math.hypot(*position)
-                    bleed = max(14.0, reach_t + 7.0)
-                    text_fits = text_radius - reach_t >= inner - bleed
-                    score = (abs(shift) * 8.0 +
-                             abs(radius - preferred) * .23 +
-                             extra_gap * .65 +
-                             sum(_intersect_area(rect, fixed) * 1000
-                                 for fixed in occupied_rects
-                                 for rect in (glyph_rect, text_rect)) +
-                             (12000 if not fits or not text_fits else 0))
-                    candidates.append((score, {
-                        'longitude': displayed, 'exact': original,
-                        'glyph': glyph, 'position': position,
-                        'rect': glyph_rect, 'rects': (glyph_rect, text_rect),
-                        'radius': math.hypot(*glyph), 'fits': fits,
-                        'style': 'radial-inward',
-                    }))
+                # Fixed measured edge-to-edge separation. Glyph and degree
+                # move as an inseparable pair; only angle, radius and one
+                # *shared* font scale may change. Varying this gap made it
+                # impossible to identify which degree belonged to a glyph.
+                distance = reach_g + reach_t + glyph_degree_gap
+                position = (glyph[0] - radial[0] * distance,
+                            glyph[1] - radial[1] * distance)
+                glyph_rect = _rect(glyph, glyph_box, margin=1.0)
+                text_rect = _rect(position, text_box, margin=1.0)
+                fits = _rect_inside_annulus(glyph_rect, inner, outer)
+                # The number may cross reference lines and ring borders.
+                text_radius = math.hypot(*position)
+                bleed = max(14.0, reach_t + 7.0)
+                text_fits = text_radius - reach_t >= inner - bleed
+                score = (abs(shift) * 8.0 +
+                         abs(radius - preferred) * .23 +
+                         sum(_intersect_area(rect, fixed) * 1000
+                             for fixed in occupied_rects
+                             for rect in (glyph_rect, text_rect)) +
+                         (12000 if not fits or not text_fits else 0))
+                candidates.append((score, {
+                    'longitude': displayed, 'exact': original,
+                    'glyph': glyph, 'position': position,
+                    'rect': glyph_rect, 'rects': (glyph_rect, text_rect),
+                    'radius': math.hypot(*glyph), 'fits': fits,
+                    'style': 'radial-inward',
+                }))
         candidates.sort(key=lambda item: item[0])
         # Reserve alternatives at *every* allowed longitude shift. Keeping
         # only the cheapest candidates overall loses the wider spreading
@@ -560,6 +560,26 @@ def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
         varied.sort(key=lambda item: item[0])
         candidate_sets.append(varied)
 
+    # Conservative per-planet envelopes: if *no* candidate rectangle for
+    # planet A can touch *any* candidate rectangle for planet B, there is
+    # no reason to test their rectangles in every beam expansion. This is
+    # especially important in four-wheel redraws, where most planets are
+    # on opposite sides of the chart and otherwise cost millions of tests.
+    envelopes = []
+    for candidates in candidate_sets:
+        rectangles = [rect for _, candidate in candidates
+                      for rect in candidate['rects']]
+        envelopes.append((min(rect[0] for rect in rectangles),
+                          min(rect[1] for rect in rectangles),
+                          max(rect[2] for rect in rectangles),
+                          max(rect[3] for rect in rectangles)))
+    possible_contacts = [set() for _ in sources]
+    for i in range(len(sources)):
+        for j in range(i):
+            if _intersect_area(envelopes[i], envelopes[j]) > 0:
+                possible_contacts[i].add(j)
+                possible_contacts[j].add(i)
+
     # Constrained bodies first; retaining several complete alternatives is
     # much better for conjunctions than a greedy placement one planet at a time.
     neighbours = [min((abs((lon - other + 180) % 360 - 180)
@@ -575,7 +595,8 @@ def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
             for own_score, candidate in candidate_sets[i]:
                 overlap = sum(
                     _intersect_area(a, b)
-                    for previous in picked.values()
+                    for previous_index, previous in picked.items()
+                    if previous_index in possible_contacts[i]
                     for a in candidate['rects']
                     for b in previous['rects'])
                 updated = picked.copy()

@@ -301,7 +301,8 @@ has been reviewed visually, particularly at quad-wheel density.
   unchanged leader still connects the dial to its glyph.
 - The degree annotation is always **closer to the wheel centre** than its
   own glyph. It is not screen-below the glyph in the bottom half of the
-  wheel. Keep the annotation on the same radial ray, with adjustable spacing.
+  wheel. Keep the annotation on the same radial ray, with a fixed measured
+  edge-to-edge spacing for every glyph/degree pair.
 - A degree may cover house and zodiac spokes, local degree dials, or chart
   separator lines. Such structural lines may not erase the degree ink.
   Other planetary glyphs and degree annotations remain collision obstacles.
@@ -336,3 +337,23 @@ GUI verification remains required on Linux and Windows before merging.
 
 The adaptive scaling and right-side layout still need a local Linux GUI
 screenshot check before this redesign is merged.
+
+## October 23: fixed glyph-degree pairs and faster placement
+
+- The glyph and its degree now have one fixed **radial edge-to-edge gap**.
+  Their positions can move together angularly or radially; the solver no
+  longer lengthens or shortens the distance for individual conjunctions.
+  The glyph stays nearest its own exact-longitude dial and pointer.
+- Adaptive font sizing tests **complete pairs**, not only planetary glyphs.
+  All charts still receive the same glyph, degree and motion font sizes;
+  if a tight conjunction cannot fit at one scale, the common size can shrink.
+- The collision solver first finds conservative rectangular envelopes of
+  all allowed positions for each planet. Planets whose envelopes cannot
+  possibly meet are excluded from pairwise collision checks. This removes
+  most unnecessary comparisons without changing which collisions count.
+- The pure layout regression test verifies fixed spacing, radial direction,
+  and non-overlapping pairs in both inner and outer rings.
+
+Check the radix Sun/Saturn conjunction from the October 23 screenshot and
+confirm the labels remain unmistakably associated at fit and 100% zoom.
+Local GUI performance and Windows rendering still need verification.

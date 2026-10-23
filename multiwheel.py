@@ -326,11 +326,11 @@ class MultiWheel:
             self.rmax, label_widths)
 
     def adapt_planet_fonts(self, core, rings):
-        """Shrink *all* planet glyphs together if a chart is too crowded.
+        """Shrink *all* planet glyph/degree pairs when a chart is crowded.
 
-        Preflight every visible chart with the same measured glyph font.
-        Keep the original size if the labels fit with breathing room; only
-        choose a smaller global size when needed, never per planet or ring.
+        A glyph-only layout can look clear even though its degree overlaps
+        its neighbour. Check the complete fixed-gap pairs before choosing
+        one font size for every chart. Never shrink individual planets.
         """
         nominal = self.planet_fonts['glyph']
         minimum = max(12, int(nominal * .68))
@@ -347,27 +347,44 @@ class MultiWheel:
             font = self.font(size, symbol=True)
             boxes = [self.measure(common.common.planets[i], font)
                      for i in range(planets.Planets.BODIES_NUM)]
+            self.planet_fonts.update({
+                'glyph': size,
+                'degree': max(8, int(size * .46)),
+                'minute': max(8, int(size * .42)),
+                'motion': max(8, int(size * .42)),
+            })
+            degree_font = self.font(self.planet_fonts['degree'])
             clear = True
-            for chrt, edges in fields:
+            for ring_index, (chrt, edges) in enumerate(fields):
                 lons = [self.longitude(chrt, i)
                         for i in range(planets.Planets.BODIES_NUM)]
                 cusps = ([zodiac_lon(chrt, chrt.houses.cusps[j], self.options)
                           for j in range(1, houses.Houses.HOUSE_NUM + 1)]
                          if self.options.houses else None)
-                placed, unresolved = multiwheel_layout.place_planet_glyphs(
-                    lons, boxes, edges, asc, house_cusps=cusps)
+                if getattr(self, 'label_mode', 0):
+                    text_boxes = []
+                    for i, lon in enumerate(lons):
+                        speed = chrt.planets.planets[i].data[planets.Planet.SPLON]
+                        label, marker = self.position_label_parts(
+                            lon, speed, self.label_mode)
+                        marker_font = self.font(
+                            self.planet_fonts['motion'], symbol=(speed < 0))
+                        text_boxes.append(self.position_label_size(
+                            label, marker, degree_font, marker_font))
+                    # Radix dial lies outward; other rings have inner dials.
+                    direction = -1 if ring_index == 0 else 1
+                    placed, unresolved = multiwheel_layout.place_planet_label_groups(
+                        lons, boxes, text_boxes, edges, asc, direction,
+                        house_cusps=cusps)
+                else:
+                    placed, unresolved = multiwheel_layout.place_planet_glyphs(
+                        lons, boxes, edges, asc, house_cusps=cusps)
                 if unresolved or not multiwheel_layout.glyphs_have_clearance(
                         placed, minimum=max(2.0, size * .16)):
                     clear = False
                     break
             if clear:
                 break
-        self.planet_fonts.update({
-            'glyph': size,
-            'degree': max(8, int(size * .46)),
-            'minute': max(8, int(size * .42)),
-            'motion': max(8, int(size * .42)),
-        })
 
     def draw_degree_dial(self, edges, side):
         """A chart's own 360-degree dial, with 1/5/10-degree tick hierarchy.
