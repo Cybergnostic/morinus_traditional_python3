@@ -476,6 +476,55 @@ def main():
 				assert house_records[0][3] != house_records[1][3]
 				assert house_records[0][4] == house_records[1][4] == 12
 				assert house_records[0][2] < house_records[1][1]
+				# Zodiac meridians are rendered in both planetary bands,
+				# independently of house cusps. Whole Sign must suppress
+				# duplicated meridians because its cusps are sign boundaries.
+				original_zodiac_guides = multiwheel.MultiWheel.draw_zodiac_guides
+				original_radix_cusps = frame.horoscope.houses.cusps
+				original_outer_cusps = secondary.houses.cusps
+				zodiac_records = []
+				def track_zodiac(renderer, chrt, inner, outer, ring_index=None):
+					current_cusps = [multiwheel.zodiac_lon(
+						chrt, chrt.houses.cusps[h], renderer.options)
+						for h in range(1, 13)] if renderer.options.houses else None
+					zodiac_records.append((
+						chrt, ring_index,
+						wheel_primitives.zodiac_guide_longitudes(current_cusps),
+						(inner, outer)))
+					return original_zodiac_guides(
+						renderer, chrt, inner, outer, ring_index)
+				try:
+					frame.options.houses = True
+					multiwheel.MultiWheel.draw_zodiac_guides = track_zodiac
+					# Equal-looking but deliberately non-matching cusps:
+					# both rings should preserve 12 faint zodiac guides.
+					frame.horoscope.houses.cusps = (0.0,) + tuple(
+						(10 + i * 30) % 360 for i in range(12))
+					secondary.houses.cusps = (0.0,) + tuple(
+						(15 + i * 30) % 360 for i in range(12))
+					wnd.redraw()
+					assert len(zodiac_records) == 2
+					assert zodiac_records[0][0] is frame.horoscope
+					assert zodiac_records[1][0] is secondary
+					assert zodiac_records[0][1] is None
+					assert zodiac_records[1][1] == 1
+					assert all(len(entry[2]) == 12 for entry in zodiac_records)
+					assert zodiac_records[0][3][1] < zodiac_records[1][3][0]
+					# Whole Sign — every zodiac line has a house cusp,
+					# so no duplicate zodiac guides are painted.
+					zodiac_records.clear()
+					frame.horoscope.houses.cusps = (0.0,) + tuple(
+						float(i * 30) for i in range(12))
+					secondary.houses.cusps = (0.0,) + tuple(
+						float(i * 30) for i in range(12))
+					wnd.redraw()
+					assert len(zodiac_records) == 2
+					assert all(entry[2] == () for entry in zodiac_records)
+				finally:
+					multiwheel.MultiWheel.draw_zodiac_guides = original_zodiac_guides
+					frame.horoscope.houses.cusps = original_radix_cusps
+					secondary.houses.cusps = original_outer_cusps
+					frame.options.houses = saved_houses
 				wnd.redraw()
 				for count in (1, 2, 3):
 					wnd.count_choice.SetSelection(count - 1)
