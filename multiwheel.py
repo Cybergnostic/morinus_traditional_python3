@@ -8,6 +8,7 @@ import math
 import os
 import time as _time
 from collections import OrderedDict
+from datetime import datetime, timezone
 import wx
 from PIL import Image, ImageDraw
 
@@ -19,6 +20,7 @@ import houses
 import multiwheel_layout
 import multiwheel_returnnav
 import multiwheel_sources
+import multiwheel_time
 import wheel_primitives
 import planets
 import returnslist
@@ -871,10 +873,6 @@ class RingChartPicker(comparegrid.ChartPicker):
         self.ring_index = prefer
         super().__init__(parent, mainfr, on_change, prefer)
         self.create_button = wx.Button(self, label=i18n.tr('Create chart...'))
-        self.prev_button = wx.Button(self, label='◀', size=(31, -1))
-        self.next_button = wx.Button(self, label='▶', size=(31, -1))
-        self.prev_button.SetToolTip(i18n.tr('Previous return'))
-        self.next_button.SetToolTip(i18n.tr('Next return'))
         # Reflow only the multiwheel picker: a full-width chart choice above
         # the two source buttons fits a useful, compact left sidebar.
         old = self.GetSizer()
@@ -882,29 +880,19 @@ class RingChartPicker(comparegrid.ChartPicker):
         controls = wx.BoxSizer(wx.HORIZONTAL)
         controls.Add(self.openbutton, 1, wx.RIGHT, 4)
         controls.Add(self.create_button, 1)
-        controls.Add(self.prev_button, 0, wx.LEFT, 3)
-        controls.Add(self.next_button, 0, wx.LEFT, 3)
         column = wx.BoxSizer(wx.VERTICAL)
         column.Add(self.choice, 0, wx.EXPAND | wx.BOTTOM, 4)
         column.Add(controls, 0, wx.EXPAND)
         self.SetSizer(column)
         self.create_button.Bind(wx.EVT_BUTTON, self.show_create_menu)
-        self.prev_button.Bind(wx.EVT_BUTTON,
-                              lambda e: self.owner.step_return_ring(self.ring_index, False))
-        self.next_button.Bind(wx.EVT_BUTTON,
-                              lambda e: self.owner.step_return_ring(self.ring_index, True))
         self.update_step_buttons()
 
     def update_step_buttons(self):
-        if not hasattr(self, 'prev_button'):
-            return
-        chrt = self.selected()
-        enabled = (chrt.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR)
-                   and self.owner.return_origin(chrt) is not None)
-        self.prev_button.Enable(enabled)
-        self.next_button.Enable(enabled)
+        if hasattr(self.owner, 'return_controls'):
+            self.owner.update_return_controls()
 
     def changed(self, event):
+        self.owner.manual_rings.add(self.ring_index)
         self.update_step_buttons()
         super().changed(event)
 
@@ -1064,7 +1052,7 @@ class MultiWheelFrame(wx.Frame):
     """Independent chart selection for every field of a multi-wheel."""
 
     def __init__(self, mainfr):
-        wx.Frame.__init__(self, mainfr, title=i18n.tr('Multi-wheel'), size=(950, 900))
+        wx.Frame.__init__(self, mainfr, title=i18n.tr('Multi-wheel'), size=(1250, 900))
         self.mainfr = mainfr
         self.options = mainfr.options
         self.buffer = None
@@ -1073,6 +1061,11 @@ class MultiWheelFrame(wx.Frame):
         self._alive = True
         self.zoom_factor = None  # None = fit window; 1.0 = natural chart size
         self.sidebar_visible = True
+        self.saved_sidebar_width = 350
+        self.manual_rings = set()
+        self.auto_transit_radix = {}
+        self.moving_transits = set()
+        self._auto_filling = False
         self.registered_charts = []
         self.return_origins = {}
         self.return_years = {}
@@ -1082,7 +1075,7 @@ class MultiWheelFrame(wx.Frame):
         self.bitmap_origin = (0, 0)
         self._last_hover = ''
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
-        self.SetMinSize((760, 600))
+        self.SetMinSize((1060, 600))
         outer = wx.BoxSizer(wx.VERTICAL)
         row = wx.BoxSizer(wx.HORIZONTAL)
         row.Add(wx.StaticText(self, label=i18n.tr('Outer rings:')), 0,
@@ -1125,11 +1118,14 @@ class MultiWheelFrame(wx.Frame):
         viewrow.Add(self.labels_choice, 0, wx.ALIGN_CENTER_VERTICAL)
         outer.Add(viewrow, 0, wx.ALL, 7)
 
-        # Put chart-source controls beside, not above, the drawing. This
-        # recovers valuable vertical canvas space for the wheel itself.
-        content = wx.BoxSizer(wx.HORIZONTAL)
-        self.sidebar = wx.ScrolledWindow(self, style=wx.VSCROLL)
-        self.sidebar.SetMinSize((302, 250))
+        # Splitter lets the user give more room to long chart captions and
+        # the return lists. Unlike a fixed-width sizer, the sash stays
+        # adjustable and retains its width on ordinary window resizing.
+        self.splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE)
+        self.splitter.SetMinimumPaneSize(220)
+        self.splitter.SetSashGravity(0.0)
+        self.sidebar = wx.ScrolledWindow(self.splitter, style=wx.VSCROLL)
+        self.sidebar.SetMinSize((230, 250))
         self.sidebar.SetScrollRate(0, 15)
         controls = wx.BoxSizer(wx.VERTICAL)
         self.pickers = []
@@ -1184,15 +1180,86 @@ class MultiWheelFrame(wx.Frame):
         self.selection_note.Wrap(290)
         controls.Add(self.selection_note, 0, wx.EXPAND | wx.BOTTOM, 8)
         self.sidebar.SetSizer(controls)
-        content.Add(self.sidebar, 0, wx.EXPAND | wx.ALL, 7)
 
-        # Real panning, not a bitmap scaled back into a small panel.
-        self.canvas = wx.ScrolledWindow(self, style=wx.HSCROLL | wx.VSCROLL)
-        self.canvas.SetMinSize((390, 390))
+        # White workspace: the chart still pans/zooms independently, while
+        # the right rail makes use of the otherwise empty chart-side space.
+        self.view_surface = wx.Panel(self.splitter)
+        self.view_surface.SetBackgroundColour(wx.WHITE)
+        workspace = wx.BoxSizer(wx.HORIZONTAL)
+        self.canvas = wx.ScrolledWindow(
+            self.view_surface, style=wx.HSCROLL | wx.VSCROLL)
+        self.canvas.SetBackgroundColour(wx.WHITE)
+        self.canvas.SetMinSize((380, 390))
         self.canvas.SetScrollRate(20, 20)
         self.canvas.SetBackgroundStyle(wx.BG_STYLE_PAINT)
-        content.Add(self.canvas, 1, wx.EXPAND | wx.TOP | wx.RIGHT | wx.BOTTOM, 7)
-        outer.Add(content, 1, wx.EXPAND)
+        workspace.Add(self.canvas, 1, wx.EXPAND)
+        self.inspector = wx.ScrolledWindow(self.view_surface, style=wx.VSCROLL)
+        self.inspector.SetBackgroundColour(wx.WHITE)
+        self.inspector.SetForegroundColour(wx.Colour(35, 42, 51))
+        self.inspector.SetMinSize((254, 260))
+        self.inspector.SetScrollRate(0, 14)
+        rail = wx.BoxSizer(wx.VERTICAL)
+        self.add_rail_heading(rail, 'Chart details')
+        self.chart_details = []
+        for i in range(4):
+            label = wx.StaticText(self.inspector, label='')
+            label.SetForegroundColour(wx.Colour(50, 58, 68))
+            self.chart_details.append(label)
+            rail.Add(label, 0, wx.EXPAND | wx.BOTTOM, 11)
+        rail.Add(wx.StaticLine(self.inspector), 0, wx.EXPAND | wx.BOTTOM, 9)
+        self.add_rail_heading(rail, 'Return controls')
+        self.return_controls = []
+        for i in range(4):
+            line = wx.Panel(self.inspector)
+            line.SetBackgroundColour(wx.WHITE)
+            row_controls = wx.BoxSizer(wx.HORIZONTAL)
+            caption = wx.StaticText(line, label='')
+            caption.SetForegroundColour(wx.Colour(50, 58, 68))
+            previous = wx.Button(line, label='◀', size=(33, -1))
+            following = wx.Button(line, label='▶', size=(33, -1))
+            previous.SetToolTip(i18n.tr('Previous return'))
+            following.SetToolTip(i18n.tr('Next return'))
+            row_controls.Add(caption, 1, wx.ALIGN_CENTER_VERTICAL)
+            row_controls.Add(previous, 0, wx.LEFT, 3)
+            row_controls.Add(following, 0, wx.LEFT, 3)
+            line.SetSizer(row_controls)
+            rail.Add(line, 0, wx.EXPAND | wx.BOTTOM, 5)
+            self.return_controls.append((line, previous, following, caption))
+            previous.Bind(wx.EVT_BUTTON,
+                          lambda e, index=i: self.step_return_ring(index, False))
+            following.Bind(wx.EVT_BUTTON,
+                           lambda e, index=i: self.step_return_ring(index, True))
+        rail.Add(wx.StaticLine(self.inspector), 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 9)
+        self.add_rail_heading(rail, 'Transit controller')
+        self.transit_ring_choice = wx.Choice(self.inspector)
+        rail.Add(self.transit_ring_choice, 0, wx.EXPAND | wx.BOTTOM, 6)
+        self.transit_slots = []
+        self.active_transit_ring = None
+        self.transit_buttons = []
+        for unit in multiwheel_time.UNITS:
+            row_controls = wx.BoxSizer(wx.HORIZONTAL)
+            label = wx.StaticText(self.inspector, label=i18n.tr(unit))
+            label.SetForegroundColour(wx.Colour(50, 58, 68))
+            plus = wx.Button(self.inspector, label='++', size=(39, -1))
+            minus = wx.Button(self.inspector, label='--', size=(39, -1))
+            row_controls.Add(label, 1, wx.ALIGN_CENTER_VERTICAL)
+            row_controls.Add(plus, 0, wx.LEFT, 3)
+            row_controls.Add(minus, 0, wx.LEFT, 3)
+            rail.Add(row_controls, 0, wx.EXPAND | wx.BOTTOM, 4)
+            plus.Bind(wx.EVT_BUTTON,
+                      lambda e, part=unit: self.step_transit(part, True))
+            minus.Bind(wx.EVT_BUTTON,
+                       lambda e, part=unit: self.step_transit(part, False))
+            self.transit_buttons.extend((plus, minus))
+        self.transit_now = wx.Button(self.inspector, label=i18n.tr('Now (UTC)'))
+        rail.Add(self.transit_now, 0, wx.EXPAND | wx.TOP, 7)
+        self.transit_now.Bind(wx.EVT_BUTTON, self.transit_to_now)
+        self.inspector.SetSizer(rail)
+        workspace.Add(self.inspector, 0, wx.EXPAND | wx.LEFT, 9)
+        self.view_surface.SetSizer(workspace)
+        self.splitter.SplitVertically(self.sidebar, self.view_surface,
+                                      self.saved_sidebar_width)
+        outer.Add(self.splitter, 1, wx.EXPAND | wx.ALL, 7)
         self.SetSizer(outer)
         self.CreateStatusBar()
         self.Bind(wx.EVT_CHOICE, self.change_count, self.count_choice)
@@ -1209,6 +1276,9 @@ class MultiWheelFrame(wx.Frame):
         self.lunar_ring_choice.Bind(wx.EVT_CHOICE, self.on_lunar_ring_choice)
         self.solar_year_list.Bind(wx.EVT_LISTBOX, self.on_solar_year_choice)
         self.lunar_list.Bind(wx.EVT_LISTBOX, self.on_lunar_choice)
+        self.transit_ring_choice.Bind(wx.EVT_CHOICE, self.on_transit_ring_choice)
+        self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED,
+                           self.on_sidebar_resized)
         self.canvas.Bind(wx.EVT_PAINT, self.paint)
         self.canvas.Bind(wx.EVT_SIZE, self.resize)
         self.canvas.Bind(wx.EVT_LEFT_UP, self.on_click)
@@ -1218,6 +1288,206 @@ class MultiWheelFrame(wx.Frame):
         self.CentreOnParent()
         self.refresh_return_navigation()
         wx.CallAfter(self.queue_draw)
+
+    def add_rail_heading(self, rail, label):
+        heading = wx.StaticText(self.inspector, label=i18n.tr(label))
+        font = heading.GetFont()
+        font.SetWeight(wx.FONTWEIGHT_BOLD)
+        heading.SetFont(font)
+        heading.SetForegroundColour(wx.Colour(35, 42, 51))
+        rail.Add(heading, 0, wx.EXPAND | wx.BOTTOM, 7)
+        return heading
+
+    def on_sidebar_resized(self, event):
+        if self.splitter.IsSplit():
+            self.saved_sidebar_width = max(230, self.splitter.GetSashPosition())
+        self.queue_draw()
+        event.Skip()
+
+    def update_return_controls(self):
+        """Return arrows live on the white workspace, not in the sidebar."""
+        if not hasattr(self, 'return_controls'):
+            return
+        count = self.count_choice.GetSelection() + 1
+        for i, (line, previous, following, caption) in enumerate(self.return_controls):
+            selected = self.pickers[i].selected()
+            is_return = (i <= count and
+                         selected.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR)
+                         and self.return_origin(selected) is not None)
+            if is_return:
+                kind = ('SR' if selected.htype == chart.Chart.SOLAR else 'LR')
+                caption.SetLabel('%s  %s' % (self.ring_label(i), kind))
+            line.Show(is_return)
+            previous.Enable(is_return)
+            following.Enable(is_return)
+        self.inspector.Layout()
+        self.inspector.FitInside()
+
+    def refresh_transit_controls(self):
+        """Choose which of the visible transit rings the stepper will move."""
+        count = self.count_choice.GetSelection() + 1
+        slots = [i for i in range(count + 1)
+                 if self.pickers[i].selected().htype == chart.Chart.TRANSIT]
+        if self.active_transit_ring not in slots:
+            self.active_transit_ring = slots[-1] if slots else None
+        self.transit_slots = slots
+        self.transit_ring_choice.Clear()
+        for i in slots:
+            self.transit_ring_choice.Append(self.ring_label(i))
+        if self.active_transit_ring is not None:
+            self.transit_ring_choice.SetSelection(
+                slots.index(self.active_transit_ring))
+        self.transit_ring_choice.Enable(bool(slots))
+        for button in self.transit_buttons:
+            button.Enable(bool(slots))
+        self.transit_now.Enable(bool(slots))
+
+    def on_transit_ring_choice(self, event):
+        index = self.transit_ring_choice.GetSelection()
+        if 0 <= index < len(self.transit_slots):
+            self.active_transit_ring = self.transit_slots[index]
+
+    def create_current_transit(self, radix):
+        """An independent transit chart for the present UTC instant."""
+        now = datetime.now(timezone.utc)
+        location = radix.place
+        instant = chart.Time(now.year, now.month, now.day,
+                             now.hour, now.minute, now.second, False,
+                             chart.Time.GREGORIAN, chart.Time.GREENWICH,
+                             True, 0, 0, False, location)
+        return chart.Chart(radix.name, radix.male, instant, location,
+                           chart.Chart.TRANSIT, '', self.options, False)
+
+    def step_transit(self, unit, forward):
+        """Move one transit ring using the same six increments as Elections."""
+        index = self.active_transit_ring
+        if index is None:
+            return
+        previous = self.pickers[index].selected()
+        if previous.htype != chart.Chart.TRANSIT:
+            return
+        t = previous.time
+        current = (t.origyear, t.origmonth, t.origday,
+                   t.hour, t.minute, t.second)
+        changed = multiwheel_time.shift(current, unit, forward)
+        if changed is None:
+            self.SetStatusText(i18n.tr('The requested date is out of range.'))
+            return
+        try:
+            instant = chart.Time(*changed, t.bc, t.cal, t.zt, t.plus,
+                                 t.zh, t.zm, t.daylightsaving, previous.place)
+            moving = chart.Chart(previous.name, previous.male, instant,
+                                 previous.place, chart.Chart.TRANSIT, '',
+                                 self.options, False)
+        except (ValueError, OverflowError) as exc:
+            self.SetStatusText(str(exc))
+            return
+        self.replace_moving_transit(index, moving)
+
+    def transit_to_now(self, event=None):
+        index = self.active_transit_ring
+        if index is None:
+            return
+        previous = self.pickers[index].selected()
+        if previous.htype != chart.Chart.TRANSIT:
+            return
+        self.replace_moving_transit(index, self.create_current_transit(previous))
+
+    def replace_moving_transit(self, index, new_chart):
+        """Keep only the latest remote-controlled transit in the menu.
+
+        An earlier transit remains available if another ring still uses it.
+        Manually created or loaded transit charts are never pruned.
+        """
+        previous = self.pickers[index].selected()
+        self.register_chart(new_chart, i18n.tr('Transits'), self.pickers[index])
+        self.moving_transits.add(new_chart)
+        if (previous in self.moving_transits and
+                not any(picker.selected() is previous for picker in self.pickers)):
+            self.registered_charts = [item for item in self.registered_charts
+                                      if item[1] is not previous]
+            self.moving_transits.discard(previous)
+            for picker in self.pickers:
+                picker.refresh()
+
+    @staticmethod
+    def angle_label(longitude):
+        lon = longitude % 360
+        degrees = int(lon % 30)
+        minutes = int((lon % 1) * 60)
+        return '%02d°%02d′ %s' % (degrees, minutes,
+                                  i18n.tr(SIGNS[int(lon // 30)]))
+
+    def update_chart_details(self):
+        """Provide chart identity, place, exact time and both main angles."""
+        count = self.count_choice.GetSelection() + 1
+        for i, label in enumerate(self.chart_details):
+            if i > count:
+                label.Hide()
+                continue
+            chrt = self.pickers[i].selected()
+            kind, date = MultiWheel.chart_identity(chrt)
+            time_suffix = (' UTC' if chrt.time.zt == chart.Time.GREENWICH
+                           else '')
+            place = getattr(chrt.place, 'placename', '') or i18n.tr('Unknown place')
+            asc = self.angle_label(chrt.houses.ascmc[houses.Houses.ASC])
+            mc = self.angle_label(chrt.houses.ascmc[houses.Houses.MC])
+            contents = ('%s · %s\n%s%s\n%s\nASC %s\nMC  %s' %
+                        (self.ring_label(i), kind, date, time_suffix,
+                         place, asc, mc))
+            label.SetLabel(contents)
+            label.Wrap(238)
+            label.Show()
+        self.inspector.Layout()
+        self.inspector.FitInside()
+
+    def maybe_autofill_rings(self):
+        """Natal -> SR implies in-force LR and, on a quad-wheel, transits.
+
+        Automatically fill only untouched rings. A manually chosen chart in
+        any ring always wins. Linking requires the *same* natal object.
+        """
+        if self._auto_filling or self._updating_returns:
+            return
+        count = self.count_choice.GetSelection() + 1
+        if count < 2:
+            return
+        radix = self.pickers[0].selected()
+        solar = self.pickers[1].selected()
+        if (radix.htype != chart.Chart.RADIX or
+                solar.htype != chart.Chart.SOLAR or
+                self.return_origin(solar) is not radix):
+            return
+        self._auto_filling = True
+        previous = self._updating_returns
+        self._updating_returns = True
+        try:
+            if 2 not in self.manual_rings:
+                year = self.solar_year(solar)
+                rows = self.return_rows(radix, year)
+                if len(rows) >= 2:
+                    current = self.pickers[2].selected()
+                    expected = returnslist.gmt_time(rows[1].t, radix).jd
+                    if not (current.htype == chart.Chart.LUNAR and
+                            self.return_origin(current) is radix and
+                            abs(current.time.jd - expected) < .02):
+                        lunar = returnslist.return_chart(
+                            rows[1].t, radix, chart.Chart.LUNAR, radix.place)
+                        self.register_chart(lunar, i18n.tr('Lunar return'),
+                                            self.pickers[2], radix=radix)
+            if (count >= 3 and 3 not in self.manual_rings
+                    and self.auto_transit_radix.get(3) is not radix):
+                transit = self.create_current_transit(radix)
+                self.register_chart(transit, i18n.tr('Transits'),
+                                    self.pickers[3])
+                self.auto_transit_radix[3] = radix
+                self.moving_transits.add(transit)
+        finally:
+            self._updating_returns = previous
+            self._auto_filling = False
+        if not previous:
+            self.refresh_return_navigation()
+            self.queue_draw()
 
     def change_count(self, event=None):
         count = self.count_choice.GetSelection() + 1
@@ -1233,6 +1503,7 @@ class MultiWheelFrame(wx.Frame):
         self.sidebar.Layout()
         self.sidebar.FitInside()
         self.Layout()
+        self.maybe_autofill_rings()
         self.refresh_return_navigation()
         self.queue_draw()
 
@@ -1241,6 +1512,8 @@ class MultiWheelFrame(wx.Frame):
 
         Only the ring whose button was used changes its selection.
         """
+        if not self._auto_filling and not self._updating_returns:
+            self.manual_rings.add(picker.ring_index)
         if (chrt.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR)
                 and isinstance(radix, chart.Chart)
                 and radix.htype == chart.Chart.RADIX):
@@ -1258,6 +1531,8 @@ class MultiWheelFrame(wx.Frame):
         finally:
             self._updating_returns = previous
         if not previous:
+            if picker.ring_index <= 1:
+                self.maybe_autofill_rings()
             self.refresh_return_navigation()
             self.queue_draw()
 
@@ -1290,6 +1565,8 @@ class MultiWheelFrame(wx.Frame):
     def on_picker_change(self, index):
         self.queue_draw()
         if not self._updating_returns and hasattr(self, 'solar_ring_choice'):
+            if index <= 1:
+                self.maybe_autofill_rings()
             self.refresh_return_navigation()
 
     def ring_assignments(self):
@@ -1530,6 +1807,9 @@ class MultiWheelFrame(wx.Frame):
         self.lunar_list.Enable(bool(self._nav_lunar_rows))
         self.sidebar.Layout()
         self.sidebar.FitInside()
+        self.update_return_controls()
+        self.refresh_transit_controls()
+        self.update_chart_details()
 
     @staticmethod
     def ring_label(index):
@@ -1569,7 +1849,12 @@ class MultiWheelFrame(wx.Frame):
 
     def toggle_sidebar(self, event=None):
         self.sidebar_visible = not self.sidebar_visible
-        self.sidebar.Show(self.sidebar_visible)
+        if self.sidebar_visible:
+            self.splitter.SplitVertically(self.sidebar, self.view_surface,
+                                          self.saved_sidebar_width)
+        else:
+            self.saved_sidebar_width = max(230, self.splitter.GetSashPosition())
+            self.splitter.Unsplit(self.sidebar)
         self.side_button.SetLabel(i18n.tr(
             'Hide charts' if self.sidebar_visible else 'Show charts'))
         self.Layout()

@@ -424,6 +424,12 @@ def main():
 				wnd = multiwheel.show(frame)
 				settle(0.3)
 				assert len(wnd.pickers) == 4
+				assert wnd.splitter.IsSplit()
+				assert wnd.inspector.GetParent() is wnd.view_surface
+				wnd.toggle_sidebar()
+				assert not wnd.splitter.IsSplit()
+				wnd.toggle_sidebar()
+				assert wnd.splitter.IsSplit()
 				inner = wnd.pickers[0]
 				picker = wnd.pickers[1]
 				assert inner.selected() is frame.horoscope
@@ -487,13 +493,32 @@ def main():
 				wnd.register_chart(solar, 'Smoke SR', picker, radix=natal,
 					solar_year=base_year)
 				lunar_picker = wnd.pickers[2]
+				assert lunar_picker.selected().htype == chart.Chart.LUNAR
+				assert (lunar_picker.selected().time.jd ==
+					sample_rows(natal, base_year)[1].jd)
+				assert 2 not in wnd.manual_rings
+				# Quad-wheel auto-adds independent current transits.
+				wnd.count_choice.SetSelection(2)
+				wnd.change_count()
+				transit_picker = wnd.pickers[3]
+				assert transit_picker.selected().htype == chart.Chart.TRANSIT
+				assert wnd.active_transit_ring == 3
+				before = transit_picker.selected()
+				wnd.step_transit('Sec', True)
+				assert transit_picker.selected() is not before
+				assert transit_picker.selected().time.jd > before.time.jd
+				assert not any(source is before for _, source in wnd.registered_charts)
+				assert len(wnd.transit_slots) == 1
+				assert picker.selected() is solar
+				wnd.count_choice.SetSelection(1)
+				wnd.change_count()
 				wnd.register_chart(lunar, 'Smoke LR', lunar_picker, radix=natal)
 				assert wnd.return_origin(solar) is natal
 				assert wnd.return_origin(lunar) is natal
 				assert len(wnd._nav_years) == 5
 				assert len(wnd._nav_lunar_rows) == 3
 				assert wnd.pickers[0].selected() is natal
-				assert lunar_picker.next_button.IsEnabled()
+				assert wnd.return_controls[2][2].IsEnabled()
 				# Pick the last LR in the old solar year, then step across.
 				wnd.lunar_list.SetSelection(2)
 				wnd.on_lunar_choice(None)
