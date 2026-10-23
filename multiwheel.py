@@ -187,6 +187,27 @@ class MultiWheel:
                 self.stroke(self.point(a, r), self.point(b, r), 'divider',
                             self.options.clraspect[kind])
 
+    def draw_zodiac_guides(self, chrt, inner, outer, ring_index=None):
+        """Faint zodiac dividers within this field; house cusps take priority.
+
+        The exact same zodiac boundaries apply to each chart, but never
+        project house cusps from one chart into another. In Whole Sign,
+        every sign boundary already has a house line, so skip its guide.
+        """
+        cusps = ([zodiac_lon(chrt, chrt.houses.cusps[house], self.options)
+                  for house in range(1, houses.Houses.HOUSE_NUM + 1)]
+                 if self.options.houses else None)
+        divisions = wheel_primitives.zodiac_guide_longitudes(cusps)
+        background = self.ring_background_colour(ring_index)
+        # Zodiac = a neutral, quiet reference; cusps retain the stronger
+        # chart-specific ring colour. Mix with actual band tint, not white.
+        ink = chartstyle.mix(self.colour(self.options.clrsigns), background, .76)
+        width = max(1, round(.55 * self.scale))
+        for lon in divisions:
+            start, end = self.point(lon, inner + 1.25), self.point(lon, outer - 1.25)
+            self.draw.line((self.scaled(start), self.scaled(end)),
+                           fill=ink, width=width)
+
     def draw_house_spokes(self, chrt, inner, outer, colour=None):
         """Only this chart's house cusps, ending inside its own field.
 
@@ -496,6 +517,7 @@ class MultiWheel:
     def draw_radix(self, core):
         self.draw_aspects(core)
         self.draw_houses(core)
+        self.draw_zodiac_guides(self.radix, core * .67, core)
         self.draw_house_spokes(self.radix, core * .55, core)
         self.draw_angles(self.radix, core * .55, core)
         self.circle(core * .55)
@@ -732,9 +754,9 @@ class MultiWheel:
         border = None if self.bw else RING_COLOURS[index - 1]
         separation = self.separator_width(edges)
         chart_start = inner + separation + 1
-        # Zodiac meridians belong only in the shared zodiac band.
-        # Drawing them in this chart's field made them look like projected
-        # house cusps from the radix/other rings.
+        # Faint zodiac boundaries provide sign context. House cusps are
+        # stronger, and coincident divisions are rendered only once.
+        self.draw_zodiac_guides(chrt, chart_start, outer, ring_index=index)
         self.draw_house_spokes(chrt, chart_start, outer, border)
         self.draw_angles(chrt, chart_start, outer, border, ring_index=index)
         self.draw_planet_band(chrt, (chart_start, outer),
