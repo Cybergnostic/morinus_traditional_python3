@@ -461,6 +461,21 @@ def main():
 				assert wnd.renderer.label_mode == 1
 				assert wnd.renderer.planet_fonts['glyph'] > wnd.renderer.planet_fonts['degree']
 				assert wnd.renderer.drawn_degree_labels
+				# Retrograde is T in the Morinus symbols font, never an
+				# ASCII R attached to degree/minute text.
+				import common
+				assert multiwheel.MultiWheel.position_label_parts(
+					12.5, -0.3, 1) == ('12°', common.common.retr)
+				assert multiwheel.MultiWheel.position_label_parts(
+					12.5, -0.3, 2) == ("12°30'", common.common.retr)
+				assert multiwheel.MultiWheel.position_label_parts(
+					12.5, 0.0, 1) == ('12°', 'S')
+				assert multiwheel.MultiWheel.position_label_parts(
+					12.5, .2, 1) == ('12°', '')
+				assert not any(label.endswith(' R') for _, _, label in
+							   wnd.renderer.drawn_degree_labels)
+				assert all(mark == common.common.retr for _, _, mark in
+						   wnd.renderer.drawn_retrograde_glyphs)
 				# Numeric annotations can be switched off without removing planets
 				# or changing their exact-longitude hit targets.
 				previous_hits = len(wnd.renderer.hits)
