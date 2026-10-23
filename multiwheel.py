@@ -16,6 +16,7 @@ import common
 import comparegrid
 import houses
 import multiwheel_layout
+import wheel_primitives
 import planets
 import util
 
@@ -24,6 +25,15 @@ SIGNS = ('Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
          'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces')
 PLANET_NAMES = ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus',
                 'Mercury', 'Moon', 'North Node', 'South Node')
+
+# Muted ring colours distinguish charts without replacing the planet colours.
+RING_COLOURS = ((45, 96, 143), (150, 100, 44), (111, 80, 130))
+
+
+def aspect_ring_from_choice(selection):
+    """-1 means no aspect lines, 0 radix only, 1..3 radix to outer ring."""
+    return selection - 1
+
 
 
 def zodiac_lon(chrt, lon, options):
@@ -69,7 +79,8 @@ class MultiWheel:
         self.height = max(1, int(size[1]))
         self.options = options
         self.bw = bool(bw)
-        self.aspect_ring = 0  # 0 = radix only; otherwise 1..len(others)
+        self.aspect_ring = -1  # -1 = none; 0 = radix only; 1..3 = radix to ring
+        self.reference_outside = False  # False = original; True = exterior bands
         self.hits = []
         self.buffer = None
 
@@ -79,23 +90,41 @@ class MultiWheel:
         return math.pi + math.radians(asc - lon)
 
     def point(self, lon, radius):
-        theta = self.angle(lon)
-        return (self.cx + math.cos(theta) * radius,
-                self.cy + math.sin(theta) * radius)
+        asc = zodiac_lon(self.radix,
+                         self.radix.houses.ascmc[houses.Houses.ASC], self.options)
+        return wheel_primitives.polar_point(self.cx, self.cy, asc, lon, radius)
 
     def colour(self, value):
         return (0, 0, 0) if self.bw else tuple(value)
+
+    # Multiwheel has a denser drawing than a single Morinus chart. Do not
+    # change chartstyle's global pens or the ordinary chart's appearance.
+    LINE_WEIGHTS = {
+        'major': 1.1, 'circle': 1.1, 'divider': .72,
+        'pointer': .72, 'tick10': .76, 'tick1': .56,
+    }
+    LINE_FADE = {
+        'major': .18, 'circle': .13, 'divider': .38,
+        'pointer': .36, 'tick10': .32, 'tick1': .48,
+    }
+
+    def stroke_colour(self, colour, role):
+        background = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
+        return chartstyle.mix(self.colour(colour), background,
+                              self.LINE_FADE.get(role, 0.0))
 
     def ink(self, role):
         pen = chartstyle.frame_pen(self.options, self.bw,
                                    min(self.width, self.height), role)
         c = pen.GetColour()
-        return (c.Red(), c.Green(), c.Blue()), max(1, pen.GetWidth() * self.scale)
+        colour = self.stroke_colour((c.Red(), c.Green(), c.Blue()), role)
+        weight = self.LINE_WEIGHTS.get(role, 1.0)
+        return colour, max(1, round(weight * self.scale))
 
     def stroke(self, a, b, role='divider', colour=None):
         ink, width = self.ink(role)
         if colour is not None:
-            ink = self.colour(colour)
+            ink = self.stroke_colour(colour, role)
         self.draw.line((self.scaled(a), self.scaled(b)),
                        fill=ink, width=width)
 
@@ -103,8 +132,10 @@ class MultiWheel:
         return (int(round(xy[0] * self.scale)),
                 int(round(xy[1] * self.scale)))
 
-    def circle(self, radius, role='circle'):
+    def circle(self, radius, role='circle', colour=None):
         ink, width = self.ink(role)
+        if colour is not None:
+            ink = self.stroke_colour(colour, role)
         x, y = self.cx, self.cy
         rect = (int((x - radius) * self.scale),
                 int((y - radius) * self.scale),
@@ -126,15 +157,19 @@ class MultiWheel:
                           self.options)
 
     def degree_text(self, lon):
-        n = int(lon % 30)
-        minute = int(round((lon % 1) * 60))
-        if minute == 60:
-            n = (n + 1) % 30
-            minute = 0
-        return '%02d\N{DEGREE SIGN}%02d' % (n, minute)
+        degree, minute = wheel_primitives.position_text(lon, '\N{DEGREE SIGN}')
+        return degree + minute
+
+    def planet_colour(self, index):
+        """Match GraphChart's planet colours, including its node fallback."""
+        colors = self.options.clrplanets
+        colour_index = min(index, planets.Planets.BODIES_NUM - 2)
+        return colors[colour_index] if colour_index < len(colors) else self.options.clrtexts
 
     def draw_aspects(self, core):
-        """Draw within-radix lines; optionally add links to ONE selected ring."""
+        """Draw no aspects by default; optionally radix or one selected ring."""
+        if self.aspect_ring < 0:
+            return
         r = core * 0.52
         matrix = getattr(self.radix, 'aspmatrix', None)
         if matrix is not None:
@@ -147,57 +182,430 @@ class MultiWheel:
                         b = self.longitude(self.radix, j)
                         self.stroke(self.point(a, r), self.point(b, r), 'divider',
                                     self.options.clraspect[kind])
-        if self.aspect_ring:
+        if self.aspect_ring > 0:
             other = self.others[self.aspect_ring - 1]
             for i, j, kind, a, b in cross_aspects(self.radix, other, self.options):
                 self.stroke(self.point(a, r), self.point(b, r), 'divider',
                             self.options.clraspect[kind])
 
+    def draw_zodiac_guides(self, chrt, inner, outer, ring_index=None):
+        """Faint zodiac dividers within this field; house cusps take priority.
+
+        The exact same zodiac boundaries apply to each chart, but never
+        project house cusps from one chart into another. In Whole Sign,
+        every sign boundary already has a house line, so skip its guide.
+        """
+        cusps = ([zodiac_lon(chrt, chrt.houses.cusps[house], self.options)
+                  for house in range(1, houses.Houses.HOUSE_NUM + 1)]
+                 if self.options.houses else None)
+        divisions = wheel_primitives.zodiac_guide_longitudes(cusps)
+        background = self.ring_background_colour(ring_index)
+        # Zodiac = a neutral, quiet reference; cusps retain the stronger
+        # chart-specific ring colour. Mix with actual band tint, not white.
+        ink = chartstyle.mix(self.colour(self.options.clrsigns), background, .76)
+        width = max(1, round(.55 * self.scale))
+        for lon in divisions:
+            start, end = self.point(lon, inner + 1.25), self.point(lon, outer - 1.25)
+            self.draw.line((self.scaled(start), self.scaled(end)),
+                           fill=ink, width=width)
+
+    def draw_house_spokes(self, chrt, inner, outer, colour=None):
+        """Only this chart's house cusps, ending inside its own field.
+
+        The shared zodiac/reference strips never inherit these spokes,
+        and another chart never receives a projected set of radix cusps.
+        """
+        if not self.options.houses:
+            return
+        cusps = [zodiac_lon(chrt, chrt.houses.cusps[house], self.options)
+                 for house in range(1, houses.Houses.HOUSE_NUM + 1)]
+        ink = colour if colour is not None else self.options.clrhouses
+        for lon, start, finish in wheel_primitives.house_spoke_segments(
+                cusps, inner, outer):
+            self.stroke(self.point(lon, start), self.point(lon, finish),
+                        'divider', ink)
+
+    def ring_background_colour(self, ring_index=None):
+        """Actual chart-field background, also used behind hollow angle ends."""
+        background = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
+        if ring_index is None:
+            return background
+        i = ring_index - 1
+        if self.bw:
+            return (249, 249, 249) if i % 2 == 0 else (240, 240, 240)
+        return chartstyle.mix(background, RING_COLOURS[i],
+                              0.065 + i * 0.015)
+
+    def draw_angle_arrowhead(self, lon, tip_radius, size, colour):
+        """An outward triangular end, used only for DESC and MC."""
+        theta = self.angle(lon)
+        half_base = max(2.0, min(3.3, size * .42))
+        bx, by = self.point(lon, tip_radius - size)
+        dx, dy = -math.sin(theta) * half_base, math.cos(theta) * half_base
+        self.draw.polygon(
+            [self.scaled((bx + dx, by + dy)),
+             self.scaled((bx - dx, by - dy)),
+             self.scaled(self.point(lon, tip_radius))],
+            fill=self.stroke_colour(colour, 'major'))
+
+    def draw_angle_open_circle(self, lon, centre_radius, marker_radius,
+                               colour, ring_index=None):
+        """Hollow ASC end, with the field colour covering any cusp beneath."""
+        x, y = self.point(lon, centre_radius)
+        rect = (self.scaled((x - marker_radius, y - marker_radius)),
+                self.scaled((x + marker_radius, y + marker_radius)))
+        self.draw.ellipse(
+            rect, fill=self.ring_background_colour(ring_index),
+            outline=self.stroke_colour(colour, 'major'),
+            width=self.ink('major')[1])
+
+    def draw_angles(self, chrt, inner, outer, colour=None, ring_index=None):
+        """Chart-local angle ends: ASC open circle, DESC/MC arrows, IC line.
+
+        All four axes keep their exact ecliptic longitudes and stay inside
+        the chart's planetary field. Markers are the same for every wheel.
+        """
+        asc, mc = (chrt.houses.ascmc[houses.Houses.ASC],
+                   chrt.houses.ascmc[houses.Houses.MC])
+        colour = colour if colour is not None else self.options.clrAscMC
+        size = min(8.5, max(5.5, (outer - inner) * .16))
+        tip_radius = outer - 1.8
+        for kind, lon in enumerate(wheel_primitives.angle_longitudes(asc, mc)):
+            display_lon = zodiac_lon(chrt, lon, self.options)
+            if kind == 0:  # ASC: hollow fishing-hook-like beginning
+                radius = min(4.0, max(2.8, (outer - inner) * .075))
+                centre_radius = tip_radius - radius
+                self.stroke(self.point(display_lon, inner),
+                            self.point(display_lon, centre_radius - radius),
+                            'major', colour)
+                self.draw_angle_open_circle(
+                    display_lon, centre_radius, radius, colour, ring_index)
+            elif kind in (1, 2):  # DESC and MC: triangular arrowheads
+                self.stroke(self.point(display_lon, inner),
+                            self.point(display_lon, tip_radius - size),
+                            'major', colour)
+                self.draw_angle_arrowhead(display_lon, tip_radius, size, colour)
+            else:  # IC: plain axis line
+                self.stroke(self.point(display_lon, inner),
+                            self.point(display_lon, tip_radius),
+                            'major', colour)
+
+    @staticmethod
+    def dial_width(edges):
+        inner, outer = edges
+        return min(8.5, max(5.5, (outer - inner) * .14))
+
+    @classmethod
+    def planet_label_edges(cls, edges, side):
+        """Usable planetary text band after reserving a local degree dial."""
+        inner, outer = edges
+        width = cls.dial_width(edges)
+        if side == 'outer':
+            return inner + 1.0, outer - width - 2.0
+        if side == 'inner':
+            return inner + width + 2.0, outer - 2.0
+        raise ValueError('Unknown planetary dial orientation')
+
+    def prepare_planet_fonts(self, core, rings):
+        """Choose exactly one glyph/degree/minute size for all chart layers."""
+        label_widths = []
+        core_edges = self.planet_label_edges((core * .67, core), 'outer')
+        label_widths.append(core_edges[1] - core_edges[0])
+        for edges in rings:
+            inner, outer = edges
+            chart_start = inner + self.separator_width(edges) + 1
+            text_edges = self.planet_label_edges((chart_start, outer), 'inner')
+            label_widths.append(text_edges[1] - text_edges[0])
+        self.planet_fonts = multiwheel_layout.shared_planet_font_sizes(
+            self.rmax, label_widths)
+
+    def draw_degree_dial(self, edges, side):
+        """A chart's own 360-degree dial, with 1/5/10-degree tick hierarchy.
+
+        'outer': radial (inner) chart, with ticks immediately below its
+        outer boundary.  'inner': additional charts, where a narrow dial
+        sits just beyond the empty separator.  Returns the free label band
+        and the true-longitude radius for pointer leaders.
+        """
+        inner, outer = edges
+        width = self.dial_width(edges)
+        if side == 'outer':
+            base, far = outer - 1.0, outer - width
+
+            direction = -1.0
+        elif side == 'inner':
+            base, far = inner + 1.0, inner + width
+
+            direction = 1.0
+        else:
+            raise ValueError('Unknown planetary dial orientation')
+        self.circle(base, 'divider')
+        self.circle(far, 'divider')
+        for degree in range(360):
+            if degree % 30 == 0:
+                length, role = width * .85, 'tick10'
+            elif degree % 10 == 0:
+                length, role = width * .70, 'tick10'
+            elif degree % 5 == 0:
+                length, role = width * .44, 'tick10'
+            else:
+                length, role = width * .21, 'tick1'
+            self.stroke(self.point(degree, base),
+                        self.point(degree, base + direction * length), role)
+        return self.planet_label_edges(edges, side), base
+
     def draw_houses(self, core):
+        """House numbers retain the inner Morinus chart's house-number ring."""
         if not self.options.houses:
             return
         cusps = self.radix.houses.cusps
-        fnt = self.font(max(8, core * 0.06))
+        font = self.font(max(8, core * .06))
         for index in range(1, 13):
             lon = zodiac_lon(self.radix, cusps[index], self.options)
-            nextlon = zodiac_lon(self.radix, cusps[index % 12 + 1], self.options)
-            # as in Morinus's wheel: the cusps and the house numbers outside the aspects
-            self.stroke(self.point(lon, core * 0.55),
-                        self.point(lon, core), 'major' if index in (1, 4, 7, 10) else 'divider')
-            mid = (lon + (nextlon - lon) % 360 / 2) % 360
-            self.label(self.point(mid, core * 0.61), str(index), fnt,
-                       self.options.clrhousenumbers)
+            next_lon = zodiac_lon(self.radix, cusps[index % 12 + 1], self.options)
+            mid = (lon + (next_lon - lon) % 360 / 2) % 360
+            self.label(self.point(mid, core * .61), str(index),
+                       font, self.options.clrhousenumbers)
+
+    @staticmethod
+    def position_label_parts(longitude, speed, mode):
+        """Number and motion mark, using the same retro glyph as GraphChart.
+
+        The retrograde marker is a Morinus *symbol-font* glyph ('T'), not
+        a literal Latin R in the text font. A stationary S stays text.
+        """
+        degrees, minutes = wheel_primitives.position_text(longitude, '°')
+        text = degrees + (minutes if mode == 2 else '')
+        mark = (common.common.retr if speed < 0 else
+                'S' if speed == 0 else '')
+        return text, mark
+
+    def position_label_size(self, text, marker, text_font, marker_font):
+        """Combined ink rectangle for independently fonted number + marker."""
+        tw, th = self.measure(text, text_font)
+        if not marker:
+            return (tw, th)
+        mw, mh = self.measure(marker, marker_font)
+        return (tw + max(2.0, self.planet_fonts['degree'] * .22) + mw,
+                max(th, mh))
+
+    def draw_position_label(self, xy, text, marker, text_font,
+                            marker_font, colour):
+        """Paint a centred annotation while keeping its motion glyph font."""
+        if not marker:
+            wheel_primitives.optical_text_center(
+                self.draw, self.scaled(xy), text, text_font, colour)
+            return
+        tw, _ = self.measure(text, text_font)
+        mw, _ = self.measure(marker, marker_font)
+        gap = max(2.0, self.planet_fonts['degree'] * .22)
+        total = tw + gap + mw
+        left = xy[0] - total / 2.0
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((left + tw / 2.0, xy[1])),
+            text, text_font, colour)
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((left + tw + gap + mw / 2.0, xy[1])),
+            marker, marker_font, colour)
+
+    def draw_planet_band(self, chrt, edges, role, dial_side):
+        """Large primary glyphs, independently placed small optional positions.
+
+        Neither degrees nor minutes constrain the glyph size or the glyph
+        collision solver. Its exact ecliptic longitude stays on the dial.
+        """
+        (inner, outer), dial_anchor = self.draw_degree_dial(edges, dial_side)
+        fonts = self.planet_fonts
+        glyph_font = self.font(fonts['glyph'], symbol=True)
+        degree_font = self.font(fonts['degree'])
+        count = planets.Planets.BODIES_NUM
+        lons = [self.longitude(chrt, i) for i in range(count)]
+        glyph_boxes = [
+            self.measure(common.common.planets[i], glyph_font)
+            for i in range(count)]
+        # A chart uses its *own* house system, not the radix house spokes
+        # appearing beneath it. Sign membership is always tested as well.
+        cusps = ([zodiac_lon(chrt, chrt.houses.cusps[j], self.options)
+                  for j in range(1, houses.Houses.HOUSE_NUM + 1)]
+                 if self.options.houses else None)
+        asc = zodiac_lon(
+            self.radix, self.radix.houses.ascmc[houses.Houses.ASC],
+            self.options)
+        placements, unresolved = multiwheel_layout.place_planet_glyphs(
+            lons, glyph_boxes, (inner, outer), asc, house_cusps=cusps)
+        if unresolved:
+            self.layout_issues.append((role, len(unresolved)))
+
+        # Numeric positions are placed after the glyphs. The retrograde
+        # character uses the Morinus symbol font, independently of the
+        # normal text font used by the degrees and minutes.
+        label_mode = self.label_mode
+        labels = []
+        marks = []
+        mark_fonts = []
+        if label_mode:
+            for i, lon in enumerate(lons):
+                speed = chrt.planets.planets[i].data[planets.Planet.SPLON]
+                text, marker = self.position_label_parts(
+                    lon, speed, label_mode)
+                labels.append(text)
+                marks.append(marker)
+                mark_fonts.append(self.font(
+                    fonts['motion'], symbol=(speed < 0)))
+            text_boxes = [
+                self.position_label_size(text, mark, degree_font, mark_font)
+                for text, mark, mark_font in
+                zip(labels, marks, mark_fonts)
+            ]
+            direction = -1 if dial_side == 'outer' else 1
+            label_points, hidden = multiwheel_layout.place_degree_annotations(
+                placements, lons, text_boxes, (inner, outer), asc,
+                direction, house_cusps=cusps)
+            if hidden:
+                self.hidden_positions.append((role, len(hidden)))
+        else:
+            label_points = [None] * count
+
+        for i, (exact, placement) in enumerate(zip(lons, placements)):
+            displayed = placement['longitude']
+            theta = self.angle(displayed)
+            glyph_radius = placement['radius']
+            reach = wheel_primitives.radial_half_extent(
+                glyph_boxes[i], theta)
+            label_end = (glyph_radius - reach - 1.0
+                         if dial_side == 'inner'
+                         else glyph_radius + reach + 1.0)
+            # Thin, exact-angle leader reaches the displaced glyph. This
+            # line is independent of where its numeric annotation ended up.
+            self.stroke(self.point(exact, dial_anchor),
+                        self.point(displayed, label_end),
+                        'pointer', self.planet_colour(i))
+            mark = 2.8 if dial_side == 'inner' else -2.8
+            self.stroke(self.point(exact, dial_anchor),
+                        self.point(exact, dial_anchor + mark),
+                        'major', self.planet_colour(i))
+            gx, gy = placement['glyph']
+            glyph_xy = (self.cx + gx, self.cy + gy)
+            colour = self.colour(self.planet_colour(i))
+            wheel_primitives.optical_text_center(
+                self.draw, self.scaled(glyph_xy),
+                common.common.planets[i], glyph_font, colour)
+            if label_points[i] is not None:
+                dx, dy = label_points[i]
+                label_xy = (self.cx + dx, self.cy + dy)
+                displacement = math.hypot(label_xy[0] - glyph_xy[0],
+                                          label_xy[1] - glyph_xy[1])
+                # If a number uses an alternate lane, a quiet connector
+                # avoids making it look like another planet's degree.
+                if displacement > max(29.0, fonts['glyph'] * 1.7):
+                    ux = (label_xy[0] - glyph_xy[0]) / displacement
+                    uy = (label_xy[1] - glyph_xy[1]) / displacement
+                    begin = (glyph_xy[0] + ux * fonts['glyph'] * .58,
+                             glyph_xy[1] + uy * fonts['glyph'] * .58)
+                    end = (label_xy[0] - ux * fonts['degree'] * .7,
+                           label_xy[1] - uy * fonts['degree'] * .7)
+                    self.stroke(begin, end, 'pointer', self.planet_colour(i))
+                self.draw_position_label(
+                    label_xy, labels[i], marks[i], degree_font,
+                    mark_fonts[i], colour)
+                self.drawn_degree_labels.append((role, i, labels[i]))
+                if marks[i] == common.common.retr:
+                    self.drawn_retrograde_glyphs.append(
+                        (role, i, marks[i]))
+            self.hits.append((glyph_xy, max(fonts['glyph'] * .75, 12),
+                              chrt, i, exact, role))
 
     def draw_radix(self, core):
         self.draw_aspects(core)
         self.draw_houses(core)
-        self.circle(core * 0.55)
+        self.draw_zodiac_guides(self.radix, core * .67, core)
+        self.draw_house_spokes(self.radix, core * .55, core)
+        self.draw_angles(self.radix, core * .55, core)
+        self.circle(core * .55)
         if self.options.houses:
-            self.circle(core * 0.67, 'divider')	# the ring of the house numbers
+            self.circle(core * .67, 'divider')
         self.circle(core)
-        lons = [self.longitude(self.radix, i) for i in range(planets.Planets.BODIES_NUM)]
-        radius = core * 0.78
-        glyph = max(11, core * 0.115)
-        spread = multiwheel_layout.spread_longitudes(
-            lons, max(7.0, math.degrees((glyph + 3) / max(1, radius))))
-        symbol_font = self.font(glyph, symbol=True)
-        for i, (exact, displayed) in enumerate(zip(lons, spread)):
-            self.stroke(self.point(exact, core * 0.89),
-                        self.point(exact, core), 'pointer')
-            xy = self.point(displayed, radius)
-            clr = self.options.clrplanets[i] if i < len(self.options.clrplanets) else self.options.clrtexts
-            self.label(xy, common.common.planets[i], symbol_font, clr)
-            self.hits.append((xy, max(10, glyph * .65), self.radix, i, lons[i], i18n.tr('Radix')))
+        self.draw_planet_band(self.radix, (core * .67, core), i18n.tr('Radix'),
+                              'outer')
+
+    def traditional_font(self, edges):
+        """Follow the small Morinus-planet glyph size used by GraphChart.
+
+        GraphChart's small traditional ruler is 2/3 of the symbol size
+        (typically about 1/18 of the chart radius). Limit it by this band's
+        actual height for tri- and quad-wheels.
+        """
+        inner, outer = edges
+        pixels = max(8, int(min((outer - inner) * .62,
+                                 self.rmax / 24.0)))
+        return self.font(pixels, symbol=True), pixels * self.scale
+
+    def draw_decans(self, edges):
+        """Shared GraphChart decan rulerships, precise tenth divisions.
+
+        Use exactly the same glyph square-centering as GraphChart.drawDecans,
+        rather than PIL's unrelated 'mm' text anchor.
+        """
+        if edges is None:
+            return
+        inner, outer = edges
+        self.circle(inner, 'circle')
+        self.circle(outer, 'circle')
+        font, size = self.traditional_font(edges)
+        middle = (inner + outer) / 2.0
+        rulers = self.options.decans[self.options.seldecan]
+        for centre, ruler, start in wheel_primitives.traditional_decan_markers(rulers):
+            self.stroke(self.point(start, inner),
+                        self.point(start, outer), 'divider')
+            wheel_primitives.paint_glyph(
+                self.draw, self.scaled(self.point(centre, middle)),
+                common.common.planets[ruler], font, size,
+                self.stroke_colour(self.options.clrsigns, 'divider'))
+
+    def draw_terms(self, edges):
+        """Use the *same unequal bounds* and glyph positioning as GraphChart."""
+        if edges is None:
+            return
+        inner, outer = edges
+        self.circle(inner, 'circle')
+        self.circle(outer, 'circle')
+        font, size = self.traditional_font(edges)
+        middle = (inner + outer) / 2.0
+        bounds = self.options.terms[self.options.selterm]
+        for centre, ruler, endpoint in wheel_primitives.traditional_term_markers(bounds):
+            self.stroke(self.point(endpoint, inner),
+                        self.point(endpoint, outer), 'divider')
+            wheel_primitives.paint_glyph(
+                self.draw, self.scaled(self.point(centre, middle)),
+                common.common.planets[ruler], font, size,
+                self.stroke_colour(self.options.clrsigns, 'divider'))
 
     def draw_zodiac(self, edges):
+        """One zodiac band for every chart, including Morinus degree ticks."""
         inner, outer = edges
         self.circle(inner, 'major')
         self.circle(outer, 'major')
-        font = self.font(max(10, (outer - inner) * 0.58), symbol=True)
+        width = outer - inner
+        # The degree ticks have their own inner lane; this third circle
+        # closes it and frames the sign glyphs in a properly centred lane.
+        sign_inner, _ = multiwheel_layout.zodiac_sign_lane(edges)
+        self.circle(sign_inner, 'circle')
+        for degree in range(360):
+            if degree % 30 == 0:
+                continue
+            if degree % 10 == 0:
+                length, role = .28, 'tick10'
+            elif degree % 5 == 0:
+                length, role = .17, 'tick10'
+            else:
+                length, role = .09, 'tick1'
+            self.stroke(self.point(degree, inner),
+                        self.point(degree, inner + width * length), role)
+        font = self.font(max(10, width * 0.55), symbol=True)
         for sign in range(12):
             lon = sign * 30
             self.stroke(self.point(lon, inner), self.point(lon, outer), 'major')
-            self.label(self.point(lon + 15, (inner + outer) / 2),
+            self.label(self.point(lon + 15, (sign_inner + outer) / 2.0),
                        common.common.signs[sign], font, self.options.clrsigns)
 
     def measure(self, text, font):
@@ -212,69 +620,225 @@ class MultiWheel:
         wheel, but along it at the sides."""
         return abs(math.cos(theta)) * w / 2.0 + abs(math.sin(theta)) * h / 2.0
 
-    def draw_outer_ring(self, chrt, index, edges):
-        """Each planet: a tick at its exact longitude on the inner edge, its glyph
-        next to it and its degree (with the retrograde mark) at the outer edge,
-        both placed by their real size so that they stay inside the band."""
+    def draw_ring_backgrounds(self, zodiac, rings):
+        """Tint only planetary bands; keep the single shared zodiac untouched.
+
+        Draw circles outside-in before all labels and ticks, avoiding masks
+        or per-pixel image operations even when the canvas is resized.
+        """
+        background = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
+        for i in reversed(range(len(rings))):
+            outer = rings[i][1]
+            if self.bw:
+                shade = (249, 249, 249) if i % 2 == 0 else (240, 240, 240)
+            else:
+                accent = RING_COLOURS[i]
+                shade = chartstyle.mix(background, accent, 0.065 + i * 0.015)
+            xy = (int((self.cx - outer) * self.scale),
+                  int((self.cy - outer) * self.scale),
+                  int((self.cx + outer) * self.scale),
+                  int((self.cy + outer) * self.scale))
+            self.draw.ellipse(xy, fill=shade)
+        # Original: the reference bands separate radix from outer charts,
+        # so erase through the zodiac's outer edge. Exterior: clearing to
+        # the zodiac would also ERASE all the planetary rings. Only the
+        # core must be restored in that layout.
+        inner = self.core_radius if self.reference_outside else zodiac[1]
+        xy = (int((self.cx - inner) * self.scale),
+              int((self.cy - inner) * self.scale),
+              int((self.cx + inner) * self.scale),
+              int((self.cy + inner) * self.scale))
+        self.draw.ellipse(xy, fill=background)
+
+    @staticmethod
+    def chart_identity(chrt, default_kind=None):
+        """Short, unmistakable chart identification for wheel screenshots."""
+        kinds = {chart.Chart.RADIX: 'Radix',
+                 chart.Chart.SOLAR: 'Solar return',
+                 chart.Chart.LUNAR: 'Lunar return',
+                 chart.Chart.REVOLUTION: 'Return',
+                 chart.Chart.TRANSIT: 'Transits',
+                 chart.Chart.HORARY: 'Horary'}
+        kind = i18n.tr(kinds.get(chrt.htype, default_kind or 'Chart'))
+        t = chrt.time
+        date = '%04d-%02d-%02d' % (
+            t.origyear, t.origmonth, t.origday)
+        if t.bc:
+            date += ' BC'
+        name = str(chrt.name or '').strip()
+        title = kind + (': ' + name if name else '')
+        return title, '%s %02d:%02d' % (date, t.hour, t.minute)
+
+    def draw_centre_identity(self):
+        """Label the inner radix inside its otherwise empty central disk."""
+        kind, detail = self.chart_identity(self.radix, 'Radix')
+        title = kind
+        title_font = self.font(max(9, min(12, self.rmax * .036)))
+        detail_font = self.font(max(8, min(10, self.rmax * .030)))
+        # Width must remain within the small centre disk at quad-wheel sizes.
+        max_width = self.core_radius * .95
+        while len(title) > 8 and self.measure(title, title_font)[0] > max_width:
+            title = title[:-2] + '…'
+        date_part = detail
+        text_colour = (65, 65, 65) if self.bw else self.options.clrtexts
+        background = (255, 255, 255) if self.bw else self.options.clrbackground
+        # A small backing keeps the name legible even when aspects are on.
+        tw = max(self.measure(title, title_font)[0],
+                 self.measure(date_part, detail_font)[0])
+        x, y = self.cx, self.cy
+        rect = (self.scaled((x - tw / 2 - 6, y - 15)),
+                self.scaled((x + tw / 2 + 6, y + 15)))
+        self.draw.rectangle(rect, fill=self.colour(background))
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((x, y - 7)), title,
+            title_font, self.colour(text_colour))
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((x, y + 7)), date_part,
+            detail_font, self.colour(text_colour))
+
+    def draw_outer_identity(self, chrt, index, edges):
+        """Place each chart's name *inside its band* in a free field.
+
+        Candidate positions near the top/bottom offer a wide horizontal
+        chord. Prefer the one farthest from the chart's glyph positions;
+        a tiny opaque backing keeps the caption legible over house lines.
+        """
+        kind, detail = self.chart_identity(chrt)
         inner, outer = edges
-        self.circle(inner, 'major')
-        self.circle(outer, 'major')
-        width = outer - inner
-        tick = min(10, width * .15)
-        glyph = max(10, min(width * 0.36, self.rmax * 0.05))
-        glyph_font = self.font(glyph, symbol=True)
-        n = planets.Planets.BODIES_NUM
-        sizes = [self.measure(common.common.planets[i], glyph_font) for i in range(n)]
-        gw = max(w for w, h in sizes)
-        # the degree must fit beside the glyph across the band (at the sides of the wheel)
-        dsize = max(7, min(glyph * 0.62, (width - tick - gw - 8) / 3.4))
-        degree_font = self.font(dsize)
-        retro_font = self.font(dsize, symbol=True)
-        lons = [self.longitude(chrt, i) for i in range(n)]
-        texts = [self.degree_text(lon) for lon in lons]
-        retro = [chrt.planets.planets[i].data[planets.Planet.SPLON] < 0 for i in range(n)]
-        rw, rh = self.measure(common.common.retr, retro_font)
-        boxes = []
-        for i in range(n):
-            tw, th = self.measure(texts[i], degree_font)
-            boxes.append((tw + (rw + 2 if retro[i] else 0), max(th, rh if retro[i] else 0), tw))
-        widest = max(gw, max(b[0] for b in boxes))
-        separation = math.degrees((widest + 4) / max(inner + width / 2.0, 1))
-        spread = multiwheel_layout.spread_longitudes(lons, min(max(6.0, separation), 359.0 / n))
-        for i, (exact, displayed) in enumerate(zip(lons, spread)):
-            self.stroke(self.point(exact, inner + 1), self.point(exact, inner + tick), 'pointer')
-            theta = self.angle(displayed)
-            gw_i, gh_i = sizes[i]
-            g_reach = self.reach(theta, gw_i, gh_i)
-            cw, ch, tw = boxes[i]
-            t_reach = self.reach(theta, cw, ch)
-            g_r = inner + tick + 2 + g_reach
-            t_r = max(outer - 3 - t_reach, g_r + g_reach + t_reach + 1)
-            colour = (self.options.clrplanets[i] if i < len(self.options.clrplanets)
-                      else self.options.clrtexts)
-            xy = self.point(displayed, g_r)
-            self.label(xy, common.common.planets[i], glyph_font, colour)
-            cx, cy = self.point(displayed, t_r)
-            self.label((cx - (cw - tw) / 2.0, cy), texts[i], degree_font, self.options.clrtexts)
-            if retro[i]:
-                self.label((cx + cw / 2.0 - rw / 2.0, cy), common.common.retr, retro_font, colour)
-            self.hits.append((xy, max(glyph * .7, 12), chrt, i, exact, i18n.tr('Ring %d') % index))
+        front = self.font(max(10, min(13, (outer - inner) * .20)))
+        secondary = self.font(max(9, min(11, (outer - inner) * .17)))
+        max_width = min(self.rmax * .44, 180.0)
+        while len(detail) > 8 and self.measure(detail, secondary)[0] > max_width:
+            detail = detail[:-2] + '…'
+        while len(kind) > 8 and self.measure(kind, front)[0] > max_width:
+            kind = kind[:-2] + '…'
+        w = max(self.measure(kind, front)[0],
+                self.measure(detail, secondary)[0]) + 10
+        h = 30.0
+        radius = (inner + outer) / 2.0
+        ring_hits = [xy for xy, extent, obj, *_ in self.hits if obj is chrt]
+        candidates = (-math.pi / 2, math.pi / 2,
+                      -math.pi * .43, math.pi * .43,
+                      -math.pi * .57, math.pi * .57)
+        ranked = []
+        for theta in candidates:
+            cx = self.cx + math.cos(theta) * radius
+            cy = self.cy + math.sin(theta) * radius
+            corners = ((cx - w / 2, cy - h / 2),
+                       (cx + w / 2, cy - h / 2),
+                       (cx - w / 2, cy + h / 2),
+                       (cx + w / 2, cy + h / 2))
+            corner_radii = [math.hypot(x - self.cx, y - self.cy)
+                            for x, y in corners]
+            if min(corner_radii) < inner + 2 or max(corner_radii) > outer - 2:
+                continue
+            nearest = min((math.hypot(cx - px, cy - py)
+                           for px, py in ring_hits), default=1000.0)
+            ranked.append((nearest, cx, cy))
+        if not ranked:
+            return  # Never spill chart labels outside their own ring.
+        _, x, y = max(ranked)
+        background = (255, 255, 255) if self.bw else chartstyle.mix(
+            tuple(self.options.clrbackground), RING_COLOURS[index - 1],
+            .065 + (index - 1) * .015)
+        self.draw.rectangle(
+            (self.scaled((x - w / 2, y - h / 2)),
+             self.scaled((x + w / 2, y + h / 2))),
+            fill=background)
+        colour = (35, 35, 35) if self.bw else RING_COLOURS[index - 1]
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((x, y - 6)), kind,
+            front, self.colour(colour))
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((x, y + 6)), detail,
+            secondary, self.colour(colour))
+
+    def draw_outer_ring(self, chrt, index, edges):
+        """A chart-specific ring with Morinus notation and its own axes."""
+        inner, outer = edges
+        border = None if self.bw else RING_COLOURS[index - 1]
+        separation = self.separator_width(edges)
+        chart_start = inner + separation + 1
+        # Faint zodiac boundaries provide sign context. House cusps are
+        # stronger, and coincident divisions are rendered only once.
+        self.draw_zodiac_guides(chrt, chart_start, outer, ring_index=index)
+        self.draw_house_spokes(chrt, chart_start, outer, border)
+        self.draw_angles(chrt, chart_start, outer, border, ring_index=index)
+        self.draw_planet_band(chrt, (chart_start, outer),
+                              i18n.tr('Ring %d') % index, 'inner')
+
+    @staticmethod
+    def separator_width(edges):
+        inner, outer = edges
+        # Slim but visibly empty at all three wheel counts; the two lines
+        # themselves are light single-pixel strokes after downsampling.
+        return min(3.2, max(2.4, (outer - inner) * .055))
+
+    def draw_separator_gaps(self, rings):
+        """Erase the entire separator annulus, then draw its two borders.
+
+        Painting last means *no* sign, house, or angle line can cross the gap.
+        """
+        background = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
+        for index, edges in enumerate(rings):
+            inner, _ = edges
+            width = self.separator_width(edges)
+            mid = inner + width * .5
+            rect = (int((self.cx - mid) * self.scale),
+                    int((self.cy - mid) * self.scale),
+                    int((self.cx + mid) * self.scale),
+                    int((self.cy + mid) * self.scale))
+            self.draw.ellipse(rect, outline=background,
+                              width=max(1, int(math.ceil(width * self.scale))))
+            border = None if self.bw else RING_COLOURS[index]
+            self.circle(inner, 'major', border)
+            self.circle(inner + width, 'major', border)
 
     def drawChart(self):
         self.scale = 2  # crisp curves and glyphs after Lanczos downsampling
         self.cx, self.cy = self.width / 2.0, self.height / 2.0
         self.rmax = min(self.width, self.height) * .465
-        core, zodiac, rings = multiwheel_layout.allocate_rings(
-            self.rmax, len(self.others))
+        core, decans, terms, zodiac, rings = multiwheel_layout.allocate_traditional_rings(
+            self.rmax, len(self.others), self.options.showterms,
+            self.options.showdecans, reference_outside=self.reference_outside)
+        self.core_radius = core
+        self.prepare_planet_fonts(core, rings)
         bg = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
         image = Image.new('RGB', i18n.tr((self.width * self.scale,
                                   self.height * self.scale)), i18n.tr(bg))
         self.draw = ImageDraw.Draw(image)
         self.hits = []
+        self.layout_issues = []
+        self.hidden_positions = []
+        self.drawn_degree_labels = []
+        self.drawn_retrograde_glyphs = []
+        self.draw_ring_backgrounds(zodiac, rings)
         self.draw_radix(core)
-        self.draw_zodiac(zodiac)
+        if not self.reference_outside:
+            self.draw_decans(decans)
+            self.draw_terms(terms)
+            self.draw_zodiac(zodiac)
         for index, (chrt, edges) in enumerate(zip(self.others, rings), 1):
             self.draw_outer_ring(chrt, index, edges)
+        if self.reference_outside:
+            # The outer reference bands are not another chart; they have
+            # no house lines, angles, planet dials or chart identity.
+            self.draw_decans(decans)
+            self.draw_terms(terms)
+            self.draw_zodiac(zodiac)
+        self.draw_separator_gaps(rings)
+        # Exterior mode ends with the shared zodiac; the original layout
+        # ends at the last coloured planetary chart.
+        if self.reference_outside:
+            self.circle(zodiac[1] - .6, 'circle')
+        else:
+            self.circle(rings[-1][1] - .6, 'circle',
+                        None if self.bw else RING_COLOURS[len(rings) - 1])
+        # Labels are part of the chart image (and therefore its PNG), not
+        # only the window's selectors. Add them after separators are clear.
+        self.draw_centre_identity()
+        for index, (chrt, edges) in enumerate(zip(self.others, rings), 1):
+            self.draw_outer_identity(chrt, index, edges)
         image = image.resize((self.width, self.height), Image.Resampling.LANCZOS)
         out = wx.Image(self.width, self.height)
         out.SetData(image.tobytes())
@@ -289,10 +853,84 @@ class MultiWheel:
         if not hits:
             return ''
         _, chrt, i, lon, role = min(hits, key=lambda item: item[0])
-        sign = SIGNS[int((lon + 0.5 / 60) // 30) % 12]	# as degree_text rounds to the minute
+        sign = SIGNS[int(lon // 30) % 12]	# the Morinus degree label truncates minutes
         retro = ' (R)' if chrt.planets.planets[i].data[planets.Planet.SPLON] < 0 else ''
         return '%s: %s - %s %s%s  [%s]' % (
             role, i18n.tr(PLANET_NAMES[i]), self.degree_text(lon), i18n.tr(sign), retro, chrt.name)
+
+
+class OuterChartPicker(comparegrid.ChartPicker):
+    """Multi-wheel picker with Morinus's own return/transit creation dialogs."""
+
+    def __init__(self, parent, mainfr, on_change, prefer=0):
+        self.generated_labels = {}
+        super().__init__(parent, mainfr, on_change, prefer)
+        self.create_button = wx.Button(self, label=i18n.tr('Create chart...'))
+        # Reflow only the multiwheel picker: a full-width chart choice above
+        # the two source buttons fits a useful, compact left sidebar.
+        old = self.GetSizer()
+        old.Clear(delete_windows=False)
+        controls = wx.BoxSizer(wx.HORIZONTAL)
+        controls.Add(self.openbutton, 1, wx.RIGHT, 4)
+        controls.Add(self.create_button, 1)
+        column = wx.BoxSizer(wx.VERTICAL)
+        column.Add(self.choice, 0, wx.EXPAND | wx.BOTTOM, 4)
+        column.Add(controls, 0, wx.EXPAND)
+        self.SetSizer(column)
+        self.create_button.Bind(wx.EVT_BUTTON, self.show_create_menu)
+
+    def refresh(self, event=None):
+        super().refresh(event)
+        # Preserve generated chart identities in the list, even when their
+        # independent transit/revolution windows are later closed.
+        for i, (_, chrt) in enumerate(self.sources):
+            label = self.generated_labels.get(id(chrt))
+            if label:
+                title = label + ': ' + comparegrid.caption(chrt)
+                self.sources[i] = (title, chrt)
+                self.choice.SetString(i, title)
+
+    def show_create_menu(self, event):
+        menu = wx.Menu()
+        for label, kind in ((i18n.tr('Solar return...'), 3),
+                            (i18n.tr('Lunar return...'), 6),
+                            (i18n.tr('Transits...'), None)):
+            item = menu.Append(wx.ID_ANY, label)
+            menu.Bind(wx.EVT_MENU,
+                      lambda e, requested=kind: self.create_chart(requested),
+                      id=item.GetId())
+        try:
+            self.PopupMenu(menu)
+        finally:
+            menu.Destroy()
+
+    def create_chart(self, kind):
+        """Attach a chart returned by the existing Morinus dialogs.
+
+        If the user cancels either dialog, no chart is created or selected.
+        """
+        import transitframe
+        before = {id(w) for w in wx.GetTopLevelWindows()
+                  if isinstance(w, transitframe.TransitFrame)}
+        if kind is None:
+            self.mainfr.onTransits(None)
+        else:
+            self.mainfr.onRevolutions(None, planet=kind)
+        new = [w for w in wx.GetTopLevelWindows()
+               if isinstance(w, transitframe.TransitFrame)
+               and not w.IsBeingDeleted() and id(w) not in before]
+        if not new:
+            return
+        chrt = new[-1].chart
+        labels = {chart.Chart.SOLAR: i18n.tr('Solar return'),
+                  chart.Chart.LUNAR: i18n.tr('Lunar return'),
+                  chart.Chart.TRANSIT: i18n.tr('Transits')}
+        label = labels.get(chrt.htype, i18n.tr('Return'))
+        self.generated_labels[id(chrt)] = label
+        self.loaded.append((label, chrt))
+        self.refresh()
+        self.choice.SetSelection(len(self.sources) - 1)
+        self.on_change()
 
 
 class MultiWheelFrame(wx.Frame):
@@ -306,58 +944,169 @@ class MultiWheelFrame(wx.Frame):
         self.renderer = None
         self.pending = None
         self._alive = True
+        self.zoom_factor = None  # None = fit window; 1.0 = natural chart size
+        self.sidebar_visible = True
+        self.bitmap_origin = (0, 0)
+        self._last_hover = ''
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
-        self.SetMinSize((650, 660))
+        self.SetMinSize((760, 600))
         outer = wx.BoxSizer(wx.VERTICAL)
         row = wx.BoxSizer(wx.HORIZONTAL)
         row.Add(wx.StaticText(self, label=i18n.tr('Outer charts:')), 0,
                 wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
-        self.count_choice = wx.Choice(self, choices=i18n.tr(['1 (bi-wheel)', '2 (tri-wheel)', '3 (quad-wheel)']))
+        self.count_choice = wx.Choice(
+            self, choices=i18n.tr(['1 (bi-wheel)', '2 (tri-wheel)', '3 (quad-wheel)']))
         self.count_choice.SetSelection(0)
-        row.Add(self.count_choice, 0, wx.RIGHT, 20)
+        row.Add(self.count_choice, 0, wx.RIGHT, 15)
         row.Add(wx.StaticText(self, label=i18n.tr('Aspects between:')), 0,
                 wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
-        self.aspect_choice = wx.Choice(self, choices=i18n.tr(['Radix only', 'Radix and ring 1']))
+        self.aspect_choice = wx.Choice(
+            self, choices=i18n.tr(['None', 'Radix only', 'Radix and ring 1']))
         self.aspect_choice.SetSelection(0)
         row.Add(self.aspect_choice, 0, wx.RIGHT, 15)
+        row.Add(wx.StaticText(self, label=i18n.tr('Reference bands:')),
+                0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
+        self.reference_choice = wx.Choice(
+            self, choices=i18n.tr(['Inside (classic)', 'Outside (experimental)']))
+        self.reference_choice.SetSelection(0)
+        row.Add(self.reference_choice, 0, wx.RIGHT, 8)
+        outer.Add(row, 0, wx.LEFT | wx.RIGHT | wx.TOP, 7)
+        viewrow = wx.BoxSizer(wx.HORIZONTAL)
+        self.fit_button = wx.Button(self, label=i18n.tr('Fit'))
+        self.actual_button = wx.Button(self, label='100%')
+        self.out_button = wx.Button(self, label='-')
+        self.in_button = wx.Button(self, label='+')
+        for control in (self.fit_button, self.actual_button,
+                        self.out_button, self.in_button):
+            viewrow.Add(control, 0, wx.RIGHT, 4)
+        self.side_button = wx.Button(self, label=i18n.tr('Hide charts'))
+        viewrow.Add(self.side_button, 0, wx.RIGHT, 8)
         self.savebutton = wx.Button(self, label=i18n.tr('Save image (PNG)...'))
-        row.Add(self.savebutton)
-        outer.Add(row, 0, wx.ALL, 9)
+        viewrow.Add(self.savebutton, 0, wx.RIGHT, 10)
+        viewrow.Add(wx.StaticText(self, label=i18n.tr('Planet labels:')),
+                    0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        self.labels_choice = wx.Choice(
+            self, choices=i18n.tr(['Glyphs only', 'Glyphs + degrees',
+                                   'Full positions']))
+        self.labels_choice.SetSelection(1)
+        viewrow.Add(self.labels_choice, 0, wx.ALIGN_CENTER_VERTICAL)
+        outer.Add(viewrow, 0, wx.ALL, 7)
+
+        # Put chart-source controls beside, not above, the drawing. This
+        # recovers valuable vertical canvas space for the wheel itself.
+        content = wx.BoxSizer(wx.HORIZONTAL)
+        self.sidebar = wx.ScrolledWindow(self, style=wx.VSCROLL)
+        self.sidebar.SetMinSize((302, 250))
+        self.sidebar.SetScrollRate(0, 15)
+        controls = wx.BoxSizer(wx.VERTICAL)
+        self.radix_label = wx.StaticText(
+            self.sidebar, label=i18n.tr('Inner radix') + ': ' +
+            comparegrid.caption(mainfr.horoscope))
+        self.radix_label.Wrap(292)
+        controls.Add(self.radix_label, 0, wx.EXPAND | wx.BOTTOM, 12)
         self.pickers = []
+        self.picker_rows = []
         for i in range(3):
-            picker = comparegrid.ChartPicker(self, mainfr, self.queue_draw, i + 1)
+            strip = wx.Panel(self.sidebar)
+            line = wx.BoxSizer(wx.VERTICAL)
+            tag = wx.StaticText(
+                strip, label=i18n.tr('Ring %d') % (i + 1) + ':')
+            if not self.options.bw:
+                tag.SetForegroundColour(wx.Colour(*RING_COLOURS[i]))
+            line.Add(tag, 0, wx.BOTTOM, 4)
+            picker = OuterChartPicker(strip, mainfr, self.queue_draw, i + 1)
+            line.Add(picker, 0, wx.EXPAND)
+            strip.SetSizer(line)
             self.pickers.append(picker)
-            outer.Add(picker, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
+            self.picker_rows.append(strip)
+            controls.Add(strip, 0, wx.EXPAND | wx.BOTTOM, 14)
             if i:
-                picker.Hide()
-        self.canvas = wx.Panel(self)
-        self.canvas.SetMinSize((420, 420))
+                strip.Hide()
+        self.selection_note = wx.StaticText(self.sidebar, label='')
+        self.selection_note.Wrap(290)
+        controls.Add(self.selection_note, 0, wx.EXPAND | wx.BOTTOM, 8)
+        self.sidebar.SetSizer(controls)
+        content.Add(self.sidebar, 0, wx.EXPAND | wx.ALL, 7)
+
+        # Real panning, not a bitmap scaled back into a small panel.
+        self.canvas = wx.ScrolledWindow(self, style=wx.HSCROLL | wx.VSCROLL)
+        self.canvas.SetMinSize((390, 390))
+        self.canvas.SetScrollRate(20, 20)
         self.canvas.SetBackgroundStyle(wx.BG_STYLE_PAINT)
-        outer.Add(self.canvas, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        content.Add(self.canvas, 1, wx.EXPAND | wx.TOP | wx.RIGHT | wx.BOTTOM, 7)
+        outer.Add(content, 1, wx.EXPAND)
         self.SetSizer(outer)
         self.CreateStatusBar()
         self.Bind(wx.EVT_CHOICE, self.change_count, self.count_choice)
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.aspect_choice)
+        self.Bind(wx.EVT_CHOICE, self.queue_draw, self.labels_choice)
+        self.Bind(wx.EVT_CHOICE, self.queue_draw, self.reference_choice)
         self.Bind(wx.EVT_BUTTON, self.onSaveAsBitmap, self.savebutton)
+        self.Bind(wx.EVT_BUTTON, self.zoom_fit, self.fit_button)
+        self.Bind(wx.EVT_BUTTON, self.zoom_actual, self.actual_button)
+        self.Bind(wx.EVT_BUTTON, self.zoom_in, self.in_button)
+        self.Bind(wx.EVT_BUTTON, self.zoom_out, self.out_button)
+        self.Bind(wx.EVT_BUTTON, self.toggle_sidebar, self.side_button)
         self.canvas.Bind(wx.EVT_PAINT, self.paint)
         self.canvas.Bind(wx.EVT_SIZE, self.resize)
         self.canvas.Bind(wx.EVT_LEFT_UP, self.on_click)
+        self.canvas.Bind(wx.EVT_MOTION, self.on_motion)
+        self.canvas.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave)
         self.Bind(wx.EVT_ACTIVATE, lambda e: (comparegrid.refresh_pickers(self.pickers) if e.GetActive() else None, e.Skip()))
         self.CentreOnParent()
         wx.CallAfter(self.queue_draw)
 
     def change_count(self, event=None):
         count = self.count_choice.GetSelection() + 1
-        for i, picker in enumerate(self.pickers):
-            picker.Show(i < count)
+        for i, strip in enumerate(self.picker_rows):
+            strip.Show(i < count)
         prior = self.aspect_choice.GetSelection()
         self.aspect_choice.Clear()
-        self.aspect_choice.Append('Radix only')
+        self.aspect_choice.Append(i18n.tr('None'))
+        self.aspect_choice.Append(i18n.tr('Radix only'))
         for i in range(count):
-            self.aspect_choice.Append('Radix and ring %d' % (i + 1))
-        self.aspect_choice.SetSelection(min(max(prior, 0), count))
+            self.aspect_choice.Append(i18n.tr('Radix and ring %d') % (i + 1))
+        self.aspect_choice.SetSelection(min(max(prior, 0), count + 1))
+        self.sidebar.Layout()
+        self.sidebar.FitInside()
         self.Layout()
         self.queue_draw()
+
+    def toggle_sidebar(self, event=None):
+        self.sidebar_visible = not self.sidebar_visible
+        self.sidebar.Show(self.sidebar_visible)
+        self.side_button.SetLabel(i18n.tr(
+            'Hide charts' if self.sidebar_visible else 'Show charts'))
+        self.Layout()
+        self.queue_draw()
+
+    def zoom_fit(self, event=None):
+        self.zoom_factor = None
+        self.queue_draw()
+
+    def zoom_actual(self, event=None):
+        self.zoom_factor = 1.0
+        self.queue_draw()
+
+    def zoom_in(self, event=None):
+        self.zoom_factor = min(3.0, (self.zoom_factor or .8) * 1.25)
+        self.queue_draw()
+
+    def zoom_out(self, event=None):
+        self.zoom_factor = max(.4, (self.zoom_factor or 1.0) / 1.25)
+        self.queue_draw()
+
+    @staticmethod
+    def natural_diameter(count):
+        # Minimum useful pixel diameters for the three density levels.
+        return {1: 920, 2: 1080, 3: 1280}[count]
+
+    def canvas_size(self, count):
+        w, h = self.canvas.GetClientSize()
+        if self.zoom_factor is None:
+            return max(100, w), max(100, h)
+        diameter = int(self.natural_diameter(count) * self.zoom_factor)
+        return diameter, diameter
 
     def resize(self, event):
         self.queue_draw()
@@ -384,26 +1133,72 @@ class MultiWheelFrame(wx.Frame):
                 return
         except RuntimeError:
             return
-        w, h = self.canvas.GetClientSize()
-        if w < 100 or h < 100:
+        vw, vh = self.canvas.GetClientSize()
+        if vw < 100 or vh < 100:
             return
         count = self.count_choice.GetSelection() + 1
+        w, h = self.canvas_size(count)
         charts = [picker.selected() for picker in self.pickers[:count]]
+        repeated = []
+        seen = {id(self.mainfr.horoscope): i18n.tr('Radix')}
+        for i, selected in enumerate(charts, 1):
+            if id(selected) in seen:
+                repeated.append(i18n.tr('Ring %d') % i + ' = ' + seen[id(selected)])
+            else:
+                seen[id(selected)] = i18n.tr('Ring %d') % i
         self.renderer = MultiWheel(self.mainfr.horoscope, charts,
                                    (w, h), self.options, self.options.bw)
-        self.renderer.aspect_ring = max(0, self.aspect_choice.GetSelection())
+        self.renderer.aspect_ring = aspect_ring_from_choice(
+            self.aspect_choice.GetSelection())
+        self.renderer.label_mode = self.labels_choice.GetSelection()
+        self.renderer.reference_outside = bool(self.reference_choice.GetSelection())
         self.buffer = self.renderer.drawChart()
+        notes = []
+        if repeated:
+            notes.append(i18n.tr('Repeated charts') + ': ' + ', '.join(repeated))
+        if self.renderer.layout_issues:
+            notes.append(i18n.tr('Crowded planetary glyphs: use 100% or zoom in'))
+        if self.renderer.hidden_positions:
+            notes.append(i18n.tr('Some small positions are hidden: hover or click a planet'))
+        self.selection_note.SetLabel('\n'.join(notes))
+        self.selection_note.Wrap(290)
+        self.sidebar.Layout()
+        self.sidebar.FitInside()
+        self.bitmap_origin = (max(0, (vw - w) // 2),
+                              max(0, (vh - h) // 2))
+        self.canvas.SetVirtualSize((max(vw, w), max(vh, h)))
         self.canvas.Refresh(False)
 
     def paint(self, event):
-        if self.buffer is None:
-            wx.PaintDC(self.canvas)
-        else:
-            wx.BufferedPaintDC(self.canvas, self.buffer)
+        dc = wx.AutoBufferedPaintDC(self.canvas)
+        self.canvas.PrepareDC(dc)
+        dc.Clear()
+        if self.buffer is not None:
+            dc.DrawBitmap(self.buffer, *self.bitmap_origin)
+
+    def position_details(self, point):
+        if self.renderer is None:
+            return ''
+        x, y = self.canvas.CalcUnscrolledPosition(point)
+        return self.renderer.onClick(
+            (x - self.bitmap_origin[0], y - self.bitmap_origin[1]))
 
     def on_click(self, event):
-        if self.renderer is not None:
-            self.SetStatusText(self.renderer.onClick(event.GetPosition()))
+        self.SetStatusText(self.position_details(event.GetPosition()))
+
+    def on_motion(self, event):
+        # Give the complete degree, minute, motion and sign on hover,
+        # including for planets whose small visible label could not fit.
+        details = self.position_details(event.GetPosition())
+        if details != self._last_hover:
+            self._last_hover = details
+            self.canvas.SetToolTip(details)
+        event.Skip()
+
+    def on_leave(self, event):
+        self._last_hover = ''
+        self.canvas.SetToolTip('')
+        event.Skip()
 
     def onSaveAsBitmap(self, event):
         if self.buffer is None:
@@ -421,7 +1216,20 @@ class MultiWheelFrame(wx.Frame):
             path = dlg.GetPath()
             if not path.lower().endswith('.png'):
                 path += '.png'
-            if self.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG):
+            # Export from a fresh high-resolution render. Never export
+            # the reduced Fit-to-window bitmap.
+            count = self.count_choice.GetSelection() + 1
+            diameter = {1: 1600, 2: 2000, 3: 2400}[count]
+            charts = [p.selected() for p in self.pickers[:count]]
+            exporter = MultiWheel(self.mainfr.horoscope, charts,
+                                  (diameter, diameter),
+                                  self.options, self.options.bw)
+            exporter.aspect_ring = aspect_ring_from_choice(
+                self.aspect_choice.GetSelection())
+            exporter.label_mode = self.labels_choice.GetSelection()
+            exporter.reference_outside = bool(self.reference_choice.GetSelection())
+            bitmap = exporter.drawChart()
+            if bitmap.SaveFile(path, wx.BITMAP_TYPE_PNG):
                 self.mainfr.fpathimgs = os.path.dirname(path)
         finally:
             dlg.Destroy()

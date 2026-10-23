@@ -11,6 +11,7 @@ import chart
 import dodecatemoria
 import tradoptions
 import chartstyle
+import wheel_primitives
 import chartquality
 import houses
 import planets
@@ -757,11 +758,8 @@ class GraphChart:
         if self.options.ayanamsha != 0 and self.options.hsys == 5:
             asc = util.normalize(self.chart.houses.ascmc[houses.Houses.ASC] - self.chart.ayanamsha)
         for i in range(1, houses.Houses.HOUSE_NUM + 1):
-            dif = math.radians(util.normalize(asc - chouses.cusps[i]))
-            x1 = cx + math.cos(math.pi + dif) * r1
-            y1 = cy + math.sin(math.pi + dif) * r1
-            x2 = cx + math.cos(math.pi + dif) * r2
-            y2 = cy + math.sin(math.pi + dif) * r2
+            x1, y1 = wheel_primitives.polar_point(cx, cy, asc, chouses.cusps[i], r1)
+            x2, y2 = wheel_primitives.polar_point(cx, cy, asc, chouses.cusps[i], r2)
             self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
 
     def drawAscMC(self, ascmc, r1, r2, rArrow):
@@ -927,28 +925,20 @@ class GraphChart:
                     clr = self.options.clrplanets[i]
                 else:
                     clr = self.options.clrplanets[(i - 1)]
-            self.draw.text((x - self.symbolSize // 2, y - self.symbolSize // 2), common.common.planets[i], fill=clr, font=self.fntMorinus)
+            wheel_primitives.paint_glyph(self.draw, (x, y), common.common.planets[i], self.fntMorinus, self.symbolSize, clr)
             if not outer:
                 alon = lon
                 if self.options.ayanamsha != 0:
                     alon -= self.chart.ayanamsha
                     alon = util.normalize(alon)
-                d, m, s = util.decToDeg(alon)
-                d = d % chart.Chart.SIGN_DEG
-                degtxt = str(d).zfill(2) + self.deg_symbol
-                wdeg, hdeg = self.draw.textbbox((0, 0), degtxt, self.fntText)[2:]
+                degtxt, mintxt = wheel_primitives.position_text(alon, self.deg_symbol)
                 x = cx + math.cos(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosDeg
                 y = cy + math.sin(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosDeg
-                xdeg = x - wdeg // 2
-                ydeg = y - hdeg // 2
-                self.draw.text((xdeg, ydeg), degtxt, fill=clr, font=self.fntText)
-                mintxt = str(m).zfill(2) + "'"
-                wdeg, hdeg = self.draw.textbbox((0, 0), mintxt, self.fntSmallText2)[2:]
+                wheel_primitives.paint_position_text(self.draw, (x, y), degtxt, self.fntText, clr)
+
                 x = cx + math.cos(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosMin
                 y = cy + math.sin(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - lon - pshift[i])) * self.rPosMin
-                xdeg = x - wdeg // 2
-                ydeg = y - hdeg // 2
-                self.draw.text((xdeg, ydeg), mintxt.zfill(2), fill=clr, font=self.fntSmallText2)
+                wheel_primitives.paint_position_text(self.draw, (x, y), mintxt.zfill(2), self.fntSmallText2, clr)
                 if chrt.planets.planets[i].data[planets.Planet.SPLON] <= 0.0:
                     if chrt.planets.planets[i].data[planets.Planet.SPLON] == 0.0:
                         t = 'S'
@@ -956,12 +946,9 @@ class GraphChart:
                     elif chrt.planets.planets[i].data[planets.Planet.SPLON] < 0.0:
                         t = common.common.retr
                         rfnt = self.fntRetr
-                    wdeg, hdeg = self.draw.textbbox((0, 0), t, rfnt)[2:]
                     x = cx + math.cos(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - chrt.planets.planets[i].data[planets.Planet.LON] - pshift[i])) * rRetr
                     y = cy + math.sin(math.pi + math.radians(self.chart.houses.ascmc[houses.Houses.ASC] - chrt.planets.planets[i].data[planets.Planet.LON] - pshift[i])) * rRetr
-                    xdeg = x - wdeg // 2
-                    ydeg = y - hdeg // 2
-                    self.draw.text((xdeg, ydeg), t, fill=clr, font=rfnt)
+                    wheel_primitives.paint_position_text(self.draw, (x, y), t, rfnt, clr)
             elif i < planets.Planets.BODIES_NUM:
                 if chrt.planets.planets[i].data[planets.Planet.SPLON] <= 0.0:
                     t = 'S'
@@ -1030,89 +1017,56 @@ class GraphChart:
             i -= deg
 
     def drawTermsLines(self):
+        # Shared with the multiwheel: the original Morinus unequal-term
+        # boundaries, including the final boundary of every sign.
         cx, cy = self.center.Get()
-        asclon = self.chart.houses.ascmc[houses.Houses.ASC]
+        asc = self.chart.houses.ascmc[houses.Houses.ASC]
         if self.options.ayanamsha != 0:
-            asclon -= self.chart.ayanamsha
-            asclon = util.normalize(asclon)
-        shift = math.radians(asclon)
-        signdeg = float(chart.Chart.SIGN_DEG)
-        num = len(self.options.terms[self.options.selterm])
-        subnum = len(self.options.terms[self.options.selterm][0])
-        sign = 0.0
-        for i in range(num):
-            deg = sign
-            for j in range(subnum):
-                deg += float(self.options.terms[self.options.selterm][i][j][1])
-                x1 = cx + math.cos(math.pi + shift - math.radians(deg)) * self.rTerms
-                y1 = cy + math.sin(math.pi + shift - math.radians(deg)) * self.rTerms
-                x2 = cx + math.cos(math.pi + shift - math.radians(deg)) * self.rDecans
-                y2 = cy + math.sin(math.pi + shift - math.radians(deg)) * self.rDecans
-                self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
-
-            sign += signdeg
+            asc = util.normalize(asc - self.chart.ayanamsha)
+        selected = self.options.terms[self.options.selterm]
+        for centre, ruler, boundary in wheel_primitives.traditional_term_markers(selected):
+            x1, y1 = wheel_primitives.polar_point(cx, cy, asc, boundary, self.rTerms)
+            x2, y2 = wheel_primitives.polar_point(cx, cy, asc, boundary, self.rDecans)
+            self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
 
     def drawTerms(self):
         cx, cy = self.center.Get()
-        clr = (0, 0, 0)
-        if not self.bw:
-            clr = self.options.clrsigns
-        asclon = self.chart.houses.ascmc[houses.Houses.ASC]
+        clr = (0, 0, 0) if self.bw else self.options.clrsigns
+        asc = self.chart.houses.ascmc[houses.Houses.ASC]
         if self.options.ayanamsha != 0:
-            asclon -= self.chart.ayanamsha
-            asclon = util.normalize(asclon)
-        shift = math.radians(asclon)
-        signdeg = float(chart.Chart.SIGN_DEG)
-        num = len(self.options.terms[self.options.selterm])
-        subnum = len(self.options.terms[self.options.selterm][0])
-        sign = 0.0
-        for i in range(num):
-            deg = sign
-            for j in range(subnum):
-                pldeg = deg + float(self.options.terms[self.options.selterm][i][j][1]) / 2.0
-                deg += float(self.options.terms[self.options.selterm][i][j][1])
-                x = cx + math.cos(math.pi + shift - math.radians(pldeg)) * self.rTermsPlanet
-                y = cy + math.sin(math.pi + shift - math.radians(pldeg)) * self.rTermsPlanet
-                self.draw.text((x - self.smallsymbolSize // 2, y - self.smallsymbolSize // 2), common.common.planets[self.options.terms[self.options.selterm][i][j][0]], fill=clr, font=self.fntSmallMorinus)
-
-            sign += signdeg
+            asc = util.normalize(asc - self.chart.ayanamsha)
+        selected = self.options.terms[self.options.selterm]
+        for longitude, ruler, boundary in wheel_primitives.traditional_term_markers(selected):
+            x, y = wheel_primitives.polar_point(cx, cy, asc, longitude,
+                                                self.rTermsPlanet)
+            self.draw.text((x - self.smallsymbolSize // 2, y - self.smallsymbolSize // 2),
+                           common.common.planets[ruler], fill=clr,
+                           font=self.fntSmallMorinus)
 
     def drawDecansLines(self):
         cx, cy = self.center.Get()
-        asclon = self.chart.houses.ascmc[houses.Houses.ASC]
+        asc = self.chart.houses.ascmc[houses.Houses.ASC]
         if self.options.ayanamsha != 0:
-            asclon -= self.chart.ayanamsha
-            asclon = util.normalize(asclon)
-        shift = asclon
-        deg = GraphChart.DEG10
-        i = math.pi + math.radians(shift)
-        while i > -math.pi + math.radians(shift):
-            x1 = cx + math.cos(i) * self.rInner
-            y1 = cy + math.sin(i) * self.rInner
-            x2 = cx + math.cos(i) * self.rDecans
-            y2 = cy + math.sin(i) * self.rDecans
+            asc = util.normalize(asc - self.chart.ayanamsha)
+        selected = self.options.decans[self.options.seldecan]
+        for longitude, ruler, boundary in wheel_primitives.traditional_decan_markers(selected):
+            x1, y1 = wheel_primitives.polar_point(cx, cy, asc, boundary, self.rInner)
+            x2, y2 = wheel_primitives.polar_point(cx, cy, asc, boundary, self.rDecans)
             self.bdc.DrawLine(int(x1), int(y1), int(x2), int(y2))
-            i -= deg
 
     def drawDecans(self):
         cx, cy = self.center.Get()
-        clr = (0, 0, 0)
-        if not self.bw:
-            clr = self.options.clrsigns
-        asclon = self.chart.houses.ascmc[houses.Houses.ASC]
+        clr = (0, 0, 0) if self.bw else self.options.clrsigns
+        asc = self.chart.houses.ascmc[houses.Houses.ASC]
         if self.options.ayanamsha != 0:
-            asclon -= self.chart.ayanamsha
-            asclon = util.normalize(asclon)
-        shift = math.radians(asclon)
-        num = len(self.options.decans[self.options.seldecan])
-        subnum = len(self.options.decans[self.options.seldecan][0])
-        deg = 5.0
-        for i in range(num):
-            for j in range(subnum):
-                x = cx + math.cos(math.pi + shift - math.radians(deg)) * self.rDecansPlanet
-                y = cy + math.sin(math.pi + shift - math.radians(deg)) * self.rDecansPlanet
-                self.draw.text((x - self.smallsymbolSize // 2, y - self.smallsymbolSize // 2), common.common.planets[self.options.decans[self.options.seldecan][i][j]], fill=clr, font=self.fntSmallMorinus)
-                deg += 10.0
+            asc = util.normalize(asc - self.chart.ayanamsha)
+        selected = self.options.decans[self.options.seldecan]
+        for longitude, ruler, boundary in wheel_primitives.traditional_decan_markers(selected):
+            x, y = wheel_primitives.polar_point(cx, cy, asc, longitude,
+                                                self.rDecansPlanet)
+            self.draw.text((x - self.smallsymbolSize // 2, y - self.smallsymbolSize // 2),
+                           common.common.planets[ruler], fill=clr,
+                           font=self.fntSmallMorinus)
 
     def dodecObjs(self, chrt):
         """Duad longitudes, symbols and fonts of a chart (computed here for charts made without them)"""

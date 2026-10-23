@@ -427,19 +427,346 @@ def main():
 				picker.loaded.append(('Smoke transit', secondary))
 				picker.refresh()
 				picker.choice.SetSelection(len(picker.sources) - 1)
+				# House separators must be LOCAL to their chart field.
+				# Give the outer chart deliberately different cusps, then
+				# trace the actual strokes. Sign spokes should never appear
+				# as extra chart-wide spokes in the outer planetary band.
+				import math, houses, wheel_primitives
+				saved_cusps = secondary.houses.cusps[:]
+				saved_houses = frame.options.houses
+				saved_spokes = multiwheel.MultiWheel.draw_house_spokes
+				house_records = []
+				def trace_house_spokes(renderer, chrt, inner, outer, colour=None):
+					ink_segments = []
+					original_stroke = renderer.stroke
+					def collect_house_stroke(a, b, role='divider', colour=None):
+						ink_segments.append((a, b))
+						return original_stroke(a, b, role, colour)
+					renderer.stroke = collect_house_stroke
+					try:
+						return saved_spokes(renderer, chrt, inner, outer, colour)
+					finally:
+						del renderer.stroke
+						cusps = tuple(multiwheel.zodiac_lon(
+							chrt, chrt.houses.cusps[h], renderer.options)
+							for h in range(1, houses.Houses.HOUSE_NUM + 1))
+						for (a, b), (lon, start, end) in zip(
+								ink_segments,
+								wheel_primitives.house_spoke_segments(cusps, inner, outer)):
+							for actual, expected in ((a, renderer.point(lon, start)),
+													 (b, renderer.point(lon, end))):
+								assert math.dist(actual, expected) < 1e-5
+						house_records.append((chrt, inner, outer, cusps, len(ink_segments)))
+				try:
+					frame.options.houses = True
+					shifted_cusps = list(saved_cusps)
+					for h in range(1, houses.Houses.HOUSE_NUM + 1):
+						shifted_cusps[h] = (saved_cusps[h] + 11) % 360
+					secondary.houses.cusps = tuple(shifted_cusps)
+					multiwheel.MultiWheel.draw_house_spokes = trace_house_spokes
+					wnd.redraw()
+				finally:
+					multiwheel.MultiWheel.draw_house_spokes = saved_spokes
+					secondary.houses.cusps = saved_cusps
+					frame.options.houses = saved_houses
+				assert not hasattr(multiwheel.MultiWheel, 'draw_sign_spokes')
+				assert len(house_records) == 2
+				assert house_records[0][0] is frame.horoscope
+				assert house_records[1][0] is secondary
+				assert house_records[0][3] != house_records[1][3]
+				assert house_records[0][4] == house_records[1][4] == 12
+				assert house_records[0][2] < house_records[1][1]
+				# Zodiac meridians are rendered in both planetary bands,
+				# independently of house cusps. Whole Sign must suppress
+				# duplicated meridians because its cusps are sign boundaries.
+				original_zodiac_guides = multiwheel.MultiWheel.draw_zodiac_guides
+				original_radix_cusps = frame.horoscope.houses.cusps
+				original_outer_cusps = secondary.houses.cusps
+				zodiac_records = []
+				def track_zodiac(renderer, chrt, inner, outer, ring_index=None):
+					current_cusps = [multiwheel.zodiac_lon(
+						chrt, chrt.houses.cusps[h], renderer.options)
+						for h in range(1, 13)] if renderer.options.houses else None
+					zodiac_records.append((
+						chrt, ring_index,
+						wheel_primitives.zodiac_guide_longitudes(current_cusps),
+						(inner, outer)))
+					return original_zodiac_guides(
+						renderer, chrt, inner, outer, ring_index)
+				try:
+					frame.options.houses = True
+					multiwheel.MultiWheel.draw_zodiac_guides = track_zodiac
+					# Equal-looking but deliberately non-matching cusps:
+					# both rings should preserve 12 faint zodiac guides.
+					frame.horoscope.houses.cusps = (0.0,) + tuple(
+						(10 + i * 30) % 360 for i in range(12))
+					secondary.houses.cusps = (0.0,) + tuple(
+						(15 + i * 30) % 360 for i in range(12))
+					wnd.redraw()
+					assert len(zodiac_records) == 2
+					assert zodiac_records[0][0] is frame.horoscope
+					assert zodiac_records[1][0] is secondary
+					assert zodiac_records[0][1] is None
+					assert zodiac_records[1][1] == 1
+					assert all(len(entry[2]) == 12 for entry in zodiac_records)
+					assert zodiac_records[0][3][1] < zodiac_records[1][3][0]
+					# Whole Sign — every zodiac line has a house cusp,
+					# so no duplicate zodiac guides are painted.
+					zodiac_records.clear()
+					frame.horoscope.houses.cusps = (0.0,) + tuple(
+						float(i * 30) for i in range(12))
+					secondary.houses.cusps = (0.0,) + tuple(
+						float(i * 30) for i in range(12))
+					wnd.redraw()
+					assert len(zodiac_records) == 2
+					assert all(entry[2] == () for entry in zodiac_records)
+				finally:
+					multiwheel.MultiWheel.draw_zodiac_guides = original_zodiac_guides
+					frame.horoscope.houses.cusps = original_radix_cusps
+					secondary.houses.cusps = original_outer_cusps
+					frame.options.houses = saved_houses
+				wnd.redraw()
 				for count in (1, 2, 3):
 					wnd.count_choice.SetSelection(count - 1)
 					wnd.change_count()
-					wnd.aspect_choice.SetSelection(1)
+					# Default is no aspects; keep it in the saved reference images.
+					wnd.aspect_choice.SetSelection(0)
 					settle(0.3)
 					wnd.redraw()
+					assert wnd.renderer.aspect_ring == -1
 					assert wnd.buffer is not None and wnd.buffer.IsOk()
+					# Radix-only and radix-to-outer-ring remain available.
+					wnd.aspect_choice.SetSelection(1)
+					wnd.redraw()
+					assert wnd.renderer.aspect_ring == 0
+					wnd.aspect_choice.SetSelection(2)
+					wnd.redraw()
+					assert wnd.renderer.aspect_ring == 1
+					wnd.aspect_choice.SetSelection(0)
+					wnd.redraw()
+					# Thin chart boundaries are local to multiwheel; do not
+					# weaken the normal Morinus chart's global pen settings.
+					assert 2.0 < wnd.renderer.separator_width((100, 165)) < 3.5
+					assert wnd.renderer.ink('major')[1] <= 3
+					assert wnd.renderer.ink('divider')[1] <= 2
 					assert len(wnd.renderer.others) == count
 					assert wnd.renderer.hits, 'No glyph hitboxes'
 					assert wnd.renderer.onClick(wnd.renderer.hits[0][0])
 					path = os.path.join(out, 'multiwheel-%d-rings.png' % count)
 					assert wnd.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG)
 					assert os.path.getsize(path) > 0
+				# The default label hierarchy prioritizes planetary glyphs.
+				assert wnd.labels_choice.GetSelection() == 1
+				assert wnd.renderer.label_mode == 1
+				assert wnd.renderer.planet_fonts['glyph'] > wnd.renderer.planet_fonts['degree']
+				assert wnd.renderer.drawn_degree_labels
+				# Retrograde is T in the Morinus symbols font, never an
+				# ASCII R attached to degree/minute text.
+				import common
+				assert multiwheel.MultiWheel.position_label_parts(
+					12.5, -0.3, 1) == ('12°', common.common.retr)
+				assert multiwheel.MultiWheel.position_label_parts(
+					12.5, -0.3, 2) == ("12°30'", common.common.retr)
+				assert multiwheel.MultiWheel.position_label_parts(
+					12.5, 0.0, 1) == ('12°', 'S')
+				assert multiwheel.MultiWheel.position_label_parts(
+					12.5, .2, 1) == ('12°', '')
+				assert not any(label.endswith(' R') for _, _, label in
+							   wnd.renderer.drawn_degree_labels)
+				assert all(mark == common.common.retr for _, _, mark in
+						   wnd.renderer.drawn_retrograde_glyphs)
+				# Numeric annotations can be switched off without removing planets
+				# or changing their exact-longitude hit targets.
+				previous_hits = len(wnd.renderer.hits)
+				wnd.labels_choice.SetSelection(0)
+				wnd.redraw()
+				assert len(wnd.renderer.hits) == previous_hits
+				assert not wnd.renderer.drawn_degree_labels
+				wnd.labels_choice.SetSelection(2)
+				wnd.redraw()
+				assert wnd.renderer.label_mode == 2
+				wnd.labels_choice.SetSelection(1)
+				wnd.redraw()
+				assert wnd.renderer.label_mode == 1
+				assert "'" in wnd.renderer.onClick(wnd.renderer.hits[0][0])
+				# Zoom must render a genuinely larger bitmap with scrolling,
+				# not enlarge the fitted bitmap.  Hiding the source sidebar
+				# must not destroy its selected charts.
+				wnd.zoom_actual()
+				wnd.redraw()
+				assert wnd.buffer.GetWidth() == wnd.natural_diameter(3)
+				assert wnd.canvas.GetVirtualSize()[0] >= wnd.buffer.GetWidth()
+				wnd.zoom_in()
+				wnd.redraw()
+				assert wnd.buffer.GetWidth() > wnd.natural_diameter(3)
+				wnd.zoom_out()
+				wnd.redraw()
+				assert wnd.buffer.GetWidth() == wnd.natural_diameter(3)
+				wnd.toggle_sidebar()
+				assert not wnd.sidebar.IsShown()
+				wnd.toggle_sidebar()
+				assert wnd.sidebar.IsShown()
+				wnd.zoom_fit()
+				wnd.redraw()
+				assert wnd.zoom_factor is None
+				# Each chart has the same marker convention and planetary fonts:
+				# ASC hollow circle, DESC/MC arrows and IC plain line.
+				traces = {'dial': [], 'center': 0, 'outer': 0, 'angles': 0,
+					'arrow': 0, 'asc_circle': 0, 'planet_fonts': []}
+				original_dial = multiwheel.MultiWheel.draw_degree_dial
+				original_center = multiwheel.MultiWheel.draw_centre_identity
+				original_outer = multiwheel.MultiWheel.draw_outer_identity
+				original_angles = multiwheel.MultiWheel.draw_angles
+				original_arrow = multiwheel.MultiWheel.draw_angle_arrowhead
+				original_asc = multiwheel.MultiWheel.draw_angle_open_circle
+				original_planets = multiwheel.MultiWheel.draw_planet_band
+				def trace_dial(renderer, edges, side):
+					traces['dial'].append(side)
+					return original_dial(renderer, edges, side)
+				def trace_center(renderer):
+					traces['center'] += 1
+					return original_center(renderer)
+				def trace_outer(renderer, chrt, index, edges):
+					traces['outer'] += 1
+					return original_outer(renderer, chrt, index, edges)
+				def trace_angles(renderer, *args, **kwargs):
+					traces['angles'] += 1
+					return original_angles(renderer, *args, **kwargs)
+				def trace_arrow(renderer, *args, **kwargs):
+					traces['arrow'] += 1
+					return original_arrow(renderer, *args, **kwargs)
+				def trace_asc(renderer, *args, **kwargs):
+					traces['asc_circle'] += 1
+					return original_asc(renderer, *args, **kwargs)
+				def trace_planets(renderer, *args, **kwargs):
+					traces['planet_fonts'].append(tuple(sorted(
+						renderer.planet_fonts.items())))
+					return original_planets(renderer, *args, **kwargs)
+				try:
+					multiwheel.MultiWheel.draw_degree_dial = trace_dial
+					multiwheel.MultiWheel.draw_centre_identity = trace_center
+					multiwheel.MultiWheel.draw_outer_identity = trace_outer
+					multiwheel.MultiWheel.draw_angles = trace_angles
+					multiwheel.MultiWheel.draw_angle_arrowhead = trace_arrow
+					multiwheel.MultiWheel.draw_angle_open_circle = trace_asc
+					multiwheel.MultiWheel.draw_planet_band = trace_planets
+					wnd.redraw()
+				finally:
+					multiwheel.MultiWheel.draw_degree_dial = original_dial
+					multiwheel.MultiWheel.draw_centre_identity = original_center
+					multiwheel.MultiWheel.draw_outer_identity = original_outer
+					multiwheel.MultiWheel.draw_angles = original_angles
+					multiwheel.MultiWheel.draw_angle_arrowhead = original_arrow
+					multiwheel.MultiWheel.draw_angle_open_circle = original_asc
+					multiwheel.MultiWheel.draw_planet_band = original_planets
+				assert traces['dial'] == ['outer', 'inner', 'inner', 'inner']
+				assert traces['center'] == 1 and traces['outer'] == 3
+				assert traces['angles'] == 4
+				assert traces['arrow'] == 8  # 2 per chart: DESC + MC
+				assert traces['asc_circle'] == 4  # 1 per chart: ASC
+				assert len(traces['planet_fonts']) == 4
+				assert len(set(traces['planet_fonts'])) == 1
+				# Both orders of the same shared zodiac/terms/decans reference
+				# system must render. The option changes only presentation,
+				# never the selected charts, angular positions or ink scale.
+				assert wnd.reference_choice.GetSelection() == 0
+				original_terms = frame.options.showterms
+				original_decans = frame.options.showdecans
+				original_sources = [picker.selected() for picker in wnd.pickers]
+				try:
+					frame.options.showterms = True
+					frame.options.showdecans = True
+					for number in (1, 2, 3):
+						wnd.count_choice.SetSelection(number - 1)
+						wnd.change_count()
+						for mode in (0, 1):
+							wnd.reference_choice.SetSelection(mode)
+							wnd.redraw()
+							renderer = wnd.renderer
+							assert renderer.reference_outside == bool(mode)
+							assert renderer.buffer is not None and renderer.buffer.IsOk()
+							assert len(renderer.hits) == (number + 1) * 9
+							core, decans, terms, zodiac, chart_rings = (
+								multiwheel.multiwheel_layout.allocate_traditional_rings(
+									renderer.rmax, number, True, True,
+									reference_outside=bool(mode)))
+							assert decans is not None and terms is not None
+							if mode:
+								assert core == chart_rings[0][0]
+								assert chart_rings[-1][1] == decans[0]
+								assert decans[1] == terms[0]
+								assert terms[1] == zodiac[0]
+								assert abs(zodiac[1] - renderer.rmax) < 1e-6
+							else:
+								assert core == decans[0]
+								assert decans[1] == terms[0]
+								assert terms[1] == zodiac[0]
+								assert zodiac[1] == chart_rings[0][0]
+							path = os.path.join(
+								out, 'multiwheel-%d-rings-%s-reference.png' % (
+									number, 'exterior' if mode else 'classic'))
+							assert wnd.buffer.SaveFile(path, wx.BITMAP_TYPE_PNG)
+							assert os.path.getsize(path) > 0
+						assert all(picker.selected() is previous
+								   for picker, previous in zip(wnd.pickers,
+																 original_sources))
+				finally:
+					wnd.reference_choice.SetSelection(0)
+					wnd.count_choice.SetSelection(2)
+					wnd.change_count()
+					frame.options.showterms = original_terms
+					frame.options.showdecans = original_decans
+				wnd.redraw()
+				assert not wnd.renderer.reference_outside
+				# Changing house systems must keep the multiwheel open, and
+				# refresh all the retained charts rather than destroying it.
+				previous_hsys = frame.options.hsys
+				next_hsys = 5 if previous_hsys != 5 else 2
+				frame.onHouseSystem(wx.CommandEvent(wx.wxEVT_MENU,
+					frame.hsbase + next_hsys))
+				settle(0.2)
+				assert not wnd.IsBeingDeleted() and wnd.IsShown()
+				wnd.redraw()
+				assert wnd.buffer is not None and wnd.buffer.IsOk()
+				assert wnd.renderer.radix is frame.horoscope
+				frame.onHouseSystem(wx.CommandEvent(wx.wxEVT_MENU,
+					frame.hsbase + previous_hsys))
+				settle(0.2)
+				assert not wnd.IsBeingDeleted()
+				wnd.redraw()
+				# The multiwheel's chart-creation menu reuses the existing
+				# Morinus return/transit workflows, then picks the result.
+				import transitframe
+				original_revolutions = frame.onRevolutions
+				original_transits = frame.onTransits
+				generated_windows = []
+				def fake_generate(kind):
+					created = chart.Chart(frame.horoscope.name, frame.horoscope.male,
+						frame.horoscope.time, frame.horoscope.place, kind, '',
+						frame.options, False)
+					new_window = transitframe.TransitFrame(
+						frame, 'Smoke generated', created, frame.horoscope, frame.options)
+					new_window.Show(True)
+					generated_windows.append(new_window)
+				try:
+					frame.onRevolutions = lambda event, planet=None: fake_generate(
+						chart.Chart.SOLAR if planet == 3 else chart.Chart.LUNAR)
+					frame.onTransits = lambda event: fake_generate(chart.Chart.TRANSIT)
+					for requested, htype in ((3, chart.Chart.SOLAR),
+							(6, chart.Chart.LUNAR), (None, chart.Chart.TRANSIT)):
+						picker.create_chart(requested)
+						assert picker.selected().htype == htype
+						assert picker.choice.GetStringSelection() != ''
+				finally:
+					frame.onRevolutions = original_revolutions
+					frame.onTransits = original_transits
+					for gen_window in generated_windows:
+						gen_window.Close()
+				# Restore our reference image to the original smoke transit.
+				picker.refresh()
+				picker.choice.SetSelection(next(i for i, (_, selected) in
+					enumerate(picker.sources) if selected is secondary))
+				wnd.redraw()
 				capture_window(wnd, 'multiwheel-window.png')
 				wnd.SetSize((1050, 790))
 				settle(0.2)

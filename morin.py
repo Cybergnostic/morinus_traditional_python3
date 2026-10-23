@@ -1858,15 +1858,41 @@ class MFrame(wx.Frame):
                 if self.options.saveHouseSystem():
                     self.moptions.Enable(self.ID_SaveOpts, False)
             if not self.splash:
-                self.closeChildWnds()
+                # Keep multi-wheels and their return/transit sources alive when
+                # the house system changes. Other auxiliary windows still close
+                # as before, to avoid leaving stale tables visible.
+                import multiwheel
+                live = [ch for ch in self.GetChildren()
+                        if isinstance(ch, (multiwheel.MultiWheelFrame,
+                                           transitframe.TransitFrame))
+                        and not ch.IsBeingDeleted()]
+                self.closeChildWnds(preserve=live)
                 self.horoscope.setHouseSystem()
                 self.horoscope.calcHcsAspMatrix()
                 self.horoscope.calcHCsFixedStarAspMatrix()
                 self.horoscope.calcLots()
                 self.horoscope.calcAlmutens()
+                # Each additional horoscope must use the newly selected
+                # house system too, including file-loaded ring charts.
+                seen = {id(self.horoscope)}
+                for wnd in live:
+                    if isinstance(wnd, transitframe.TransitFrame):
+                        charts = (wnd.chart,)
+                    else:
+                        charts = tuple(picker.selected() for picker in wnd.pickers)
+                    for chrt in charts:
+                        if id(chrt) not in seen:
+                            chrt.setHouseSystem()
+                            seen.add(id(chrt))
                 self.clickedPlId = None
                 self.drawBkg()
                 self.Refresh()
+                for wnd in live:
+                    if isinstance(wnd, multiwheel.MultiWheelFrame):
+                        wnd.queue_draw()
+                    elif hasattr(wnd.w, 'drawBkg'):
+                        wnd.w.drawBkg()
+                        wnd.sidebar.setChart(wnd.chart, self.horoscope)
         return
 
     def onNodes(self, event):
@@ -2256,11 +2282,11 @@ class MFrame(wx.Frame):
             res = False
         return res
 
-    def closeChildWnds(self):
+    def closeChildWnds(self, preserve=()):
         li = self.GetChildren()
         for ch in li:
             x, y = ch.GetClientSize()
-            if ch.GetName() != 'status_line' and y > 50 and ch is not self.settingswnd and ch is not self.sidebar and ch not in getattr(self, 'keep_open', ()) and not isinstance(ch, (wx.ToolBar, wx.PopupWindow)):
+            if ch.GetName() != 'status_line' and y > 50 and ch is not self.settingswnd and ch is not self.sidebar and ch not in preserve and ch not in getattr(self, 'keep_open', ()) and not isinstance(ch, (wx.ToolBar, wx.PopupWindow)):
                 ch.Destroy()
 
     def enableMenus(self, bEnable):
