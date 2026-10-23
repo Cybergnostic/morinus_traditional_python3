@@ -55,6 +55,50 @@ class MultiWheelLayoutTests(unittest.TestCase):
                     self.assertAlmostEqual(cursor, 300)
                     self.assertGreater(core, 0)
 
+    def test_exterior_reference_layout_preserves_planetary_space(self):
+        for count in (1, 2, 3):
+            for terms in (False, True):
+                for decans in (False, True):
+                    classic = allocate_traditional_rings(
+                        300.0, count, terms, decans)
+                    exterior = allocate_traditional_rings(
+                        300.0, count, terms, decans,
+                        reference_outside=True)
+                    core, d, t, z, rings = exterior
+                    self.assertAlmostEqual(core, classic[0])
+                    self.assertEqual(d is not None, decans)
+                    self.assertEqual(t is not None, terms)
+                    self.assertEqual(len(rings), count)
+                    # The chart sources retain their original order.
+                    self.assertAlmostEqual(rings[0][0], core)
+                    self.assertTrue(all(b > a for a, b in rings))
+                    self.assertTrue(all(
+                        abs((b - a) - (cb - ca)) < 1e-7
+                        for (a, b), (ca, cb) in zip(rings, classic[4])))
+                    cursor = core
+                    for a, b in rings:
+                        self.assertAlmostEqual(a, cursor)
+                        cursor = b
+                    for band in (d, t, z):
+                        if band is None:
+                            continue
+                        self.assertAlmostEqual(band[0], cursor)
+                        self.assertGreater(band[1], band[0])
+                        cursor = band[1]
+                    self.assertAlmostEqual(cursor, 300.0)
+                    self.assertAlmostEqual(z[1], 300.0)
+                    self.assertAlmostEqual(z[1] - z[0],
+                                           classic[3][1] - classic[3][0])
+
+    def test_classic_reference_layout_remains_default(self):
+        for count in (1, 2, 3):
+            for terms, decans in ((True, True), (False, False),
+                                  (True, False), (False, True)):
+                args = (300.0, count, terms, decans)
+                self.assertEqual(allocate_traditional_rings(*args),
+                                 allocate_traditional_rings(
+                                     *args, reference_outside=False))
+
     def test_biwheel_reserves_space_for_readable_outer_planets(self):
         rmax = 300.0
         core, decans, terms, zodiac, rings = allocate_traditional_rings(
