@@ -425,8 +425,21 @@ class MultiWheel:
                 common.common.planets[i], glyph_font, colour)
             if label_points[i] is not None:
                 dx, dy = label_points[i]
+                label_xy = (self.cx + dx, self.cy + dy)
+                displacement = math.hypot(label_xy[0] - glyph_xy[0],
+                                          label_xy[1] - glyph_xy[1])
+                # If a number uses an alternate lane, a quiet connector
+                # avoids making it look like another planet's degree.
+                if displacement > max(29.0, fonts['glyph'] * 1.7):
+                    ux = (label_xy[0] - glyph_xy[0]) / displacement
+                    uy = (label_xy[1] - glyph_xy[1]) / displacement
+                    begin = (glyph_xy[0] + ux * fonts['glyph'] * .58,
+                             glyph_xy[1] + uy * fonts['glyph'] * .58)
+                    end = (label_xy[0] - ux * fonts['degree'] * .7,
+                           label_xy[1] - uy * fonts['degree'] * .7)
+                    self.stroke(begin, end, 'pointer', self.planet_colour(i))
                 wheel_primitives.optical_text_center(
-                    self.draw, self.scaled((self.cx + dx, self.cy + dy)),
+                    self.draw, self.scaled(label_xy),
                     labels[i], degree_font, colour)
                 self.drawn_degree_labels.append((role, i, labels[i]))
             self.hits.append((glyph_xy, max(fonts['glyph'] * .75, 12),
