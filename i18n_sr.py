@@ -324,6 +324,7 @@ TEXTS.update({
 	'Aspects between': 'Aspekti između', 'Radix only': 'Samo radiks', 'Radix and ring 1': 'Radiks i prsten 1', 'Radix and ring %d': 'Radiks i prsten %d',
 	'Save image (PNG)': 'Sačuvaj sliku (PNG)', 'Save multi-wheel as PNG': 'Sačuvaj višestruku kartu kao PNG',
 	'Active': 'Aktivna', 'File': 'Datoteka', 'Inner chart': 'Unutrašnja karta', 'Outer rings': 'Spoljni prstenovi',
+	'Recent natal': 'Nedavna natalna',
 	'Inner chart only': 'Samo unutrašnja karta', 'Inner and ring 1': 'Unutrašnja karta i prsten 1',
 	'Inner and ring %d': 'Unutrašnja karta i prsten %d', 'Create chart': 'Napravi kartu',
 	'Return navigation': 'Navigacija povrataka', 'Solar ring': 'Prsten solara',

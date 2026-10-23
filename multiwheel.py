@@ -871,6 +871,7 @@ class RingChartPicker(comparegrid.ChartPicker):
     def __init__(self, parent, mainfr, owner, on_change, prefer=0):
         self.owner = owner
         self.ring_index = prefer
+        self._inner_override = None
         super().__init__(parent, mainfr, on_change, prefer)
         self.create_button = wx.Button(self, label=i18n.tr('Create chart...'))
         # Reflow only the multiwheel picker: a full-width chart choice above
@@ -892,9 +893,33 @@ class RingChartPicker(comparegrid.ChartPicker):
             self.owner.update_return_controls()
 
     def changed(self, event):
+        if self.ring_index == 0:
+            index = self.choice.GetSelection()
+            if 0 <= index < len(self.sources):
+                source = self.sources[index][1]
+                if isinstance(source, multiwheel_sources.RecentNatal):
+                    loaded = self.mainfr.subLoad(
+                        source.path, os.path.dirname(source.path), dontclose=True)
+                    if loaded is None or loaded.htype != chart.Chart.RADIX:
+                        self.choice.SetSelection(0)
+                        return
+                    self.owner.register_chart(loaded, i18n.tr('File'), self,
+                                              file_path=source.path)
+                    return
+                if source is not self._inner_override:
+                    if self._inner_override is not None:
+                        self._inner_override = None
+                        self.refresh()
         self.owner.manual_rings.add(self.ring_index)
         self.update_step_buttons()
         super().changed(event)
+
+    def selected(self):
+        """A recent path is only opened on explicit selection, not refresh."""
+        selected = super().selected()
+        if isinstance(selected, multiwheel_sources.RecentNatal):
+            return self.mainfr.horoscope
+        return selected
 
     def refresh(self, event=None):
         previous = self.selected()
@@ -916,14 +941,47 @@ class RingChartPicker(comparegrid.ChartPicker):
                 chrt = picker.selected()
                 if isinstance(chrt, chart.Chart):
                     opened.append((i18n.tr('Open'), chrt))
+                # Comparison pickers remember explicitly opened .hor files,
+                # even when a different chart is currently selected.
+                for _, loaded in getattr(picker, 'loaded', ()):
+                    opened.append((i18n.tr('File'), loaded))
             for cell in getattr(wnd, 'cells', ()):
                 chrt = cell.picker.selected()
                 if isinstance(chrt, chart.Chart):
                     opened.append((i18n.tr('Open'), chrt))
+                for _, loaded in getattr(cell.picker, 'loaded', ()):
+                    opened.append((i18n.tr('File'), loaded))
             for label, chrt in getattr(wnd, 'registered_charts', ()):
                 opened.append((label, chrt))
-        sources = multiwheel_sources.merge_chart_sources(
-            self.mainfr.horoscope, opened, self.owner.registered_charts)
+        if self.ring_index == 0:
+            sources = multiwheel_sources.inner_chart_sources(
+                self.mainfr.horoscope, opened, self.owner.registered_charts,
+                chart.Chart.RADIX,
+                manual_labels=(i18n.tr('File'), i18n.tr('New chart'),
+                               i18n.tr('Here and now')))
+            if (self._inner_override is not None and
+                    all(chrt is not self._inner_override for _, chrt in sources)):
+                sources.append((i18n.tr('Open'), self._inner_override))
+            # A recent file is a lightweight selectable reference, not an
+            # eagerly computed chart. Skip files already open in this window.
+            history = getattr(self.mainfr, 'filehistory', None)
+            if history is not None:
+                known = set(self.owner.opened_paths)
+                current_path = getattr(self.mainfr, 'fpath', '')
+                if current_path:
+                    known.add(os.path.abspath(current_path))
+                for i in range(history.GetCount()):
+                    path = history.GetHistoryFile(i)
+                    if os.path.abspath(path) in known:
+                        continue
+                    recent = multiwheel_sources.recent_natal(
+                        path, chart.Chart.RADIX)
+                    if recent is not None:
+                        sources.append((i18n.tr('Recent natal'), recent))
+                        known.add(recent.path)
+        else:
+            sources = multiwheel_sources.merge_chart_sources(
+                self.mainfr.horoscope, opened, self.owner.registered_charts)
         self.sources = [(self.chart_caption(label, chrt), chrt)
                         for label, chrt in sources]
         self.choice.Clear()
@@ -938,12 +996,21 @@ class RingChartPicker(comparegrid.ChartPicker):
 
     @staticmethod
     def chart_caption(label, chrt):
+        if isinstance(chrt, multiwheel_sources.RecentNatal):
+            return label + ': ' + chrt.name + ' - ' + chrt.birth
         kind, _ = MultiWheel.chart_identity(chrt)
         if label in ('Active', i18n.tr('Open'), i18n.tr('File')):
             label = i18n.tr(label) + ' (' + kind.split(': ', 1)[0] + ')'
         return label + ': ' + comparegrid.caption(chrt)
 
     def select_chart(self, chrt):
+        if self.ring_index == 0 and chrt is not self._inner_override:
+            if any(source is chrt for _, source in self.sources):
+                self._inner_override = None
+            else:
+                # A chart created expressly in the centre must remain
+                # selectable even if its type is normally filtered out.
+                self._inner_override = chrt
         self.refresh()
         for index, (_, source) in enumerate(self.sources):
             if source is chrt:
@@ -965,7 +1032,8 @@ class RingChartPicker(comparegrid.ChartPicker):
             dlg.Destroy()
         chrt = self.mainfr.subLoad(path, os.path.dirname(path), dontclose=True)
         if chrt is not None:
-            self.owner.register_chart(chrt, i18n.tr('File'), self)
+            self.owner.register_chart(chrt, i18n.tr('File'), self,
+                                      file_path=path)
 
     def show_create_menu(self, event):
         menu = wx.Menu()
@@ -1067,6 +1135,7 @@ class MultiWheelFrame(wx.Frame):
         self.moving_transits = set()
         self._auto_filling = False
         self.registered_charts = []
+        self.opened_paths = set()
         self.return_origins = {}
         self.return_years = {}
         self.lunar_years = {}
@@ -1562,7 +1631,8 @@ class MultiWheelFrame(wx.Frame):
         self.refresh_return_navigation()
         self.queue_draw()
 
-    def register_chart(self, chrt, label, picker, radix=None, solar_year=None):
+    def register_chart(self, chrt, label, picker, radix=None, solar_year=None,
+                       file_path=None):
         """Retain a newly created/loaded chart for all ring dropdowns.
 
         Only the ring whose button was used changes its selection.
@@ -1575,6 +1645,8 @@ class MultiWheelFrame(wx.Frame):
             self.return_origins[chrt] = radix
         if solar_year is not None:
             self.return_years[chrt] = solar_year
+        if file_path is not None:
+            self.opened_paths.add(os.path.abspath(file_path))
         if not any(source is chrt for _, source in self.registered_charts):
             self.registered_charts.append((label, chrt))
         previous = self._updating_returns

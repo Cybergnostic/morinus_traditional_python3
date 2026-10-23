@@ -436,14 +436,17 @@ def main():
 				wnd.register_chart(secondary, 'Smoke transit', picker)
 				assert picker.selected() is secondary
 				assert inner.selected() is frame.horoscope
+				assert not any(source is secondary for _, source in inner.sources)
 				assert all(any(source is secondary for _, source in p.sources)
-					for p in wnd.pickers)
+					for p in wnd.pickers[1:])
 				# All rings have independent selectors, including the centre.
 				inner.select_chart(secondary)
 				wnd.redraw()
 				assert wnd.renderer.radix is secondary
 				assert picker.selected() is secondary
 				inner.select_chart(frame.horoscope)
+				inner.refresh()
+				assert not any(source is secondary for _, source in inner.sources)
 				# Creation through one ring selects that chart in that ring only.
 				created = chart.Chart(frame.horoscope.name, frame.horoscope.male,
 					frame.horoscope.time, frame.horoscope.place, chart.Chart.HORARY,
@@ -456,6 +459,7 @@ def main():
 					picker.create_new_chart = create_new
 				assert picker.selected() is created
 				assert inner.selected() is frame.horoscope
+				assert any(source is created for _, source in inner.sources)
 				assert frame.horoscope is not created
 				picker.select_chart(secondary)
 				wnd.count_choice.SetSelection(2)
@@ -502,6 +506,9 @@ def main():
 				wnd.change_count()
 				transit_picker = wnd.pickers[3]
 				assert transit_picker.selected().htype == chart.Chart.TRANSIT
+				assert not any(getattr(source, 'htype', None) in (chart.Chart.SOLAR, chart.Chart.LUNAR,
+					chart.Chart.TRANSIT) and source is not created
+					for _, source in inner.sources)
 				assert wnd.active_transit_ring == 3
 				before = transit_picker.selected()
 				wnd.step_transit('Sec', True)
