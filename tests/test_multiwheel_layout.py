@@ -4,11 +4,37 @@ from multiwheel_layout import (allocate_rings, allocate_traditional_rings,
                                spread_longitudes, zodiac_sign_lane,
                                place_planet_clusters, _intersect_area,
                                shared_planet_font_sizes, house_sector,
+                               house_number_midpoints, glyphs_have_clearance,
                                place_planet_glyphs, place_degree_annotations,
                                place_planet_label_groups)
 
 
 class MultiWheelLayoutTests(unittest.TestCase):
+    def test_house_numbers_use_each_chart_own_cusp_midpoints(self):
+        radix = [350, 20, 50, 80, 110, 140,
+                 170, 200, 230, 260, 290, 320]
+        solar = [(cusp + 12) % 360 for cusp in radix]
+        inner = house_number_midpoints(radix)
+        outer = house_number_midpoints(solar)
+        self.assertEqual(len(inner), 12)
+        self.assertAlmostEqual(inner[0], 5)
+        self.assertAlmostEqual(outer[0], 17)
+        self.assertTrue(all((a + 12) % 360 == b
+                            for a, b in zip(inner, outer)))
+        with self.assertRaises(ValueError):
+            house_number_midpoints([0, 30])
+
+    def test_glyph_clearance_detects_dense_fields(self):
+        separated = [{'rect': (0, 0, 10, 10)},
+                     {'rect': (15, 0, 25, 10)}]
+        touching = [{'rect': (0, 0, 10, 10)},
+                    {'rect': (11, 0, 21, 10)}]
+        self.assertTrue(glyphs_have_clearance(separated, 3))
+        self.assertFalse(glyphs_have_clearance(touching, 3))
+        self.assertTrue(glyphs_have_clearance([], 3))
+        with self.assertRaises(ValueError):
+            glyphs_have_clearance(separated, -1)
+
     def test_one_to_three_rings_fit_without_overlap(self):
         for count in (1, 2, 3):
             core, zodiac, rings = allocate_rings(300, count)

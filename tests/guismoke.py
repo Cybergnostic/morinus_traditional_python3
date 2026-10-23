@@ -425,7 +425,11 @@ def main():
 				settle(0.3)
 				assert len(wnd.pickers) == 4
 				assert wnd.splitter.IsSplit()
-				assert wnd.inspector.GetParent() is wnd.view_surface
+				assert wnd.inspector.GetParent() is wnd.view_splitter
+				assert wnd.canvas.GetParent() is wnd.view_splitter
+				assert wnd.view_splitter.IsSplit()
+				assert (wnd.inspector.GetBackgroundColour() ==
+						wnd.sidebar.GetBackgroundColour())
 				assert isinstance(wnd.inspector, wx.Notebook)
 				assert wnd.inspector.GetPageCount() == 2
 				wnd.toggle_sidebar()
@@ -805,10 +809,14 @@ def main():
 				assert traces['asc_circle'] == 4  # 1 per chart: ASC
 				assert len(traces['planet_fonts']) == 4
 				assert len(set(traces['planet_fonts'])) == 1
+				assert len(wnd.renderer.drawn_house_numbers) == 48
+				assert all(sum(role == ring for role, _, _ in
+							   wnd.renderer.drawn_house_numbers) == 12
+						   for ring in range(4))
 				# Both orders of the same shared zodiac/terms/decans reference
 				# system must render. The option changes only presentation,
 				# never the selected charts, angular positions or ink scale.
-				assert wnd.reference_choice.GetSelection() == 0
+				assert wnd.reference_choice.GetSelection() == 1
 				original_terms = frame.options.showterms
 				original_decans = frame.options.showdecans
 				original_sources = [picker.selected() for picker in wnd.pickers]
@@ -850,13 +858,13 @@ def main():
 								   for picker, previous in zip(wnd.pickers,
 																 original_sources))
 				finally:
-					wnd.reference_choice.SetSelection(0)
+					wnd.reference_choice.SetSelection(1)
 					wnd.count_choice.SetSelection(2)
 					wnd.change_count()
 					frame.options.showterms = original_terms
 					frame.options.showdecans = original_decans
 				wnd.redraw()
-				assert not wnd.renderer.reference_outside
+				assert wnd.renderer.reference_outside
 				# Changing house systems must keep the multiwheel open, and
 				# refresh all the retained charts rather than destroying it.
 				previous_hsys = frame.options.hsys

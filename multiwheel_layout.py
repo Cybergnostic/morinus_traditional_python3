@@ -349,6 +349,29 @@ def house_sector(longitude, cusps):
     return min(range(12), key=lambda i: (lon - cusps[i]) % 360.0)
 
 
+def house_number_midpoints(cusps):
+    """One longitude per house, respecting each chart's own cusp order."""
+    if len(cusps) != 12:
+        raise ValueError('Expected twelve house cusps')
+    return [((start + (cusps[(i + 1) % 12] - start) % 360 / 2) % 360)
+            for i, start in enumerate(cusps)]
+
+
+def glyphs_have_clearance(placements, minimum=2.0):
+    """Whether all measured glyph boxes have at least minimum free space."""
+    import math
+    if minimum < 0:
+        raise ValueError('Minimum clearance cannot be negative')
+    rects = [item['rect'] for item in placements]
+    for i, a in enumerate(rects):
+        for b in rects[i + 1:]:
+            dx = max(a[0] - b[2], b[0] - a[2], 0)
+            dy = max(a[1] - b[3], b[1] - a[3], 0)
+            if math.hypot(dx, dy) < minimum:
+                return False
+    return True
+
+
 def place_planet_glyphs(longitudes, glyph_boxes, edges, asc,
                         house_cusps=None, maximum_shift=7.5):
     """Lay out glyphs *without* considering degree/minute text.

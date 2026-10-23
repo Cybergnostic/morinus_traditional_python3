@@ -314,3 +314,25 @@ has been reviewed visually, particularly at quad-wheel density.
   Each page scrolls independently on short screens.
 
 GUI verification remains required on Linux and Windows before merging.
+
+## October 23: responsive glyph scale, themed and resizable controls, house numbers
+
+- The multiwheel now defaults to **Outside** reference bands. The classic
+  arrangement remains available from the selector; the ordinary single-wheel
+  renderer is unchanged.
+- Planetary glyphs still share one common size across every chart in the
+  multiwheel. Before drawing, the renderer checks all selected charts for
+  tight or overlapping measured glyph boxes; if necessary, it reduces that
+  one shared size in small steps. Degree and motion fonts scale consistently.
+  Exact dial positions and longitude pointers are unaffected.
+- Every outer chart displays its own twelve house numbers, calculated from
+  the midpoints between its own house cusps. These do not copy radix houses.
+  The existing radix house-number positions remain unchanged, and hiding
+  houses hides their numbers in every ring.
+- The right-hand notebook takes its colours from the OS-themed left sidebar
+  instead of forcing white backgrounds and dark text. Its divider can be
+  dragged to resize the chart canvas and inspector independently, and
+  individual tabs retain vertical scrolling on smaller screens.
+
+The adaptive scaling and right-side layout still need a local Linux GUI
+screenshot check before this redesign is merged.

@@ -86,7 +86,7 @@ class MultiWheel:
         self.options = options
         self.bw = bool(bw)
         self.aspect_ring = -1  # -1 = none; 0 = inner; 1..3 = inner to ring
-        self.reference_outside = False  # False = original; True = exterior bands
+        self.reference_outside = True  # Exterior reference bands are the default.
         self.hits = []
         self.buffer = None
 
@@ -325,6 +325,50 @@ class MultiWheel:
         self.planet_fonts = multiwheel_layout.shared_planet_font_sizes(
             self.rmax, label_widths)
 
+    def adapt_planet_fonts(self, core, rings):
+        """Shrink *all* planet glyphs together if a chart is too crowded.
+
+        Preflight every visible chart with the same measured glyph font.
+        Keep the original size if the labels fit with breathing room; only
+        choose a smaller global size when needed, never per planet or ring.
+        """
+        nominal = self.planet_fonts['glyph']
+        minimum = max(12, int(nominal * .68))
+        asc = zodiac_lon(self.radix,
+                         self.radix.houses.ascmc[houses.Houses.ASC],
+                         self.options)
+        fields = [(self.radix,
+                   self.planet_label_edges((core * .67, core), 'outer'))]
+        for chrt, edges in zip(self.others, rings):
+            start = edges[0] + self.separator_width(edges) + 1
+            fields.append((chrt,
+                           self.planet_label_edges((start, edges[1]), 'inner')))
+        for size in range(nominal, minimum - 1, -1):
+            font = self.font(size, symbol=True)
+            boxes = [self.measure(common.common.planets[i], font)
+                     for i in range(planets.Planets.BODIES_NUM)]
+            clear = True
+            for chrt, edges in fields:
+                lons = [self.longitude(chrt, i)
+                        for i in range(planets.Planets.BODIES_NUM)]
+                cusps = ([zodiac_lon(chrt, chrt.houses.cusps[j], self.options)
+                          for j in range(1, houses.Houses.HOUSE_NUM + 1)]
+                         if self.options.houses else None)
+                placed, unresolved = multiwheel_layout.place_planet_glyphs(
+                    lons, boxes, edges, asc, house_cusps=cusps)
+                if unresolved or not multiwheel_layout.glyphs_have_clearance(
+                        placed, minimum=max(2.0, size * .16)):
+                    clear = False
+                    break
+            if clear:
+                break
+        self.planet_fonts.update({
+            'glyph': size,
+            'degree': max(8, int(size * .46)),
+            'minute': max(8, int(size * .42)),
+            'motion': max(8, int(size * .42)),
+        })
+
     def draw_degree_dial(self, edges, side):
         """A chart's own 360-degree dial, with 1/5/10-degree tick hierarchy.
 
@@ -364,14 +408,36 @@ class MultiWheel:
         """House numbers retain the inner Morinus chart's house-number ring."""
         if not self.options.houses:
             return
-        cusps = self.radix.houses.cusps
+        cusps = [zodiac_lon(self.radix, self.radix.houses.cusps[i],
+                            self.options) for i in range(1, 13)]
         font = self.font(max(8, core * .06))
-        for index in range(1, 13):
-            lon = zodiac_lon(self.radix, cusps[index], self.options)
-            next_lon = zodiac_lon(self.radix, cusps[index % 12 + 1], self.options)
-            mid = (lon + (next_lon - lon) % 360 / 2) % 360
-            self.label(self.point(mid, core * .61), str(index),
-                       font, self.options.clrhousenumbers)
+        for index, mid in enumerate(multiwheel_layout.house_number_midpoints(cusps), 1):
+            point = self.point(mid, core * .61)
+            self.label(point, str(index), font, self.options.clrhousenumbers)
+            self.planet_occupied.append(multiwheel_layout._rect(
+                (point[0] - self.cx, point[1] - self.cy),
+                self.measure(str(index), font), margin=1))
+            self.drawn_house_numbers.append((0, index, mid))
+
+    def draw_outer_house_numbers(self, chrt, index, inner, outer):
+        """Print this ring's own house numbers, separate from radix houses."""
+        if not self.options.houses:
+            return
+        cusps = [zodiac_lon(chrt, chrt.houses.cusps[i], self.options)
+                 for i in range(1, 13)]
+        radius = outer - min(10.5, (outer - inner) * .19)
+        font = self.font(max(8, min(11, (outer - inner) * .16)))
+        ink = (self.options.clrhousenumbers if self.bw else
+               chartstyle.mix(tuple(self.options.clrhousenumbers),
+                              self.ring_background_colour(index), .25))
+        for house, midpoint in enumerate(
+                multiwheel_layout.house_number_midpoints(cusps), 1):
+            point = self.point(midpoint, radius)
+            self.label(point, str(house), font, ink)
+            self.planet_occupied.append(multiwheel_layout._rect(
+                (point[0] - self.cx, point[1] - self.cy),
+                self.measure(str(house), font), margin=1))
+            self.drawn_house_numbers.append((index, house, midpoint))
 
     @staticmethod
     def position_label_parts(longitude, speed, mode):
@@ -777,6 +843,7 @@ class MultiWheel:
         self.draw_zodiac_guides(chrt, chart_start, outer, ring_index=index)
         self.draw_house_spokes(chrt, chart_start, outer, border)
         self.draw_angles(chrt, chart_start, outer, border, ring_index=index)
+        self.draw_outer_house_numbers(chrt, index, chart_start, outer)
         self.draw_planet_band(chrt, (chart_start, outer),
                               i18n.tr('Ring %d') % index, 'inner')
 
@@ -820,11 +887,13 @@ class MultiWheel:
         image = Image.new('RGB', i18n.tr((self.width * self.scale,
                                   self.height * self.scale)), i18n.tr(bg))
         self.draw = ImageDraw.Draw(image)
+        self.adapt_planet_fonts(core, rings)
         self.hits = []
         self.layout_issues = []
         self.hidden_positions = []
         self.drawn_degree_labels = []
         self.drawn_retrograde_glyphs = []
+        self.drawn_house_numbers = []
         self.pending_planet_positions = []
         self.planet_occupied = []
         self.draw_ring_backgrounds(zodiac, rings)
@@ -1176,7 +1245,7 @@ class MultiWheelFrame(wx.Frame):
                 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
         self.reference_choice = wx.Choice(
             self, choices=i18n.tr(['Inside (classic)', 'Outside (experimental)']))
-        self.reference_choice.SetSelection(0)
+        self.reference_choice.SetSelection(1)
         row.Add(self.reference_choice, 0, wx.RIGHT, 8)
         outer.Add(row, 0, wx.LEFT | wx.RIGHT | wx.TOP, 7)
         viewrow = wx.BoxSizer(wx.HORIZONTAL)
@@ -1263,28 +1332,33 @@ class MultiWheelFrame(wx.Frame):
         controls.Add(self.selection_note, 0, wx.EXPAND | wx.BOTTOM, 8)
         self.sidebar.SetSizer(controls)
 
-        # White workspace: the chart still pans/zooms independently, while
-        # the right rail makes use of the otherwise empty chart-side space.
+        # White chart canvas with an OS-themed, independently resizable rail.
         self.view_surface = wx.Panel(self.splitter)
         self.view_surface.SetBackgroundColour(wx.WHITE)
         workspace = wx.BoxSizer(wx.HORIZONTAL)
+        self.view_splitter = wx.SplitterWindow(
+            self.view_surface, style=wx.SP_LIVE_UPDATE)
+        self.view_splitter.SetMinimumPaneSize(220)
+        self.view_splitter.SetSashGravity(1.0)
         self.canvas = wx.ScrolledWindow(
-            self.view_surface, style=wx.HSCROLL | wx.VSCROLL)
+            self.view_splitter, style=wx.HSCROLL | wx.VSCROLL)
         self.canvas.SetBackgroundColour(wx.WHITE)
         self.canvas.SetMinSize((380, 390))
         self.canvas.SetScrollRate(20, 20)
         self.canvas.SetBackgroundStyle(wx.BG_STYLE_PAINT)
-        workspace.Add(self.canvas, 1, wx.EXPAND)
         # Keep chart identity separate from the time/navigation workspace.
         # Both pages scroll independently on small laptop screens.
-        self.inspector = wx.Notebook(self.view_surface)
-        self.inspector.SetBackgroundColour(wx.WHITE)
-        self.inspector.SetForegroundColour(wx.Colour(35, 42, 51))
+        rail_bg = self.sidebar.GetBackgroundColour()
+        rail_fg = self.selection_note.GetForegroundColour()
+        self.inspector = wx.Notebook(self.view_splitter)
+        self.inspector.SetBackgroundColour(rail_bg)
+        self.inspector.SetForegroundColour(rail_fg)
         self.inspector.SetMinSize((270, 260))
         self.info_page = wx.ScrolledWindow(self.inspector, style=wx.VSCROLL)
         self.controls_page = wx.ScrolledWindow(self.inspector, style=wx.VSCROLL)
         for page in (self.info_page, self.controls_page):
-            page.SetBackgroundColour(wx.WHITE)
+            page.SetBackgroundColour(rail_bg)
+            page.SetForegroundColour(rail_fg)
             page.SetScrollRate(0, 14)
         self.inspector.AddPage(self.info_page, i18n.tr('Charts'))
         self.inspector.AddPage(self.controls_page, i18n.tr('Returns + transits'))
@@ -1294,23 +1368,24 @@ class MultiWheelFrame(wx.Frame):
         self.chart_details = []
         for i in range(4):
             label = wx.StaticText(self.info_page, label='')
-            label.SetForegroundColour(wx.Colour(50, 58, 68))
+            label.SetForegroundColour(rail_fg)
             self.chart_details.append(label)
             info_rail.Add(label, 0, wx.EXPAND | wx.BOTTOM, 11)
         self.info_page.SetSizer(info_rail)
 
         controls_rail = wx.BoxSizer(wx.VERTICAL)
         self.return_section = wx.Panel(self.controls_page)
-        self.return_section.SetBackgroundColour(wx.WHITE)
+        self.return_section.SetBackgroundColour(rail_bg)
+        self.return_section.SetForegroundColour(rail_fg)
         return_rail = wx.BoxSizer(wx.VERTICAL)
         self.add_rail_heading(return_rail, 'Return controls', self.return_section)
         self.return_controls = []
         for i in range(4):
             line = wx.Panel(self.return_section)
-            line.SetBackgroundColour(wx.WHITE)
+            line.SetBackgroundColour(rail_bg)
             row_controls = wx.BoxSizer(wx.HORIZONTAL)
             caption = wx.StaticText(line, label='')
-            caption.SetForegroundColour(wx.Colour(50, 58, 68))
+            caption.SetForegroundColour(rail_fg)
             previous = wx.Button(line, label='◀', size=(33, -1))
             following = wx.Button(line, label='▶', size=(33, -1))
             previous.SetToolTip(i18n.tr('Previous return'))
@@ -1329,7 +1404,8 @@ class MultiWheelFrame(wx.Frame):
         controls_rail.Add(self.return_section, 0, wx.EXPAND | wx.BOTTOM, 12)
 
         self.transit_section = wx.Panel(self.controls_page)
-        self.transit_section.SetBackgroundColour(wx.WHITE)
+        self.transit_section.SetBackgroundColour(rail_bg)
+        self.transit_section.SetForegroundColour(rail_fg)
         transit_rail = wx.BoxSizer(wx.VERTICAL)
         self.add_rail_heading(transit_rail, 'Transit controller', self.transit_section)
         self.transit_ring_choice = wx.Choice(self.transit_section)
@@ -1343,7 +1419,7 @@ class MultiWheelFrame(wx.Frame):
         for unit in multiwheel_time.UNITS:
             row_controls = wx.BoxSizer(wx.HORIZONTAL)
             label = wx.StaticText(self.transit_section, label=i18n.tr(unit))
-            label.SetForegroundColour(wx.Colour(50, 58, 68))
+            label.SetForegroundColour(rail_fg)
             plus = wx.Button(self.transit_section, label='++', size=(34, -1))
             minus = wx.Button(self.transit_section, label='--', size=(34, -1))
             row_controls.Add(label, 1, wx.ALIGN_CENTER_VERTICAL)
@@ -1371,7 +1447,8 @@ class MultiWheelFrame(wx.Frame):
         self.transit_section.SetSizer(transit_rail)
         controls_rail.Add(self.transit_section, 0, wx.EXPAND)
         self.controls_page.SetSizer(controls_rail)
-        workspace.Add(self.inspector, 0, wx.EXPAND | wx.LEFT, 9)
+        self.view_splitter.SplitVertically(self.canvas, self.inspector, -285)
+        workspace.Add(self.view_splitter, 1, wx.EXPAND)
         self.view_surface.SetSizer(workspace)
         self.splitter.SplitVertically(self.sidebar, self.view_surface,
                                       self.saved_sidebar_width)
@@ -1395,6 +1472,8 @@ class MultiWheelFrame(wx.Frame):
         self.transit_ring_choice.Bind(wx.EVT_CHOICE, self.on_transit_ring_choice)
         self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED,
                            self.on_sidebar_resized)
+        self.view_splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED,
+                                self.on_inspector_resized)
         self.canvas.Bind(wx.EVT_PAINT, self.paint)
         self.canvas.Bind(wx.EVT_SIZE, self.resize)
         self.canvas.Bind(wx.EVT_LEFT_UP, self.on_click)
@@ -1410,7 +1489,7 @@ class MultiWheelFrame(wx.Frame):
         font = heading.GetFont()
         font.SetWeight(wx.FONTWEIGHT_BOLD)
         heading.SetFont(font)
-        heading.SetForegroundColour(wx.Colour(35, 42, 51))
+        heading.SetForegroundColour(parent.GetForegroundColour())
         rail.Add(heading, 0, wx.EXPAND | wx.BOTTOM, 7)
         return heading
 
@@ -1423,6 +1502,11 @@ class MultiWheelFrame(wx.Frame):
     def on_sidebar_resized(self, event):
         if self.splitter.IsSplit():
             self.saved_sidebar_width = max(230, self.splitter.GetSashPosition())
+        self.queue_draw()
+        event.Skip()
+
+    def on_inspector_resized(self, event):
+        self.refresh_inspector()
         self.queue_draw()
         event.Skip()
 
