@@ -7,7 +7,7 @@ from wheel_primitives import (angle_longitudes, planet_band_radii,
                               optical_text_center, planet_cluster_radii,
                               compact_planet_radii, radial_half_extent,
                               traditional_term_markers, traditional_decan_markers,
-                              house_spoke_segments)
+                              house_spoke_segments, zodiac_guide_longitudes)
 
 
 class SharedWheelPrimitivesTests(unittest.TestCase):
@@ -155,6 +155,37 @@ class SharedWheelPrimitivesTests(unittest.TestCase):
                 ([30 * i for i in range(12)], 100, 150, -1)):
             with self.assertRaises(ValueError):
                 house_spoke_segments(cusps, inner, outer, inset)
+
+    def test_zodiac_guides_remain_distinct_from_non_coincident_houses(self):
+        # Placidus-like cusps offset from 0, 30, 60... preserve all
+        # zodiac divisions while the stronger house divisions remain.
+        oblique_cusps = [12 + 30 * i for i in range(12)]
+        self.assertEqual(zodiac_guide_longitudes(oblique_cusps),
+                         tuple(float(i) for i in range(0, 360, 30)))
+        self.assertEqual(len(house_spoke_segments(oblique_cusps, 170, 225)),
+                         12)
+        # Disabling house lines must not hide any sign boundary.
+        self.assertEqual(zodiac_guide_longitudes(), tuple(
+                         float(i) for i in range(0, 360, 30)))
+
+    def test_whole_sign_house_cusps_replace_duplicated_zodiac_guides(self):
+        # Both Aries 0 and other sign boundaries coincide with cusps.
+        whole_sign_cusps = [30 * i for i in range(12)]
+        self.assertEqual(zodiac_guide_longitudes(whole_sign_cusps), ())
+        # Whole Sign at the end of Pisces tests angular wrapping, too.
+        shifted = [((30 * i) + (360 if i % 2 else 0))
+                   for i in range(12)]
+        self.assertEqual(zodiac_guide_longitudes(shifted), ())
+
+    def test_zodiac_guides_skip_only_matching_cusps(self):
+        cusps = [0.009, 31.0, 61.0, 90.0, 121.0, 151.0,
+                 180.0, 211.0, 241.0, 270.0, 301.0, 331.0]
+        self.assertEqual(zodiac_guide_longitudes(cusps),
+                         (30., 60., 120., 150., 210., 240., 300., 330.))
+        with self.assertRaises(ValueError):
+            zodiac_guide_longitudes([0, 30])
+        with self.assertRaises(ValueError):
+            zodiac_guide_longitudes(None, tolerance=-1)
 
     def test_four_angles_match_morinus_quadrants(self):
         self.assertEqual(angle_longitudes(350, 75), (350, 170, 75, 255))
