@@ -345,6 +345,47 @@ class MultiWheel:
             self.label(self.point(mid, core * .61), str(index),
                        font, self.options.clrhousenumbers)
 
+    @staticmethod
+    def position_label_parts(longitude, speed, mode):
+        """Number and motion mark, using the same retro glyph as GraphChart.
+
+        The retrograde marker is a Morinus *symbol-font* glyph ('T'), not
+        a literal Latin R in the text font. A stationary S stays text.
+        """
+        degrees, minutes = wheel_primitives.position_text(longitude, '°')
+        text = degrees + (minutes if mode == 2 else '')
+        mark = (common.common.retr if speed < 0 else
+                'S' if speed == 0 else '')
+        return text, mark
+
+    def position_label_size(self, text, marker, text_font, marker_font):
+        """Combined ink rectangle for independently fonted number + marker."""
+        tw, th = self.measure(text, text_font)
+        if not marker:
+            return (tw, th)
+        mw, mh = self.measure(marker, marker_font)
+        return (tw + max(2.0, self.planet_fonts['degree'] * .22) + mw,
+                max(th, mh))
+
+    def draw_position_label(self, xy, text, marker, text_font,
+                            marker_font, colour):
+        """Paint a centred annotation while keeping its motion glyph font."""
+        if not marker:
+            wheel_primitives.optical_text_center(
+                self.draw, self.scaled(xy), text, text_font, colour)
+            return
+        tw, _ = self.measure(text, text_font)
+        mw, _ = self.measure(marker, marker_font)
+        gap = max(2.0, self.planet_fonts['degree'] * .22)
+        total = tw + gap + mw
+        left = xy[0] - total / 2.0
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((left + tw / 2.0, xy[1])),
+            text, text_font, colour)
+        wheel_primitives.optical_text_center(
+            self.draw, self.scaled((left + tw + gap + mw / 2.0, xy[1])),
+            marker, marker_font, colour)
+
     def draw_planet_band(self, chrt, edges, role, dial_side):
         """Large primary glyphs, independently placed small optional positions.
 
@@ -373,23 +414,27 @@ class MultiWheel:
         if unresolved:
             self.layout_issues.append((role, len(unresolved)))
 
-        # Positions are a separate, optional annotation layer. Only the
-        # full-positions view includes minutes; clicking/hovering always
-        # reports exact positions, even when a label must be suppressed.
+        # Numeric positions are placed after the glyphs. The retrograde
+        # character uses the Morinus symbol font, independently of the
+        # normal text font used by the degrees and minutes.
         label_mode = self.label_mode
         labels = []
+        marks = []
+        mark_fonts = []
         if label_mode:
             for i, lon in enumerate(lons):
-                degrees, minutes = wheel_primitives.position_text(lon, '°')
-                text = degrees + (minutes if label_mode == 2 else '')
                 speed = chrt.planets.planets[i].data[planets.Planet.SPLON]
-                if speed < 0:
-                    text += ' R'
-                elif speed == 0:
-                    text += ' S'
+                text, marker = self.position_label_parts(
+                    lon, speed, label_mode)
                 labels.append(text)
-            text_boxes = [self.measure(label, degree_font)
-                          for label in labels]
+                marks.append(marker)
+                mark_fonts.append(self.font(
+                    fonts['motion'], symbol=(speed < 0)))
+            text_boxes = [
+                self.position_label_size(text, mark, degree_font, mark_font)
+                for text, mark, mark_font in
+                zip(labels, marks, mark_fonts)
+            ]
             direction = -1 if dial_side == 'outer' else 1
             label_points, hidden = multiwheel_layout.place_degree_annotations(
                 placements, lons, text_boxes, (inner, outer), asc,
@@ -438,10 +483,13 @@ class MultiWheel:
                     end = (label_xy[0] - ux * fonts['degree'] * .7,
                            label_xy[1] - uy * fonts['degree'] * .7)
                     self.stroke(begin, end, 'pointer', self.planet_colour(i))
-                wheel_primitives.optical_text_center(
-                    self.draw, self.scaled(label_xy),
-                    labels[i], degree_font, colour)
+                self.draw_position_label(
+                    label_xy, labels[i], marks[i], degree_font,
+                    mark_fonts[i], colour)
                 self.drawn_degree_labels.append((role, i, labels[i]))
+                if marks[i] == common.common.retr:
+                    self.drawn_retrograde_glyphs.append(
+                        (role, i, marks[i]))
             self.hits.append((glyph_xy, max(fonts['glyph'] * .75, 12),
                               chrt, i, exact, role))
 
@@ -733,6 +781,7 @@ class MultiWheel:
         self.layout_issues = []
         self.hidden_positions = []
         self.drawn_degree_labels = []
+        self.drawn_retrograde_glyphs = []
         self.draw_ring_backgrounds(zodiac, rings)
         self.draw_radix(core)
         self.draw_decans(decans)
