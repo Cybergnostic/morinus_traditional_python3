@@ -402,11 +402,14 @@ def place_planet_glyphs(longitudes, glyph_boxes, edges, asc,
 
 def place_degree_annotations(glyphs, longitudes, text_boxes, edges, asc,
                              direction, house_cusps=None):
-    """Fit optional degree text around fixed glyphs, never move a glyph.
+    """Fit numeric labels *around* fixed glyphs using the available annulus.
 
-    Returns optional Cartesian label centres and hidden indices. Label
-    collisions never affect the primary glyph positions. The centre of a
-    numeric annotation stays in its planet's sign and house.
+    Earlier versions tested only one narrow row on one side of a planet,
+    then silently dropped most numbers in crowded signs. Labels are not
+    planets: a number may sit to either side of its glyph and even cross a
+    nearby cusp. The glyph and the exact-longitude dial remain in their
+    correct house/sign. Prefer same-sector labels, but do not demand them.
+    Returns label positions and genuinely unplaceable indices.
     """
     import math
     if not (len(glyphs) == len(longitudes) == len(text_boxes)):
@@ -415,56 +418,128 @@ def place_degree_annotations(glyphs, longitudes, text_boxes, edges, asc,
         raise ValueError('Invalid degree band or direction')
     if house_cusps is not None and len(house_cusps) != 12:
         raise ValueError('Expected twelve chart-specific house cusps')
-    glyph_rects = [p['rect'] for p in glyphs]
-    placed_rects = []
-    points = []
-    hidden = []
+    if not glyphs:
+        return [], []
+
+    occupied_glyphs = [p['rect'] for p in glyphs]
+    inner, outer = edges
+    # A numeric label can move into unused space of its chart band.
+    # Use signed angular offsets in both directions and several radial
+    # lanes. Labels nearest their planet are always favoured.
+    angle_shifts = (0, -.5, .5, -1, 1, -1.75, 1.75, -2.5, 2.5,
+                    -3.5, 3.5, -5, 5, -7, 7, -9, 9, -11, 11,
+                    -13, 13, -16, 16)
+    candidate_sets = []
     for i, (glyph, source_lon, box) in enumerate(
             zip(glyphs, longitudes, text_boxes)):
         if box[0] <= 0 or box[1] <= 0:
-            points.append(None)
+            candidate_sets.append([])
             continue
-        original_sign = int((source_lon % 360) // 30)
-        original_house = (house_sector(source_lon, house_cusps)
-                          if house_cusps is not None else None)
-        base_longitude = glyph['longitude']
-        theta = math.pi + math.radians(asc - base_longitude)
-        glyph_w = glyph_rects[i][2] - glyph_rects[i][0] - 2.4
-        glyph_h = glyph_rects[i][3] - glyph_rects[i][1] - 2.4
-        glyph_reach = _radial_reach((glyph_w, glyph_h), theta)
-        text_reach = _radial_reach(box, theta)
-        ideal_radius = glyph['radius'] + direction * (
-            glyph_reach + text_reach + 3.0)
-        best = None
-        best_score = float('inf')
-        for shift in (0, -0.6, 0.6, -1.4, 1.4, -2.5, 2.5):
-            label_lon = (base_longitude + shift) % 360.0
-            if int(label_lon // 30) != original_sign:
+        glyph_pos = glyph['glyph']
+        glyph_lon = glyph['longitude']
+        glyph_radius = glyph['radius']
+        sign = int((source_lon % 360) // 30)
+        house = (house_sector(source_lon, house_cusps)
+                 if house_cusps is not None else None)
+        theta = math.pi + math.radians(asc - glyph_lon)
+        glyph_width = glyph['rect'][2] - glyph['rect'][0] - 2.4
+        glyph_height = glyph['rect'][3] - glyph['rect'][1] - 2.4
+        preferred_radius = glyph_radius + direction * (
+            _radial_reach((glyph_width, glyph_height), theta) +
+            _radial_reach(box, theta) + 3.0)
+        candidates = []
+        for shift in angle_shifts:
+            display_lon = (glyph_lon + shift) % 360
+            display_theta = math.pi + math.radians(asc - display_lon)
+            reach = _radial_reach(box, display_theta)
+            min_radius = inner + reach + 2
+            max_radius = outer - reach - 2
+            if min_radius > max_radius:
                 continue
-            if (original_house is not None and
-                    house_sector(label_lon, house_cusps) != original_house):
+            # Quantize radial positions to ~3px and include the preferred
+            # radius, so tiny rings and wide outer ones both behave well.
+            radii = [min_radius, max_radius,
+                     max(min_radius, min(max_radius, preferred_radius))]
+            step_count = max(1, int((max_radius - min_radius) / 3.0))
+            radii.extend(min_radius + k * (max_radius - min_radius) /
+                         step_count for k in range(step_count + 1))
+            for radius in radii:
+                point = _polar_point(asc, display_lon, radius)
+                ink_rect = _rect(point, box, margin=.8)
+                if any(_intersect_area(ink_rect, other) > 0
+                       for other in occupied_glyphs):
+                    continue
+                distance = math.hypot(point[0] - glyph_pos[0],
+                                      point[1] - glyph_pos[1])
+                # Do not confuse planets by putting a number on the other
+                # side of the chart. The limit scales with chart radius.
+                if distance > max(40.0, min(65.0, glyph_radius * .18)):
+                    continue
+                sector_cost = 0
+                if int(display_lon // 30) != sign:
+                    sector_cost += 17
+                if (house is not None and
+                        house_sector(display_lon, house_cusps) != house):
+                    sector_cost += 12
+                opposite = (radius - glyph_radius) * direction < 0
+                cost = (distance + abs(shift) * .30 +
+                        abs(radius - preferred_radius) * .16 +
+                        (6 if opposite else 0) + sector_cost)
+                candidates.append((cost, point, ink_rect))
+        # Deduplicate candidates with identical rounded coordinates.
+        candidates.sort(key=lambda item: item[0])
+        seen = set()
+        unique = []
+        for candidate in candidates:
+            key = tuple(round(v, 1) for v in candidate[1])
+            if key not in seen:
+                unique.append(candidate)
+                seen.add(key)
+        candidate_sets.append(unique)
+
+    # Constrained first: reserve the scarce nearby positions before less
+    # crowded planets claim them. Every placement must avoid *all* glyphs.
+    def close_count(index):
+        candidates = candidate_sets[index]
+        if not candidates:
+            return 0
+        best_cost = candidates[0][0]
+        return sum(c[0] <= best_cost + 11 for c in candidates)
+
+    order = sorted(range(len(glyphs)), key=lambda i: (
+        close_count(i), len(candidate_sets[i]), i))
+    selected = {}
+    def fits(candidate, exclude=None):
+        return all(_intersect_area(candidate[2], other[2]) == 0
+                   for j, other in selected.items() if j != exclude)
+
+    for i in order:
+        for candidate in candidate_sets[i]:
+            if fits(candidate):
+                selected[i] = candidate
+                break
+        if i in selected:
+            continue
+        # Repair one earlier greedy placement before hiding the number.
+        # This is cheap for the maximum nine planetary glyphs in a chart.
+        for candidate in candidate_sets[i]:
+            conflict = [j for j, other in selected.items()
+                        if _intersect_area(candidate[2], other[2]) > 0]
+            if len(conflict) != 1:
                 continue
-            label_theta = math.pi + math.radians(asc - label_lon)
-            reach = _radial_reach(box, label_theta)
-            for radial in (0, direction * 3, -direction * 3,
-                           direction * 6, -direction * 6,
-                           direction * 10, -direction * 10):
-                r = ideal_radius + radial
-                if r - reach < edges[0] + 2 or r + reach > edges[1] - 2:
-                    continue
-                point = _polar_point(asc, label_lon, r)
-                rect = _rect(point, box, margin=.7)
-                if any(_intersect_area(rect, other) > 0 for other in
-                       glyph_rects + placed_rects):
-                    continue
-                score = abs(shift) * 6 + abs(radial)
-                if score < best_score:
-                    best = (point, rect)
-                    best_score = score
-        if best is None:
-            points.append(None)
-            hidden.append(i)
-        else:
-            points.append(best[0])
-            placed_rects.append(best[1])
+            victim = conflict[0]
+            previous = selected.pop(victim)
+            selected[i] = candidate
+            replacement = next((alternative for alternative in
+                                candidate_sets[victim] if fits(alternative)),
+                               None)
+            if replacement is not None:
+                selected[victim] = replacement
+                break
+            selected.pop(i)
+            selected[victim] = previous
+
+    points = [selected[i][1] if i in selected else None
+              for i in range(len(glyphs))]
+    hidden = [i for i in range(len(glyphs)) if i not in selected]
     return points, hidden
