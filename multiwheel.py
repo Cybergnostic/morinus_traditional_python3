@@ -80,6 +80,7 @@ class MultiWheel:
         self.options = options
         self.bw = bool(bw)
         self.aspect_ring = -1  # -1 = none; 0 = radix only; 1..3 = radix to ring
+        self.reference_outside = False  # False = original; True = exterior bands
         self.hits = []
         self.buffer = None
 
@@ -638,7 +639,11 @@ class MultiWheel:
                   int((self.cx + outer) * self.scale),
                   int((self.cy + outer) * self.scale))
             self.draw.ellipse(xy, fill=shade)
-        inner = zodiac[1]
+        # Original: the reference bands separate radix from outer charts,
+        # so erase through the zodiac's outer edge. Exterior: clearing to
+        # the zodiac would also ERASE all the planetary rings. Only the
+        # core must be restored in that layout.
+        inner = self.core_radius if self.reference_outside else zodiac[1]
         xy = (int((self.cx - inner) * self.scale),
               int((self.cy - inner) * self.scale),
               int((self.cx + inner) * self.scale),
@@ -794,7 +799,8 @@ class MultiWheel:
         self.cx, self.cy = self.width / 2.0, self.height / 2.0
         self.rmax = min(self.width, self.height) * .465
         core, decans, terms, zodiac, rings = multiwheel_layout.allocate_traditional_rings(
-            self.rmax, len(self.others), self.options.showterms, self.options.showdecans)
+            self.rmax, len(self.others), self.options.showterms,
+            self.options.showdecans, reference_outside=self.reference_outside)
         self.core_radius = core
         self.prepare_planet_fonts(core, rings)
         bg = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
@@ -808,16 +814,26 @@ class MultiWheel:
         self.drawn_retrograde_glyphs = []
         self.draw_ring_backgrounds(zodiac, rings)
         self.draw_radix(core)
-        self.draw_decans(decans)
-        self.draw_terms(terms)
-        self.draw_zodiac(zodiac)
+        if not self.reference_outside:
+            self.draw_decans(decans)
+            self.draw_terms(terms)
+            self.draw_zodiac(zodiac)
         for index, (chrt, edges) in enumerate(zip(self.others, rings), 1):
             self.draw_outer_ring(chrt, index, edges)
+        if self.reference_outside:
+            # The outer reference bands are not another chart; they have
+            # no house lines, angles, planet dials or chart identity.
+            self.draw_decans(decans)
+            self.draw_terms(terms)
+            self.draw_zodiac(zodiac)
         self.draw_separator_gaps(rings)
-        # One continuous perimeter closes the entire multiwheel. Draw last
-        # so house/angle spokes stop cleanly at the final edge.
-        self.circle(rings[-1][1] - .6, 'circle',
-                    None if self.bw else RING_COLOURS[len(rings) - 1])
+        # Exterior mode ends with the shared zodiac; the original layout
+        # ends at the last coloured planetary chart.
+        if self.reference_outside:
+            self.circle(zodiac[1] - .6, 'circle')
+        else:
+            self.circle(rings[-1][1] - .6, 'circle',
+                        None if self.bw else RING_COLOURS[len(rings) - 1])
         # Labels are part of the chart image (and therefore its PNG), not
         # only the window's selectors. Add them after separators are clear.
         self.draw_centre_identity()
@@ -948,6 +964,12 @@ class MultiWheelFrame(wx.Frame):
             self, choices=i18n.tr(['None', 'Radix only', 'Radix and ring 1']))
         self.aspect_choice.SetSelection(0)
         row.Add(self.aspect_choice, 0, wx.RIGHT, 15)
+        row.Add(wx.StaticText(self, label=i18n.tr('Reference bands:')),
+                0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
+        self.reference_choice = wx.Choice(
+            self, choices=i18n.tr(['Inside (classic)', 'Outside (experimental)']))
+        self.reference_choice.SetSelection(0)
+        row.Add(self.reference_choice, 0, wx.RIGHT, 8)
         outer.Add(row, 0, wx.LEFT | wx.RIGHT | wx.TOP, 7)
         viewrow = wx.BoxSizer(wx.HORIZONTAL)
         self.fit_button = wx.Button(self, label=i18n.tr('Fit'))
@@ -1018,6 +1040,7 @@ class MultiWheelFrame(wx.Frame):
         self.Bind(wx.EVT_CHOICE, self.change_count, self.count_choice)
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.aspect_choice)
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.labels_choice)
+        self.Bind(wx.EVT_CHOICE, self.queue_draw, self.reference_choice)
         self.Bind(wx.EVT_BUTTON, self.onSaveAsBitmap, self.savebutton)
         self.Bind(wx.EVT_BUTTON, self.zoom_fit, self.fit_button)
         self.Bind(wx.EVT_BUTTON, self.zoom_actual, self.actual_button)
@@ -1128,6 +1151,7 @@ class MultiWheelFrame(wx.Frame):
         self.renderer.aspect_ring = aspect_ring_from_choice(
             self.aspect_choice.GetSelection())
         self.renderer.label_mode = self.labels_choice.GetSelection()
+        self.renderer.reference_outside = bool(self.reference_choice.GetSelection())
         self.buffer = self.renderer.drawChart()
         notes = []
         if repeated:
@@ -1203,6 +1227,7 @@ class MultiWheelFrame(wx.Frame):
             exporter.aspect_ring = aspect_ring_from_choice(
                 self.aspect_choice.GetSelection())
             exporter.label_mode = self.labels_choice.GetSelection()
+            exporter.reference_outside = bool(self.reference_choice.GetSelection())
             bitmap = exporter.drawChart()
             if bitmap.SaveFile(path, wx.BITMAP_TYPE_PNG):
                 self.mainfr.fpathimgs = os.path.dirname(path)
