@@ -332,13 +332,6 @@ class MultiWheel:
                         self.point(degree, base + direction * length), role)
         return self.planet_label_edges(edges, side), base
 
-    def draw_sign_spokes(self, inner, outer):
-        """Continue sign divisions inside a planetary ring, never the zodiac."""
-        for sign in range(12):
-            lon = sign * 30.0
-            self.stroke(self.point(lon, inner),
-                        self.point(lon, outer), 'divider')
-
     def draw_houses(self, core):
         """House numbers retain the inner Morinus chart's house-number ring."""
         if not self.options.houses:
