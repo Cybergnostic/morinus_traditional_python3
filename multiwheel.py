@@ -7,6 +7,7 @@ import i18n
 import math
 import os
 import time as _time
+from collections import OrderedDict
 import wx
 from PIL import Image, ImageDraw
 
@@ -16,9 +17,11 @@ import common
 import comparegrid
 import houses
 import multiwheel_layout
+import multiwheel_returnnav
 import multiwheel_sources
 import wheel_primitives
 import planets
+import returnslist
 import util
 
 
@@ -865,8 +868,13 @@ class RingChartPicker(comparegrid.ChartPicker):
 
     def __init__(self, parent, mainfr, owner, on_change, prefer=0):
         self.owner = owner
+        self.ring_index = prefer
         super().__init__(parent, mainfr, on_change, prefer)
         self.create_button = wx.Button(self, label=i18n.tr('Create chart...'))
+        self.prev_button = wx.Button(self, label='◀', size=(31, -1))
+        self.next_button = wx.Button(self, label='▶', size=(31, -1))
+        self.prev_button.SetToolTip(i18n.tr('Previous return'))
+        self.next_button.SetToolTip(i18n.tr('Next return'))
         # Reflow only the multiwheel picker: a full-width chart choice above
         # the two source buttons fits a useful, compact left sidebar.
         old = self.GetSizer()
@@ -874,11 +882,31 @@ class RingChartPicker(comparegrid.ChartPicker):
         controls = wx.BoxSizer(wx.HORIZONTAL)
         controls.Add(self.openbutton, 1, wx.RIGHT, 4)
         controls.Add(self.create_button, 1)
+        controls.Add(self.prev_button, 0, wx.LEFT, 3)
+        controls.Add(self.next_button, 0, wx.LEFT, 3)
         column = wx.BoxSizer(wx.VERTICAL)
         column.Add(self.choice, 0, wx.EXPAND | wx.BOTTOM, 4)
         column.Add(controls, 0, wx.EXPAND)
         self.SetSizer(column)
         self.create_button.Bind(wx.EVT_BUTTON, self.show_create_menu)
+        self.prev_button.Bind(wx.EVT_BUTTON,
+                              lambda e: self.owner.step_return_ring(self.ring_index, False))
+        self.next_button.Bind(wx.EVT_BUTTON,
+                              lambda e: self.owner.step_return_ring(self.ring_index, True))
+        self.update_step_buttons()
+
+    def update_step_buttons(self):
+        if not hasattr(self, 'prev_button'):
+            return
+        chrt = self.selected()
+        enabled = (chrt.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR)
+                   and self.owner.return_origin(chrt) is not None)
+        self.prev_button.Enable(enabled)
+        self.next_button.Enable(enabled)
+
+    def changed(self, event):
+        self.update_step_buttons()
+        super().changed(event)
 
     def refresh(self, event=None):
         previous = self.selected()
@@ -916,6 +944,7 @@ class RingChartPicker(comparegrid.ChartPicker):
         selected = next((i for i, (_, chrt) in enumerate(self.sources)
                          if chrt is previous), 0)
         self.choice.SetSelection(selected)
+        self.update_step_buttons()
         if event is not None or self.selected() is not previous:
             self.on_change()
 
@@ -931,6 +960,7 @@ class RingChartPicker(comparegrid.ChartPicker):
         for index, (_, source) in enumerate(self.sources):
             if source is chrt:
                 self.choice.SetSelection(index)
+                self.update_step_buttons()
                 self.on_change()
                 return
 
@@ -984,6 +1014,7 @@ class RingChartPicker(comparegrid.ChartPicker):
         New natal and horary charts are constructed independently: they do
         not replace the main horoscope or close any existing windows.
         """
+        radix = None
         if action == 'new':
             chrt = self.create_new_chart()
         elif action == 'here_now':
@@ -1007,11 +1038,11 @@ class RingChartPicker(comparegrid.ChartPicker):
                     'synastry': 'onSynastry',
                 }
                 getattr(self.mainfr, methods[action])(None)
-            created = [getattr(w, 'chart', None)
-                       for w in wx.GetTopLevelWindows()
-                       if id(w) not in before and not w.IsBeingDeleted()]
-            chrt = next((item for item in reversed(created)
-                         if isinstance(item, chart.Chart)), None)
+            created = [w for w in wx.GetTopLevelWindows()
+                       if id(w) not in before and not w.IsBeingDeleted()
+                       and isinstance(getattr(w, 'chart', None), chart.Chart)]
+            chrt = created[-1].chart if created else None
+            radix = getattr(created[-1], 'radix', None) if created else None
         if chrt is not None:
             labels = {
                 'new': 'New chart', 'here_now': 'Here and now',
@@ -1025,7 +1056,8 @@ class RingChartPicker(comparegrid.ChartPicker):
                 'syzygy': 'Prenatal syzygy',
                 'syzygy_other': 'Other prenatal syzygy',
             }
-            self.owner.register_chart(chrt, i18n.tr(labels[action]), self)
+            self.owner.register_chart(chrt, i18n.tr(labels[action]), self,
+                                      radix=radix)
 
 
 class MultiWheelFrame(wx.Frame):
@@ -1042,6 +1074,11 @@ class MultiWheelFrame(wx.Frame):
         self.zoom_factor = None  # None = fit window; 1.0 = natural chart size
         self.sidebar_visible = True
         self.registered_charts = []
+        self.return_origins = {}
+        self.return_years = {}
+        self.lunar_years = {}
+        self.return_cache = OrderedDict()
+        self._updating_returns = False
         self.bitmap_origin = (0, 0)
         self._last_hover = ''
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
@@ -1107,7 +1144,7 @@ class MultiWheelFrame(wx.Frame):
                 tag.SetForegroundColour(wx.Colour(*RING_COLOURS[i - 1]))
             line.Add(tag, 0, wx.BOTTOM, 4)
             picker = RingChartPicker(strip, mainfr, self,
-                                     self.queue_draw, i)
+                                     lambda index=i: self.on_picker_change(index), i)
             line.Add(picker, 0, wx.EXPAND)
             strip.SetSizer(line)
             self.pickers.append(picker)
@@ -1115,6 +1152,34 @@ class MultiWheelFrame(wx.Frame):
             controls.Add(strip, 0, wx.EXPAND | wx.BOTTOM, 14)
             if i > 1:
                 strip.Hide()
+        self.return_panel = wx.Panel(self.sidebar)
+        return_controls = wx.BoxSizer(wx.VERTICAL)
+        return_controls.Add(wx.StaticText(self.return_panel,
+                           label=i18n.tr('Return navigation')), 0, wx.BOTTOM, 8)
+        return_controls.Add(wx.StaticText(self.return_panel,
+                           label=i18n.tr('Solar ring')), 0, wx.BOTTOM, 3)
+        self.solar_ring_choice = wx.Choice(self.return_panel)
+        return_controls.Add(self.solar_ring_choice, 0, wx.EXPAND | wx.BOTTOM, 6)
+        return_controls.Add(wx.StaticText(self.return_panel,
+                           label=i18n.tr('Solar years')), 0, wx.BOTTOM, 3)
+        self.solar_year_list = wx.ListBox(self.return_panel, size=(-1, 108))
+        return_controls.Add(self.solar_year_list, 0, wx.EXPAND | wx.BOTTOM, 9)
+        return_controls.Add(wx.StaticText(self.return_panel,
+                           label=i18n.tr('Lunar ring')), 0, wx.BOTTOM, 3)
+        self.lunar_ring_choice = wx.Choice(self.return_panel)
+        return_controls.Add(self.lunar_ring_choice, 0, wx.EXPAND | wx.BOTTOM, 6)
+        return_controls.Add(wx.StaticText(self.return_panel,
+                           label=i18n.tr('Lunar returns')), 0, wx.BOTTOM, 3)
+        self.lunar_list = wx.ListBox(self.return_panel, size=(-1, 180))
+        return_controls.Add(self.lunar_list, 0, wx.EXPAND)
+        self.return_panel.SetSizer(return_controls)
+        controls.Add(self.return_panel, 0, wx.EXPAND | wx.BOTTOM, 12)
+        self._nav_solar_ring = None
+        self._nav_lunar_ring = None
+        self._nav_solar_slots = []
+        self._nav_lunar_slots = []
+        self._nav_years = []
+        self._nav_lunar_rows = []
         self.selection_note = wx.StaticText(self.sidebar, label='')
         self.selection_note.Wrap(290)
         controls.Add(self.selection_note, 0, wx.EXPAND | wx.BOTTOM, 8)
@@ -1140,6 +1205,10 @@ class MultiWheelFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.zoom_in, self.in_button)
         self.Bind(wx.EVT_BUTTON, self.zoom_out, self.out_button)
         self.Bind(wx.EVT_BUTTON, self.toggle_sidebar, self.side_button)
+        self.solar_ring_choice.Bind(wx.EVT_CHOICE, self.on_solar_ring_choice)
+        self.lunar_ring_choice.Bind(wx.EVT_CHOICE, self.on_lunar_ring_choice)
+        self.solar_year_list.Bind(wx.EVT_LISTBOX, self.on_solar_year_choice)
+        self.lunar_list.Bind(wx.EVT_LISTBOX, self.on_lunar_choice)
         self.canvas.Bind(wx.EVT_PAINT, self.paint)
         self.canvas.Bind(wx.EVT_SIZE, self.resize)
         self.canvas.Bind(wx.EVT_LEFT_UP, self.on_click)
@@ -1147,6 +1216,7 @@ class MultiWheelFrame(wx.Frame):
         self.canvas.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave)
         self.Bind(wx.EVT_ACTIVATE, lambda e: (comparegrid.refresh_pickers(self.pickers) if e.GetActive() else None, e.Skip()))
         self.CentreOnParent()
+        self.refresh_return_navigation()
         wx.CallAfter(self.queue_draw)
 
     def change_count(self, event=None):
@@ -1163,18 +1233,339 @@ class MultiWheelFrame(wx.Frame):
         self.sidebar.Layout()
         self.sidebar.FitInside()
         self.Layout()
+        self.refresh_return_navigation()
         self.queue_draw()
 
-    def register_chart(self, chrt, label, picker):
+    def register_chart(self, chrt, label, picker, radix=None, solar_year=None):
         """Retain a newly created/loaded chart for all ring dropdowns.
 
         Only the ring whose button was used changes its selection.
         """
+        if (chrt.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR)
+                and isinstance(radix, chart.Chart)
+                and radix.htype == chart.Chart.RADIX):
+            self.return_origins[chrt] = radix
+        if solar_year is not None:
+            self.return_years[chrt] = solar_year
         if not any(source is chrt for _, source in self.registered_charts):
             self.registered_charts.append((label, chrt))
-        for item in self.pickers:
-            item.refresh()
-        picker.select_chart(chrt)
+        previous = self._updating_returns
+        self._updating_returns = True
+        try:
+            for item in self.pickers:
+                item.refresh()
+            picker.select_chart(chrt)
+        finally:
+            self._updating_returns = previous
+        if not previous:
+            self.refresh_return_navigation()
+            self.queue_draw()
+
+    def return_origin(self, chrt):
+        """Only documented natal provenance can link two returns.
+
+        In particular, identical names, birth dates or calculated planets
+        are not sufficient to infer that two open charts have one radix.
+        """
+        if chrt.htype not in (chart.Chart.SOLAR, chart.Chart.LUNAR):
+            return None
+        radix = self.return_origins.get(chrt)
+        if radix is not None:
+            return radix
+        for wnd in wx.GetTopLevelWindows():
+            if wnd.IsBeingDeleted():
+                continue
+            if getattr(wnd, 'chart', None) is chrt:
+                candidate = getattr(wnd, 'radix', None)
+                if (isinstance(candidate, chart.Chart)
+                        and candidate.htype == chart.Chart.RADIX):
+                    self.return_origins[chrt] = candidate
+                    return candidate
+            others = getattr(wnd, 'return_origins', None)
+            if others is not None and chrt in others:
+                self.return_origins[chrt] = others[chrt]
+                return others[chrt]
+        return None
+
+    def on_picker_change(self, index):
+        self.queue_draw()
+        if not self._updating_returns and hasattr(self, 'solar_ring_choice'):
+            self.refresh_return_navigation()
+
+    def ring_assignments(self):
+        count = self.count_choice.GetSelection() + 2  # centre + outer fields
+        out = []
+        for picker in self.pickers[:count]:
+            selected = picker.selected()
+            kind = ('solar' if selected.htype == chart.Chart.SOLAR else
+                    'lunar' if selected.htype == chart.Chart.LUNAR else None)
+            out.append((kind, self.return_origin(selected) if kind else None))
+        return out
+
+    def return_rows(self, radix, year):
+        if radix is None or not 1 <= year <= 9998:
+            return []
+        key = (radix, year)
+        if key in self.return_cache:
+            self.return_cache.move_to_end(key)
+            return self.return_cache[key]
+        try:
+            rows = returnslist.compute(radix, year)
+        except (ValueError, OverflowError, RuntimeError) as exc:
+            self.SetStatusText(str(exc))
+            return []
+        self.return_cache[key] = rows
+        if len(self.return_cache) > 6:
+            self.return_cache.popitem(last=False)
+        return rows
+
+    def solar_year(self, chrt):
+        known = self.return_years.get(chrt)
+        if known is not None:
+            return known
+        # A solar return at the edge of December/January may take place
+        # in a different UTC calendar year from the requested return year.
+        radix = self.return_origin(chrt)
+        if radix is not None:
+            for candidate in (chrt.time.year, chrt.time.year - 1,
+                              chrt.time.year + 1):
+                if not 1 <= candidate <= 9998:
+                    continue
+                t = returnslist.solar_return(radix, candidate)
+                if (t is not None and abs(returnslist.gmt_time(t, radix).jd
+                                          - chrt.time.jd) < .03):
+                    self.return_years[chrt] = candidate
+                    return candidate
+        return chrt.time.year
+
+    def lunar_solar_year(self, lunar, radix):
+        """Which solar year contains a standalone lunar return?"""
+        if lunar in self.lunar_years:
+            return self.lunar_years[lunar]
+        # A solar return for a named year can occur in the previous
+        # December or the next January. Compare Julian-day boundaries,
+        # not calendar years, to handle birthdays near New Year's Day.
+        calendar_year = lunar.time.year
+        for year in range(calendar_year - 1, calendar_year + 2):
+            if not 1 <= year <= 9997:
+                continue
+            start = returnslist.solar_return(radix, year)
+            end = returnslist.solar_return(radix, year + 1)
+            if (start and end and
+                    returnslist.gmt_time(start, radix).jd <= lunar.time.jd
+                    < returnslist.gmt_time(end, radix).jd):
+                self.lunar_years[lunar] = year
+                return year
+        return None
+
+    def selected_solar_for_lunar(self, lunar_index, assignments=None):
+        assignments = assignments or self.ring_assignments()
+        return multiwheel_returnnav.nearest_inner_solar(lunar_index, assignments)
+
+    def select_solar_year(self, ring_index, year, lunar_overrides=None):
+        """Step a solar ring and reset matching outer lunar rings to in-force.
+
+        The sole exception is the lunar ring that initiated a chronological
+        cross-year step: it displays the actual next/previous lunar event.
+        """
+        solar = self.pickers[ring_index].selected()
+        radix = self.return_origin(solar)
+        if solar.htype != chart.Chart.SOLAR or radix is None:
+            return False
+        assignments = self.ring_assignments()
+        linked = multiwheel_returnnav.linked_lunar_indices(ring_index, assignments)
+        # Do not calculate a whole year of lunar returns when only the
+        # solar chart is present. That is noticeably slower than one SR.
+        rows = self.return_rows(radix, year) if linked else []
+        solar_t = rows[0].t if rows else returnslist.solar_return(radix, year)
+        if solar_t is None or (linked and len(rows) < 2):
+            return False
+        overrides = lunar_overrides or {}
+        prior = self._updating_returns
+        self._updating_returns = True
+        try:
+            new_solar = returnslist.return_chart(
+                solar_t, radix, chart.Chart.SOLAR, solar.place)
+            self.register_chart(new_solar, i18n.tr('Solar return'),
+                                self.pickers[ring_index], radix=radix,
+                                solar_year=year)
+            for index in linked:
+                old_lunar = self.pickers[index].selected()
+                row = overrides.get(index, rows[1])
+                new_lunar = returnslist.return_chart(
+                    row.t, radix, chart.Chart.LUNAR, old_lunar.place)
+                self.register_chart(new_lunar, i18n.tr('Lunar return'),
+                                    self.pickers[index], radix=radix)
+        finally:
+            self._updating_returns = prior
+        if not prior:
+            self.refresh_return_navigation()
+            self.queue_draw()
+        return True
+
+    def select_lunar_row(self, ring_index, row, radix):
+        old = self.pickers[ring_index].selected()
+        if old.htype != chart.Chart.LUNAR or self.return_origin(old) is not radix:
+            return False
+        new_lunar = returnslist.return_chart(
+            row.t, radix, chart.Chart.LUNAR, old.place)
+        self.register_chart(new_lunar, i18n.tr('Lunar return'),
+                            self.pickers[ring_index], radix=radix)
+        return True
+
+    def step_return_ring(self, ring_index, forward):
+        selected = self.pickers[ring_index].selected()
+        radix = self.return_origin(selected)
+        if radix is None:
+            return
+        delta = 1 if forward else -1
+        if selected.htype == chart.Chart.SOLAR:
+            if not self.select_solar_year(ring_index,
+                                          self.solar_year(selected) + delta):
+                self.SetStatusText(i18n.tr('The next return could not be computed.'))
+            return
+        if selected.htype != chart.Chart.LUNAR:
+            return
+        assignments = self.ring_assignments()
+        solar_index = self.selected_solar_for_lunar(ring_index, assignments)
+        if solar_index is None:
+            # For an unrelated or standalone lunar ring, no other chart is
+            # changed. Morinus's ordinary return stepper already handles it.
+            new_lunar = returnslist.step_return(radix, selected, forward)
+            if new_lunar is not None:
+                self.register_chart(new_lunar, i18n.tr('Lunar return'),
+                                    self.pickers[ring_index], radix=radix)
+            else:
+                self.SetStatusText(i18n.tr('The next return could not be computed.'))
+            return
+        year = self.solar_year(self.pickers[solar_index].selected())
+        rows = self.return_rows(radix, year)
+        hits = rows[1:]
+        target_index = multiwheel_returnnav.next_return_index(
+            hits, selected.time.jd, forward)
+        if target_index is not None:
+            self.select_lunar_row(ring_index, hits[target_index], radix)
+            return
+        # The same in-force LR can occur at both sides of the year
+        # boundary. Choose a strictly different event on the new year's
+        # list and move the associated inner SR at the same time.
+        next_year = year + delta
+        hits = self.return_rows(radix, next_year)[1:]
+        target_index = multiwheel_returnnav.next_return_index(
+            hits, selected.time.jd, forward)
+        if (target_index is None or not self.select_solar_year(
+                solar_index, next_year,
+                lunar_overrides={ring_index: hits[target_index]})):
+            self.SetStatusText(i18n.tr('The next return could not be computed.'))
+
+    def refresh_return_navigation(self):
+        """Show just the returns of the active year, without changing rings."""
+        if self._updating_returns:
+            return
+        assignments = self.ring_assignments()
+        solar_slots = [i for i, (kind, radix) in enumerate(assignments)
+                       if kind == 'solar' and radix is not None]
+        lunar_slots = [i for i, (kind, radix) in enumerate(assignments)
+                       if kind == 'lunar' and radix is not None]
+        self.return_panel.Show(bool(solar_slots or lunar_slots))
+        self._nav_solar_slots = solar_slots
+        self._nav_lunar_slots = lunar_slots
+        if self._nav_solar_ring not in solar_slots:
+            self._nav_solar_ring = solar_slots[0] if solar_slots else None
+        if self._nav_lunar_ring not in lunar_slots:
+            # Prefer a lunar ring that really follows the chosen SR.
+            matching = [i for i in lunar_slots if
+                        self.selected_solar_for_lunar(i, assignments)
+                        == self._nav_solar_ring]
+            self._nav_lunar_ring = (matching[0] if matching else
+                                    lunar_slots[0] if lunar_slots else None)
+        self.solar_ring_choice.Clear()
+        for i in solar_slots:
+            self.solar_ring_choice.Append(self.ring_label(i))
+        if self._nav_solar_ring is not None:
+            self.solar_ring_choice.SetSelection(
+                solar_slots.index(self._nav_solar_ring))
+        self.solar_ring_choice.Enable(bool(solar_slots))
+        self.lunar_ring_choice.Clear()
+        for i in lunar_slots:
+            self.lunar_ring_choice.Append(self.ring_label(i))
+        if self._nav_lunar_ring is not None:
+            self.lunar_ring_choice.SetSelection(
+                lunar_slots.index(self._nav_lunar_ring))
+        self.lunar_ring_choice.Enable(bool(lunar_slots))
+
+        self._nav_years = []
+        self.solar_year_list.Clear()
+        if self._nav_solar_ring is not None:
+            year = self.solar_year(self.pickers[self._nav_solar_ring].selected())
+            self._nav_years = list(multiwheel_returnnav.solar_year_window(year))
+            for choice in self._nav_years:
+                self.solar_year_list.Append(str(choice))
+            if year in self._nav_years:
+                self.solar_year_list.SetSelection(self._nav_years.index(year))
+        self.solar_year_list.Enable(bool(self._nav_years))
+
+        self._nav_lunar_rows = []
+        self.lunar_list.Clear()
+        if self._nav_lunar_ring is not None:
+            index = self._nav_lunar_ring
+            lunar = self.pickers[index].selected()
+            radix = self.return_origin(lunar)
+            linked_solar = self.selected_solar_for_lunar(index, assignments)
+            if linked_solar is not None:
+                year = self.solar_year(self.pickers[linked_solar].selected())
+            else:
+                year = self.lunar_solar_year(lunar, radix)
+            if year is not None:
+                self._nav_lunar_rows = self.return_rows(radix, year)[1:]
+            for n, row in enumerate(self._nav_lunar_rows, 1):
+                date = '%04d-%02d-%02d %02d:%02d UTC' % row.t[:5]
+                note = (' (' + i18n.tr('in force') + ')' if
+                        row.note == returnslist.IN_FORCE else '')
+                self.lunar_list.Append('%02d  %s%s' % (n, date, note))
+            hit = multiwheel_returnnav.match_return_index(
+                self._nav_lunar_rows, lunar.time.jd)
+            if hit is not None:
+                self.lunar_list.SetSelection(hit)
+        self.lunar_list.Enable(bool(self._nav_lunar_rows))
+        self.sidebar.Layout()
+        self.sidebar.FitInside()
+
+    @staticmethod
+    def ring_label(index):
+        return i18n.tr('Inner chart') if index == 0 else i18n.tr('Ring %d') % index
+
+    def on_solar_ring_choice(self, event):
+        choice = self.solar_ring_choice.GetSelection()
+        if 0 <= choice < len(self._nav_solar_slots):
+            self._nav_solar_ring = self._nav_solar_slots[choice]
+            matching = [i for i in self._nav_lunar_slots if
+                        self.selected_solar_for_lunar(i)
+                        == self._nav_solar_ring]
+            if matching:
+                self._nav_lunar_ring = matching[0]
+            self.refresh_return_navigation()
+
+    def on_lunar_ring_choice(self, event):
+        choice = self.lunar_ring_choice.GetSelection()
+        if 0 <= choice < len(self._nav_lunar_slots):
+            self._nav_lunar_ring = self._nav_lunar_slots[choice]
+            self.refresh_return_navigation()
+
+    def on_solar_year_choice(self, event):
+        choice = self.solar_year_list.GetSelection()
+        if (self._nav_solar_ring is not None
+                and 0 <= choice < len(self._nav_years)):
+            self.select_solar_year(self._nav_solar_ring, self._nav_years[choice])
+
+    def on_lunar_choice(self, event):
+        choice = self.lunar_list.GetSelection()
+        if (self._nav_lunar_ring is not None
+                and 0 <= choice < len(self._nav_lunar_rows)):
+            selected = self.pickers[self._nav_lunar_ring].selected()
+            self.select_lunar_row(self._nav_lunar_ring,
+                                  self._nav_lunar_rows[choice],
+                                  self.return_origin(selected))
 
     def toggle_sidebar(self, event=None):
         self.sidebar_visible = not self.sidebar_visible

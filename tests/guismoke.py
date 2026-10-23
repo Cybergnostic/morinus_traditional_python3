@@ -460,6 +460,61 @@ def main():
 				assert inner.selected() is frame.horoscope
 				wnd.count_choice.SetSelection(0)
 				wnd.change_count()
+				# Return navigation: year selection resets the outer LR to the
+				# in-force event; crossing a boundary steps the matching SR.
+				# Use a small deterministic return series to exercise controls
+				# without rerunning 15 months of ephemeris transits in smoke.
+				from types import SimpleNamespace
+				import returnslist
+				natal = frame.horoscope
+				base_year = 2026
+				def sample_rows(radix, year):
+					assert radix is natal
+					stamps = [(year, 6, 1, 12, 0, 0),
+						(year, 5, 25, 12, 0, 0),
+						(year, 7, 20, 12, 0, 0),
+						(year + 1, 5, 25, 12, 0, 0)]
+					return [SimpleNamespace(t=t, jd=returnslist.gmt_time(t, radix).jd,
+						note=returnslist.IN_FORCE if i == 1 else '')
+						for i, t in enumerate(stamps)]
+				wnd.return_rows = sample_rows
+				wnd.count_choice.SetSelection(1)
+				wnd.change_count()
+				solar = returnslist.return_chart(sample_rows(natal, base_year)[0].t,
+					natal, chart.Chart.SOLAR)
+				lunar = returnslist.return_chart(sample_rows(natal, base_year)[1].t,
+					natal, chart.Chart.LUNAR)
+				wnd.register_chart(solar, 'Smoke SR', picker, radix=natal,
+					solar_year=base_year)
+				lunar_picker = wnd.pickers[2]
+				wnd.register_chart(lunar, 'Smoke LR', lunar_picker, radix=natal)
+				assert wnd.return_origin(solar) is natal
+				assert wnd.return_origin(lunar) is natal
+				assert len(wnd._nav_years) == 5
+				assert len(wnd._nav_lunar_rows) == 3
+				assert wnd.pickers[0].selected() is natal
+				assert lunar_picker.next_button.IsEnabled()
+				# Pick the last LR in the old solar year, then step across.
+				wnd.lunar_list.SetSelection(2)
+				wnd.on_lunar_choice(None)
+				wnd.step_return_ring(2, True)
+				assert wnd.solar_year(picker.selected()) == base_year + 1
+				assert (lunar_picker.selected().time.jd ==
+					sample_rows(natal, base_year + 1)[2].jd)
+				# Direct SR year changes choose first LR in force, NOT its
+				# previous ordinal position in the earlier year's list.
+				assert wnd.select_solar_year(1, base_year + 2)
+				assert wnd.solar_year(picker.selected()) == base_year + 2
+				assert (lunar_picker.selected().time.jd ==
+					sample_rows(natal, base_year + 2)[1].jd)
+				# Selecting an arbitrary natal / unrelated chart must never
+				# trigger automatic changes to another ring.
+				lunar_picker.select_chart(created)
+				assert wnd.select_solar_year(1, base_year + 3)
+				assert lunar_picker.selected() is created
+				picker.select_chart(secondary)
+				wnd.count_choice.SetSelection(0)
+				wnd.change_count()
 				# House separators must be LOCAL to their chart field.
 				# Give the outer chart deliberately different cusps, then
 				# trace the actual strokes. Sign spokes should never appear
