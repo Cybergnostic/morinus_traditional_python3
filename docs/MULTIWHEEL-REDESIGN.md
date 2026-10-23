@@ -195,3 +195,27 @@ Do not merge until the multiwheel screenshots have been checked.
 Before merging, review fit and 100% screenshots for bi-, tri-, quad-wheels,
 including tight conjunctions close to house cusps. The numeric annotation
 suppression is intentional only when fit is mathematically impossible.
+
+## October 23: numeric label loss in bi-wheel (follow-up)
+
+Screenshots comparing Glyphs only / Glyphs + degrees / Full positions showed
+all planetary glyphs present, but numeric labels disappeared in the latter
+two modes. Root cause: the first independent-degree solver looked only in a
+narrow radial strip and angular window, and rejected numbers near cusps as
+if they were actual planet glyphs.
+
+- Replaced that solver with measured candidates spread through the usable
+  planetary annulus, testing both radial sides and a wider local angular
+  window. Prioritizes close labels and scarce-space labels, tries to
+  relocate an earlier label when one conflict prevents another.
+- Sign/house requirements remain strict for **planetary glyphs**; numeric
+  annotations may shift slightly across a nearby boundary if needed.
+  They are visual metadata, not the displayed planetary position.
+- Never paints numbers on top of real planetary glyphs or other degree
+  labels. All exact degree/minute positions remain available on hover.
+- Thin tinted connecting lines associate numeric annotations with their
+  planets when the annotation must be moved significantly.
+- Added nine-body degree and full-position collision regression tests.
+
+Verify the actual chart screenshots again before merging. Exceptional
+unplaceable labels are still reported rather than drawn over a glyph.
