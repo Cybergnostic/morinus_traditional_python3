@@ -3,7 +3,8 @@ import unittest
 from multiwheel_layout import (allocate_rings, allocate_traditional_rings,
                                spread_longitudes, zodiac_sign_lane,
                                place_planet_clusters, _intersect_area,
-                               shared_planet_font_sizes)
+                               shared_planet_font_sizes, house_sector,
+                               place_planet_glyphs, place_degree_annotations)
 
 
 class MultiWheelLayoutTests(unittest.TestCase):
@@ -153,7 +154,8 @@ class MultiWheelLayoutTests(unittest.TestCase):
         # font size separately. The smallest content band sets the scale.
         for widths in ([40, 65], [65, 40], [80, 40, 65]):
             sizes = shared_planet_font_sizes(300, widths)
-            self.assertEqual(sizes['glyph'], 12)
+            self.assertGreaterEqual(sizes['glyph'], 17)
+            self.assertLess(sizes['degree'], sizes['glyph'])
             self.assertGreaterEqual(sizes['degree'], 9)
             self.assertGreaterEqual(sizes['minute'], 9)
             self.assertGreaterEqual(sizes['motion'], 9)
@@ -170,6 +172,84 @@ class MultiWheelLayoutTests(unittest.TestCase):
                 shared_planet_font_sizes(300, widths)
         with self.assertRaises(ValueError):
             shared_planet_font_sizes(0, [50])
+
+    @staticmethod
+    def twelve_cusps():
+        # House I covers 350° to 20° (crosses 0 Aries); House II
+        # starts at 20° Aries, within the same zodiac sign.
+        return [350, 20, 50, 80, 110, 140,
+                170, 200, 230, 260, 290, 320]
+
+    def test_chart_house_lookup_handles_aries_wrap_and_exact_cusp(self):
+        cusps = self.twelve_cusps()
+        self.assertEqual(house_sector(359, cusps), 0)
+        self.assertEqual(house_sector(0, cusps), 0)
+        self.assertEqual(house_sector(19.999, cusps), 0)
+        self.assertEqual(house_sector(20, cusps), 1)
+        self.assertEqual(house_sector(20.1, cusps), 1)
+        with self.assertRaises(ValueError):
+            house_sector(10, [0, 30])
+
+    def test_primary_glyphs_stay_in_correct_sign_and_house(self):
+        original = [19.8, 20.0, 20.2, 359.8, 0.1, 120]
+        glyphs, unresolved = place_planet_glyphs(
+            original, [(19, 21)] * len(original), (110, 180),
+            350, house_cusps=self.twelve_cusps())
+        self.assertEqual(len(glyphs), len(original))
+        self.assertTrue(set(unresolved).issubset(set(range(len(original)))))
+        for original_lon, glyph in zip(original, glyphs):
+            self.assertEqual(int(original_lon // 30),
+                             int(glyph['longitude'] // 30))
+            self.assertEqual(house_sector(original_lon, self.twelve_cusps()),
+                             house_sector(glyph['longitude'],
+                                          self.twelve_cusps()))
+            self.assertEqual(glyph['exact'], original_lon)
+            self.assertLessEqual(abs((glyph['longitude'] -
+                                      original_lon + 180) % 360 - 180),
+                                 7.501)
+
+    def test_glyphs_do_not_depend_on_degree_label_dimensions(self):
+        longitudes = [4, 4.5, 5, 195]
+        boxes = [(23, 24)] * 4
+        glyphs, unresolved = place_planet_glyphs(
+            longitudes, boxes, (170, 260), 30)
+        # Grossly oversized numbers may need to be hidden, but cannot move
+        # any glyph. Primary positions remain exactly the same objects.
+        labels, hidden = place_degree_annotations(
+            glyphs, longitudes, [(400, 20)] * 4,
+            (170, 260), 30, -1)
+        self.assertEqual(len(labels), len(glyphs))
+        self.assertEqual(hidden, [0, 1, 2, 3])
+        self.assertTrue(all(label is None for label in labels))
+        self.assertEqual([g['exact'] for g in glyphs], longitudes)
+
+    def test_annotations_never_overlap_primary_ink(self):
+        longitudes = [10, 95, 205]
+        glyphs, _ = place_planet_glyphs(
+            longitudes, [(20, 20)] * 3, (110, 195), 40)
+        boxes = [(16, 9)] * 3
+        labels, hidden = place_degree_annotations(
+            glyphs, longitudes, boxes, (110, 195), 40, -1)
+        self.assertFalse(hidden)
+        for point, box in zip(labels, boxes):
+            self.assertIsNotNone(point)
+            rect = (point[0] - box[0] / 2 - .7,
+                    point[1] - box[1] / 2 - .7,
+                    point[0] + box[0] / 2 + .7,
+                    point[1] + box[1] / 2 + .7)
+            self.assertTrue(all(_intersect_area(rect, g['rect']) == 0
+                                for g in glyphs))
+
+    def test_primary_glyph_layout_rejects_invalid_inputs(self):
+        with self.assertRaises(ValueError):
+            place_planet_glyphs([10], [], (110, 195), 40)
+        with self.assertRaises(ValueError):
+            place_planet_glyphs([10], [(20, 20)], (110, 110), 40)
+        with self.assertRaises(ValueError):
+            place_planet_glyphs([10], [(20, 20)], (110, 195), 40,
+                                house_cusps=[10])
+        with self.assertRaises(ValueError):
+            place_degree_annotations([], [1], [], (100, 200), 40, -1)
 
     def test_spreading_keeps_order_across_aries(self):
         longitudes = [359, 1, 3, 15, 210]
