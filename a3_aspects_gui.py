@@ -2,6 +2,7 @@
 import wx
 import i18n
 import light_perfection
+import horary_impediments
 from traditional_aspects import PLANETS
 
 
@@ -40,15 +41,27 @@ def install(frame):
     frame.horary_summary = wx.StaticText(horary, -1,
         i18n.tr('Choose two significators and Analyze timeline to calculate future contacts.'))
     outer.Add(frame.horary_summary, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
+    outer.Add(wx.StaticText(horary, -1, i18n.tr('Perfection and impediments')),
+              0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
+    frame.horary_findings = wx.ListCtrl(horary, -1,
+                                      style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
+    for col, (label, width) in enumerate([
+            ('UT date', 165), ('Finding', 180), ('Actor', 120),
+            ('Other planet', 130), ('Reason', 520)]):
+        frame.horary_findings.InsertColumn(col, i18n.tr(label), width=width)
+    frame.horary_findings.SetMinSize((-1, 165))
+    outer.Add(frame.horary_findings, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
+    outer.Add(wx.StaticText(horary, -1, i18n.tr('Chronological planetary events')),
+              0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
     frame.horary_table = wx.ListCtrl(horary, -1,
                                      style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
     for col, (label, width) in enumerate([
             ('UT date', 185), ('Event', 140), ('Planet A', 135),
             ('Planet B', 135), ('Aspect', 150), ('Days ahead', 115)]):
         frame.horary_table.InsertColumn(col, i18n.tr(label), width=width)
-    outer.Add(frame.horary_table, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 9)
+    outer.Add(frame.horary_table, 2, wx.EXPAND | wx.LEFT | wx.RIGHT, 9)
     note = wx.StaticText(horary, -1, i18n.tr(
-        'Intervening contacts, stations and ingresses require interpretation; they are not automatic judgments of prohibition or refranation.'))
+        'The findings describe possible traditional impediments, not an automatic yes/no horary judgment. Reception and context must still be assessed.'))
     outer.Add(note, 0, wx.ALL, 9)
     horary.SetSizer(outer)
     frame.tabs.InsertPage(3, horary, i18n.tr('Horary perfection'))
@@ -104,8 +117,26 @@ def analyze_timeline(frame):
     finally:
         wx.EndBusyCursor()
     frame.a3_events = events
-    status, significant = light_perfection.horary_timeline(events, first, second, days)
-    frame.horary_summary.SetLabel(i18n.tr(status))
+    # The horary-specific classifier is separate from the universal
+    # translation/collection engine: do not impose these verdicts on natal.
+    i = PLANETS.index(first)
+    j = PLANETS.index(second)
+    cell = frame.chart.aspmatrix[max(i, j)][min(i, j)]
+    kind = cell.typ if cell.typ in range(5) else None
+    initial = dict((name, (float(p.data[0]), float(p.data[3])))
+                   for name, p in zip(PLANETS, frame.chart.planets.planets[:7]))
+    positions_at = aspect_event_adapter.named_positions(frame.chart)
+    review = horary_impediments.assess(
+        events, first, second, kind, initial, positions_at, days)
+    frame.horary_summary.SetLabel(i18n.tr(review.summary))
+    findings = frame.horary_findings
+    findings.DeleteAllItems()
+    for f in review.findings:
+        frame._insert(findings, (
+            _ut_date(f.jd, frame.chart.time.cal == 0),
+            i18n.tr(f.kind), i18n.tr(f.actor),
+            i18n.tr(f.other) if f.other else '—', i18n.tr(f.detail)))
+    _, significant = light_perfection.horary_timeline(events, first, second, days)
     table = frame.horary_table
     table.DeleteAllItems()
     start = frame.chart.time.jd

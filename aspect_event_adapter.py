@@ -8,7 +8,8 @@ IDS = (astrology.SE_SATURN, astrology.SE_JUPITER, astrology.SE_MARS,
        astrology.SE_MOON)
 
 
-def search(chart, days):
+def position_provider(chart):
+    """Return chart-consistent live ephemeris positions at any UT Julian day."""
     if chart.time.bc:
         raise ValueError('Event search is unavailable for BCE charts')
     options = chart.options
@@ -28,4 +29,14 @@ def search(chart, days):
             _flag, data, _error = astrology.swe_calc_ut(jd, planet_id, flags)
             result.append(((data[0] - shift) % 360.0, data[3]))
         return result
-    return scan(positions, chart.time.jd, days)
+    return positions
+
+
+def search(chart, days):
+    return scan(position_provider(chart), chart.time.jd, days)
+
+
+def named_positions(chart):
+    from traditional_aspects import PLANETS
+    positions = position_provider(chart)
+    return lambda jd: dict(zip(PLANETS, positions(jd)))

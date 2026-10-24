@@ -503,3 +503,43 @@ TEXTS.update({
 TEXTS.update({
     'Needs review': 'Zahteva proveru',
 })
+
+# A3 horary impediment classifications
+TEXTS.update({
+    'Perfection and impediments': 'Perfekcija i ometanja',
+    'Chronological planetary events': 'Hronološki planetarni događaji',
+    'Finding': 'Nalaz', 'Actor': 'Planeta', 'Other planet': 'Druga planeta',
+    'Reason': 'Objašnjenje', 'Frustration': 'Frustracija',
+    'Prohibition': 'Prohibicija',
+    'Possible prohibition': 'Moguća prohibicija',
+    'Refranation': 'Refranacija',
+    'Possible refranation': 'Moguća refranacija',
+    'Sign change': 'Promena znaka',
+    'Station': 'Stanica', 'Earlier contact': 'Raniji kontakt',
+    'No applying contact in the current chart': 'Nema aplikacionog aspekta u posmatranoj karti',
+    'Current contact is not applying': 'Trenutni aspekt nije aplikacioni',
+    'Direct perfection: no intervening events detected':
+        'Direktna perfekcija: nema utvrđenih međudogađaja',
+    'Perfection follows earlier events; review the timeline':
+        'Perfekcija sledi nakon drugih događaja; proverite redosled',
+    'Perfection has identified impediment(s); interpret reception and context':
+        'Utvrđena su ometanja perfekcije; protumačite recepciju i kontekst',
+    'The findings describe possible traditional impediments, not an automatic yes/no horary judgment. Reception and context must still be assessed.':
+        'Nalazi prikazuju moguća tradicionalna ometanja, ne automatski horarni odgovor. Recepcija i kontekst zahtevaju tumačenje.',
+    'Significator enters another sign before the intended aspect':
+        'Signifikator menja znak pre predviđene perfekcije',
+    'A significator stations; inspect whether application changes':
+        'Signifikator stacionira; proverite da li se aplikacija menja',
+    'An initially applying planet stations; later direction not verified':
+        'Planeta koja aplicira stacionira; kasniji smer kretanja nije potvrđen',
+    'Applying planet reversed and withdrew before intended perfection':
+        'Planeta koja aplicira promenila je smer i povukla se pre perfekcije',
+    'Observed station does not demonstrate withdrawal from the aspect':
+        'Uočena stanica ne potvrđuje povlačenje iz aspekta',
+    'The slower significator conjoins another planet before the faster reaches it; review reception':
+        'Sporiji signifikator se spaja s trećom planetom pre bržeg; proverite recepciju',
+    'Third planet perfects with both significators in sequence before their intended aspect; review reception':
+        'Treća planeta ostvaruje kontakte s oba signifikatora pre njihovog aspekta; proverite recepciju',
+    'Another exact planetary aspect precedes the intended contact':
+        'Drugi egzaktni planetarni aspekt prethodi nameravanom kontaktu',
+})

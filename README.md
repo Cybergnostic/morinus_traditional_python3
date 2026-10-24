@@ -234,11 +234,33 @@ date, "Chronologically supported" means no earlier listed planetary
 contact/ingress/station for the moving planet, "Needs review" flags earlier
 events, and "Unverified" means no matching perfection found within the
 selected horizon. A preceding contact, ingress, or station is **not**
-automatically a valid prohibition, frustration or refranation. Formal
-horary impediment judgments, reception-based exceptions and configurable
-doctrine rules are still pending in A3. Natal translations and collections
-should not be read as event predictions. Only the seven visible planets
-participate.
+automatically a valid prohibition, frustration or refranation. The **Perfection and impediments** list now classifies the originally
+applying contact between the selected significators. It separately shows:
+**prohibition** when a faster third planet contacts both significators in
+sequence before their own perfection, **frustration** when the slower
+significator first conjoins another planet, and **refranation** when an
+initially applying planet reverses and withdraws before the contact.
+It also lists earlier contacts, stations, and sign changes; a single
+early contact is not automatically labeled prohibition. Actual planetary
+positions after a station are checked before refranation is asserted.
+
+This is a **chronological and classical-pattern assessment**, not an
+automatic yes/no judgment. Reception, accidental dignity, sign/house context,
+and source disagreements remain for the astrologer to judge, including
+whether an intervention delays, redirects, or denies the matter. Events
+after an ingress may represent new circumstances. The initial application
+must be present in Morinus's current aspect matrix, and contacts of a
+different Ptolemaic type do not fulfill the original application.
+Natal translations and collections should not be read as event predictions.
+Only the seven visible planets participate.
+
+Reference for the distinctions: William Lilly, *Christian Astrology*,
+part I pp. 110–113, and the Graeme Tobyn review of earlier horary
+perfection doctrines:
+https://www.skyscript.co.uk/tobyn2.html
+
+Additional tests:
+`python3 -m unittest discover -s tests -p 'test_horary_impediments.py' -v`
 
 Calculation-level tests:
 `python3 -m unittest discover -s tests -p 'test_light_perfection.py' -v`
