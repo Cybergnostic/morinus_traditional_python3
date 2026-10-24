@@ -1068,8 +1068,13 @@ def main():
 				# The speculum selector must not alter primary-directions settings.
 				import positionsworkspace, positionscatalog
 				pdir = frame.options.primarydir
-				wnd = positionsworkspace.show(frame, 1)
+				# Regressions: opening Overview first and then constructing
+				# Speculum caused nested updateMenu() -> KeyError: 1.
+				wnd = positionsworkspace.show(frame, 0)
 				assert wnd.book.GetPageCount() == len(positionscatalog.TABS)
+				assert 0 in wnd.views and 1 not in wnd.views
+				wnd.selectTab(1)
+				assert 1 in wnd.views
 				for method in (0, 1):
 					wnd.activeView().setMethod(method)
 					if positionsworkspace.has_columns(frame.options, method):

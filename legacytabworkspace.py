@@ -93,7 +93,11 @@ class TableWorkspace(wx.Frame):
 
     def updateMenu(self):
         index = self.book.GetSelection()
-        if index < 0:
+        # A lazy view may ask for a menu refresh from inside its own
+        # constructor (SpeculumPanel.build does exactly this). Until
+        # ensureTab() has registered it in self.views, there is nothing
+        # to update. ensureTab()/onTabChanged will refresh after creation.
+        if index < 0 or index not in self.views:
             return
         view = self.views[index]
         menu = self.GetMenuBar()
