@@ -252,7 +252,9 @@ class Options:
         self.def_clrbackground = self.clrbackground = (255, 255, 255)
         self.def_clrtable = self.clrtable = (0, 0, 0)
         self.def_clrtexts = self.clrtexts = (0, 0, 0)
-        self.def_hsys = self.hsys = 0
+        # New configurations use Whole Sign houses. load() still restores a
+        # previously saved house system, so existing users keep their choice.
+        self.def_hsys = self.hsys = 5
         self.def_meannode = self.meannode = True
         self.orbs = [
          9.0, 10.0, 7.0, 15.0, 7.0, 7.0, 12.0, 0.0, 0.0]

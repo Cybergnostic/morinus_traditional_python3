@@ -423,10 +423,255 @@ def main():
 					'', frame.options, False)
 				wnd = multiwheel.show(frame)
 				settle(0.3)
-				picker = wnd.pickers[0]
-				picker.loaded.append(('Smoke transit', secondary))
-				picker.refresh()
-				picker.choice.SetSelection(len(picker.sources) - 1)
+				assert len(wnd.pickers) == 4
+				assert wnd.splitter.IsSplit()
+				assert wnd.inspector.GetParent() is wnd.view_splitter
+				assert wnd.canvas.GetParent() is wnd.view_splitter
+				assert wnd.view_splitter.IsSplit()
+				assert (wnd.inspector.GetBackgroundColour() ==
+						wnd.sidebar.GetBackgroundColour())
+				assert isinstance(wnd.inspector, wx.Notebook)
+				assert wnd.inspector.GetPageCount() == 2
+				assert wnd.highlight_choice.GetValue()
+				assert len(wnd.legend_labels) == 5
+				wnd.toggle_sidebar()
+				assert not wnd.splitter.IsSplit()
+				wnd.toggle_sidebar()
+				assert wnd.splitter.IsSplit()
+				inner = wnd.pickers[0]
+				picker = wnd.pickers[1]
+				assert inner.selected() is frame.horoscope
+				wnd.register_chart(secondary, 'Smoke transit', picker)
+				assert picker.selected() is secondary
+				assert inner.selected() is frame.horoscope
+				assert not any(source is secondary for _, source in inner.sources)
+				assert all(any(source is secondary for _, source in p.sources)
+					for p in wnd.pickers[1:])
+				# All rings have independent selectors, including the centre.
+				inner.select_chart(secondary)
+				wnd.redraw()
+				assert wnd.renderer.radix is secondary
+				assert picker.selected() is secondary
+				inner.select_chart(frame.horoscope)
+				inner.refresh()
+				# A temporary non-natal centre is not a natal-to-natal
+				# change: preserve the manually selected outer transit.
+				assert picker.selected() is secondary
+				assert any(source is secondary for _, source in
+					wnd.registered_charts)
+				assert not any(source is secondary for _, source in inner.sources)
+				# Creation through one ring selects that chart in that ring only.
+				created = chart.Chart(frame.horoscope.name, frame.horoscope.male,
+					frame.horoscope.time, frame.horoscope.place, chart.Chart.HORARY,
+					'', frame.options, False)
+				create_new = picker.create_new_chart
+				try:
+					picker.create_new_chart = lambda: created
+					picker.create_chart('new')
+				finally:
+					picker.create_new_chart = create_new
+				assert picker.selected() is created
+				assert inner.selected() is frame.horoscope
+				assert any(source is created for _, source in inner.sources)
+				assert frame.horoscope is not created
+				picker.select_chart(secondary)
+				wnd.count_choice.SetSelection(2)
+				wnd.change_count()
+				wnd.pickers[2].select_chart(created)
+				assert wnd.pickers[2].selected() is created
+				assert picker.selected() is secondary
+				assert inner.selected() is frame.horoscope
+				wnd.count_choice.SetSelection(0)
+				wnd.change_count()
+				# Return navigation: year selection resets the outer LR to the
+				# in-force event; crossing a boundary steps the matching SR.
+				# Use a small deterministic return series to exercise controls
+				# without rerunning 15 months of ephemeris transits in smoke.
+				from types import SimpleNamespace
+				import returnslist
+				natal = frame.horoscope
+				base_year = 2026
+				def sample_rows(radix, year):
+					# Deterministic rows for either of two distinct natal
+					# sources; actual return calculations are tested elsewhere.
+					assert radix.htype == chart.Chart.RADIX
+					stamps = [(year, 6, 1, 12, 0, 0),
+						(year, 5, 25, 12, 0, 0),
+						(year, 7, 20, 12, 0, 0),
+						(year + 1, 5, 25, 12, 0, 0)]
+					return [SimpleNamespace(t=t, jd=returnslist.gmt_time(t, radix).jd,
+						note=returnslist.IN_FORCE if i == 1 else '')
+						for i, t in enumerate(stamps)]
+				wnd.return_rows = sample_rows
+				wnd.count_choice.SetSelection(1)
+				wnd.change_count()
+				solar = returnslist.return_chart(sample_rows(natal, base_year)[0].t,
+					natal, chart.Chart.SOLAR)
+				lunar = returnslist.return_chart(sample_rows(natal, base_year)[1].t,
+					natal, chart.Chart.LUNAR)
+				wnd.register_chart(solar, 'Smoke SR', picker, radix=natal,
+					solar_year=base_year)
+				lunar_picker = wnd.pickers[2]
+				assert lunar_picker.selected().htype == chart.Chart.LUNAR
+				assert (lunar_picker.selected().time.jd ==
+					sample_rows(natal, base_year)[1].jd)
+				assert 2 not in wnd.manual_rings
+				# Quad-wheel auto-adds independent current transits.
+				wnd.count_choice.SetSelection(2)
+				wnd.change_count()
+				transit_picker = wnd.pickers[3]
+				assert transit_picker.selected().htype == chart.Chart.TRANSIT
+				assert not any(getattr(source, 'htype', None) in (chart.Chart.SOLAR, chart.Chart.LUNAR,
+					chart.Chart.TRANSIT) and source is not created
+					for _, source in inner.sources)
+				assert wnd.active_transit_ring == 3
+				# Course-based whole-sign annual/monthly profections across
+				# wheels. SR and LR show the matching month; transits retain
+				# the annual sign and traditional Firdaria lord glyphs.
+				import multiwheel_highlight
+				wnd.redraw()
+				assert wnd.renderer.show_highlights
+				assert set(wnd.highlight_role_choices) == {
+					'annual', 'monthly', 'major', 'sub'}
+				assert all(ctrl.GetValue()
+					for ctrl in wnd.highlight_role_choices.values())
+				assert any(mark['role'] == 'major' and mark['ring'] == 0
+					for mark in wnd.current_highlights)
+				assert [area['ring'] for area in wnd.current_profection_areas
+					if area['role'] == 'annual'] == [0, 1, 2, 3]
+				assert [area['ring'] for area in wnd.current_profection_areas
+					if area['role'] == 'monthly'] == [1, 2]
+				assert not any(mark['role'] == 'solar_asc'
+					for mark in wnd.current_highlights)
+				assert [item['role'] for item in wnd.renderer.highlight_legend][0] == 'annual'
+				assert 'As of' in wnd.legend_asof.GetLabel()
+				assert len(wnd.renderer.highlight_legend) <= 4
+				for mark in wnd.current_highlights:
+					assert mark['planet'] in range(9)
+					assert mark['role'] in multiwheel_highlight.ROLE_COLOURS
+				# Technique toggles must affect marks, sectors AND legends.
+				wnd.highlight_role_choices['monthly'].SetValue(False)
+				wnd.redraw()
+				assert not any(a['role'] == 'monthly'
+					for a in wnd.current_profection_areas)
+				assert not any(a['role'] == 'monthly'
+					for a in wnd.renderer.highlight_legend)
+				wnd.highlight_role_choices['monthly'].SetValue(True)
+				wnd.highlight_choice.SetValue(False)
+				wnd.redraw()
+				assert not wnd.renderer.show_highlights
+				assert not wnd.renderer._highlight_lookup
+				wnd.highlight_choice.SetValue(True)
+				wnd.redraw()
+				assert wnd.renderer.show_highlights
+				assert wnd.transit_section.IsShown()
+				assert wnd.return_section.IsShown()
+				wnd.inspector.SetSelection(1)
+				assert wnd.inspector.GetSelection() == 1
+				before = transit_picker.selected()
+				wnd.step_transit('Sec', True)
+				assert transit_picker.selected() is not before
+				assert transit_picker.selected().time.jd > before.time.jd
+				assert not any(source is before for _, source in wnd.registered_charts)
+				assert len(wnd.transit_slots) == 1
+				# Direct entry changes five fields in one operation; seconds stay.
+				earlier = transit_picker.selected()
+				for unit, value in (('Year', 2027), ('Month', 2), ('Day', 28),
+					('Hour', 19), ('Min', 44)):
+					wnd.transit_inputs[unit].ChangeValue(str(value))
+				wnd.apply_transit_time()
+				manual = transit_picker.selected().time
+				assert (manual.origyear, manual.origmonth, manual.origday,
+					manual.hour, manual.minute, manual.second) == (
+					2027, 2, 28, 19, 44, earlier.time.second)
+				wnd.transit_inputs['Day'].ChangeValue('30')
+				wnd.apply_transit_time()
+				assert transit_picker.selected().time is manual
+				assert picker.selected() is solar
+				# Switching the inner natal must RECAST existing SR/LR and
+				# transits, not simply change the centre caption. Exercise the
+				# file-load registration path and direct menu-selection path.
+				other_natal = chart.Chart(
+					'Second smoke natal', natal.male, natal.time, natal.place,
+					chart.Chart.RADIX, '', frame.options, False)
+				old_solar, old_lunar = picker.selected(), lunar_picker.selected()
+				old_transit = transit_picker.selected()
+				wnd.register_chart(other_natal, 'File', inner)
+				assert inner.selected() is other_natal
+				for slot, kind in ((1, chart.Chart.SOLAR),
+								  (2, chart.Chart.LUNAR),
+								  (3, chart.Chart.TRANSIT)):
+					updated = wnd.pickers[slot].selected()
+					assert updated.htype == kind
+					assert updated.name == other_natal.name
+					assert other_natal.name in wnd.pickers[slot].choice.GetStringSelection()
+					# wx.StaticText may insert line breaks while wrapping.
+					details = ' '.join(wnd.chart_details[slot].GetLabel().split())
+					assert other_natal.name in details
+				assert picker.selected() is not old_solar
+				assert lunar_picker.selected() is not old_lunar
+				assert transit_picker.selected() is not old_transit
+				assert wnd.return_origin(picker.selected()) is other_natal
+				assert wnd.return_origin(lunar_picker.selected()) is other_natal
+				assert wnd.solar_year(picker.selected()) == base_year
+				assert lunar_picker.selected().time.jd == sample_rows(
+					other_natal, base_year)[1].jd
+				new_t = transit_picker.selected().time
+				assert (new_t.origyear, new_t.origmonth, new_t.origday,
+					new_t.hour, new_t.minute, new_t.second) == (
+					manual.origyear, manual.origmonth, manual.origday,
+					manual.hour, manual.minute, manual.second)
+				assert transit_picker.selected().place is other_natal.place
+				assert wnd.auto_transit_radix[3] is other_natal
+				assert all(source not in (old_solar, old_lunar, old_transit)
+					for _, source in wnd.registered_charts)
+				# Select the original natal from the actual dropdown again.
+				original_index = next(i for i, (_, source) in
+					enumerate(inner.sources) if source is natal)
+				inner.choice.SetSelection(original_index)
+				inner.changed(None)
+				assert inner.selected() is natal
+				assert all(wnd.pickers[i].selected().name == natal.name
+					for i in (1, 2, 3))
+				assert wnd.return_origin(picker.selected()) is natal
+				assert wnd.return_origin(lunar_picker.selected()) is natal
+				assert wnd.solar_year(picker.selected()) == base_year
+				assert (transit_picker.selected().time.origyear,
+					transit_picker.selected().time.origmonth,
+					transit_picker.selected().time.origday) == (
+					manual.origyear, manual.origmonth, manual.origday)
+				solar = picker.selected()
+				lunar = lunar_picker.selected()
+				wnd.count_choice.SetSelection(1)
+				wnd.change_count()
+				wnd.register_chart(lunar, 'Smoke LR', lunar_picker, radix=natal)
+				assert wnd.return_origin(solar) is natal
+				assert wnd.return_origin(lunar) is natal
+				assert len(wnd._nav_years) == 5
+				assert len(wnd._nav_lunar_rows) == 3
+				assert wnd.pickers[0].selected() is natal
+				assert wnd.return_controls[2][2].IsEnabled()
+				# Pick the last LR in the old solar year, then step across.
+				wnd.lunar_list.SetSelection(2)
+				wnd.on_lunar_choice(None)
+				wnd.step_return_ring(2, True)
+				assert wnd.solar_year(picker.selected()) == base_year + 1
+				assert (lunar_picker.selected().time.jd ==
+					sample_rows(natal, base_year + 1)[2].jd)
+				# Direct SR year changes choose first LR in force, NOT its
+				# previous ordinal position in the earlier year's list.
+				assert wnd.select_solar_year(1, base_year + 2)
+				assert wnd.solar_year(picker.selected()) == base_year + 2
+				assert (lunar_picker.selected().time.jd ==
+					sample_rows(natal, base_year + 2)[1].jd)
+				# Selecting an arbitrary natal / unrelated chart must never
+				# trigger automatic changes to another ring.
+				lunar_picker.select_chart(created)
+				assert wnd.select_solar_year(1, base_year + 3)
+				assert lunar_picker.selected() is created
+				picker.select_chart(secondary)
+				wnd.count_choice.SetSelection(0)
+				wnd.change_count()
 				# House separators must be LOCAL to their chart field.
 				# Give the outer chart deliberately different cusps, then
 				# trace the actual strokes. Sign spokes should never appear
@@ -666,10 +911,14 @@ def main():
 				assert traces['asc_circle'] == 4  # 1 per chart: ASC
 				assert len(traces['planet_fonts']) == 4
 				assert len(set(traces['planet_fonts'])) == 1
+				assert len(wnd.renderer.drawn_house_numbers) == 48
+				assert all(sum(role == ring for role, _, _ in
+							   wnd.renderer.drawn_house_numbers) == 12
+						   for ring in range(4))
 				# Both orders of the same shared zodiac/terms/decans reference
 				# system must render. The option changes only presentation,
 				# never the selected charts, angular positions or ink scale.
-				assert wnd.reference_choice.GetSelection() == 0
+				assert wnd.reference_choice.GetSelection() == 1
 				original_terms = frame.options.showterms
 				original_decans = frame.options.showdecans
 				original_sources = [picker.selected() for picker in wnd.pickers]
@@ -711,13 +960,13 @@ def main():
 								   for picker, previous in zip(wnd.pickers,
 																 original_sources))
 				finally:
-					wnd.reference_choice.SetSelection(0)
+					wnd.reference_choice.SetSelection(1)
 					wnd.count_choice.SetSelection(2)
 					wnd.change_count()
 					frame.options.showterms = original_terms
 					frame.options.showdecans = original_decans
 				wnd.redraw()
-				assert not wnd.renderer.reference_outside
+				assert wnd.renderer.reference_outside
 				# Changing house systems must keep the multiwheel open, and
 				# refresh all the retained charts rather than destroying it.
 				previous_hsys = frame.options.hsys
@@ -752,8 +1001,9 @@ def main():
 					frame.onRevolutions = lambda event, planet=None: fake_generate(
 						chart.Chart.SOLAR if planet == 3 else chart.Chart.LUNAR)
 					frame.onTransits = lambda event: fake_generate(chart.Chart.TRANSIT)
-					for requested, htype in ((3, chart.Chart.SOLAR),
-							(6, chart.Chart.LUNAR), (None, chart.Chart.TRANSIT)):
+					for requested, htype in (('solar', chart.Chart.SOLAR),
+							('lunar', chart.Chart.LUNAR),
+							('transits', chart.Chart.TRANSIT)):
 						picker.create_chart(requested)
 						assert picker.selected().htype == htype
 						assert picker.choice.GetStringSelection() != ''

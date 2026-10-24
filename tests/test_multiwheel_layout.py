@@ -4,10 +4,37 @@ from multiwheel_layout import (allocate_rings, allocate_traditional_rings,
                                spread_longitudes, zodiac_sign_lane,
                                place_planet_clusters, _intersect_area,
                                shared_planet_font_sizes, house_sector,
-                               place_planet_glyphs, place_degree_annotations)
+                               house_number_midpoints, glyphs_have_clearance,
+                               place_planet_glyphs, place_degree_annotations,
+                               place_planet_label_groups)
 
 
 class MultiWheelLayoutTests(unittest.TestCase):
+    def test_house_numbers_use_each_chart_own_cusp_midpoints(self):
+        radix = [350, 20, 50, 80, 110, 140,
+                 170, 200, 230, 260, 290, 320]
+        solar = [(cusp + 12) % 360 for cusp in radix]
+        inner = house_number_midpoints(radix)
+        outer = house_number_midpoints(solar)
+        self.assertEqual(len(inner), 12)
+        self.assertAlmostEqual(inner[0], 5)
+        self.assertAlmostEqual(outer[0], 17)
+        self.assertTrue(all((a + 12) % 360 == b
+                            for a, b in zip(inner, outer)))
+        with self.assertRaises(ValueError):
+            house_number_midpoints([0, 30])
+
+    def test_glyph_clearance_detects_dense_fields(self):
+        separated = [{'rect': (0, 0, 10, 10)},
+                     {'rect': (15, 0, 25, 10)}]
+        touching = [{'rect': (0, 0, 10, 10)},
+                    {'rect': (11, 0, 21, 10)}]
+        self.assertTrue(glyphs_have_clearance(separated, 3))
+        self.assertFalse(glyphs_have_clearance(touching, 3))
+        self.assertTrue(glyphs_have_clearance([], 3))
+        with self.assertRaises(ValueError):
+            glyphs_have_clearance(separated, -1)
+
     def test_one_to_three_rings_fit_without_overlap(self):
         for count in (1, 2, 3):
             core, zodiac, rings = allocate_rings(300, count)
@@ -315,6 +342,151 @@ class MultiWheelLayoutTests(unittest.TestCase):
             (270, 375), 78, 1)
         self.assertEqual(hidden, [])
         self.assertTrue(all(point is not None for point in points))
+
+    def test_degree_text_and_glyph_move_as_one_group(self):
+        # A crowded realistic wheel includes two planets almost conjunct.
+        # Every annotation must be present, near its glyph and unambiguous.
+        longitudes = [.4, 12.6, 19.2, 20.4, 58, 88, 174, 251, 359]
+        for direction, edges in ((-1, (175, 251)), (1, (270, 375))):
+            placements, unresolved = place_planet_label_groups(
+                longitudes, [(19, 21)] * 9, [(34, 9)] * 9,
+                edges, 78, direction)
+            self.assertEqual(unresolved, [])
+            for i, placement in enumerate(placements):
+                self.assertEqual(placement['exact'], longitudes[i])
+                self.assertTrue(placement['fits'])
+                self.assertEqual(len(placement['rects']), 2)
+                self.assertEqual(int(placement['longitude'] // 30),
+                                 int(longitudes[i] // 30))
+                self.assertLessEqual(abs((placement['longitude'] -
+                                          longitudes[i] + 180) % 360 - 180),
+                                     7.501)
+                import math
+                self.assertLess(math.dist(placement['glyph'],
+                                          placement['position']), 50)
+                for later in placements[i + 1:]:
+                    self.assertTrue(all(_intersect_area(a, b) == 0
+                                        for a in placement['rects']
+                                        for b in later['rects']))
+
+    def test_fixed_radial_gap_anchors_every_degree_to_its_glyph(self):
+        import math
+
+        # Close Sun/Saturn-style conjunction: every pair must preserve the
+        # same visible edge-to-edge gap, even as their positions move apart.
+        lons = [9.8, 10.1, 10.7, 13.2, 75, 210]
+        glyph_box, degree_box, gap = (17, 19), (25, 10), 5.0
+        for dial_side in (-1, 1):
+            placed, unresolved = place_planet_label_groups(
+                lons, [glyph_box] * len(lons),
+                [degree_box] * len(lons), (110, 200), 84,
+                dial_side, glyph_degree_gap=gap)
+            self.assertEqual(unresolved, [])
+            for item in placed:
+                glyph, degree = item['glyph'], item['position']
+                theta = math.atan2(glyph[1], glyph[0])
+                radial_extent = lambda box: (
+                    abs(math.cos(theta)) * box[0] +
+                    abs(math.sin(theta)) * box[1]) / 2
+                actual_gap = (math.dist(glyph, degree) -
+                              radial_extent(glyph_box) -
+                              radial_extent(degree_box))
+                self.assertAlmostEqual(actual_gap, gap, places=6)
+                self.assertLess(math.hypot(*degree), math.hypot(*glyph))
+            for i, item in enumerate(placed):
+                for other in placed[i + 1:]:
+                    self.assertTrue(all(_intersect_area(a, b) == 0
+                                        for a in item['rects']
+                                        for b in other['rects']))
+
+        with self.assertRaises(ValueError):
+            place_planet_label_groups([10], [glyph_box], [degree_box],
+                                      (110, 200), 84, -1, glyph_degree_gap=-1)
+
+    def test_group_search_is_bounded_for_a_crowded_wheel(self):
+        # This is a deterministic work-budget check, not a fragile timer.
+        # The earlier wide search made hundreds of thousands to millions of
+        # rectangle comparisons whenever conjunctions were present.
+        from unittest.mock import patch
+        import multiwheel_layout
+
+        positions = [96, 99, 100, 113, 175, 183, 220, 280, 325, 15]
+        original = multiwheel_layout._intersect_area
+        with patch('multiwheel_layout._intersect_area', wraps=original) as intersections:
+            placed, unresolved = place_planet_label_groups(
+                positions, [(17, 19)] * 10, [(26, 10)] * 10,
+                (120, 200), 78, -1)
+        self.assertEqual(len(placed), len(positions))
+        self.assertEqual(unresolved, [])
+        self.assertLess(intersections.call_count, 100_000)
+
+    def test_label_group_follows_own_house_not_radix_house(self):
+        longitudes = [19.8, 20.0, 20.2, 359.8, .1, 120]
+        placements, _ = place_planet_label_groups(
+            longitudes, [(18, 20)] * 6, [(28, 9)] * 6,
+            (110, 200), 350, -1, house_cusps=self.twelve_cusps())
+        self.assertEqual(len(placements), len(longitudes))
+        for original, placement in zip(longitudes, placements):
+            self.assertEqual(placement['exact'], original)
+            self.assertEqual(int(original // 30),
+                             int(placement['longitude'] // 30))
+            self.assertEqual(house_sector(original, self.twelve_cusps()),
+                             house_sector(placement['longitude'],
+                                          self.twelve_cusps()))
+
+    def test_degrees_are_radially_inward_above_and_below_wheel_centre(self):
+        import math
+        for direction in (-1, 1):
+            for longitude in (105, 285):
+                placements, unresolved = place_planet_label_groups(
+                    [longitude], [(19, 21)], [(31, 9)],
+                    (100, 215), 90, direction)
+                self.assertFalse(unresolved)
+                placement = placements[0]
+                self.assertEqual(placement['style'], 'radial-inward')
+                self.assertLess(math.hypot(*placement['position']),
+                                math.hypot(*placement['glyph']))
+                # In the lower half of the wheel the degree is physically
+                # above the glyph, and in the top half it is below it.
+                if placement['glyph'][1] > 0:
+                    self.assertLess(placement['position'][1],
+                                    placement['glyph'][1])
+                else:
+                    self.assertGreater(placement['position'][1],
+                                       placement['glyph'][1])
+
+    def test_degree_can_cross_ring_border_without_touching_other_labels(self):
+        import math
+        placements, unresolved = place_planet_label_groups(
+            [12, 12.7, 13.4, 55], [(18, 19)] * 4, [(23, 9)] * 4,
+            (160, 245), 90, 1)
+        self.assertFalse(unresolved)
+        self.assertTrue(any(math.hypot(*p['position']) < 160
+                            for p in placements))
+        for i, placement in enumerate(placements):
+            for other in placements[i + 1:]:
+                self.assertTrue(all(_intersect_area(a, b) == 0
+                                    for a in placement['rects']
+                                    for b in other['rects']))
+
+    def test_impossible_label_group_does_not_hide_degrees(self):
+        placements, unresolved = place_planet_label_groups(
+            [15] * 5, [(19, 21)] * 5, [(34, 10)] * 5,
+            (100, 119), 180, 1)
+        self.assertEqual(len(placements), 5)
+        self.assertTrue(unresolved)
+        self.assertTrue(all(p['position'] is not None for p in placements))
+
+    def test_group_layout_validates_dimensions(self):
+        with self.assertRaises(ValueError):
+            place_planet_label_groups([10], [(18, 18)], [], (100, 200),
+                                      0, -1)
+        with self.assertRaises(ValueError):
+            place_planet_label_groups([10], [(18, 18)], [(30, 9)],
+                                      (100, 100), 0, -1)
+        with self.assertRaises(ValueError):
+            place_planet_label_groups([10], [(18, 18)], [(30, 9)],
+                                      (100, 200), 0, 0)
 
     def test_primary_glyph_layout_rejects_invalid_inputs(self):
         with self.assertRaises(ValueError):

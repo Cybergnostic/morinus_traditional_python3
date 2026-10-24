@@ -188,6 +188,16 @@ def _intersect_area(a, b):
         0, min(a[3], b[3]) - max(a[1], b[1]))
 
 
+def _rect_inside_annulus(rect, inner, outer):
+    """Test the full ink rectangle, not just its centre or radial tangent."""
+    import math
+    x1, y1, x2, y2 = rect
+    near_x = 0 if x1 <= 0 <= x2 else min(abs(x1), abs(x2))
+    near_y = 0 if y1 <= 0 <= y2 else min(abs(y1), abs(y2))
+    far = max(math.hypot(x, y) for x in (x1, x2) for y in (y1, y2))
+    return math.hypot(near_x, near_y) >= inner and far <= outer
+
+
 def _planet_candidate(exact, longitude, offset, asc, edges, boxes):
     """Place one measured glyph/degree/minute/optional-motion group."""
     import math
@@ -339,6 +349,29 @@ def house_sector(longitude, cusps):
     return min(range(12), key=lambda i: (lon - cusps[i]) % 360.0)
 
 
+def house_number_midpoints(cusps):
+    """One longitude per house, respecting each chart's own cusp order."""
+    if len(cusps) != 12:
+        raise ValueError('Expected twelve house cusps')
+    return [((start + (cusps[(i + 1) % 12] - start) % 360 / 2) % 360)
+            for i, start in enumerate(cusps)]
+
+
+def glyphs_have_clearance(placements, minimum=2.0):
+    """Whether all measured glyph boxes have at least minimum free space."""
+    import math
+    if minimum < 0:
+        raise ValueError('Minimum clearance cannot be negative')
+    rects = [item['rect'] for item in placements]
+    for i, a in enumerate(rects):
+        for b in rects[i + 1:]:
+            dx = max(a[0] - b[2], b[0] - a[2], 0)
+            dy = max(a[1] - b[3], b[1] - a[3], 0)
+            if math.hypot(dx, dy) < minimum:
+                return False
+    return True
+
+
 def place_planet_glyphs(longitudes, glyph_boxes, edges, asc,
                         house_cusps=None, maximum_shift=7.5):
     """Lay out glyphs *without* considering degree/minute text.
@@ -417,6 +450,170 @@ def place_planet_glyphs(longitudes, glyph_boxes, edges, asc,
             unresolved.append(i)
         placed[i] = best
     return [placed[i] for i in range(len(longitudes))], sorted(unresolved)
+
+
+def place_planet_label_groups(longitudes, glyph_boxes, text_boxes, edges, asc,
+                              direction, house_cusps=None, maximum_shift=7.5,
+                              occupied_rects=(), glyph_degree_gap=4.0):
+    """Place glyphs near their dial and their numbers radially *inward*.
+
+    A degree always lies closer to the wheel centre than its own glyph,
+    including in the bottom half of the chart. Only the glyph is constrained
+    to its chart's planetary annulus: numbers may cover dials, ring borders
+    and house/sign spokes to make use of otherwise wasted room. The whole
+    wheel is searched for non-overlapping ink boxes; the original longitude
+    remains fixed at the dial pointer.
+    """
+    import math
+
+    if not (len(longitudes) == len(glyph_boxes) == len(text_boxes)):
+        raise ValueError('Each planet needs a glyph and position box')
+    if (edges[1] <= edges[0] or direction not in (-1, 1) or
+            maximum_shift < 0 or glyph_degree_gap < 0):
+        raise ValueError('Invalid planetary band, direction or shift')
+    if house_cusps is not None and len(house_cusps) != 12:
+        raise ValueError('Expected twelve chart-specific house cusps')
+    if not longitudes:
+        return [], []
+    if any(min(*box) <= 0 for box in glyph_boxes + text_boxes):
+        raise ValueError('Label box dimensions must be positive')
+
+    inner, outer = edges
+    sources = [float(lon) % 360 for lon in longitudes]
+    trials = (0, -.5, .5, -1, 1, -2, 2, -3.5, 3.5,
+              -5, 5, -6.5, 6.5, -7.5, 7.5)
+    candidate_sets = []
+    for i, original in enumerate(sources):
+        original_sign = int(original // 30)
+        original_house = (house_sector(original, house_cusps)
+                          if house_cusps is not None else None)
+        glyph_box, text_box = glyph_boxes[i], text_boxes[i]
+        candidates = []
+        for shift in trials:
+            if abs(shift) > maximum_shift:
+                continue
+            displayed = (original + shift) % 360
+            if int(displayed // 30) != original_sign:
+                continue
+            if (original_house is not None and
+                    house_sector(displayed, house_cusps) != original_house):
+                continue
+            theta = math.pi + math.radians(asc - displayed)
+            radial = (math.cos(theta), math.sin(theta))
+            reach_g = _radial_reach(glyph_box, theta)
+            reach_t = _radial_reach(text_box, theta)
+            # The dial lies outside the radix but inside an outer chart.
+            # Prefer glyphs close to that edge, and displace them only when
+            # needed for a conjunction. Numbers always point toward centre.
+            min_glyph = inner + reach_g + 2.0
+            max_glyph = outer - reach_g - 2.0
+            if min_glyph > max_glyph:
+                # Report impossible bands, but still return a place for each
+                # body so the renderer can show its longitude on hover.
+                preferred = other_edge = (inner + outer) / 2.0
+            else:
+                preferred = max_glyph if direction == -1 else min_glyph
+                other_edge = min_glyph if direction == -1 else max_glyph
+            for fraction in (0, .10, .20, .30, .40, .50, .65, .80, 1):
+                radius = preferred + (other_edge - preferred) * fraction
+                glyph = _polar_point(asc, displayed, radius)
+                # Fixed measured edge-to-edge separation. Glyph and degree
+                # move as an inseparable pair; only angle, radius and one
+                # *shared* font scale may change. Varying this gap made it
+                # impossible to identify which degree belonged to a glyph.
+                distance = reach_g + reach_t + glyph_degree_gap
+                position = (glyph[0] - radial[0] * distance,
+                            glyph[1] - radial[1] * distance)
+                glyph_rect = _rect(glyph, glyph_box, margin=1.0)
+                text_rect = _rect(position, text_box, margin=1.0)
+                fits = _rect_inside_annulus(glyph_rect, inner, outer)
+                # The number may cross reference lines and ring borders.
+                text_radius = math.hypot(*position)
+                bleed = max(14.0, reach_t + 7.0)
+                text_fits = text_radius - reach_t >= inner - bleed
+                score = (abs(shift) * 8.0 +
+                         abs(radius - preferred) * .23 +
+                         sum(_intersect_area(rect, fixed) * 1000
+                             for fixed in occupied_rects
+                             for rect in (glyph_rect, text_rect)) +
+                         (12000 if not fits or not text_fits else 0))
+                candidates.append((score, {
+                    'longitude': displayed, 'exact': original,
+                    'glyph': glyph, 'position': position,
+                    'rect': glyph_rect, 'rects': (glyph_rect, text_rect),
+                    'radius': math.hypot(*glyph), 'fits': fits,
+                    'style': 'radial-inward',
+                }))
+        candidates.sort(key=lambda item: item[0])
+        # Reserve a small, fixed number of alternatives for each angular
+        # shift. More than this makes four-wheel redraws expensive without
+        # improving readable placement in the restricted ring widths.
+        per_shift = {}
+        varied = []
+        for candidate in candidates:
+            shift_key = round((candidate[1]['longitude'] - original +
+                               180) % 360 - 180, 3)
+            if per_shift.get(shift_key, 0) >= 8:
+                continue
+            varied.append(candidate)
+            per_shift[shift_key] = per_shift.get(shift_key, 0) + 1
+        varied.sort(key=lambda item: item[0])
+        candidate_sets.append(varied)
+
+    # Conservative per-planet envelopes: if *no* candidate rectangle for
+    # planet A can touch *any* candidate rectangle for planet B, there is
+    # no reason to test their rectangles in every beam expansion. This is
+    # especially important in four-wheel redraws, where most planets are
+    # on opposite sides of the chart and otherwise cost millions of tests.
+    envelopes = []
+    for candidates in candidate_sets:
+        rectangles = [rect for _, candidate in candidates
+                      for rect in candidate['rects']]
+        envelopes.append((min(rect[0] for rect in rectangles),
+                          min(rect[1] for rect in rectangles),
+                          max(rect[2] for rect in rectangles),
+                          max(rect[3] for rect in rectangles)))
+    possible_contacts = [set() for _ in sources]
+    for i in range(len(sources)):
+        for j in range(i):
+            if _intersect_area(envelopes[i], envelopes[j]) > 0:
+                possible_contacts[i].add(j)
+                possible_contacts[j].add(i)
+
+    # Constrained bodies first. Unlike an exhaustive multi-planet search,
+    # this beam has a strict, small work bound even at exact conjunctions.
+    neighbours = [min((abs((lon - other + 180) % 360 - 180)
+                       for j, other in enumerate(sources) if j != i),
+                      default=360) for i, lon in enumerate(sources)]
+    order = sorted(range(len(sources)), key=lambda i: (
+        neighbours[i], len(candidate_sets[i]), i))
+    beams = [(0.0, {})]
+    beam_width = 16 if min(neighbours) < 2.0 else 8
+    for i in order:
+        expanded = []
+        for total, picked in beams:
+            for own_score, candidate in candidate_sets[i]:
+                overlap = sum(
+                    _intersect_area(a, b)
+                    for previous_index, previous in picked.items()
+                    if previous_index in possible_contacts[i]
+                    for a in candidate['rects']
+                    for b in previous['rects'])
+                updated = picked.copy()
+                updated[i] = candidate
+                expanded.append((total + own_score + overlap * 1000, updated))
+        expanded.sort(key=lambda item: item[0])
+        beams = expanded[:beam_width]
+    selected = beams[0][1]
+    unresolved = sorted(i for i, current in selected.items()
+                        if not current['fits'] or any(
+                            _intersect_area(a, b) > 0
+                            for j, previous in selected.items() if j != i
+                            for a in current['rects'] for b in previous['rects'])
+                        or any(_intersect_area(a, b) > 0
+                               for a in current['rects']
+                               for b in occupied_rects))
+    return [selected[i] for i in range(len(sources))], unresolved
 
 
 def place_degree_annotations(glyphs, longitudes, text_boxes, edges, asc,

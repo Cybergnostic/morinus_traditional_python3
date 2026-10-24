@@ -293,3 +293,200 @@ traditional dignity strips switched on.
 
 Keep the existing view as default until the experimental exterior wheel
 has been reviewed visually, particularly at quad-wheel density.
+
+## October 23: radially inward degrees and two-tab inspector
+
+- The planetary glyph is the primary object. Keep it close to its exact
+  longitude dial marker while avoiding overlaps with other glyphs; the
+  unchanged leader still connects the dial to its glyph.
+- The degree annotation is always **closer to the wheel centre** than its
+  own glyph. It is not screen-below the glyph in the bottom half of the
+  wheel. Keep the annotation on the same radial ray, with a fixed measured
+  edge-to-edge spacing for every glyph/degree pair.
+- A degree may cover house and zodiac spokes, local degree dials, or chart
+  separator lines. Such structural lines may not erase the degree ink.
+  Other planetary glyphs and degree annotations remain collision obstacles.
+- When space is genuinely insufficient, do not paint one annotation over
+  another planet or annotation; report the omitted number and retain the
+  exact full position in the hover/click information.
+- The right-side workspace has **Charts** and **Returns + transits** tabs.
+  The latter contains both solar/lunar navigation and manual transit
+  stepping/date entry, showing only sections relevant to selected rings.
+  Each page scrolls independently on short screens.
+
+GUI verification remains required on Linux and Windows before merging.
+
+## October 23: responsive glyph scale, themed and resizable controls, house numbers
+
+- The multiwheel now defaults to **Outside** reference bands. The classic
+  arrangement remains available from the selector; the ordinary single-wheel
+  renderer is unchanged.
+- Planetary glyphs still share one common size across every chart in the
+  multiwheel. Before drawing, the renderer checks all selected charts for
+  tight or overlapping measured glyph boxes; if necessary, it reduces that
+  one shared size in small steps. Degree and motion fonts scale consistently.
+  Exact dial positions and longitude pointers are unaffected.
+- Every outer chart displays its own twelve house numbers, calculated from
+  the midpoints between its own house cusps. These do not copy radix houses.
+  The existing radix house-number positions remain unchanged, and hiding
+  houses hides their numbers in every ring.
+- The right-hand notebook takes its colours from the OS-themed left sidebar
+  instead of forcing white backgrounds and dark text. Its divider can be
+  dragged to resize the chart canvas and inspector independently, and
+  individual tabs retain vertical scrolling on smaller screens.
+
+The adaptive scaling and right-side layout still need a local Linux GUI
+screenshot check before this redesign is merged.
+
+## October 23: fixed glyph-degree pairs and faster placement
+
+- The glyph and its degree now have one fixed **radial edge-to-edge gap**.
+  Their positions can move together angularly or radially; the solver no
+  longer lengthens or shortens the distance for individual conjunctions.
+  The glyph stays nearest its own exact-longitude dial and pointer.
+- Adaptive font sizing tests **complete pairs**, not only planetary glyphs.
+  All charts still receive the same glyph, degree and motion font sizes;
+  if a tight conjunction cannot fit at one scale, the common size can shrink.
+- The collision solver first finds conservative rectangular envelopes of
+  all allowed positions for each planet. Planets whose envelopes cannot
+  possibly meet are excluded from pairwise collision checks. This removes
+  most unnecessary comparisons without changing which collisions count.
+- The pure layout regression test verifies fixed spacing, radial direction,
+  and non-overlapping pairs in both inner and outer rings.
+
+Check the radix Sun/Saturn conjunction from the October 23 screenshot and
+confirm the labels remain unmistakably associated at fit and 100% zoom.
+Local GUI performance and Windows rendering still need verification.
+
+## October 23: bounded placement and drawing-cost reduction
+
+The original single-wheel `graphchart.py` sorts objects by longitude,
+iteratively shifts neighbouring glyphs until they separate, and places
+longitude annotations afterward. It does not search complete joint
+glyph/degree layouts. Multiwheel's measured-group solver uses a more
+costly search to honour each ring's own house and sign constraints.
+
+- Limit candidate choices per angular shift and keep at most 16 partial
+  layouts for close conjunctions (8 for less crowded charts). The search
+  no longer expands the former 64/24 competing layouts at every planet.
+- Preserve the fixed glyph-degree gap and one shared planetary font size.
+  The exact longitude marker and chart-local sign/house restrictions stay.
+- Cache each chart-render's wx pen style and PIL font object. Drawing
+  hundreds of dial ticks must not recreate the same native pen repeatedly.
+- A deterministic test limits the number of rectangle intersection checks
+  on a representative congested ten-planet wheel, independently of CPU speed.
+
+This is a deliberately **bounded** placement method: extreme conjunctions
+may still require later visual refinement, but they must not force an
+unbounded layout search or stall the interface. Local GUI timing remains
+to be checked before merging into `main`.
+
+## October 24: rebasing dependent returns and transits on radix changes
+
+- Changing the selected inner natal chart now **recalculates selected Solar
+  Returns, Lunar Returns and transits** against the new natal instead of
+  continuing to display planets and names belonging to the previous radix.
+- Recasting is triggered for both a direct dropdown choice and a newly
+  loaded natal .hor file (whose picker callback is normally suppressed during
+  chart registration). It also updates hidden ring selections for later use.
+- Keep each selected SR year; each LR uses the return in force at the start
+  of the corresponding solar year; transits retain their precise date/time,
+  while adopting the new natal's name, chart context and location.
+- Batch-create the replacements before changing any selections, so an
+  unsuccessful return calculation cannot partially rebase a wheel. Related
+  lists and chart-details labels refresh with the new objects. Stale
+  generated dropdown entries are discarded; explicit file/opened charts
+  remain available without being renamed or mutated.
+- Unrelated chart types are not overwritten, and changing an outer-ring
+  chart alone does not rebase other rings. Independent chart windows keep
+  their existing identity.
+- GUI smoke regression exercises file registration and dropdown changes,
+  return provenance, preserved SR year/transit datetime, chart captions and
+  stale generated menu entries. Validate locally with wxPython before merge.
+
+## October 24: proposal A — Firdaria and SR-Ascendant highlighting
+
+- The multiwheel now has an optional, **enabled-by-default** `Highlight rulers`
+  checkbox. It does not alter any astrological data, single-wheel
+  GraphChart drawing, or the side-by-side comparison.
+- For the *radix*, highlight Morinus's Firdaria major and subperiod rulers
+  at the selected transit datetime (UTC), or current UTC time if no
+  transit ring is displayed. Preserve the original diurnal, Al-Biruni and
+  Bonatti Firdaria sequences, including node major periods without
+  planetary subperiods.
+- For each *Solar Return* ring, highlight the traditional domicile lord
+  of that SR chart's own Ascendant (not the radix Ascendant and not an
+  inferred profected Lord of the Year). Sidereal settings are respected.
+- Distinct blue/amber/violet colors identify major/sub/SR-Asc roles.
+  The appropriate planet glyph and its true-longitude pointer get the
+  matching color and a thin outline; its occupied house field in *its
+  own chart* receives a faint tinted sector under the house spokes.
+- An automatically placed, compact `Time Lords` legend uses spare white
+  space in the upper-left outside the wheel when space permits. The
+  same legend appears at the top of the independently scrollable Charts
+  inspector so it remains readable on narrower screens. Exported PNGs
+  include the corner legend when it fits.
+- A ruler occupying multiple roles receives more than one small outline;
+  nothing is painted across chart gaps or other chart house fields.
+- New pure tests cover diurnal/nocturnal Firdaria dates, Bonatti/Al-Biruni
+  choice, node periods, all twelve traditional domicile rulers, sidereal
+  SR Ascendants, and actual chart-specific occupied house numbers.
+  GUI smoke now exercises the checkbox, legend and ring-specific marks.
+
+Manual color customization and advanced overlapped-planet placement are
+separate follow-ups, not prerequisites for this stage. Validate at
+normal Fit size on laptop and desktop before merging.
+
+## October 24: course-corrected whole-sign profection overlays
+
+This supersedes the earlier October 24 Solar-Ascendant and ruler-occupied-house
+highlighting design (it must **not** remain in the renderer).
+
+Source: `cw_api/astrology` distilled prognostic lessons 23, 25, 26, 27
+and raw transcripts `25 profekcije`, `26 solari`, `27 lunari i tranziti`,
+`28 divizije`. The lecturer explicitly uses whole-sign annual profections,
+starting from the natal Ascendant, and follows the activated sign through
+natal and Solar Return charts. The 12-period solar method is distinguished
+from the 13-period lunar alternative. We are **only implementing the 12-period
+solar method**. The existing `profectionsmonthly.py` lists the mean-length
+version at `30.4368492` days per segment; the multiwheel instead divides
+the *actual exact* SR-to-next-SR interval by twelve to respect its precise
+return-year timeline. This convention is documented rather than silently
+conflated with calendar-month birthdays.
+
+- Annual sign = natal Ascendant sign + attained age at selected SR year,
+  modulo 12; the annual ruler is the traditional domicile lord of that sign.
+  The **complete 30-degree sign sector** is pale mint in radix, SR, LR and
+  transits, even when the corresponding house number differs by chart.
+- Monthly sign = annual sign + month index (0–11) modulo 12. Month 1 begins
+  exactly at the chosen SR; the selected LR date determines the active month,
+  with the in-force LR before the SR clamped to month 1. If no LR exists,
+  a transit within the selected SR year determines the month, otherwise the
+  SR start. In the SR and LR rings, the complete monthly 30-degree sign
+  sector is pale amber. The course reads monthly profections principally
+  against the SR, and regards lunar returns as confirmations; they are
+  **not** incorrectly mapped one-for-one to profection months.
+- The shared zodiac reference band also indicates annual and monthly
+  signs. When the annual and monthly profection select the same sign, split
+  the affected chart/zodiac sector radially into mint and amber halves;
+  never let one color erase the other's activation.
+- **Only rulers' glyphs** are highlighted for annual Lord of Year (strong
+  emerald), Firdaria major (violet), Firdaria minor (rose), and SR/LR monthly
+  lord (strong amber). The time lord's *occupied house is not colored*,
+  except when it coincides with an independently activated profection sign.
+  When a planet has several roles, use tiny discrete colored role indicators
+  rather than large nested circles, preserving the dense-ring layout.
+- Independent technique checkboxes appear at the top of Charts inspector,
+  alongside the master Highlight rulers switch. Four-role key in Charts and
+  compact chart-corner white-space legend (when space permits); the PNG
+  exporter receives exactly the same marks, tinted sign sectors and legend.
+  Unrelated single-wheel and calculation files are untouched.
+- The course prioritizes annual profection, ruler of the year, and
+  participators; this phase depicts the two profection signs and the four
+  requested ruler roles only. Participators remain interpretive context,
+  not extra colored planet roles without an explicit design decision.
+
+Validate using a selected SR year different from today's calendar year,
+change the LR, move the transit clock, switch radix, and compare charts at
+Fit size and in high-resolution PNG. Use the pure regression module
+`tests/test_multiwheel_highlight.py` and GUI smoke test.
