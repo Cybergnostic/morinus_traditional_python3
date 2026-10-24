@@ -1,0 +1,149 @@
+"""A3 traditional light transfer and chronological perfection checks.
+
+Pure calculation module. Uses only the seven visible planets and the aspects
+already selected by Morinus's active Traditional/Legacy/Custom matrix.
+Astrological configurations are distinguished from verified future events.
+"""
+from dataclasses import dataclass
+from itertools import combinations
+
+from traditional_aspects import PLANETS, ASPECT_ANGLES, angular_distance
+
+ASPECTS = ('Conjunction', 'Sextile', 'Square', 'Trine', 'Opposition')
+
+
+@dataclass(frozen=True)
+class Connection:
+    kind: str
+    actor: str
+    source: str
+    target: str
+    source_aspect: str
+    target_aspect: str
+    status: str = 'Candidate'
+    detail: str = ''
+
+
+def individual_motion(moving_lon, fixed_lon, moving_speed, angle):
+    """Does the *moving planet*, rather than the pair, approach its contact?"""
+    deviation = abs(angular_distance(moving_lon, fixed_lon) - angle)
+    if deviation < 1e-7:
+        return 'Exact'
+    if abs(moving_speed) < 1e-10:
+        return 'Stationary'
+    projected = abs(angular_distance(moving_lon + moving_speed * 0.001,
+                                     fixed_lon) - angle)
+    if projected < deviation - 1e-10:
+        return 'Applying'
+    if projected > deviation + 1e-10:
+        return 'Separating'
+    return 'Stationary'
+
+
+def _positions(chart):
+    return [(float(p.data[0]), float(p.data[3]))
+            for p in chart.planets.planets[:7]]
+
+
+def _contact(chart, i, j):
+    c = chart.aspmatrix[max(i, j)][min(i, j)]
+    return c.typ if c.typ in range(5) else None
+
+
+def _future_status(events, movers, targets, aspect_indexes):
+    """Check true event order; a station/ingress/contact may intervene.
+
+    events are chronological, and contain precise ephemeris roots. This is a
+    conservative screening rule, not an automatic horary judgment.
+    """
+    for mover, target, angle_index in zip(movers, targets, aspect_indexes):
+        encountered = False
+        for e in events:
+            if e.kind in ('station', 'ingress') and mover == e.first:
+                return 'Interrupted', f'{mover} {e.kind} before contact'
+            if e.kind != 'aspect' or mover not in (e.first, e.second):
+                continue
+            other = e.second if mover == e.first else e.first
+            if other == target and e.aspect_index == angle_index:
+                encountered = True
+                break
+            return 'Interrupted', f'{mover} contacts {other} first'
+        if not encountered:
+            return 'Unverified', 'Perfection not found within search horizon'
+    return 'Chronologically supported', 'No earlier planetary contact, station or ingress for the moving planet(s)'
+
+
+def connections(chart, events=None):
+    """Identify light translation/collection in every chart type.
+
+    Translation: faster messenger individually separates from A, applies to B.
+    Collection: both faster contributors individually apply to a slower collector.
+    Intervening events are evaluated only when an actual ephemeris scan exists.
+    """
+    pos = _positions(chart)
+    rows = []
+    for messenger in range(7):
+        for source, target in ((a, b) for a in range(7) for b in range(7)
+                               if a != b and messenger not in (a, b)):
+            past = _contact(chart, messenger, source)
+            future = _contact(chart, messenger, target)
+            if past is None or future is None:
+                continue
+            if abs(pos[messenger][1]) <= max(abs(pos[source][1]), abs(pos[target][1])):
+                continue
+            if individual_motion(pos[messenger][0], pos[source][0],
+                                 pos[messenger][1], ASPECT_ANGLES[past]) != 'Separating':
+                continue
+            if individual_motion(pos[messenger][0], pos[target][0],
+                                 pos[messenger][1], ASPECT_ANGLES[future]) != 'Applying':
+                continue
+            status, detail = ('Candidate', 'Separating from one and applying to another')
+            if events is not None:
+                status, detail = _future_status(events, [PLANETS[messenger]],
+                                                [PLANETS[target]], [future])
+            rows.append(Connection('Translation', PLANETS[messenger],
+                                   PLANETS[source], PLANETS[target],
+                                   ASPECTS[past], ASPECTS[future], status, detail))
+    for collector in range(7):
+        for first, second in combinations((i for i in range(7) if i != collector), 2):
+            a = _contact(chart, first, collector)
+            b = _contact(chart, second, collector)
+            if a is None or b is None:
+                continue
+            if abs(pos[collector][1]) >= min(abs(pos[first][1]), abs(pos[second][1])):
+                continue
+            if individual_motion(pos[first][0], pos[collector][0],
+                                 pos[first][1], ASPECT_ANGLES[a]) != 'Applying':
+                continue
+            if individual_motion(pos[second][0], pos[collector][0],
+                                 pos[second][1], ASPECT_ANGLES[b]) != 'Applying':
+                continue
+            status, detail = ('Candidate', 'Both planets apply to a slower collector')
+            if events is not None:
+                status, detail = _future_status(events,
+                    [PLANETS[first], PLANETS[second]],
+                    [PLANETS[collector], PLANETS[collector]], [a, b])
+            rows.append(Connection('Collection', PLANETS[collector],
+                                   PLANETS[first], PLANETS[second],
+                                   ASPECTS[a], ASPECTS[b], status, detail))
+    return sorted(rows, key=lambda r: (r.kind, r.actor, r.source, r.target))
+
+
+def horary_timeline(events, first, second, horizon_days):
+    """Return factual contact chronology for two selected significators.
+
+    Avoid automatically asserting prohibition/frustration/refranation: those
+    judgments depend on role, reception and the precise horary doctrine.
+    """
+    significant = [e for e in events if first in (e.first, e.second)
+                   or second in (e.first, e.second)]
+    perfection = next((e for e in significant if e.kind == 'aspect'
+                       and {e.first, e.second} == {first, second}), None)
+    if perfection is None:
+        return 'No exact contact in %d days' % horizon_days, significant
+    obstacles = [e for e in significant if e.jd < perfection.jd - 1e-7
+                 and (e.kind in ('station', 'ingress') or
+                      (e.kind == 'aspect' and {e.first, e.second} != {first, second}))]
+    if obstacles:
+        return 'Contact after %d earlier event(s): review impediments' % len(obstacles), significant
+    return 'Direct contact without earlier listed events', significant

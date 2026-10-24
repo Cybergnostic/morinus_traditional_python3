@@ -465,3 +465,36 @@ TEXTS.update({
     'Double application/separation: both planets individually approach/recede from exactness. Motion does not guarantee future perfection.':
         'Dvostruka aplikacija/separacija: obe planete se svaka za sebe približavaju/udaljavaju od egzaktnog aspekta. Ne garantuje buduće ostvarenje aspekta.',
 })
+
+# A3 planetary connections and horary event chronology
+TEXTS.update({
+    'Connections': 'Planetarne veze',
+    'Horary perfection': 'Horarna perfekcija',
+    'Method': 'Metod', 'Mediator': 'Posrednik',
+    'From': 'Od', 'To': 'Ka', 'Event check': 'Provera događaja',
+    'Explanation': 'Objašnjenje',
+    'Separating / first': 'Separacija / prvi',
+    'Applying / second': 'Aplikacija / drugi',
+    'Translation': 'Prenos svetlosti', 'Collection': 'Sakupljanje svetlosti',
+    'Candidate': 'Kandidat', 'Interrupted': 'Prekinuto',
+    'Unverified': 'Nepotvrđeno', 'Chronologically supported': 'Hronološki potvrđeno',
+    'Separating from one and applying to another': 'Odvaja se od jedne i aplicira drugoj planeti',
+    'Both planets apply to a slower collector': 'Obe planete apliciraju sporijoj planeti',
+    'No earlier planetary contact, station or ingress for the moving planet(s)':
+        'Nema ranijeg planetarnog kontakta, stanice ni promene znaka za aktivnu planetu',
+    'Perfection not found within search horizon': 'Egzaktan kontakt nije pronađen u zadatom periodu',
+    'Significator A': 'Signifikator A', 'Significator B': 'Signifikator B',
+    'Days': 'Dana', 'Analyze timeline': 'Analiziraj sled događaja',
+    'UT date': 'Datum (UT)', 'Event': 'Događaj', 'Days ahead': 'Dana do događaja',
+    'Station': 'Stanica', 'Ingress': 'Ulazak u znak',
+    'Choose two different significators.': 'Izaberite dva različita signifikatora.',
+    'Event search error': 'Greška u pretrazi događaja',
+    'Choose two significators and Analyze timeline to calculate future contacts.':
+        'Izaberite dva signifikatora i analizirajte sled narednih kontakata.',
+    'Translation/collection candidates are found in all chart types. Event verification requires Analyze timeline.':
+        'Mogući prenosi i sakupljanja svetlosti prikazuju se za sve karte. Provera događaja zahteva analizu sleda.',
+    'Intervening contacts, stations and ingresses require interpretation; they are not automatic judgments of prohibition or refranation.':
+        'Posredni kontakti, stanice i promene znaka traže tumačenje, nisu automatski zabrana ili refranacija.',
+    'Direct contact without earlier listed events': 'Direktan kontakt bez ranijih prikazanih događaja',
+    'Select a table tab to copy.': 'Izaberite karticu sa tabelom za kopiranje.',
+})

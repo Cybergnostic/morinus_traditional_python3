@@ -4,6 +4,7 @@ import wx
 import i18n
 import aspectswnd
 import aspect_workspace
+import a3_aspects_gui
 
 
 class AspectsFrame(wx.Frame):
@@ -72,6 +73,8 @@ class AspectsFrame(wx.Frame):
         self.tabs.AddPage(self.reception_page, i18n.tr("Receptions"))
         self.tabs.AddPage(classic_page, i18n.tr("Classic matrix"))
         root.Add(self.tabs, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
+        # A3: Universal connections and an on-demand horary event timeline.
+        a3_aspects_gui.install(self)
         panel.SetSizer(root)
 
         self.planet.Bind(wx.EVT_CHOICE, self.populate)
@@ -140,6 +143,7 @@ class AspectsFrame(wx.Frame):
                 len(self.all_contacts),
                 sum(r.status == "Reception" for r in self.all_receptions),
                 sum(r.status == "Generosity" for r in self.all_receptions)))
+        a3_aspects_gui.refresh_connections(self)
 
     @staticmethod
     def _degrees(decimal):
@@ -155,11 +159,12 @@ class AspectsFrame(wx.Frame):
 
     def copyTable(self, event):
         current = self.tabs.GetSelection()
-        if current not in (0, 1):
-            wx.MessageBox(i18n.tr("Select Contacts or Receptions to copy."),
+        if current not in (0, 1, 2, 3):
+            wx.MessageBox(i18n.tr("Select a table tab to copy."),
                           i18n.tr("Copy table"), wx.OK | wx.ICON_INFORMATION, self)
             return
-        table = self.contacts if current == 0 else self.receptions
+        table = (self.contacts, self.receptions, self.connection_table,
+                 self.horary_table)[current]
         rows = []
         for index in range(table.GetItemCount()):
             rows.append("\t".join(table.GetItemText(index, col)
