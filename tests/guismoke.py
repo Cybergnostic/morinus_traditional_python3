@@ -1001,8 +1001,9 @@ def main():
 					frame.onRevolutions = lambda event, planet=None: fake_generate(
 						chart.Chart.SOLAR if planet == 3 else chart.Chart.LUNAR)
 					frame.onTransits = lambda event: fake_generate(chart.Chart.TRANSIT)
-					for requested, htype in ((3, chart.Chart.SOLAR),
-							(6, chart.Chart.LUNAR), (None, chart.Chart.TRANSIT)):
+					for requested, htype in (('solar', chart.Chart.SOLAR),
+							('lunar', chart.Chart.LUNAR),
+							('transits', chart.Chart.TRANSIT)):
 						picker.create_chart(requested)
 						assert picker.selected().htype == htype
 						assert picker.choice.GetStringSelection() != ''
