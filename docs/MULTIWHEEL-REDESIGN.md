@@ -403,3 +403,36 @@ to be checked before merging into `main`.
 - GUI smoke regression exercises file registration and dropdown changes,
   return provenance, preserved SR year/transit datetime, chart captions and
   stale generated menu entries. Validate locally with wxPython before merge.
+
+## October 24: proposal A — Firdaria and SR-Ascendant highlighting
+
+- The multiwheel now has an optional, **enabled-by-default** `Highlight rulers`
+  checkbox. It does not alter any astrological data, single-wheel
+  GraphChart drawing, or the side-by-side comparison.
+- For the *radix*, highlight Morinus's Firdaria major and subperiod rulers
+  at the selected transit datetime (UTC), or current UTC time if no
+  transit ring is displayed. Preserve the original diurnal, Al-Biruni and
+  Bonatti Firdaria sequences, including node major periods without
+  planetary subperiods.
+- For each *Solar Return* ring, highlight the traditional domicile lord
+  of that SR chart's own Ascendant (not the radix Ascendant and not an
+  inferred profected Lord of the Year). Sidereal settings are respected.
+- Distinct blue/amber/violet colors identify major/sub/SR-Asc roles.
+  The appropriate planet glyph and its true-longitude pointer get the
+  matching color and a thin outline; its occupied house field in *its
+  own chart* receives a faint tinted sector under the house spokes.
+- An automatically placed, compact `Time Lords` legend uses spare white
+  space in the upper-left outside the wheel when space permits. The
+  same legend appears at the top of the independently scrollable Charts
+  inspector so it remains readable on narrower screens. Exported PNGs
+  include the corner legend when it fits.
+- A ruler occupying multiple roles receives more than one small outline;
+  nothing is painted across chart gaps or other chart house fields.
+- New pure tests cover diurnal/nocturnal Firdaria dates, Bonatti/Al-Biruni
+  choice, node periods, all twelve traditional domicile rulers, sidereal
+  SR Ascendants, and actual chart-specific occupied house numbers.
+  GUI smoke now exercises the checkbox, legend and ring-specific marks.
+
+Manual color customization and advanced overlapped-planet placement are
+separate follow-ups, not prerequisites for this stage. Validate at
+normal Fit size on laptop and desktop before merging.

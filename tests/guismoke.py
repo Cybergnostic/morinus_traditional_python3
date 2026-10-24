@@ -432,6 +432,8 @@ def main():
 						wnd.sidebar.GetBackgroundColour())
 				assert isinstance(wnd.inspector, wx.Notebook)
 				assert wnd.inspector.GetPageCount() == 2
+				assert wnd.highlight_choice.GetValue()
+				assert len(wnd.legend_labels) == 5
 				wnd.toggle_sidebar()
 				assert not wnd.splitter.IsSplit()
 				wnd.toggle_sidebar()
@@ -518,6 +520,27 @@ def main():
 					chart.Chart.TRANSIT) and source is not created
 					for _, source in inner.sources)
 				assert wnd.active_transit_ring == 3
+				# Time-lord overlay must identify the natal Firdaria ruler
+				# and the *solar chart's* own Ascendant domicile ruler.
+				import multiwheel_highlight
+				wnd.redraw()
+				assert wnd.renderer.show_highlights
+				assert any(mark['role'] == 'major' and mark['ring'] == 0
+					for mark in wnd.current_highlights)
+				assert any(mark['role'] == 'solar_asc' and mark['ring'] == 1
+					for mark in wnd.current_highlights)
+				for mark in wnd.current_highlights:
+					assert mark['planet'] in range(9)
+					assert 1 <= mark['house'] <= 12
+					assert mark['role'] in multiwheel_highlight.ROLE_COLOURS
+				assert 'As of' in wnd.legend_asof.GetLabel()
+				wnd.highlight_choice.SetValue(False)
+				wnd.redraw()
+				assert not wnd.renderer.show_highlights
+				assert not wnd.renderer._highlight_lookup
+				wnd.highlight_choice.SetValue(True)
+				wnd.redraw()
+				assert wnd.renderer.show_highlights
 				assert wnd.transit_section.IsShown()
 				assert wnd.return_section.IsShown()
 				wnd.inspector.SetSelection(1)

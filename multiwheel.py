@@ -18,6 +18,7 @@ import common
 import comparegrid
 import houses
 import multiwheel_layout
+import multiwheel_highlight
 import multiwheel_returnnav
 import multiwheel_sources
 import multiwheel_time
@@ -91,6 +92,9 @@ class MultiWheel:
         self.buffer = None
         self._ink_cache = {}
         self._font_cache = {}
+        self.highlight_entries = []
+        self.show_highlights = False
+        self._highlight_lookup = {}
 
     def angle(self, lon):
         asc = zodiac_lon(self.radix,
@@ -510,7 +514,7 @@ class MultiWheel:
             self.draw, self.scaled((left + tw + gap + mw / 2.0, xy[1])),
             marker, marker_font, colour)
 
-    def draw_planet_band(self, chrt, edges, role, dial_side):
+    def draw_planet_band(self, chrt, edges, role, dial_side, ring_index=0):
         """Treat each planet, its position and motion as one movable label.
 
         The degree dial and leaders always preserve the exact longitude.
@@ -599,15 +603,28 @@ class MultiWheel:
             # from its immutable exact-longitude tick on the degree dial.
             glyph_edge = (self.cx + gx * label_end / glyph_radius,
                           self.cy + gy * label_end / glyph_radius)
+            role_colours = self.highlight_role_colours(ring_index, i)
+            glyph_colour = role_colours[0] if role_colours else self.planet_colour(i)
             self.stroke(self.point(exact, dial_anchor),
                         glyph_edge,
-                        'pointer', self.planet_colour(i))
+                        'pointer', glyph_colour)
             mark = 2.8 if dial_side == 'inner' else -2.8
             self.stroke(self.point(exact, dial_anchor),
                         self.point(exact, dial_anchor + mark),
-                        'major', self.planet_colour(i))
+                        'major', glyph_colour)
             glyph_xy = (self.cx + gx, self.cy + gy)
-            colour = self.colour(self.planet_colour(i))
+            if role_colours:
+                # Outlines distinguish time rulers without enlarging their
+                # glyphs or changing the collision-placement geometry.
+                extent = max(glyph_boxes[i]) * .55 + 2
+                for n, role_colour in enumerate(role_colours):
+                    radius = extent + 2.3 * n
+                    rect = (self.scaled((glyph_xy[0] - radius, glyph_xy[1] - radius)),
+                            self.scaled((glyph_xy[0] + radius, glyph_xy[1] + radius)))
+                    self.draw.ellipse(rect, outline=(
+                        (55, 55, 55) if self.bw else role_colour),
+                        width=max(1, self.scale))
+            colour = self.colour(glyph_colour)
             wheel_primitives.optical_text_center(
                 self.draw, self.scaled(glyph_xy),
                 common.common.planets[i], glyph_font, colour)
@@ -728,6 +745,99 @@ class MultiWheel:
         horizontal text is long across the ray at the top and bottom of the
         wheel, but along it at the sides."""
         return abs(math.cos(theta)) * w / 2.0 + abs(math.sin(theta)) * h / 2.0
+
+    def highlight_role_colours(self, ring, planet):
+        """One glyph can represent two active time-lord roles."""
+        roles = self._highlight_lookup.get((ring, planet), ())
+        return [multiwheel_highlight.ROLE_COLOURS[r] for r in roles]
+
+    def paint_highlight_fields(self, core, rings):
+        """Very faint house-sector tints, behind all spokes and labels.
+
+        Colour only the *occupied house* of each relevant ruler and only
+        in that ruler's natal or solar-return chart, never across other rings.
+        An annular sector is a small bounded polygon, not a bitmap mask.
+        """
+        if not self.show_highlights or not self.highlight_entries:
+            return
+        charts = [self.radix] + list(self.others)
+        for mark in self.highlight_entries:
+            ring = mark['ring']
+            if ring >= len(charts):
+                continue
+            chrt = charts[ring]
+            if ring == 0:
+                inner, outer = core * .67, core - self.dial_width((core * .67, core)) - 2
+            else:
+                a, b = rings[ring - 1]
+                start = a + self.separator_width((a, b)) + 1
+                inner, outer = start + self.dial_width((start, b)) + 2, b
+            if inner >= outer:
+                continue
+            cusps = [zodiac_lon(chrt, chrt.houses.cusps[k], self.options)
+                     for k in range(1, 13)]
+            h = mark['house'] - 1
+            start = cusps[h]
+            sweep = (cusps[(h + 1) % 12] - start) % 360
+            if sweep <= 0:
+                continue
+            steps = max(2, int(math.ceil(sweep / 2)))
+            longs = [(start + sweep * j / steps) % 360
+                     for j in range(steps + 1)]
+            boundary = [self.scaled(self.point(lon, outer)) for lon in longs]
+            boundary.extend(self.scaled(self.point(lon, inner))
+                            for lon in reversed(longs))
+            base = self.ring_background_colour(ring if ring else None)
+            tint = ((224, 224, 224) if self.bw else chartstyle.mix(
+                base, multiwheel_highlight.ROLE_COLOURS[mark['role']], .14))
+            self.draw.polygon(boundary, fill=tint)
+
+    def paint_highlight_legend(self):
+        """Small key in the empty upper-left corner, only when it fits.
+
+        The same legend is permanently visible in the Charts inspector;
+        the chart-corner copy follows the image into PNG export.
+        """
+        if not self.show_highlights or not self.highlight_entries:
+            return
+        font_size = max(10, min(19, int(self.rmax * .023)))
+        font = self.font(font_size)
+        lines = []
+        for mark in self.highlight_entries:
+            name = multiwheel_highlight.NAMES[mark['planet']]
+            prefix = ('Major' if mark['role'] == 'major' else
+                      'Subperiod' if mark['role'] == 'sub' else
+                      'SR%d Asc' % mark['ring'])
+            lines.append((mark['role'], '%s: %s · H%d' %
+                          (prefix, name, mark['house'])))
+        if len(lines) > 5:
+            return
+        line_height = font_size * 1.7
+        x, y = 14.0, 14.0
+        width = max(self.measure(text, font)[0]
+                    for _, text in lines) + 35
+        height = 13 + line_height * (len(lines) + 1)
+        # The furthest corner of the box must remain outside the wheel.
+        if math.hypot(self.cx - (x + width), self.cy - (y + height)) < self.rmax + 12:
+            return
+        background = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
+        self.draw.rectangle((self.scaled((x, y)),
+                             self.scaled((x + width, y + height))),
+                            fill=background,
+                            outline=(190, 190, 190), width=max(1, self.scale))
+        title_font = self.font(font_size + 1)
+        self.label((x + width / 2, y + line_height * .65),
+                   'Time Lords', title_font, (45, 45, 45))
+        for i, (role, text) in enumerate(lines):
+            yy = y + line_height * (i + 1.5)
+            colour = multiwheel_highlight.ROLE_COLOURS[role]
+            block_x = x + 13
+            block_y = yy - 4
+            self.draw.rectangle((self.scaled((block_x - 4, block_y - 4)),
+                                 self.scaled((block_x + 4, block_y + 4))),
+                                fill=(70, 70, 70) if self.bw else colour)
+            self.label((x + 27 + self.measure(text, font)[0] / 2, yy),
+                       text, font, (45, 45, 45))
 
     def draw_ring_backgrounds(self, zodiac, rings):
         """Tint only planetary bands; keep the single shared zodiac untouched.
@@ -875,7 +985,7 @@ class MultiWheel:
         self.draw_angles(chrt, chart_start, outer, border, ring_index=index)
         self.draw_outer_house_numbers(chrt, index, chart_start, outer)
         self.draw_planet_band(chrt, (chart_start, outer),
-                              i18n.tr('Ring %d') % index, 'inner')
+                              i18n.tr('Ring %d') % index, 'inner', ring_index=index)
 
     @staticmethod
     def separator_width(edges):
@@ -917,6 +1027,11 @@ class MultiWheel:
             self.options.showdecans, reference_outside=self.reference_outside)
         self.core_radius = core
         self.prepare_planet_fonts(core, rings)
+        self._highlight_lookup = {}
+        if self.show_highlights:
+            for entry in self.highlight_entries:
+                self._highlight_lookup.setdefault(
+                    (entry['ring'], entry['planet']), []).append(entry['role'])
         bg = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
         image = Image.new('RGB', i18n.tr((self.width * self.scale,
                                   self.height * self.scale)), i18n.tr(bg))
@@ -931,6 +1046,7 @@ class MultiWheel:
         self.pending_planet_positions = []
         self.planet_occupied = []
         self.draw_ring_backgrounds(zodiac, rings)
+        self.paint_highlight_fields(core, rings)
         self.draw_radix(core)
         if not self.reference_outside:
             self.draw_decans(decans)
@@ -961,6 +1077,7 @@ class MultiWheel:
         # annotations are permitted to cross both without being erased.
         for args in self.pending_planet_positions:
             self.draw_position_label(*args)
+        self.paint_highlight_legend()
         image = image.resize((self.width, self.height), Image.Resampling.LANCZOS)
         out = wx.Image(self.width, self.height)
         out.SetData(image.tobytes())
@@ -1259,6 +1376,7 @@ class MultiWheelFrame(wx.Frame):
         self._updating_returns = False
         self.bitmap_origin = (0, 0)
         self._last_hover = ''
+        self.current_highlights = []
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
         self.SetMinSize((1060, 600))
         outer = wx.BoxSizer(wx.VERTICAL)
@@ -1300,7 +1418,10 @@ class MultiWheelFrame(wx.Frame):
             self, choices=i18n.tr(['Glyphs only', 'Glyphs + degrees',
                                    'Full positions']))
         self.labels_choice.SetSelection(1)
-        viewrow.Add(self.labels_choice, 0, wx.ALIGN_CENTER_VERTICAL)
+        viewrow.Add(self.labels_choice, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
+        self.highlight_choice = wx.CheckBox(self, label=i18n.tr('Highlight rulers'))
+        self.highlight_choice.SetValue(True)
+        viewrow.Add(self.highlight_choice, 0, wx.ALIGN_CENTER_VERTICAL)
         outer.Add(viewrow, 0, wx.ALL, 7)
 
         # Splitter lets the user give more room to long chart captions and
@@ -1398,6 +1519,18 @@ class MultiWheelFrame(wx.Frame):
         self.inspector.AddPage(self.controls_page, i18n.tr('Returns + transits'))
 
         info_rail = wx.BoxSizer(wx.VERTICAL)
+        self.add_rail_heading(info_rail, 'Time Lords', self.info_page)
+        self.legend_asof = wx.StaticText(self.info_page, label='')
+        self.legend_asof.SetForegroundColour(rail_fg)
+        info_rail.Add(self.legend_asof, 0, wx.EXPAND | wx.BOTTOM, 5)
+        self.legend_labels = []
+        for _ in range(5):
+            label = wx.StaticText(self.info_page, label='')
+            label.SetForegroundColour(rail_fg)
+            self.legend_labels.append(label)
+            info_rail.Add(label, 0, wx.EXPAND | wx.BOTTOM, 5)
+        info_rail.Add(wx.StaticLine(self.info_page), 0,
+                      wx.EXPAND | wx.TOP | wx.BOTTOM, 11)
         self.add_rail_heading(info_rail, 'Chart details', self.info_page)
         self.chart_details = []
         for i in range(4):
@@ -1493,6 +1626,7 @@ class MultiWheelFrame(wx.Frame):
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.aspect_choice)
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.labels_choice)
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.reference_choice)
+        self.Bind(wx.EVT_CHECKBOX, self.queue_draw, self.highlight_choice)
         self.Bind(wx.EVT_BUTTON, self.onSaveAsBitmap, self.savebutton)
         self.Bind(wx.EVT_BUTTON, self.zoom_fit, self.fit_button)
         self.Bind(wx.EVT_BUTTON, self.zoom_actual, self.actual_button)
@@ -1530,6 +1664,49 @@ class MultiWheelFrame(wx.Frame):
         heading.SetForegroundColour(parent.GetForegroundColour())
         rail.Add(heading, 0, wx.EXPAND | wx.BOTTOM, 7)
         return heading
+
+    def highlight_reference_time(self, charts):
+        """Use the selected transit time, otherwise the current UTC time."""
+        for chrt in reversed(charts):
+            if chrt.htype == chart.Chart.TRANSIT and not chrt.time.bc:
+                t = chrt.time
+                try:
+                    return datetime(
+                        t.origyear, t.origmonth, t.origday,
+                        t.hour, t.minute, t.second, tzinfo=timezone.utc)
+                except ValueError:
+                    break
+        return datetime.now(timezone.utc)
+
+    def time_lord_entries(self, inner, charts):
+        instant = self.highlight_reference_time(charts)
+        return (multiwheel_highlight.entries_for(
+                    inner, charts, instant, bool(self.options.ayanamsha)),
+                instant)
+
+    def update_highlight_legend(self, entries, instant):
+        if not self.highlight_choice.GetValue():
+            self.legend_asof.SetLabel(i18n.tr('Highlighting off'))
+            for label in self.legend_labels:
+                label.Hide()
+            self.refresh_inspector()
+            return
+        self.legend_asof.SetLabel(
+            '%s %s UTC' % (i18n.tr('As of'), instant.strftime('%Y-%m-%d')))
+        if not entries:
+            self.legend_labels[0].SetLabel(i18n.tr('No rulers for this chart'))
+            self.legend_labels[0].Show()
+        for i, label in enumerate(self.legend_labels):
+            if i >= len(entries):
+                label.Hide()
+                continue
+            mark = entries[i]
+            label.SetLabel(mark['text'])
+            label.SetForegroundColour(
+                wx.Colour(*(multiwheel_highlight.ROLE_COLOURS[mark['role']]
+                            if not self.options.bw else (65, 65, 65))))
+            label.Show()
+        self.refresh_inspector()
 
     def refresh_inspector(self):
         for page in (self.info_page, self.controls_page):
@@ -2347,7 +2524,12 @@ class MultiWheelFrame(wx.Frame):
             self.aspect_choice.GetSelection())
         self.renderer.label_mode = self.labels_choice.GetSelection()
         self.renderer.reference_outside = bool(self.reference_choice.GetSelection())
+        self.renderer.show_highlights = self.highlight_choice.GetValue()
+        entries, instant = self.time_lord_entries(inner, charts)
+        self.current_highlights = entries
+        self.renderer.highlight_entries = entries
         self.buffer = self.renderer.drawChart()
+        self.update_highlight_legend(entries, instant)
         notes = []
         if repeated:
             notes.append(i18n.tr('Repeated charts') + ': ' + ', '.join(repeated))
@@ -2422,6 +2604,8 @@ class MultiWheelFrame(wx.Frame):
                 self.aspect_choice.GetSelection())
             exporter.label_mode = self.labels_choice.GetSelection()
             exporter.reference_outside = bool(self.reference_choice.GetSelection())
+            exporter.show_highlights = self.highlight_choice.GetValue()
+            exporter.highlight_entries, _ = self.time_lord_entries(inner, charts)
             bitmap = exporter.drawChart()
             if bitmap.SaveFile(path, wx.BITMAP_TYPE_PNG):
                 self.mainfr.fpathimgs = os.path.dirname(path)
