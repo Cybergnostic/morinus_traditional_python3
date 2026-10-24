@@ -457,3 +457,11 @@ TEXTS.update({
     '%d aspects · %d receptions · %d generosities':
         '%d aspekata · %d recepcija · %d velikodušnosti',
 })
+
+# Double application/separation in the A2 Contacts table
+TEXTS.update({
+    'Double application': 'Dvostruka aplikacija',
+    'Double separation': 'Dvostruka separacija',
+    'Double application/separation: both planets individually approach/recede from exactness. Motion does not guarantee future perfection.':
+        'Dvostruka aplikacija/separacija: obe planete se svaka za sebe približavaju/udaljavaju od egzaktnog aspekta. Ne garantuje buduće ostvarenje aspekta.',
+})

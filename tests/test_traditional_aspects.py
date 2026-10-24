@@ -49,6 +49,37 @@ class TraditionalAspectTests(unittest.TestCase):
         self.assertTrue(t.evaluate(359, 2, 0, -1, 9, 9).applying)
         self.assertTrue(t.evaluate(359, 2, 0, 1, 9, 9).separating)
 
+    def test_double_application_direct_and_retrograde(self):
+        r = t.evaluate(0, 63, 2, -1, 9, 9)
+        self.assertIsNotNone(r)
+        self.assertTrue(r.double_applying)
+        self.assertFalse(r.double_separating)
+        self.assertTrue(r.applying)
+        self.assertEqual(t.motion_status(63, 0, -1, 2, 60), "Double application")
+
+    def test_double_separation_direct_and_retrograde(self):
+        r = t.evaluate(0, 63, -2, 1, 9, 9)
+        self.assertIsNotNone(r)
+        self.assertTrue(r.double_separating)
+        self.assertFalse(r.double_applying)
+        self.assertTrue(r.separating)
+        self.assertEqual(t.motion_status(63, 0, 1, -2, 60), "Double separation")
+
+    def test_double_application_and_separation_crossing_aries(self):
+        self.assertEqual(t.motion_status(359, 1, 1, -1, 0), "Double application")
+        self.assertEqual(t.motion_status(359, 1, -1, 1, 0), "Double separation")
+
+    def test_same_direction_retrogrades_use_relative_motion(self):
+        # Both retrograde bodies can still yield ordinary application or separation.
+        self.assertEqual(t.motion_status(100, 193, -1, -2, 90), "Applying")
+        self.assertEqual(t.motion_status(100, 193, -2, -1, 90), "Separating")
+
+    def test_exact_stationary_and_single_application(self):
+        self.assertEqual(t.motion_status(0, 60, 1, -1, 60), "Exact")
+        self.assertEqual(t.motion_status(0, 63, 0, 0, 60), "Stationary")
+        self.assertEqual(t.motion_status(0, 63, 2, 1, 60), "Applying")
+        self.assertEqual(t.motion_status(0, 63, 1, 2, 60), "Separating")
+
     def test_strict_sign_mode_leaves_valid_sign_aspects(self):
         self.assertIsNotNone(t.evaluate(0, 62, 0, 0, 9, 9, boundary_allowance=0))
 

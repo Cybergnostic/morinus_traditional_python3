@@ -27,6 +27,8 @@ class Contact:
     applying: bool
     separating: bool
     exact: bool
+    double_applying: bool = False
+    double_separating: bool = False
 
 
 def angular_distance(a: float, b: float) -> float:
@@ -39,6 +41,40 @@ def sign_configuration(a: float, b: float) -> int | None:
     difference = (int((b % 360.0) // 30.0) -
                   int((a % 360.0) // 30.0)) % 12
     return SIGN_ASPECTS.get(difference)
+
+
+
+def motion_status(a: float, b: float, speed_a: float, speed_b: float,
+                  angle: float) -> str:
+    """Classify motion toward the current aspect's exact degree.
+
+    A double application means each planet individually closes the deviation
+    when the other is held fixed; double separation means both individually
+    widen it. This includes opposite signed motions caused by retrogradation,
+    is symmetric in the planet order and works across 0° Aries. Otherwise the
+    ordinary label describes their *relative* motion. This is instantaneous,
+    not a prediction of eventual perfection across an ingress or station.
+    """
+    current = abs(angular_distance(a, b) - angle)
+    if current <= 1e-7:
+        return "Exact"
+
+    dt = 0.001
+    tolerance = 1e-10
+    delta_a = abs(angular_distance(a + speed_a * dt, b) - angle) - current
+    delta_b = abs(angular_distance(a, b + speed_b * dt) - angle) - current
+    if delta_a < -tolerance and delta_b < -tolerance:
+        return "Double application"
+    if delta_a > tolerance and delta_b > tolerance:
+        return "Double separation"
+
+    delta_pair = abs(angular_distance(a + speed_a * dt,
+                                      b + speed_b * dt) - angle) - current
+    if delta_pair < -tolerance:
+        return "Applying"
+    if delta_pair > tolerance:
+        return "Separating"
+    return "Stationary"
 
 
 def combine_orbs(orb_a: float, orb_b: float, method: str = "larger") -> float:
@@ -83,16 +119,14 @@ def evaluate(a: float, b: float, speed_a: float, speed_b: float,
             chosen, deviation = idx, candidate
     if chosen is None:
         return None
-    # Compare a very short projection of both signed motions, including R.
-    dt = 0.001
-    future_distance = angular_distance(a + speed_a * dt, b + speed_b * dt)
-    future_deviation = abs(future_distance - ASPECT_ANGLES[chosen])
-    exact = deviation <= 1e-7
-    applying = not exact and future_deviation < deviation - 1e-10
-    separating = not exact and future_deviation > deviation + 1e-10
+    motion = motion_status(a, b, speed_a, speed_b, ASPECT_ANGLES[chosen])
+    exact = motion == "Exact"
+    applying = motion in ("Applying", "Double application")
+    separating = motion in ("Separating", "Double separation")
     return Contact(chosen, ASPECT_ANGLES[chosen], deviation, allowed,
                    sign_index, chosen != sign_index, deviation <= 3.0,
-                   applying, separating, exact)
+                   applying, separating, exact,
+                   motion == "Double application", motion == "Double separation")
 
 
 def configured_orbs(values):

@@ -6,7 +6,8 @@ No wxPython or ephemeris dependency: this module can be tested independently.
 
 from dataclasses import dataclass
 
-from traditional_aspects import ASPECT_ANGLES, PLANETS, angular_distance, sign_configuration
+from traditional_aspects import (ASPECT_ANGLES, PLANETS, angular_distance,
+                                 motion_status, sign_configuration)
 
 ASPECT_NAMES = ("Conjunction", "Sextile", "Square", "Trine", "Opposition")
 SIGNS = ("Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
@@ -43,19 +44,12 @@ class ReceptionRow:
 def angular_motion(a, b, speed_a, speed_b, angle):
     """Immediate applying/separating state from signed geocentric motions.
 
-    This describes the current movement toward exactness, not guaranteed
-    future perfection across stations, ingresses or intervening aspects.
+    This distinguishes double application/separation when both planets
+    individually approach/recede from the same exact aspect, and ordinary
+    applying/separating from their relative speed. Future perfection across
+    stations, ingresses or intervening aspects is not guaranteed.
     """
-    current = abs(angular_distance(a, b) - angle)
-    if current < 1e-7:
-        return "Exact"
-    dt = 0.001
-    future = abs(angular_distance(a + speed_a * dt, b + speed_b * dt) - angle)
-    if future < current - 1e-10:
-        return "Applying"
-    if future > current + 1e-10:
-        return "Separating"
-    return "Stationary"
+    return motion_status(a, b, speed_a, speed_b, angle)
 
 
 def dignity_holds(options, host_index, longitude, daytime):

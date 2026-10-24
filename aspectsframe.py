@@ -53,9 +53,9 @@ class AspectsFrame(wx.Frame):
         self.contacts = self._make_table(
             self.contact_page,
             [("Planet A", 105), ("Aspect", 115), ("Planet B", 105),
-             ("Orb", 85), ("Motion", 115), ("Sign relation", 115),
+             ("Orb", 85), ("Motion", 170), ("Sign relation", 115),
              ("A (°/day)", 95), ("B (°/day)", 95), ("Reception", 200)],
-            i18n.tr("Motion reflects current signed speeds, not guaranteed future perfection."))
+            i18n.tr("Double application/separation: both planets individually approach/recede from exactness. Motion does not guarantee future perfection."))
         self.receptions = self._make_table(
             self.reception_page,
             [("Host", 115), ("Receives", 115), ("Classification", 105),

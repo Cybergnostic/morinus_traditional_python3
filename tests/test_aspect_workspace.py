@@ -42,6 +42,32 @@ class WorkspaceTests(unittest.TestCase):
         self.assertEqual(w.angular_motion(0, 60, 0, 0, 60), "Exact")
         self.assertEqual(w.angular_motion(0, 63, 0, 0, 60), "Stationary")
 
+    def test_double_application_and_separation_labels(self):
+        self.assertEqual(w.angular_motion(0, 63, 2, -1, 60),
+                         "Double application")
+        self.assertEqual(w.angular_motion(0, 63, -2, 1, 60),
+                         "Double separation")
+        self.assertEqual(w.angular_motion(359, 1, 1, -1, 0),
+                         "Double application")
+        self.assertEqual(w.angular_motion(359, 1, -1, 1, 0),
+                         "Double separation")
+
+    def test_double_application_in_contact_rows(self):
+        # Mars at 10 Aries and Venus at 13 Aries: direct/retrograde.
+        longs = [170, 210, 10, 310, 13, 90, 250]
+        speeds = [0, 0, 2, 0, -1, 0, 0]
+        chart = DummyChart(longs, speeds, [(2, 4, 0)])
+        contacts, _ = w.analyze(chart)
+        self.assertEqual(len(contacts), 1)
+        self.assertEqual(contacts[0].motion, "Double application")
+
+    def test_double_separation_in_contact_rows(self):
+        longs = [170, 210, 10, 310, 13, 90, 250]
+        speeds = [0, 0, -2, 0, 1, 0, 0]
+        chart = DummyChart(longs, speeds, [(2, 4, 0)])
+        contacts, _ = w.analyze(chart)
+        self.assertEqual(contacts[0].motion, "Double separation")
+
     def test_domicile_reception_requires_contact(self):
         # Venus in Mars's Aries; Mars itself makes a degree conjunction.
         ch = DummyChart([180, 130, 10, 65, 11, 230, 350],
