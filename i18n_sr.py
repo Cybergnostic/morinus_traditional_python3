@@ -498,3 +498,8 @@ TEXTS.update({
     'Direct contact without earlier listed events': 'Direktan kontakt bez ranijih prikazanih događaja',
     'Select a table tab to copy.': 'Izaberite karticu sa tabelom za kopiranje.',
 })
+
+# Conservative chronological screening in A3
+TEXTS.update({
+    'Needs review': 'Zahteva proveru',
+})

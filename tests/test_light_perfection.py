@@ -52,7 +52,7 @@ class LightTests(unittest.TestCase):
         ch = fixture([100, 140, 8, 200, 15, 270, 10],
                      [0, 0, .3, 1, .2, 1, 13],
                      [(6, 2, 0), (6, 4, 0)])
-        self.assertTrue(any(r.status == 'Interrupted' for
+        self.assertTrue(any(r.status == 'Needs review' for
                             r in connections(ch, events)))
 
     def test_horary_timeline_requires_event_order(self):

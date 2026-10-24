@@ -211,6 +211,38 @@ matched exactly with Swiss Ephemeris 1.76 (the `clean-port` branch). `guismoke.p
 triggers every menu command and popup-menu item (run it on a copy of the
 folder, since it saves options).
 
+## Traditional aspects: A3 planetary connections and event chronology
+
+Use **Tables → Aspects** (F8). The new **Connections** tab works in natal,
+horary, electional, solar-return and other chart types. It lists candidate
+**translation of light** (a faster planet separates from one and applies
+to another) and **collection of light** (two planets apply to a slower
+collector), based on the currently selected aspect rules. No receptions are
+required by this initial geometric filter. The Classic matrix remains available.
+
+Open **Horary perfection** to choose two planets as significators, set an
+event horizon (1–180 days, 30 by default), and click **Analyze timeline**.
+The Swiss Ephemeris scans the days **following the chart's date** (not the
+current calendar date), refining actual aspect perfections, planetary stations
+and sign ingresses. The timeline reports all such events involving either
+selected significator, and the Connections table marks whether each candidate
+has a matching next contact within that scanned period. Calculation only
+starts when the button is clicked; it is not a background process.
+
+**Interpretive boundary:** "Candidate" means a configuration at the chart's
+date, "Chronologically supported" means no earlier listed planetary
+contact/ingress/station for the moving planet, "Needs review" flags earlier
+events, and "Unverified" means no matching perfection found within the
+selected horizon. A preceding contact, ingress, or station is **not**
+automatically a valid prohibition, frustration or refranation. Formal
+horary impediment judgments, reception-based exceptions and configurable
+doctrine rules are still pending in A3. Natal translations and collections
+should not be read as event predictions. Only the seven visible planets
+participate.
+
+Calculation-level tests:
+`python3 -m unittest discover -s tests -p 'test_light_perfection.py' -v`
+
 ## Automatic time zones (birth data)
 
 The Windows build and `install.sh` include what this needs. In **New Chart**

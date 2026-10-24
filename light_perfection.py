@@ -60,14 +60,14 @@ def _future_status(events, movers, targets, aspect_indexes):
         encountered = False
         for e in events:
             if e.kind in ('station', 'ingress') and mover == e.first:
-                return 'Interrupted', f'{mover} {e.kind} before contact'
+                return 'Needs review', f'{mover} {e.kind} before intended contact'
             if e.kind != 'aspect' or mover not in (e.first, e.second):
                 continue
             other = e.second if mover == e.first else e.first
             if other == target and e.aspect_index == angle_index:
                 encountered = True
                 break
-            return 'Interrupted', f'{mover} contacts {other} first'
+            return 'Needs review', f'{mover} contacts {other} first'
         if not encountered:
             return 'Unverified', 'Perfection not found within search horizon'
     return 'Chronologically supported', 'No earlier planetary contact, station or ingress for the moving planet(s)'
