@@ -419,3 +419,41 @@ TEXTS.update({
     'Used only with the Custom planetary orbs preset.':
         'Koristi se samo ako su izabrani posebni planetarni orbisi.',
 })
+
+# Readable A2 Aspects workspace
+TEXTS.update({
+    'Planetary aspects and receptions': 'Planetarni aspekti i recepcije',
+    'Planet': 'Planeta', 'All planets': 'Sve planete',
+    'Include generosity': 'Uključi velikodušnost',
+    'Generosity: qualifying dignity without an aspect within orb.':
+        'Velikodušnost: dovoljno dostojanstvo bez aspekta unutar orbisa.',
+    'Refresh': 'Osveži', 'Copy table': 'Kopiraj tabelu',
+    'Contacts': 'Kontakti', 'Receptions': 'Recepcije',
+    'Classic matrix': 'Stara matrica',
+    'Planet A': 'Planeta A', 'Aspect': 'Aspekt',
+    'Planet B': 'Planeta B', 'Orb': 'Orbis',
+    'Motion': 'Kretanje', 'Sign relation': 'Odnos znakova',
+    'A (°/day)': 'A (°/dan)', 'B (°/day)': 'B (°/dan)',
+    'Reception': 'Recepcija',
+    'Host': 'Primalac', 'Receives': 'Prima',
+    'Classification': 'Vrsta', 'Dignities held': 'Dostojanstva',
+    'Contact': 'Aspekt', 'Mutual': 'Uzajamna',
+    'Guest position': 'Položaj primljene',
+    'Motion reflects current signed speeds, not guaranteed future perfection.':
+        'Kretanje pokazuje trenutne brzine, ne garantuje buduće ostvarenje aspekta.',
+    'The host receives the guest in its dignity when an aspect is within orb.':
+        'Planeta prima drugu u svom dostojanstvu kada je aspekt unutar orbisa.',
+    'Applying': 'Aplikacioni', 'Separating': 'Separacioni',
+    'Stationary': 'Nepromenjeno', 'Exact': 'Egzaktan',
+    'Out of sign': 'Van znaka', 'By sign': 'Po znaku',
+    'Mutual reception': 'Uzajamna recepcija',
+    'Generosity': 'Velikodušnost', 'Yes': 'Da',
+    'Conjunction': 'Konjunkcija', 'Sextile': 'Sekstil',
+    'Square': 'Kvadrat', 'Trine': 'Trigon', 'Opposition': 'Opozicija',
+    'Domicile': 'Sedište', 'Exaltation': 'Egzaltacija',
+    'Triplicity': 'Triplicitet', 'Term': 'Termin', 'Face': 'Lice',
+    'Select Contacts or Receptions to copy.':
+        'Izaberite Kontakti ili Recepcije za kopiranje.',
+    '%d aspects · %d receptions · %d generosities':
+        '%d aspekata · %d recepcija · %d velikodušnosti',
+})
