@@ -2019,9 +2019,16 @@ class MultiWheelFrame(wx.Frame):
             place = getattr(chrt.place, 'placename', '') or i18n.tr('Unknown place')
             asc = self.angle_label(chrt.houses.ascmc[houses.Houses.ASC])
             mc = self.angle_label(chrt.houses.ascmc[houses.Houses.MC])
-            contents = ('%s · %s\n%s%s\n%s\nASC %s\nMC  %s' %
-                        (self.ring_label(i), kind, date, time_suffix,
-                         place, asc, mc))
+            # Keep the chart name on its own line. Joining it to the
+            # return type produces a long header which wx.StaticText.Wrap
+            # may split in the middle of the person's name on laptops.
+            name = str(chrt.name or '').strip()
+            short_kind = (kind[:-(len(name) + 2)]
+                          if name and kind.endswith(': ' + name) else kind)
+            header = self.ring_label(i) + ' · ' + short_kind
+            contents = '\n'.join(
+                [header] + ([name] if name else []) +
+                [date + time_suffix, place, 'ASC ' + asc, 'MC  ' + mc])
             label.SetLabel(contents)
             label.Wrap(238)
             label.Show(i <= count)

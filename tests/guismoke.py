@@ -605,7 +605,9 @@ def main():
 					assert updated.htype == kind
 					assert updated.name == other_natal.name
 					assert other_natal.name in wnd.pickers[slot].choice.GetStringSelection()
-					assert other_natal.name in wnd.chart_details[slot].GetLabel()
+					# wx.StaticText may insert line breaks while wrapping.
+					details = ' '.join(wnd.chart_details[slot].GetLabel().split())
+					assert other_natal.name in details
 				assert picker.selected() is not old_solar
 				assert lunar_picker.selected() is not old_lunar
 				assert transit_picker.selected() is not old_transit
