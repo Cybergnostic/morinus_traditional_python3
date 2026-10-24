@@ -24,9 +24,9 @@ class AspectsWnd(commonwnd.CommonWnd):
         self.YOFFSET = self.SPACE // 2
         self.SQUARE_SIZE = self.SPACE + self.FONT_SIZE + self.SPACE
         self.LINE_NUM = 10
-        # Whole Sign has no aspect columns for intermediate house cusps.
-        # Ascendant/MC and interplanetary aspects remain unchanged.
-        self.show_house_cusps = self.chart.houses.hsys != 5
+        # Equal and Whole Sign do not use independent intermediate quadrant
+        # cusps for aspect interpretation. Other systems retain the columns.
+        self.show_house_cusps = self.chart.houses.hsys not in (4, 5)
         self.HOUSESOFFS = 11
         self.COLUMN_NUM = 17 if self.show_house_cusps else 11
         self.TABLE_HEIGHT = self.LINE_NUM * (self.SQUARE_SIZE + self.SPACE)

@@ -224,8 +224,8 @@ it from the table. An absence of a matching perfection within the selected
 horizon also suppresses that candidate rather than claiming success.
 Use **Search days** and **Analyze connections** to rescan 1–180 days.
 No receptions are required by this initial geometric filter. The Classic
-matrix remains available. Under Whole Sign houses, the Classic matrix hides
-the six intermediary house-cusp aspect columns; other systems keep them.
+matrix remains available. Under Whole Sign or Equal houses, the Classic matrix hides
+the six intermediary house-cusp aspect columns; quadrant-like systems keep them.
 The Ascendant/MC and the original planetary matrix are unaffected.
 
 Open **Horary perfection** to choose two planets as significators, set an

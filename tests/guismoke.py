@@ -1076,7 +1076,7 @@ def main():
 					classic = next(w for w in wnd.tabs.GetPage(4).GetChildren()
 					               if isinstance(w, wx.Window) and
 					               hasattr(w, 'show_house_cusps'))
-					assert classic.show_house_cusps == (frame.horoscope.houses.hsys != 5)
+					assert classic.show_house_cusps == (frame.horoscope.houses.hsys not in (4, 5))
 					assert classic.COLUMN_NUM == (17 if classic.show_house_cusps else 11)
 					wnd.connection_days.SetValue(1)
 					wnd.tabs.SetSelection(2)
