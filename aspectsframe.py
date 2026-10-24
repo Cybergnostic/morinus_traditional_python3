@@ -56,13 +56,13 @@ class AspectsFrame(wx.Frame):
             [("Planet A", 105), ("Aspect", 115), ("Planet B", 105),
              ("Orb", 85), ("Motion", 170), ("Sign relation", 115),
              ("A (°/day)", 95), ("B (°/day)", 95), ("Reception", 200)],
-            i18n.tr("Double application/separation: both planets individually approach/recede from exactness. Motion does not guarantee future perfection."))
+            '')
         self.receptions = self._make_table(
             self.reception_page,
             [("Host", 115), ("Receives", 115), ("Classification", 105),
              ("Dignities held", 235), ("Contact", 120),
              ("Mutual", 85), ("Guest position", 155)],
-            i18n.tr("The host receives the guest in its dignity when an aspect is within orb."))
+            '')
         self.receptions.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onReceptionSelected)
 
         old_matrix = aspectswnd.AspectsWnd(classic_page, chrt, options, parent)
@@ -89,8 +89,9 @@ class AspectsFrame(wx.Frame):
         for index, (heading, width) in enumerate(columns):
             table.InsertColumn(index, i18n.tr(heading), width=width)
         outer.Add(table, 1, wx.EXPAND | wx.ALL, 7)
-        description = wx.StaticText(parent, -1, i18n.tr(note))
-        outer.Add(description, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        if note:
+            description = wx.StaticText(parent, -1, i18n.tr(note))
+            outer.Add(description, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         parent.SetSizer(outer)
         return table
 

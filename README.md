@@ -213,21 +213,30 @@ folder, since it saves options).
 
 ## Traditional aspects: A3 planetary connections and event chronology
 
-Use **Tables → Aspects** (F8). The new **Connections** tab works in natal,
-horary, electional, solar-return and other chart types. It lists candidate
-**translation of light** (a faster planet separates from one and applies
-to another) and **collection of light** (two planets apply to a slower
-collector), based on the currently selected aspect rules. No receptions are
-required by this initial geometric filter. The Classic matrix remains available.
+Use **Tables → Aspects** (F8). The **Connections** tab works in natal,
+horary, electional, solar-return and other chart types. On opening the tab,
+Morinus automatically scans a 90-day event horizon, including the seven
+traditional planets' major aspects, stations and sign ingresses. It lists
+only chronologically verified **translation of light** and **collection of
+light**, with exact UT contact times. A messenger/feeder reaching another
+contact, station or ingress first invalidates that candidate and suppresses
+it from the table. An absence of a matching perfection within the selected
+horizon also suppresses that candidate rather than claiming success.
+Use **Search days** and **Analyze connections** to rescan 1–180 days.
+No receptions are required by this initial geometric filter. The Classic
+matrix remains available. Under Whole Sign houses, the Classic matrix hides
+the six intermediary house-cusp aspect columns; other systems keep them.
+The Ascendant/MC and the original planetary matrix are unaffected.
 
 Open **Horary perfection** to choose two planets as significators, set an
 event horizon (1–180 days, 30 by default), and click **Analyze timeline**.
 The Swiss Ephemeris scans the days **following the chart's date** (not the
 current calendar date), refining actual aspect perfections, planetary stations
 and sign ingresses. The timeline reports all such events involving either
-selected significator, and the Connections table marks whether each candidate
-has a matching next contact within that scanned period. Calculation only
-starts when the button is clicked; it is not a background process.
+selected significator. The Horary scan is independent of the Connections tab
+and does not alter its selected time horizon. The horary scan starts when
+**Analyze timeline** is clicked; Connections are computed on first opening
+their tab or when **Analyze connections** is clicked.
 
 **Interpretive boundary:** "Candidate" means a configuration at the chart's
 date, "Chronologically supported" means no earlier listed planetary

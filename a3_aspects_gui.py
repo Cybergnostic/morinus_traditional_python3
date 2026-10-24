@@ -10,11 +10,27 @@ def install(frame):
     """Add universal Connections and signifier-specific Horary tabs to A2."""
     connections = wx.Panel(frame.tabs)
     frame.connection_table = frame._make_table(connections, [
-        ('Method', 115), ('Mediator', 115), ('From', 110), ('To', 110),
-        ('Separating / first', 155), ('Applying / second', 155),
-        ('Event check', 185), ('Explanation', 400)],
-        'Translation/collection candidates are found in all chart types. Event verification requires Analyze timeline.')
+        ('Method', 125), ('Mediator', 115), ('From', 120), ('To', 120),
+        ('Separating aspect', 165), ('Applying aspect', 165),
+        ('Exact contact (UT)', 345)], '')
+    layout = connections.GetSizer()
+    controls = wx.BoxSizer(wx.HORIZONTAL)
+    controls.Add(wx.StaticText(connections, -1, i18n.tr('Search days') + ':'),
+                 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 7)
+    frame.connection_days = wx.SpinCtrl(connections, -1, min=1, max=180,
+                                         initial=90, size=(80, -1))
+    controls.Add(frame.connection_days, 0, wx.RIGHT, 12)
+    scan_button = wx.Button(connections, -1, i18n.tr('Analyze connections'))
+    scan_button.Bind(wx.EVT_BUTTON, lambda event: analyze_connections(frame))
+    controls.Add(scan_button, 0)
+    frame.connection_summary = wx.StaticText(connections, -1, '')
+    layout.Insert(0, controls, 0, wx.EXPAND | wx.ALL, 9)
+    layout.Insert(1, frame.connection_summary, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
     frame.tabs.InsertPage(2, connections, i18n.tr('Connections'))
+    # Recompute when this tab is first selected rather than displaying
+    # unverified natal translation/collection candidates.
+    frame.tabs.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED,
+                    lambda event: on_tab_changed(frame, event))
 
     horary = wx.Panel(frame.tabs)
     outer = wx.BoxSizer(wx.VERTICAL)
@@ -38,8 +54,7 @@ def install(frame):
     button.Bind(wx.EVT_BUTTON, lambda event: analyze_timeline(frame))
     controls.Add(button, 0)
     outer.Add(controls, 0, wx.ALL, 9)
-    frame.horary_summary = wx.StaticText(horary, -1,
-        i18n.tr('Choose two significators and Analyze timeline to calculate future contacts.'))
+    frame.horary_summary = wx.StaticText(horary, -1, i18n.tr('Select significators and analyze'))
     outer.Add(frame.horary_summary, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
     outer.Add(wx.StaticText(horary, -1, i18n.tr('Perfection and impediments')),
               0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
@@ -60,31 +75,59 @@ def install(frame):
             ('Planet B', 135), ('Aspect', 150), ('Days ahead', 115)]):
         frame.horary_table.InsertColumn(col, i18n.tr(label), width=width)
     outer.Add(frame.horary_table, 2, wx.EXPAND | wx.LEFT | wx.RIGHT, 9)
-    note = wx.StaticText(horary, -1, i18n.tr(
-        'The findings describe possible traditional impediments, not an automatic yes/no horary judgment. Reception and context must still be assessed.'))
-    outer.Add(note, 0, wx.ALL, 9)
     horary.SetSizer(outer)
     frame.tabs.InsertPage(3, horary, i18n.tr('Horary perfection'))
-    frame.a3_events = None
+    frame.a3_connection_events = None
+    frame.a3_connection_days = 0
+    refresh_connections(frame)
+
+
+def on_tab_changed(frame, event):
+    event.Skip()
+    if frame.tabs.GetSelection() == 2 and frame.a3_connection_events is None:
+        wx.CallAfter(analyze_connections, frame)
+
+
+def analyze_connections(frame):
+    import aspect_event_adapter
+    days = frame.connection_days.GetValue()
+    wx.BeginBusyCursor()
+    try:
+        events = aspect_event_adapter.search(frame.chart, days)
+    except Exception as exc:
+        wx.MessageBox(str(exc), i18n.tr('Event search error'),
+                      wx.OK | wx.ICON_ERROR, frame)
+        return
+    finally:
+        wx.EndBusyCursor()
+    frame.a3_connection_events = events
+    frame.a3_connection_days = days
     refresh_connections(frame)
 
 
 def refresh_connections(frame):
     if not hasattr(frame, 'connection_table'):
         return
-    current = frame.planet.GetSelection()
-    chosen = PLANETS[current - 1] if current > 0 else None
-    rows = light_perfection.connections(frame.chart, frame.a3_events)
     table = frame.connection_table
     table.DeleteAllItems()
-    for row in rows:
-        if chosen is not None and chosen not in (row.actor, row.source, row.target):
-            continue
+    if frame.a3_connection_events is None:
+        frame.connection_summary.SetLabel('')
+        return
+    current = frame.planet.GetSelection()
+    chosen = PLANETS[current - 1] if current > 0 else None
+    rows = light_perfection.connections(frame.chart, frame.a3_connection_events)
+    visible = [row for row in rows if chosen is None or
+               chosen in (row.actor, row.source, row.target)]
+    for row in visible:
+        times = ' / '.join(_ut_date(jd, frame.chart.time.cal == 0)
+                           for jd in row.exact_times)
         frame._insert(table, (
             i18n.tr(row.kind), i18n.tr(row.actor), i18n.tr(row.source),
             i18n.tr(row.target), i18n.tr(row.source_aspect),
-            i18n.tr(row.target_aspect), i18n.tr(row.status),
-            i18n.tr(row.detail)))
+            i18n.tr(row.target_aspect), times))
+    frame.connection_summary.SetLabel(
+        i18n.tr('%d connections · %d days') %
+        (len(visible), frame.a3_connection_days))
 
 
 def _ut_date(jd, gregorian=True):
@@ -116,7 +159,7 @@ def analyze_timeline(frame):
         return
     finally:
         wx.EndBusyCursor()
-    frame.a3_events = events
+    # Horary chronology is separate from the Connections search horizon.
     # The horary-specific classifier is separate from the universal
     # translation/collection engine: do not impose these verdicts on natal.
     i = PLANETS.index(first)
@@ -149,4 +192,4 @@ def analyze_timeline(frame):
                               i18n.tr(e.kind.title()), i18n.tr(e.first),
                               i18n.tr(e.second) if e.second else '—',
                               i18n.tr(asp), f'{e.jd - start:.3f}'))
-    refresh_connections(frame)
+

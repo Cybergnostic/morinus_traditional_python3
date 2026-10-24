@@ -110,7 +110,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'comparisonGrid', 'multiWheel', 'chartQuality', 'tablePresentation', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'transitSearch', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'comparisonGrid', 'multiWheel', 'chartQuality', 'tablePresentation', 'aspectsWorkspace', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'transitSearch', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
 	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
@@ -1063,6 +1063,38 @@ def main():
 					assert table.zoom == 1.0
 				finally:
 					fr.Destroy()
+			elif name == 'aspectsWorkspace':
+				# A2/A3: verify all five tabs, exact connection filtering,
+				# the significator event workflow and the house-cusp layout.
+				import aspectsframe, a3_aspects_gui
+				wnd = aspectsframe.AspectsFrame(frame, frame.title, frame.horoscope, frame.options)
+				try:
+					wnd.Show()
+					assert wnd.tabs.GetPageCount() == 5
+					assert wnd.contact_page is wnd.tabs.GetPage(0)
+					assert wnd.reception_page is wnd.tabs.GetPage(1)
+					classic = next(w for w in wnd.tabs.GetPage(4).GetChildren()
+					               if isinstance(w, wx.Window) and
+					               hasattr(w, 'show_house_cusps'))
+					assert classic.show_house_cusps == (frame.horoscope.houses.hsys != 5)
+					assert classic.COLUMN_NUM == (17 if classic.show_house_cusps else 11)
+					wnd.connection_days.SetValue(1)
+					wnd.tabs.SetSelection(2)
+					settle(0.4)
+					assert wnd.a3_connection_events is not None
+					assert wnd.a3_connection_days == 1
+					assert all(r.status == 'Verified' for r in
+					    __import__('light_perfection').connections(
+					        wnd.chart, wnd.a3_connection_events))
+					wnd.tabs.SetSelection(3)
+					wnd.horizon.SetValue(1)
+					a3_aspects_gui.analyze_timeline(wnd)
+					assert wnd.horary_summary.GetLabel()
+					wnd.tabs.SetSelection(4)
+					settle(0.1)
+					check_clipping(wnd)
+				finally:
+					wnd.Destroy()
 			elif name == 'positionsWorkspace':
 				# B1: exercise all four embedded, original Morinus tables.
 				# The speculum selector must not alter primary-directions settings.

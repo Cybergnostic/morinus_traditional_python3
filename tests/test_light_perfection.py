@@ -46,14 +46,68 @@ class LightTests(unittest.TestCase):
         self.assertFalse(any(r.kind == 'Collection' and
                              r.actor == 'Saturn' for r in connections(ch)))
 
-    def test_intervening_station(self):
+    def test_intervening_station_invalidates_translation(self):
         events = [Event(1, 'station', 'Moon'),
                   Event(2, 'aspect', 'Venus', 'Moon', 0)]
         ch = fixture([100, 140, 8, 200, 15, 270, 10],
                      [0, 0, .3, 1, .2, 1, 13],
                      [(6, 2, 0), (6, 4, 0)])
-        self.assertTrue(any(r.status == 'Needs review' for
-                            r in connections(ch, events)))
+        self.assertEqual(connections(ch, events), [])
+
+    def test_verified_translation_has_true_perfection_time(self):
+        ch = fixture([100, 140, 8, 200, 15, 270, 10],
+                     [0, 0, .3, 1, .2, 1, 13],
+                     [(6, 2, 0), (6, 4, 0)])
+        rows = connections(ch, [Event(6, 'aspect', 'Moon', 'Venus', 0)])
+        matched = [r for r in rows if r.kind == 'Translation' and
+                   r.actor == 'Moon' and r.target == 'Venus']
+        self.assertEqual(len(matched), 1)
+        self.assertEqual(matched[0].status, 'Verified')
+        self.assertEqual(matched[0].exact_times, (6,))
+
+    def test_moon_meets_sun_before_target_no_false_translation(self):
+        ch = fixture([100, 140, 8, 200, 15, 270, 10],
+                     [0, 0, .3, 1, .2, 1, 13],
+                     [(6, 2, 0), (6, 4, 0)])
+        events = [Event(1, 'aspect', 'Sun', 'Moon', 1),
+                  Event(6, 'aspect', 'Moon', 'Venus', 0)]
+        self.assertEqual(connections(ch, events), [])
+
+    def test_collection_rejected_on_earlier_contact(self):
+        ch = fixture([12, 100, 160, 200, 10, 290, 9],
+                     [.1, 0, 0, 1, 1, 0, 13],
+                     [(0, 4, 0), (0, 6, 0)])
+        # Moon contacts Sun before reaching Saturn: no valid collection.
+        events = [Event(1, 'aspect', 'Moon', 'Sun', 1),
+                  Event(2, 'aspect', 'Venus', 'Saturn', 0),
+                  Event(3, 'aspect', 'Moon', 'Saturn', 0)]
+        self.assertEqual(connections(ch, events), [])
+
+    def test_collection_verified_when_both_next_contacts_are_collector(self):
+        ch = fixture([12, 100, 160, 200, 10, 290, 9],
+                     [.1, 0, 0, 1, 1, 0, 13],
+                     [(0, 4, 0), (0, 6, 0)])
+        events = [Event(2, 'aspect', 'Venus', 'Saturn', 0),
+                  Event(3, 'aspect', 'Moon', 'Saturn', 0)]
+        verified = [r for r in connections(ch, events)
+                    if r.kind == 'Collection' and r.actor == 'Saturn']
+        self.assertEqual(len(verified), 1)
+        self.assertEqual(verified[0].exact_times, (2, 3))
+
+    def test_unverified_horizon_does_not_show_connection(self):
+        ch = fixture([12, 100, 160, 200, 10, 290, 9],
+                     [.1, 0, 0, 1, 1, 0, 13],
+                     [(0, 4, 0), (0, 6, 0)])
+        self.assertEqual(connections(ch, []), [])
+
+    def test_ingress_and_station_before_contact_disqualify(self):
+        ch = fixture([12, 100, 160, 200, 10, 290, 9],
+                     [.1, 0, 0, 1, 1, 0, 13],
+                     [(0, 4, 0), (0, 6, 0)])
+        events = [Event(1, 'ingress', 'Venus'),
+                  Event(2, 'aspect', 'Venus', 'Saturn', 0),
+                  Event(3, 'aspect', 'Moon', 'Saturn', 0)]
+        self.assertEqual(connections(ch, events), [])
 
     def test_horary_timeline_requires_event_order(self):
         events = [Event(1, 'aspect', 'Moon', 'Venus', 1),

@@ -543,3 +543,15 @@ TEXTS.update({
     'Another exact planetary aspect precedes the intended contact':
         'Drugi egzaktni planetarni aspekt prethodi nameravanom kontaktu',
 })
+
+# Aspects workspace: verified connections only
+TEXTS.update({
+    'Search days': 'Period (dani)',
+    'Analyze connections': 'Analiziraj veze',
+    'Separating aspect': 'Separacioni aspekt',
+    'Applying aspect': 'Aplikacioni aspekt',
+    'Exact contact (UT)': 'Egzaktan kontakt (UT)',
+    'Verified': 'Potvrđeno',
+    '%d connections · %d days': '%d veza · %d dana',
+    'Select significators and analyze': 'Izaberite signifikatore i pokrenite analizu',
+})

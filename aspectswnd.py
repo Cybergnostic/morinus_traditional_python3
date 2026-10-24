@@ -24,8 +24,11 @@ class AspectsWnd(commonwnd.CommonWnd):
         self.YOFFSET = self.SPACE // 2
         self.SQUARE_SIZE = self.SPACE + self.FONT_SIZE + self.SPACE
         self.LINE_NUM = 10
+        # Whole Sign has no aspect columns for intermediate house cusps.
+        # Ascendant/MC and interplanetary aspects remain unchanged.
+        self.show_house_cusps = self.chart.houses.hsys != 5
         self.HOUSESOFFS = 11
-        self.COLUMN_NUM = 17
+        self.COLUMN_NUM = 17 if self.show_house_cusps else 11
         self.TABLE_HEIGHT = self.LINE_NUM * (self.SQUARE_SIZE + self.SPACE)
         self.TABLE_WIDTH = self.COLUMN_NUM * (self.SQUARE_SIZE + self.SPACE)
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
@@ -185,61 +188,62 @@ class AspectsWnd(commonwnd.CommonWnd):
 
             ii += 1
 
-        hidx = (1, 2, 3, 10, 11, 12)
-        x = BOR + self.HOUSESOFFS * self.SQUARE_SIZE + self.HOUSESOFFS * self.SPACE
-        for i in range(len(hidx)):
-            self.drawSquare(draw, x + (self.SQUARE_SIZE + self.SPACE) * i, BOR, tableclr)
-            w, h = draw.textbbox((0, 0), common.common.housenames2[(hidx[i] - 1)], self.fntText)[2:]
-            draw.text((x + (self.SQUARE_SIZE + self.SPACE) * i + (self.SQUARE_SIZE - w) // 2, BOR + (self.SQUARE_SIZE - h) // 2), common.common.housenames2[(hidx[i] - 1)], fill=(0,
-                                                                                                                                                                                0,
-                                                                                                                                                                                0), font=self.fntText)
+        if self.show_house_cusps:
+            hidx = (1, 2, 3, 10, 11, 12)
+            x = BOR + self.HOUSESOFFS * self.SQUARE_SIZE + self.HOUSESOFFS * self.SPACE
+            for i in range(len(hidx)):
+                self.drawSquare(draw, x + (self.SQUARE_SIZE + self.SPACE) * i, BOR, tableclr)
+                w, h = draw.textbbox((0, 0), common.common.housenames2[(hidx[i] - 1)], self.fntText)[2:]
+                draw.text((x + (self.SQUARE_SIZE + self.SPACE) * i + (self.SQUARE_SIZE - w) // 2, BOR + (self.SQUARE_SIZE - h) // 2), common.common.housenames2[(hidx[i] - 1)], fill=(0,
+                                                                                                                                                                                    0,
+                                                                                                                                                                                    0), font=self.fntText)
 
-        x = BOR + self.HOUSESOFFS * (self.SQUARE_SIZE + self.SPACE)
-        y = BOR + (self.SQUARE_SIZE + self.SPACE)
-        for i in range(len(self.chart.aspmatrixH)):
-            kk = 0
-            for j in range(len(self.chart.aspmatrixH[i])):
-                k = x + (self.SQUARE_SIZE + self.SPACE) * i
-                l = y + (self.SQUARE_SIZE + self.SPACE) * kk
-                self.drawSquare(draw, k, l, tableclr)
-                lon1 = self.chart.houses.cusps[self.hidx[i]]
-                lon2 = self.chart.planets.planets[j].data[planets.Planet.LON]
-                showasp = self.chart.aspmatrixH[i][j].typ != chart.Chart.NONE
-                if showasp:
-                    if self.chart.aspmatrixH[i][j].exact:
-                        draw.rectangle(((k + self.XOFFSET // 2, l + self.XOFFSET // 2), (k + self.SQUARE_SIZE - self.XOFFSET // 2, l + self.SQUARE_SIZE - self.XOFFSET // 2 - 1)), fill=self.bkgclr, outline=tableclr)
-                    if self.chart.aspmatrixH[i][j].appl:
-                        draw.polygon(((k, l), (k + self.SPACE, l), (k, l + self.SPACE)), fill=tableclr, outline=tableclr)
-                    txt = common.common.aspects[self.chart.aspmatrixH[i][j].typ]
-                    clr = self.options.clraspect[self.chart.aspmatrixH[i][j].typ]
-                    if self.bw:
-                        clr = (0, 0, 0)
-                    draw.text((x + i * (self.SPACE + self.SQUARE_SIZE) + self.XOFFSET, BOR + (self.SQUARE_SIZE + self.SPACE) * (kk + 1) + self.YOFFSET, self.SQUARE_SIZE), txt, fill=clr, font=self.fntAspects)
-                if self.chart.aspmatrixH[i][j].parallel != chart.Chart.NONE:
-                    pclr = (0, 0, 0)
-                    if not self.bw:
-                        pclr = self.options.clrtexts
-                    txt = 'X'
-                    if self.chart.aspmatrixH[i][j].parallel == chart.Chart.CONTRAPARALLEL:
-                        txt = 'Y'
-                    w, h = draw.textbbox((0, 0), txt, self.fntAspects)[2:]
-                    draw.text((x + (self.SQUARE_SIZE + self.SPACE) * i + self.SQUARE_SIZE - w - self.SPACE, y + (self.SQUARE_SIZE + self.SPACE) * kk + self.YOFFSET), txt, fill=pclr, font=self.fntAspects)
-                txt = util.floatstr(self.chart.aspmatrixH[i][j].dif)
-                if showasp:
-                    txt = util.floatstr(self.chart.aspmatrixH[i][j].aspdif)
-                t = txt.partition('.')
-                txt = t[0] + t[1] + t[2][0]
-                fnt = self.fntText2
-                clr = (0, 0, 0)
-                if showasp:
-                    fnt = self.fntText3
-                    if not self.bw:
+            x = BOR + self.HOUSESOFFS * (self.SQUARE_SIZE + self.SPACE)
+            y = BOR + (self.SQUARE_SIZE + self.SPACE)
+            for i in range(len(self.chart.aspmatrixH)):
+                kk = 0
+                for j in range(len(self.chart.aspmatrixH[i])):
+                    k = x + (self.SQUARE_SIZE + self.SPACE) * i
+                    l = y + (self.SQUARE_SIZE + self.SPACE) * kk
+                    self.drawSquare(draw, k, l, tableclr)
+                    lon1 = self.chart.houses.cusps[self.hidx[i]]
+                    lon2 = self.chart.planets.planets[j].data[planets.Planet.LON]
+                    showasp = self.chart.aspmatrixH[i][j].typ != chart.Chart.NONE
+                    if showasp:
+                        if self.chart.aspmatrixH[i][j].exact:
+                            draw.rectangle(((k + self.XOFFSET // 2, l + self.XOFFSET // 2), (k + self.SQUARE_SIZE - self.XOFFSET // 2, l + self.SQUARE_SIZE - self.XOFFSET // 2 - 1)), fill=self.bkgclr, outline=tableclr)
+                        if self.chart.aspmatrixH[i][j].appl:
+                            draw.polygon(((k, l), (k + self.SPACE, l), (k, l + self.SPACE)), fill=tableclr, outline=tableclr)
+                        txt = common.common.aspects[self.chart.aspmatrixH[i][j].typ]
                         clr = self.options.clraspect[self.chart.aspmatrixH[i][j].typ]
-                elif not self.bw:
-                    clr = txtclr
-                w, h = draw.textbbox((0, 0), txt, fnt)[2:]
-                draw.text((x + (self.SQUARE_SIZE + self.SPACE) * i + (self.SQUARE_SIZE - w) // 2, y + (self.SQUARE_SIZE + self.SPACE) * kk + self.SQUARE_SIZE - h - self.YOFFSET), txt, fill=clr, font=fnt)
-                kk += 1
+                        if self.bw:
+                            clr = (0, 0, 0)
+                        draw.text((x + i * (self.SPACE + self.SQUARE_SIZE) + self.XOFFSET, BOR + (self.SQUARE_SIZE + self.SPACE) * (kk + 1) + self.YOFFSET, self.SQUARE_SIZE), txt, fill=clr, font=self.fntAspects)
+                    if self.chart.aspmatrixH[i][j].parallel != chart.Chart.NONE:
+                        pclr = (0, 0, 0)
+                        if not self.bw:
+                            pclr = self.options.clrtexts
+                        txt = 'X'
+                        if self.chart.aspmatrixH[i][j].parallel == chart.Chart.CONTRAPARALLEL:
+                            txt = 'Y'
+                        w, h = draw.textbbox((0, 0), txt, self.fntAspects)[2:]
+                        draw.text((x + (self.SQUARE_SIZE + self.SPACE) * i + self.SQUARE_SIZE - w - self.SPACE, y + (self.SQUARE_SIZE + self.SPACE) * kk + self.YOFFSET), txt, fill=pclr, font=self.fntAspects)
+                    txt = util.floatstr(self.chart.aspmatrixH[i][j].dif)
+                    if showasp:
+                        txt = util.floatstr(self.chart.aspmatrixH[i][j].aspdif)
+                    t = txt.partition('.')
+                    txt = t[0] + t[1] + t[2][0]
+                    fnt = self.fntText2
+                    clr = (0, 0, 0)
+                    if showasp:
+                        fnt = self.fntText3
+                        if not self.bw:
+                            clr = self.options.clraspect[self.chart.aspmatrixH[i][j].typ]
+                    elif not self.bw:
+                        clr = txtclr
+                    w, h = draw.textbbox((0, 0), txt, fnt)[2:]
+                    draw.text((x + (self.SQUARE_SIZE + self.SPACE) * i + (self.SQUARE_SIZE - w) // 2, y + (self.SQUARE_SIZE + self.SPACE) * kk + self.SQUARE_SIZE - h - self.YOFFSET), txt, fill=clr, font=fnt)
+                    kk += 1
 
         wxImg = wx.Image(img.size[0], img.size[1])
         wxImg.SetData(img.tobytes())
