@@ -69,6 +69,17 @@ Added in this version:
   optional list of twelve Sun returns (the annual return plus eleven monthly
   returns at the natal degree in successive signs). Double-click opens a chart.
   The current implementation supports tropical charts.
+- **Repeated natal configurations** — right-click a solar return and open the
+  optional *Repeated natal configurations* search. It finds the same named
+  traditional planet pairs forming the same Ptolemaic aspects in both natal
+  and solar charts; complete three-planet aspect patterns are listed on their
+  own tab. An adjustable maximum deviation (default 5 degrees, separately
+  enforced in both charts) controls how tight a repetition must be. You can
+  also search repeated zodiac signs and whole-sign houses, or restrict results
+  to the annual profection ruler. No extra aspect marks are drawn on the chart.
+  This is a **geometric pattern search**, not a replacement for the existing
+  aspect-orb settings or the planned traditional aspect engine; the current
+  search does not assess sign-boundary exceptions, reception or application.
 - **Steppers** (right-click in a chart window) — *Step solar/lunar returns*
   moves to the previous or next return; *Step time* moves transits over the
   natal chart by seconds up to years.
