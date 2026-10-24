@@ -278,7 +278,7 @@ Calculation-level tests:
 
 In **Tables → Aspects → Hellenistic**, select one of two sub-tabs:
 
-- **Aversion & mitigations** now lists all seven traditional planets and
+- **Domicile witnessing** lists all seven traditional planets and
   **each of their domiciles** (12 rows total). For every domicile it shows
   the planet's sign, the whole-sign witnessing relation (co-presence,
   sextile, square, trine, opposition or aversion), and any mitigation.
