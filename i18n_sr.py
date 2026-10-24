@@ -360,4 +360,17 @@ TEXTS.update({
 	'Yes': 'Da', 'No': 'Ne', '%d BC': '%d. p. n. e.', 'Please confirm the offset is correct.': 'Proverite da li je pomak tačan.',
 	# misc
 	'Ink': 'Ink', 'Instrument': 'Instrument', 'Classic': 'Classic', 'Formulas': 'Formule', 'Images': 'Slike',
+	# solar-year divisions and monthly solar revolutions
+	'Divisions (Valens)': 'Divizije (Valens)',
+	'Planetary periods in this solar year': 'Planetarni periodi u ovoj solarnoj godini',
+	'Monthly solar revolutions': 'Mesečni solarni povratci',
+	'Solar monthly charts for this solar year': 'Mesečni solari ove solarne godine',
+	'Sun returns to the natal degree in each successive sign (tropical).': 'Sunce stiže na natalni stepen u svakom narednom znaku (tropski zodijak).',
+	'Double-click a row to open that monthly chart.': 'Dupli klik na red otvara odgovarajuću mesečnu kartu.',
+	'Sun at': 'Sunce na', 'Annual solar return': 'Godišnji solarni povratak', 'Monthly solar return': 'Mesečni solarni povratak',
+	'No.': 'Br.', 'Lord': 'Vladar', 'Start (UTC)': 'Početak (UTC)', 'End (UTC)': 'Kraj (UTC)',
+	'Valens days': 'Valensovi dani', 'SR house': 'Solarna kuća',
+	'Annual profection sign': 'Znak godišnje profekcije', 'Ruler of the year': 'Vladar godine',
+	'Secondary zodiacal order from the ruler of the year; * = current period.': 'Sekundarni zodijački redosled od vladara godine; * = aktuelni period.',
+	'Fixed 365-day Valens cycle; last lord continues until the next solar return.': 'Fiksni Valensov ciklus od 365 dana; poslednji vladar traje do sledećeg solara.',
 })

@@ -52,6 +52,15 @@ def solar_return(radix, year):
     return tuple(revs.t)
 
 
+def solar_year_for_chart(radix, solar):
+    """Identify the anniversary year, including charts near a year boundary."""
+    for year in (solar.time.year, solar.time.year - 1, solar.time.year + 1):
+        t = solar_return(radix, year)
+        if t is not None and abs(gmt_time(t, radix).jd - solar.time.jd) < 0.02:
+            return year
+    raise ValueError('Cannot match chart to a solar return anniversary')
+
+
 def step_return(radix, current, forward):
     """The next (or previous) return of the same kind as the chart `current`,
     cast for the same place; None if it cannot be found."""

@@ -56,6 +56,7 @@ class TransitFrame(wx.Frame):
         self.ID_PDConverse = wx.NewId()
         self.ID_PDRadix = wx.NewId()
         self.ID_Divisions = wx.NewId()
+        self.ID_MonthlySolar = wx.NewId()
         self.selmenu = wx.Menu()
         self.chartmenu = self.selmenu.Append(self.ID_Chart, i18n.tr(mtexts.txtspopupmenu['Chart']), '', wx.ITEM_RADIO)
         self.compoundmenu = self.selmenu.Append(self.ID_Comparison, i18n.tr(mtexts.txtspopupmenu['Comparison']), '', wx.ITEM_RADIO)
@@ -72,6 +73,8 @@ class TransitFrame(wx.Frame):
         if self.chart.htype == chart.Chart.SOLAR:
             self.pmenu.Append(self.ID_Divisions, i18n.tr('Divisions (Valens)'),
                               i18n.tr('Planetary periods in this solar year'))
+            self.pmenu.Append(self.ID_MonthlySolar, i18n.tr('Monthly solar revolutions...'),
+                              i18n.tr('Solar monthly charts for this solar year'))
         # stepping: previous/next return for solar and lunar returns, time steps otherwise
         self.ID_Step = wx.NewIdRef()
         # stepper(chart, forward) -> the chart before or after (e.g. the lunations)
@@ -100,6 +103,7 @@ class TransitFrame(wx.Frame):
             self.Bind(wx.EVT_MENU, self.onPDRadix, id=self.ID_PDRadix)
         if self.chart.htype == chart.Chart.SOLAR:
             self.Bind(wx.EVT_MENU, self.onDivisions, id=self.ID_Divisions)
+            self.Bind(wx.EVT_MENU, self.onMonthlySolar, id=self.ID_MonthlySolar)
         self.Bind(wx.EVT_MENU, self.onSaveAsBitmap, id=self.ID_SaveAsBitmap)
         self.Bind(wx.EVT_MENU, self.onBlackAndWhite, id=self.ID_BlackAndWhite)
         if self.options.bw:
@@ -271,6 +275,15 @@ class TransitFrame(wx.Frame):
             frame.Show(True)
         except (ValueError, OverflowError) as exc:
             wx.MessageBox(str(exc), i18n.tr('Divisions (Valens)'), wx.OK | wx.ICON_WARNING, self)
+
+    def onMonthlySolar(self, event):
+        import monthlysolarframe
+        try:
+            frame = monthlysolarframe.MonthlySolarFrame(self.parent, self.title,
+                                                        self.radix, self.chart, self.options)
+            frame.Show(True)
+        except (ValueError, OverflowError) as exc:
+            wx.MessageBox(str(exc), i18n.tr('Monthly solar revolutions'), wx.OK | wx.ICON_WARNING, self)
 
     def onSaveAsBitmap(self, event):
         self.w.onSaveAsBitmap(event)

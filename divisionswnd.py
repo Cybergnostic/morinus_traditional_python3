@@ -35,11 +35,7 @@ def _utc_from_jd(jd):
 
 def _solar_year(radix, solar):
     """Match a return to its actual anniversary, including year-boundary births."""
-    for year in (solar.time.year, solar.time.year - 1, solar.time.year + 1):
-        t = returnslist.solar_return(radix, year)
-        if t is not None and abs(returnslist.gmt_time(t, radix).jd - solar.time.jd) < 0.02:
-            return year
-    raise ValueError("Cannot match chart to a solar return anniversary")
+    return returnslist.solar_year_for_chart(radix, solar)
 
 
 def _zodiac_longitude(chrt, longitude):

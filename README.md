@@ -65,6 +65,10 @@ Added in this version:
   order. The table shows UTC boundaries and each ruler's solar house; the last
   ruler covers the remaining fraction of the solar year. Solar directions are
   already available from the same popup under *Primary Directions*.
+- **Monthly solar revolutions** — in the same solar-chart popup, open an
+  optional list of twelve Sun returns (the annual return plus eleven monthly
+  returns at the natal degree in successive signs). Double-click opens a chart.
+  The current implementation supports tropical charts.
 - **Steppers** (right-click in a chart window) — *Step solar/lunar returns*
   moves to the previous or next return; *Step time* moves transits over the
   natal chart by seconds up to years.
