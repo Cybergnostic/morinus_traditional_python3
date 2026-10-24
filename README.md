@@ -274,6 +274,43 @@ Additional tests:
 Calculation-level tests:
 `python3 -m unittest discover -s tests -p 'test_light_perfection.py' -v`
 
+## Traditional aspects: A4 Hellenistic configurations
+
+In **Tables → Aspects → Hellenistic**, select one of two sub-tabs:
+
+- **Aversion & mitigations** evaluates sign aversion among the seven
+  traditional planets, from each planet to the Ascendant sign, and from
+  each ruler to its own domicile sign. **Geometry** remains *Averse*
+  even where the **Condition** is *Mitigated*. Mitigation sources include
+  shared domicile rulership (e.g. Venus in Libra and Taurus rising),
+  antiscia/contra-antiscia sign relationships, qualifying close whole-degree
+  reflections to actual planets/Ascendant, and **verified** translation or
+  collection of light from the A3 engine. A3-invalid or unverified transfers
+  do not mitigate aversion. The artificial midpoint of a domicile sign is
+  never treated as a real degree-based reflection contact.
+- **Rays & domination** lists directed sign-based sextile, square and
+  trine testimonies, including dexter/sinister from the named *caster*,
+  overcoming when the caster is in the ninth/tenth/eleventh sign from
+  the target, the distance from degree exactness, and close reciprocal
+  counter-rays. **Aktinobolia** requires overcoming, a selected degree
+  aspect within 3°, and the overcoming planet individually applying to
+  its counterpart. The sign relationship still exists outside a
+  degree orb, without being misreported as close aktinobolia.
+
+Opening Hellenistic uses the same 90-day A3 verified-light search when
+no search has run. Change the horizon under **Connections** and choose
+**Analyze connections** to recalculate any mediated-aversion testimony;
+the two views share the same results rather than separate calculations.
+
+A4 follows the Hellenistic sign rules from course lesson 09 and aligns
+its underlying geometry with the existing `hor_tools/analysis` helpers,
+without importing `hor_tools`' separate `swisseph` dependency into Morinus.
+The interface intentionally contains no interpretation tutorials or
+yes/no judgments.
+
+Focused tests:
+`python3 -m unittest discover -s tests -p 'test_hellenistic_aspects.py' -v`
+
 ## Automatic time zones (birth data)
 
 The Windows build and `install.sh` include what this needs. In **New Chart**

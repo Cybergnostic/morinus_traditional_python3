@@ -5,6 +5,7 @@ import i18n
 import aspectswnd
 import aspect_workspace
 import a3_aspects_gui
+import a4_aspects_gui
 
 
 class AspectsFrame(wx.Frame):
@@ -75,6 +76,8 @@ class AspectsFrame(wx.Frame):
         root.Add(self.tabs, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
         # A3: Universal connections and an on-demand horary event timeline.
         a3_aspects_gui.install(self)
+        # A4: sign-based configurations, aversions and directional rays.
+        a4_aspects_gui.install(self)
         panel.SetSizer(root)
 
         self.planet.Bind(wx.EVT_CHOICE, self.populate)
@@ -145,6 +148,7 @@ class AspectsFrame(wx.Frame):
                 sum(r.status == "Reception" for r in self.all_receptions),
                 sum(r.status == "Generosity" for r in self.all_receptions)))
         a3_aspects_gui.refresh_connections(self)
+        a4_aspects_gui.refresh(self)
 
     @staticmethod
     def _degrees(decimal):
@@ -160,12 +164,15 @@ class AspectsFrame(wx.Frame):
 
     def copyTable(self, event):
         current = self.tabs.GetSelection()
-        if current not in (0, 1, 2, 3):
+        if current not in (0, 1, 2, 3, 4):
             wx.MessageBox(i18n.tr("Select a table tab to copy."),
                           i18n.tr("Copy table"), wx.OK | wx.ICON_INFORMATION, self)
             return
-        table = (self.contacts, self.receptions, self.connection_table,
-                 self.horary_table)[current]
+        tables = (self.contacts, self.receptions, self.connection_table,
+                  self.horary_table)
+        table = (tables[current] if current < len(tables) else
+                 (self.aversion_table if self.hellenistic_tabs.GetSelection() == 0
+                  else self.ray_table))
         rows = []
         for index in range(table.GetItemCount()):
             rows.append("\t".join(table.GetItemText(index, col)

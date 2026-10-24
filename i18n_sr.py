@@ -555,3 +555,25 @@ TEXTS.update({
     '%d connections · %d days': '%d veza · %d dana',
     'Select significators and analyze': 'Izaberite signifikatore i pokrenite analizu',
 })
+
+# A4 Hellenistic configurations (traditional sign geometry)
+TEXTS.update({
+    'Hellenistic': 'Helenističke konfiguracije',
+    'Aversion & mitigations': 'Averzija i ublažavanja',
+    'Rays & domination': 'Zraci i nadjačavanje',
+    'Scope': 'Odnos', 'Related to': 'U odnosu na',
+    'Signs': 'Znakovi', 'Geometry': 'Geometrija',
+    'Condition': 'Stanje', 'Mitigations': 'Ublažavanja',
+    'Planet pair': 'Par planeta', 'Ruler to domicile': 'Vladar prema sedištu',
+    'Ascendant': 'Ascendent', 'Averse': 'Averzija',
+    'Mitigated': 'Ublažena', 'Common domicile ruler': 'Zajednički vladar sedišta',
+    'Antiscia': 'Antiscija', 'Contra-antiscia': 'Kontraantiscija',
+    'sign': 'znak', 'degree': 'stepen',
+    'via': 'preko',
+    'Caster': 'Planeta koja baca zrak', 'Target': 'Ciljna planeta',
+    'Caster sign': 'Znak izvora', 'Target sign': 'Znak cilja',
+    'Direction': 'Smer', 'Overcoming': 'Nadjačavanje',
+    'Within orb': 'U orbis', 'Counter-ray': 'Protivzrak',
+    'Aktinobolia': 'Aktinobolija',
+    'Dexter': 'Dekster', 'Sinister': 'Sinister',
+})

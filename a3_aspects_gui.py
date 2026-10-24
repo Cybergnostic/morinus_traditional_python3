@@ -128,6 +128,9 @@ def refresh_connections(frame):
     frame.connection_summary.SetLabel(
         i18n.tr('%d connections · %d days') %
         (len(visible), frame.a3_connection_days))
+    if hasattr(frame, 'aversion_table'):
+        import a4_aspects_gui
+        a4_aspects_gui.refresh(frame)
 
 
 def _ut_date(jd, gregorian=True):

@@ -1064,16 +1064,16 @@ def main():
 				finally:
 					fr.Destroy()
 			elif name == 'aspectsWorkspace':
-				# A2/A3: verify all five tabs, exact connection filtering,
+				# A2/A3/A4: verify six tabs, connection filtering,
 				# the significator event workflow and the house-cusp layout.
 				import aspectsframe, a3_aspects_gui
 				wnd = aspectsframe.AspectsFrame(frame, frame.title, frame.horoscope, frame.options)
 				try:
 					wnd.Show()
-					assert wnd.tabs.GetPageCount() == 5
+					assert wnd.tabs.GetPageCount() == 6
 					assert wnd.contact_page is wnd.tabs.GetPage(0)
 					assert wnd.reception_page is wnd.tabs.GetPage(1)
-					classic = next(w for w in wnd.tabs.GetPage(4).GetChildren()
+					classic = next(w for w in wnd.tabs.GetPage(5).GetChildren()
 					               if isinstance(w, wx.Window) and
 					               hasattr(w, 'show_house_cusps'))
 					assert classic.show_house_cusps == (frame.horoscope.houses.hsys not in (4, 5))
@@ -1091,6 +1091,14 @@ def main():
 					a3_aspects_gui.analyze_timeline(wnd)
 					assert wnd.horary_summary.GetLabel()
 					wnd.tabs.SetSelection(4)
+					settle(0.2)
+					assert wnd.hellenistic_tabs.GetPageCount() == 2
+					assert wnd.aversion_table.GetItemCount() > 0
+					wnd.hellenistic_tabs.SetSelection(1)
+					settle(0.1)
+					assert wnd.ray_table.GetItemCount() > 0
+					wnd.hellenistic_tabs.SetSelection(0)
+					wnd.tabs.SetSelection(5)
 					settle(0.1)
 					check_clipping(wnd)
 				finally:
