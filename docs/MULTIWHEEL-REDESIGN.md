@@ -380,3 +380,26 @@ This is a deliberately **bounded** placement method: extreme conjunctions
 may still require later visual refinement, but they must not force an
 unbounded layout search or stall the interface. Local GUI timing remains
 to be checked before merging into `main`.
+
+## October 24: rebasing dependent returns and transits on radix changes
+
+- Changing the selected inner natal chart now **recalculates selected Solar
+  Returns, Lunar Returns and transits** against the new natal instead of
+  continuing to display planets and names belonging to the previous radix.
+- Recasting is triggered for both a direct dropdown choice and a newly
+  loaded natal .hor file (whose picker callback is normally suppressed during
+  chart registration). It also updates hidden ring selections for later use.
+- Keep each selected SR year; each LR uses the return in force at the start
+  of the corresponding solar year; transits retain their precise date/time,
+  while adopting the new natal's name, chart context and location.
+- Batch-create the replacements before changing any selections, so an
+  unsuccessful return calculation cannot partially rebase a wheel. Related
+  lists and chart-details labels refresh with the new objects. Stale
+  generated dropdown entries are discarded; explicit file/opened charts
+  remain available without being renamed or mutated.
+- Unrelated chart types are not overwritten, and changing an outer-ring
+  chart alone does not rebase other rings. Independent chart windows keep
+  their existing identity.
+- GUI smoke regression exercises file registration and dropdown changes,
+  return provenance, preserved SR year/transit datetime, chart captions and
+  stale generated menu entries. Validate locally with wxPython before merge.

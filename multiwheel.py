@@ -1515,6 +1515,10 @@ class MultiWheelFrame(wx.Frame):
         self.canvas.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave)
         self.Bind(wx.EVT_ACTIVATE, lambda e: (comparegrid.refresh_pickers(self.pickers) if e.GetActive() else None, e.Skip()))
         self.CentreOnParent()
+        # Track actual chart identity, not its name or selected menu index.
+        # A file-loaded natal must trigger the same dependent-ring update as
+        # choosing an already-open natal from the dropdown.
+        self._last_inner_chart = self.pickers[0].selected()
         self.refresh_return_navigation()
         wx.CallAfter(self.queue_draw)
 
@@ -1819,7 +1823,11 @@ class MultiWheelFrame(wx.Frame):
         finally:
             self._updating_returns = previous
         if not previous:
-            if picker.ring_index <= 1:
+            if picker.ring_index == 0:
+                # register_chart deliberately suppresses picker callbacks
+                # during refresh; explicitly handle a newly loaded radix now.
+                self.on_picker_change(0)
+            elif picker.ring_index == 1:
                 self.maybe_autofill_rings()
             self.refresh_return_navigation()
             self.queue_draw()
@@ -1850,8 +1858,126 @@ class MultiWheelFrame(wx.Frame):
                 return others[chrt]
         return None
 
+    def sync_radix_dependents(self, previous_radix, radix):
+        """Rebase visible/hidden SR, LR and transit rings on a new natal.
+
+        This is an explicit change of the *inner* chart, not the ordinary
+        SR/LR stepper. Recompute all currently selected derived ring types,
+        even if they were selected manually. Unrelated chart types are left
+        untouched. Preserve each SR year and each transit's civil timestamp.
+        Do not rename or mutate charts in independently opened windows.
+        """
+        if (radix is previous_radix or radix.htype != chart.Chart.RADIX or
+                self._updating_returns or self._auto_filling):
+            return False
+        dependents = [(i, picker.selected())
+                      for i, picker in enumerate(self.pickers[1:], 1)
+                      if picker.selected().htype in (
+                          chart.Chart.SOLAR, chart.Chart.LUNAR,
+                          chart.Chart.TRANSIT)]
+        if not dependents:
+            return False
+
+        assignments = self.ring_assignments()
+        solar_years = {i: self.solar_year(old)
+                       for i, old in dependents
+                       if old.htype == chart.Chart.SOLAR}
+        lunar_years = {}
+        for i, old in dependents:
+            if old.htype != chart.Chart.LUNAR:
+                continue
+            linked = self.selected_solar_for_lunar(i, assignments)
+            lunar_years[i] = (solar_years[linked]
+                              if linked in solar_years
+                              else self.lunar_years.get(old, old.time.year))
+
+        # Calculate all replacement charts before touching any selection.
+        # If a return cannot be calculated, retain the old selection and
+        # display a clear error instead of partially relabelling the wheel.
+        rows_by_year = {}
+        replacements = []
+        try:
+            for year in set(lunar_years.values()):
+                rows = self.return_rows(radix, year)
+                if len(rows) < 2:
+                    raise ValueError('Cannot calculate lunar returns for %s' % year)
+                rows_by_year[year] = rows
+            for i, old in dependents:
+                if old.htype == chart.Chart.SOLAR:
+                    year = solar_years[i]
+                    t = (rows_by_year[year][0].t if year in rows_by_year
+                         else returnslist.solar_return(radix, year))
+                    if t is None:
+                        raise ValueError('Cannot calculate solar return for %s' % year)
+                    new = returnslist.return_chart(
+                        t, radix, chart.Chart.SOLAR, radix.place)
+                    replacements.append((i, old, new, i18n.tr('Solar return'), year))
+                elif old.htype == chart.Chart.LUNAR:
+                    year = lunar_years[i]
+                    new = returnslist.return_chart(
+                        rows_by_year[year][1].t, radix, chart.Chart.LUNAR,
+                        radix.place)
+                    replacements.append((i, old, new, i18n.tr('Lunar return'), None))
+                else:
+                    t = old.time
+                    instant = chart.Time(
+                        t.origyear, t.origmonth, t.origday,
+                        t.hour, t.minute, t.second, t.bc, t.cal, t.zt,
+                        t.plus, t.zh, t.zm, t.daylightsaving, radix.place)
+                    new = chart.Chart(
+                        radix.name, radix.male, instant, radix.place,
+                        chart.Chart.TRANSIT, '', self.options, False)
+                    replacements.append((i, old, new, i18n.tr('Transits'), None))
+        except (ValueError, OverflowError, RuntimeError) as exc:
+            self.SetStatusText(i18n.tr('Could not update dependent rings: ') +
+                               str(exc))
+            return False
+
+        # A single batch prevents stale picker selections from triggering
+        # another autofill halfway through the rebase.
+        self._updating_returns = True
+        self._auto_filling = True
+        try:
+            for i, old, new, label, year in replacements:
+                self.register_chart(
+                    new, label, self.pickers[i],
+                    radix=radix if new.htype in (
+                        chart.Chart.SOLAR, chart.Chart.LUNAR) else None,
+                    solar_year=year)
+                if new.htype == chart.Chart.TRANSIT:
+                    self.auto_transit_radix[i] = radix
+                    self.moving_transits.add(new)
+            # Remove obsolete generated entries from our dropdown menus,
+            # but do not erase a separately opened/file-loaded chart.
+            replaced = {old for _, old, _, _, _ in replacements}
+            selected = {picker.selected() for picker in self.pickers}
+            keep_labels = {i18n.tr('File'), i18n.tr('New chart'),
+                           i18n.tr('Here and now')}
+            self.registered_charts = [
+                entry for entry in self.registered_charts
+                if entry[1] not in replaced or entry[1] in selected or
+                entry[0] in keep_labels]
+            for old in replaced - selected:
+                self.moving_transits.discard(old)
+            for picker in self.pickers:
+                picker.refresh()
+        finally:
+            self._auto_filling = False
+            self._updating_returns = False
+        self.refresh_return_navigation()
+        self.queue_draw()
+        return True
+
     def on_picker_change(self, index):
         self.queue_draw()
+        if (index == 0 and not self._updating_returns and
+                hasattr(self, '_last_inner_chart')):
+            current = self.pickers[0].selected()
+            if current is not self._last_inner_chart:
+                previous = self._last_inner_chart
+                self._last_inner_chart = current
+                if self.sync_radix_dependents(previous, current):
+                    return
         if not self._updating_returns and hasattr(self, 'solar_ring_choice'):
             if index <= 1:
                 self.maybe_autofill_rings()

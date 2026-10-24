@@ -485,7 +485,9 @@ def main():
 				natal = frame.horoscope
 				base_year = 2026
 				def sample_rows(radix, year):
-					assert radix is natal
+					# Deterministic rows for either of two distinct natal
+					# sources; actual return calculations are tested elsewhere.
+					assert radix.htype == chart.Chart.RADIX
 					stamps = [(year, 6, 1, 12, 0, 0),
 						(year, 5, 25, 12, 0, 0),
 						(year, 7, 20, 12, 0, 0),
@@ -540,6 +542,58 @@ def main():
 				wnd.apply_transit_time()
 				assert transit_picker.selected().time is manual
 				assert picker.selected() is solar
+				# Switching the inner natal must RECAST existing SR/LR and
+				# transits, not simply change the centre caption. Exercise the
+				# file-load registration path and direct menu-selection path.
+				other_natal = chart.Chart(
+					'Second smoke natal', natal.male, natal.time, natal.place,
+					chart.Chart.RADIX, '', frame.options, False)
+				old_solar, old_lunar = picker.selected(), lunar_picker.selected()
+				old_transit = transit_picker.selected()
+				wnd.register_chart(other_natal, 'File', inner)
+				assert inner.selected() is other_natal
+				for slot, kind in ((1, chart.Chart.SOLAR),
+								  (2, chart.Chart.LUNAR),
+								  (3, chart.Chart.TRANSIT)):
+					updated = wnd.pickers[slot].selected()
+					assert updated.htype == kind
+					assert updated.name == other_natal.name
+					assert other_natal.name in wnd.pickers[slot].choice.GetStringSelection()
+					assert other_natal.name in wnd.chart_details[slot].GetLabel()
+				assert picker.selected() is not old_solar
+				assert lunar_picker.selected() is not old_lunar
+				assert transit_picker.selected() is not old_transit
+				assert wnd.return_origin(picker.selected()) is other_natal
+				assert wnd.return_origin(lunar_picker.selected()) is other_natal
+				assert wnd.solar_year(picker.selected()) == base_year
+				assert lunar_picker.selected().time.jd == sample_rows(
+					other_natal, base_year)[1].jd
+				new_t = transit_picker.selected().time
+				assert (new_t.origyear, new_t.origmonth, new_t.origday,
+					new_t.hour, new_t.minute, new_t.second) == (
+					manual.origyear, manual.origmonth, manual.origday,
+					manual.hour, manual.minute, manual.second)
+				assert transit_picker.selected().place is other_natal.place
+				assert wnd.auto_transit_radix[3] is other_natal
+				assert all(source not in (old_solar, old_lunar, old_transit)
+					for _, source in wnd.registered_charts)
+				# Select the original natal from the actual dropdown again.
+				original_index = next(i for i, (_, source) in
+					enumerate(inner.sources) if source is natal)
+				inner.choice.SetSelection(original_index)
+				inner.changed(None)
+				assert inner.selected() is natal
+				assert all(wnd.pickers[i].selected().name == natal.name
+					for i in (1, 2, 3))
+				assert wnd.return_origin(picker.selected()) is natal
+				assert wnd.return_origin(lunar_picker.selected()) is natal
+				assert wnd.solar_year(picker.selected()) == base_year
+				assert (transit_picker.selected().time.origyear,
+					transit_picker.selected().time.origmonth,
+					transit_picker.selected().time.origday) == (
+					manual.origyear, manual.origmonth, manual.origday)
+				solar = picker.selected()
+				lunar = lunar_picker.selected()
 				wnd.count_choice.SetSelection(1)
 				wnd.change_count()
 				wnd.register_chart(lunar, 'Smoke LR', lunar_picker, radix=natal)
