@@ -454,6 +454,11 @@ def main():
 				assert picker.selected() is secondary
 				inner.select_chart(frame.horoscope)
 				inner.refresh()
+				# A temporary non-natal centre is not a natal-to-natal
+				# change: preserve the manually selected outer transit.
+				assert picker.selected() is secondary
+				assert any(source is secondary for _, source in
+					wnd.registered_charts)
 				assert not any(source is secondary for _, source in inner.sources)
 				# Creation through one ring selects that chart in that ring only.
 				created = chart.Chart(frame.horoscope.name, frame.horoscope.male,

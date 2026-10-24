@@ -2164,7 +2164,13 @@ class MultiWheelFrame(wx.Frame):
         untouched. Preserve each SR year and each transit's civil timestamp.
         Do not rename or mutate charts in independently opened windows.
         """
-        if (radix is previous_radix or radix.htype != chart.Chart.RADIX or
+        # Auto-rebase is strictly natal-to-natal. An arbitrary chart may
+        # occupy the centre temporarily; switching back must not replace
+        # manually selected outer transits/returns just because the centre
+        # briefly held a non-radix chart.
+        if (radix is previous_radix or
+                getattr(previous_radix, 'htype', None) != chart.Chart.RADIX or
+                radix.htype != chart.Chart.RADIX or
                 self._updating_returns or self._auto_filling):
             return False
         dependents = [(i, picker.selected())
