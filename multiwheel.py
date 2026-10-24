@@ -2009,9 +2009,9 @@ class MultiWheelFrame(wx.Frame):
         """Provide chart identity, place, exact time and both main angles."""
         count = self.count_choice.GetSelection() + 1
         for i, label in enumerate(self.chart_details):
-            if i > count:
-                label.Hide()
-                continue
+            # Keep even hidden ring captions current. Ring 3 may be hidden
+            # in tri-wheel mode but still receives a new dependent transit
+            # when the selected radix changes.
             chrt = self.pickers[i].selected()
             kind, date = MultiWheel.chart_identity(chrt)
             time_suffix = (' UTC' if chrt.time.zt == chart.Time.GREENWICH
@@ -2024,7 +2024,7 @@ class MultiWheelFrame(wx.Frame):
                          place, asc, mc))
             label.SetLabel(contents)
             label.Wrap(238)
-            label.Show()
+            label.Show(i <= count)
         self.refresh_inspector()
 
     def maybe_autofill_rings(self):
