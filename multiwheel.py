@@ -2584,11 +2584,16 @@ class MultiWheelFrame(wx.Frame):
         """Compare any two live chart slots in a dedicated, readable table."""
         import crosschartframe
         window = self.crosschart_window
-        if window is not None and not window.IsBeingDeleted():
-            window.update_slots()
-            window.refresh()
-            window.Raise()
-            return window
+        if window is not None:
+            try:
+                if not window.IsBeingDeleted():
+                    window.update_slots()
+                    window.refresh()
+                    window.Raise()
+                    return window
+            except RuntimeError:
+                # wxPython may keep a dead Python wrapper after frame Close.
+                pass
         window = crosschartframe.CrossChartFrame(self)
         self.crosschart_window = window
         window.Show()
