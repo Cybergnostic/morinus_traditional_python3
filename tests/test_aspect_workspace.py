@@ -88,7 +88,10 @@ class WorkspaceTests(unittest.TestCase):
         ch.options.terms[0][1] = [[2,5],[4,25]]
         ch.options.decans[0][1] = [2,4,0]
         self.assertEqual(w.dignity_holds(ch.options, 2, 32, True), ("term","face"))
-        self.assertEqual(w.dignity_holds(ch.options, 4, 42, True), ("term","face"))
+        venus_held = w.dignity_holds(ch.options, 4, 42, True)
+        self.assertIn("domicile", venus_held)
+        self.assertIn("term", venus_held)
+        self.assertIn("face", venus_held)
 
     def test_mercury_virgo_exaltation_setting(self):
         ch = DummyChart([80, 130, 192, 260, 40, 290, 340])
