@@ -19,6 +19,7 @@ import mtexts
 import electionstepperdlg
 import returnstepperdlg
 import returnslist
+import divisionswnd
 import util
 import sidebar
 import time as _time
@@ -54,6 +55,7 @@ class TransitFrame(wx.Frame):
         self.ID_PDDirect = wx.NewId()
         self.ID_PDConverse = wx.NewId()
         self.ID_PDRadix = wx.NewId()
+        self.ID_Divisions = wx.NewId()
         self.selmenu = wx.Menu()
         self.chartmenu = self.selmenu.Append(self.ID_Chart, i18n.tr(mtexts.txtspopupmenu['Chart']), '', wx.ITEM_RADIO)
         self.compoundmenu = self.selmenu.Append(self.ID_Comparison, i18n.tr(mtexts.txtspopupmenu['Comparison']), '', wx.ITEM_RADIO)
@@ -67,6 +69,9 @@ class TransitFrame(wx.Frame):
             self.pdtoradix = self.pdselmenu.Append(self.ID_PDRadix, i18n.tr(mtexts.txtspopupmenu['PDRadix']), '', wx.ITEM_CHECK)
             self.pmenu.Append(wx.MenuItem(self.pmenu, self.ID_PrimaryDirections, mtexts.txtspopupmenu['PrimaryDirs'], subMenu=self.pdselmenu))
             self.pdtoradix.Enable(False)
+        if self.chart.htype == chart.Chart.SOLAR:
+            self.pmenu.Append(self.ID_Divisions, i18n.tr('Divisions (Valens)'),
+                              i18n.tr('Planetary periods in this solar year'))
         # stepping: previous/next return for solar and lunar returns, time steps otherwise
         self.ID_Step = wx.NewIdRef()
         # stepper(chart, forward) -> the chart before or after (e.g. the lunations)
@@ -93,6 +98,8 @@ class TransitFrame(wx.Frame):
             self.Bind(wx.EVT_MENU, self.onPDDirect, id=self.ID_PDDirect)
             self.Bind(wx.EVT_MENU, self.onPDConverse, id=self.ID_PDConverse)
             self.Bind(wx.EVT_MENU, self.onPDRadix, id=self.ID_PDRadix)
+        if self.chart.htype == chart.Chart.SOLAR:
+            self.Bind(wx.EVT_MENU, self.onDivisions, id=self.ID_Divisions)
         self.Bind(wx.EVT_MENU, self.onSaveAsBitmap, id=self.ID_SaveAsBitmap)
         self.Bind(wx.EVT_MENU, self.onBlackAndWhite, id=self.ID_BlackAndWhite)
         if self.options.bw:
@@ -257,6 +264,13 @@ class TransitFrame(wx.Frame):
 
     def onPDRadix(self, event):
         pass
+
+    def onDivisions(self, event):
+        try:
+            frame = divisionswnd.DivisionsFrame(self, self.title, self.radix, self.chart, self.options)
+            frame.Show(True)
+        except (ValueError, OverflowError) as exc:
+            wx.MessageBox(str(exc), i18n.tr('Divisions (Valens)'), wx.OK | wx.ICON_WARNING, self)
 
     def onSaveAsBitmap(self, event):
         self.w.onSaveAsBitmap(event)

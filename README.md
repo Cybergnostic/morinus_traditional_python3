@@ -59,6 +59,12 @@ Added in this version:
   year, the last of which is in force at its end. Each row shows the return's
   Ascendant and its whole-sign house in the solar and natal charts;
   double-click opens the return.
+- **Divisions (Valens)** — right-click a solar return chart and choose
+  *Divisions (Valens)*. The seven fixed planetary periods start with the lord
+  of the annual profection and follow the solar planets in secondary zodiacal
+  order. The table shows UTC boundaries and each ruler's solar house; the last
+  ruler covers the remaining fraction of the solar year. Solar directions are
+  already available from the same popup under *Primary Directions*.
 - **Steppers** (right-click in a chart window) — *Step solar/lunar returns*
   moves to the previous or next return; *Step time* moves transits over the
   natal chart by seconds up to years.
