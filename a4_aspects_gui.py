@@ -24,9 +24,8 @@ def install(frame):
     aversions = wx.Panel(frame.hellenistic_tabs)
     rays = wx.Panel(frame.hellenistic_tabs)
     frame.aversion_table = _column_table(aversions, [
-        ('Scope', 145), ('Planet', 115), ('Related to', 160),
-        ('Signs', 190), ('Geometry', 90), ('Condition', 100),
-        ('Mitigations', 560)])
+        ('Planet', 130), ('In sign', 130), ('Domicile', 135),
+        ('Witnessing', 145), ('Status', 135), ('Mitigations', 490)])
     frame.ray_table = _column_table(rays, [
         ('Caster', 110), ('Target', 110), ('Aspect', 105),
         ('Caster sign', 100), ('Target sign', 100),
@@ -88,13 +87,12 @@ def refresh(frame):
     frame.aversion_table.DeleteAllItems()
     frame.ray_table.DeleteAllItems()
     for row in aversions:
-        if target and target not in (row.source, row.target):
+        if target and target != row.planet:
             continue
         frame._insert(frame.aversion_table, (
-            i18n.tr(row.scope), i18n.tr(row.source), i18n.tr(row.target),
-            i18n.tr(row.source_sign) + ' / ' + i18n.tr(row.target_sign),
-            i18n.tr(row.geometry), i18n.tr(row.condition),
-            _methods_text(row.mitigations)))
+            i18n.tr(row.planet), i18n.tr(row.placement),
+            i18n.tr(row.domicile), i18n.tr(row.witnessing),
+            i18n.tr(row.status), _methods_text(row.mitigations)))
     for row in rays:
         if target and target not in (row.caster, row.target):
             continue
