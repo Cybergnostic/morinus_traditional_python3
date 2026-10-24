@@ -1,9 +1,10 @@
-"""A4 Hellenistic sign relationships and aversion mitigations.
+"""A4 Hellenistic domicile witnessing and directed planetary rays.
 
-The geometry is independent of the planetary orbs: the planets continue to
-behold (or fail to behold) by whole sign. Actual close counter-rays use the
-selected Morinus aspect matrix and a 3-degree limit. Light-based mediation is
-imported ONLY from chronologically verified A3 connections.
+Whole-sign witnessing is calculated for every planet against each of its
+traditional domiciles. Rays are judged once per pair from the naturally
+faster planet in Chaldean order, independent of present daily speed.
+Close counter-rays use the selected Morinus aspect matrix and 3-degree
+limit. Light-based mediation uses only verified A3 connections.
 """
 from dataclasses import dataclass
 from itertools import combinations
@@ -38,14 +39,12 @@ EPS = 1e-9
 
 @dataclass(frozen=True)
 class AversionRow:
-    scope: str
-    source: str
-    target: str
-    source_sign: str
-    target_sign: str
-    condition: str
+    planet: str
+    placement: str
+    domicile: str
+    witnessing: str
+    status: str
     mitigations: tuple
-    geometry: str = "Averse"
 
 
 @dataclass(frozen=True)
@@ -141,48 +140,50 @@ def _methods(source_long, target_long, source_name, target_name,
     return tuple(dict.fromkeys(methods))
 
 
-def analyze_aversions(chart, light=()):
-    """Averse planet pairs, planet-to-Ascendant and ruler-to-domicile.
+def domicile_witnessing(source_sign, domicile_sign):
+    """A sign-based testimony, not a claim of a close degree aspect."""
+    step = (domicile_sign - source_sign) % 12
+    return {0: "Co-presence", 2: "Sextile", 3: "Square",
+            4: "Trine", 6: "Opposition", 8: "Trine",
+            9: "Square", 10: "Sextile"}.get(step, "Averse")
 
-    This retains geometry and mitigation as distinct fields. A planet in one
-    of its two domiciles is never unconditionally called disconnected from
-    the other domicile just because the signs do not behold.
+
+def analyze_aversions(chart, light=()):
+    """Show EACH planet's relation to EACH domicile it rules (12 rows).
+
+    Do not mix in planet-pair aversions or arbitrary planet-to-Ascendant
+    relationships. For each domicile, report whole-sign witnessing; only
+    averse signs need mitigating evidence. Co-rulership of two domiciles,
+    mirror signs and verified light transfer can mitigate, but never
+    erase, the underlying sign-based aversion.
     """
     positions = {
         name: ((float(planet.data[0]) - _shift(chart)) % 360.0,
                float(planet.data[3]))
         for name, planet in zip(PLANETS, chart.planets.planets[:7])
     }
-    asc = (float(chart.houses.ascmc[0]) - _shift(chart)) % 360.0
     light_pairs = _verified_light_pairs(light)
     rows = []
-
-    def add(scope, source, target, source_lon, target_lon):
-        if not signs_averse(sign_of(source_lon), sign_of(target_lon)):
-            return
-        methods = _methods(source_lon, target_lon, source, target,
-                           positions, light_pairs,
-                           target_is_sign=(scope == "Ruler to domicile"))
-        rows.append(AversionRow(
-            scope, source, target, SIGNS[sign_of(source_lon)],
-            SIGNS[sign_of(target_lon)],
-            "Mitigated" if methods else "Averse", methods))
-
-    for first, second in combinations(PLANETS, 2):
-        add("Planet pair", first, second, positions[first][0],
-            positions[second][0])
-
-    for name in PLANETS:
-        add("Ascendant", name, "Ascendant", positions[name][0], asc)
-
-    for sign, ruler in enumerate(SIGN_RULERS):
-        if ruler in positions:
-            add("Ruler to domicile", ruler, SIGNS[sign] + " domicile",
-                positions[ruler][0], sign * 30.0 + 15.0)
-
-    return sorted(rows, key=lambda r: (
-        {"Ascendant": 0, "Ruler to domicile": 1, "Planet pair": 2}[r.scope],
-        r.source, r.target))
+    for planet in PLANETS:
+        source_long = positions[planet][0]
+        source_sign = sign_of(source_long)
+        for sign, ruler in enumerate(SIGN_RULERS):
+            if ruler != planet:
+                continue
+            witnessing = domicile_witnessing(source_sign, sign)
+            methods = ()
+            if witnessing == "Averse":
+                # The domicile is a SIGN, not a physical planet located at
+                # an arbitrary midpoint. Never manufacture degree contacts.
+                methods = _methods(
+                    source_long, sign * 30.0 + 15.0, planet,
+                    SIGNS[sign] + " domicile", positions, light_pairs,
+                    target_is_sign=True)
+            rows.append(AversionRow(
+                planet, SIGNS[source_sign], SIGNS[sign], witnessing,
+                ("Mitigated" if methods else "Averse") if witnessing == "Averse"
+                else "Witnesses", methods))
+    return rows
 
 
 def _shift(chart):
@@ -201,34 +202,35 @@ def analyze_rays(chart):
     shift = _shift(chart)
     signs = {name: sign_of(lon - shift) for name, (lon, _) in raw.items()}
     rows = []
-    for caster in PLANETS:
-        for target in PLANETS:
-            if caster == target:
-                continue
-            ray = directed_ray(signs[caster], signs[target])
-            if ray is None:
-                continue
-            aspect, direction = ray
-            step = (signs[target] - signs[caster]) % 12
-            _name, angle, index = SIGN_RAYS[step]
-            caster_lon, caster_speed = raw[caster]
-            target_lon, _ = raw[target]
-            deviation = abs(angular_distance(caster_lon, target_lon) - angle)
-            i, j = PLANETS.index(caster), PLANETS.index(target)
-            cell = chart.aspmatrix[max(i, j)][min(i, j)]
-            in_orb = cell.typ == index
-            superior = overcomes(signs[caster], signs[target])
-            # The victim's counter-ray is reciprocal at the same aspect
-            # angle. It only qualifies within 3 degrees and when the
-            # superior planet itself applies to the victim.
-            counter = superior and in_orb and deviation <= 3.0 + EPS
-            applying = (individual_motion(caster_lon, target_lon,
-                                          caster_speed, angle) == "Applying")
-            rows.append(RayRow(
-                caster, target, SIGNS[signs[caster]], SIGNS[signs[target]],
-                aspect, direction, "Yes" if superior else "No",
-                deviation, counter, counter and applying, in_orb))
-    return sorted(rows, key=lambda r: (r.caster, r.target))
+    # Chaldean order is slowest -> fastest. Each pair is evaluated ONCE
+    # from its naturally faster body, regardless of current daily speed.
+    for slower, faster in combinations(PLANETS, 2):
+        caster, target = faster, slower
+        ray = directed_ray(signs[caster], signs[target])
+        if ray is None:
+            continue
+        aspect, direction = ray
+        step = (signs[target] - signs[caster]) % 12
+        _name, angle, index = SIGN_RAYS[step]
+        caster_lon, caster_speed = raw[caster]
+        target_lon, _ = raw[target]
+        deviation = abs(angular_distance(caster_lon, target_lon) - angle)
+        i, j = PLANETS.index(caster), PLANETS.index(target)
+        cell = chart.aspmatrix[max(i, j)][min(i, j)]
+        in_orb = cell.typ == index
+        superior = overcomes(signs[caster], signs[target])
+        # The victim's counter-ray is reciprocal at the same aspect
+        # angle. It only qualifies within 3 degrees and when the
+        # superior planet itself applies to the victim.
+        counter = superior and in_orb and deviation <= 3.0 + EPS
+        applying = (individual_motion(caster_lon, target_lon,
+                                      caster_speed, angle) == "Applying")
+        rows.append(RayRow(
+            caster, target, SIGNS[signs[caster]], SIGNS[signs[target]],
+            aspect, direction, "Yes" if superior else "No",
+            deviation, counter, counter and applying, in_orb))
+    return sorted(rows, key=lambda r: (PLANETS.index(r.caster),
+                                      PLANETS.index(r.target)))
 
 
 def analyze(chart, verified_light=()):

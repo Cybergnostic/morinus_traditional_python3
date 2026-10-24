@@ -1093,10 +1093,20 @@ def main():
 					wnd.tabs.SetSelection(4)
 					settle(0.2)
 					assert wnd.hellenistic_tabs.GetPageCount() == 2
-					assert wnd.aversion_table.GetItemCount() > 0
+					assert wnd.aversion_table.GetItemCount() == 12
+					import hellenistic_aspects
+					av_rows = hellenistic_aspects.analyze_aversions(wnd.chart)
+					assert len(av_rows) == 12
+					assert len(set(r.domicile for r in av_rows)) == 12
 					wnd.hellenistic_tabs.SetSelection(1)
 					settle(0.1)
 					assert wnd.ray_table.GetItemCount() > 0
+					rays = hellenistic_aspects.analyze_rays(wnd.chart)
+					pairs = [frozenset((r.caster, r.target)) for r in rays]
+					assert len(pairs) == len(set(pairs)), 'Repeated Hellenistic rays'
+					from traditional_aspects import PLANETS
+					assert all(PLANETS.index(r.caster) > PLANETS.index(r.target)
+					           for r in rays), 'Caster is not the naturally faster body'
 					wnd.hellenistic_tabs.SetSelection(0)
 					wnd.tabs.SetSelection(5)
 					settle(0.1)

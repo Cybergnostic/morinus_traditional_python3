@@ -278,24 +278,24 @@ Calculation-level tests:
 
 In **Tables → Aspects → Hellenistic**, select one of two sub-tabs:
 
-- **Aversion & mitigations** evaluates sign aversion among the seven
-  traditional planets, from each planet to the Ascendant sign, and from
-  each ruler to its own domicile sign. **Geometry** remains *Averse*
-  even where the **Condition** is *Mitigated*. Mitigation sources include
-  shared domicile rulership (e.g. Venus in Libra and Taurus rising),
-  antiscia/contra-antiscia sign relationships, qualifying close whole-degree
-  reflections to actual planets/Ascendant, and **verified** translation or
-  collection of light from the A3 engine. A3-invalid or unverified transfers
-  do not mitigate aversion. The artificial midpoint of a domicile sign is
-  never treated as a real degree-based reflection contact.
-- **Rays & domination** lists directed sign-based sextile, square and
-  trine testimonies, including dexter/sinister from the named *caster*,
-  overcoming when the caster is in the ninth/tenth/eleventh sign from
-  the target, the distance from degree exactness, and close reciprocal
-  counter-rays. **Aktinobolia** requires overcoming, a selected degree
-  aspect within 3°, and the overcoming planet individually applying to
-  its counterpart. The sign relationship still exists outside a
-  degree orb, without being misreported as close aktinobolia.
+- **Aversion & mitigations** now lists all seven traditional planets and
+  **each of their domiciles** (12 rows total). For every domicile it shows
+  the planet's sign, the whole-sign witnessing relation (co-presence,
+  sextile, square, trine, opposition or aversion), and any mitigation.
+  The status is Witnesses, Averse or Mitigated. The earlier unrelated
+  planet-to-Ascendant and redundant planet-pair aversion rows are removed.
+  An averse planet occupying its *other* domicile is mitigated by common
+  rulership (for example Venus in Libra in relation to Taurus). Other
+  mitigations include antiscia/contra-antiscia sign relationships and
+  **verified** A3 translation/collection through occupants of the domicile.
+  The sign's midpoint is never treated as a real degree-level contact.
+- **Rays & domination** shows **one entry per planetary pair**, judged
+  exclusively from the **naturally faster planet in Chaldean order**
+  (Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon), *not* current
+  instantaneous speed. Dexter/sinister, overcoming, orb and close
+  counter-ray/aktinobolia are judged from that chosen caster's position.
+  Aktinobolia requires the caster to overcome its target, the selected
+  degree aspect to be within 3°, and the caster to be individually applying.
 
 Opening Hellenistic uses the same 90-day A3 verified-light search when
 no search has run. Change the horizon under **Connections** and choose

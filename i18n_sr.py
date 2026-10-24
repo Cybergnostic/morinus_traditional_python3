@@ -577,3 +577,18 @@ TEXTS.update({
     'Aktinobolia': 'Aktinobolija',
     'Dexter': 'Dekster', 'Sinister': 'Sinister',
 })
+
+# A4: domicile witnessing, one directional ray per Chaldean pair
+TEXTS.update({
+    'In sign': 'U znaku',
+    'Domicile': 'Sedište',
+    'Witnessing': 'Viđenje',
+    'Status': 'Status',
+    'Witnesses': 'Vidi',
+    'Co-presence': 'Saprisutnost',
+})
+
+# A4 all domicile witnessing rows
+TEXTS.update({
+    'Domicile witnessing': 'Viđenje sopstvenih sedišta',
+})

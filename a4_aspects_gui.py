@@ -32,7 +32,7 @@ def install(frame):
         ('Caster sign', 100), ('Target sign', 100),
         ('Direction', 105), ('Overcoming', 105), ('Orb', 90),
         ('Within orb', 95), ('Counter-ray', 100), ('Aktinobolia', 105)])
-    frame.hellenistic_tabs.AddPage(aversions, i18n.tr('Aversion & mitigations'))
+    frame.hellenistic_tabs.AddPage(aversions, i18n.tr('Domicile witnessing'))
     frame.hellenistic_tabs.AddPage(rays, i18n.tr('Rays & domination'))
     main.Add(frame.hellenistic_tabs, 1, wx.EXPAND)
     page.SetSizer(main)
