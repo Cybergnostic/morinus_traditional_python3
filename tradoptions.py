@@ -45,6 +45,17 @@ DEFAULTS = {
 	'table_zoom': 1.0,
 	'show_sidebar': True,
 	'sidebar_width': 310,		# resizable panel width in logical pixels
+	# traditional aspects (Legacy uses the original Morinus aspect algorithm and orbs)
+	'aspect_preset': 'traditional',  # traditional, legacy, custom
+	'aspect_combine': 'larger',      # larger or average
+	'aspect_boundary': 3.0,         # 0 = strict sign boundaries
+	'aspect_custom_saturn': 9.0,
+	'aspect_custom_jupiter': 9.0,
+	'aspect_custom_mars': 8.0,
+	'aspect_custom_sun': 15.0,
+	'aspect_custom_venus': 7.0,
+	'aspect_custom_mercury': 7.0,
+	'aspect_custom_moon': 12.0,
 	# windows and errors
 	'win_remember': True,
 	'err_show': True,

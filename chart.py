@@ -23,6 +23,8 @@ import hours
 import syzygy
 import userpd
 import util
+import traditional_aspects
+import tradoptions
 
 class Time:
     """Time of Birth"""
@@ -328,6 +330,35 @@ class Chart:
                         if dif > 180.0:
                             dif = 360.0 - dif
                         self.aspmatrix[k][l].dif = dif
+
+        self._apply_traditional_planet_aspects()
+
+    def _apply_traditional_planet_aspects(self):
+        """Replace only the seven planets' ecliptic aspects, never node or parallels.
+
+        The original matrix calculation above is deliberately left unchanged
+        for the Legacy preset and for all contacts outside these 21 pairs.
+        """
+        settings = tradoptions.values()
+        if settings['aspect_preset'] == 'legacy':
+            return
+        orbs = traditional_aspects.configured_orbs(settings)
+        for i in range(planets.Planets.PLANETS_NUM):
+            for j in range(i):
+                a = self.planets.planets[i]
+                b = self.planets.planets[j]
+                cell = self.aspmatrix[i][j]
+                found = traditional_aspects.evaluate(
+                    a.data[planets.Planet.LON], b.data[planets.Planet.LON],
+                    a.data[planets.Planet.SPLON], b.data[planets.Planet.SPLON],
+                    orbs[i], orbs[j], settings['aspect_combine'],
+                    settings['aspect_boundary'])
+                cell.dif = traditional_aspects.angular_distance(
+                    a.data[planets.Planet.LON], b.data[planets.Planet.LON])
+                cell.typ = found.index if found is not None else Chart.NONE
+                cell.aspdif = found.deviation if found is not None else 0.0
+                cell.appl = found.applying if found is not None else False
+                cell.exact = found.exact if found is not None else False
 
     def calcAscMCAspMatrix(self):
         self.aspmatrixAscMC = [

@@ -188,6 +188,25 @@ DIALOGS = [
 		(SECTION, 'Errors'),
 		(CHECK, 'err_show', 'Show a message when something goes wrong', 'The details are written to morinus-error.log in any case.'),
 	]),
+	('Traditional aspects', [
+		(SECTION, 'Aspect rules'),
+		(CHOICE, 'aspect_preset', 'Aspect preset',
+			[('traditional', 'Traditional (course)'), ('legacy', 'Legacy Morinus'), ('custom', 'Custom planetary orbs')],
+			'Traditional uses the course planetary orbs; Legacy retains the original Morinus aspect algorithm. Custom uses the values below.'),
+		(CHOICE, 'aspect_combine', 'Combine planetary orbs',
+			[('larger', 'Larger of the two'), ('average', 'Average of the two')],
+			'Maximum separation from exactness: use the larger planetary orb or the average. Legacy keeps its old averaging.'),
+		(FLOAT, 'aspect_boundary', 'Out-of-sign allowance (degrees)', 0.0, 10.0, 0.5, 1,
+			'Allow degree aspects not matching their whole-sign configuration within this many degrees of exactness; 0 means strict sign boundaries.'),
+		(SECTION, 'Custom planetary orbs'),
+		(FLOAT, 'aspect_custom_saturn', 'Saturn orb', 0.0, 20.0, 0.5, 1, 'Used only with the Custom planetary orbs preset.'),
+		(FLOAT, 'aspect_custom_jupiter', 'Jupiter orb', 0.0, 20.0, 0.5, 1, 'Used only with the Custom planetary orbs preset.'),
+		(FLOAT, 'aspect_custom_mars', 'Mars orb', 0.0, 20.0, 0.5, 1, 'Used only with the Custom planetary orbs preset.'),
+		(FLOAT, 'aspect_custom_sun', 'Sun orb', 0.0, 20.0, 0.5, 1, 'Used only with the Custom planetary orbs preset.'),
+		(FLOAT, 'aspect_custom_venus', 'Venus orb', 0.0, 20.0, 0.5, 1, 'Used only with the Custom planetary orbs preset.'),
+		(FLOAT, 'aspect_custom_mercury', 'Mercury orb', 0.0, 20.0, 0.5, 1, 'Used only with the Custom planetary orbs preset.'),
+		(FLOAT, 'aspect_custom_moon', 'Moon orb', 0.0, 20.0, 0.5, 1, 'Used only with the Custom planetary orbs preset.'),
+	]),
 ]
 
 

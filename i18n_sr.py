@@ -392,3 +392,30 @@ TEXTS.update({
 	'%d repeated aspects, %d three-planet groups, %d repeated placements': '%d ponovljenih aspekata, %d grupa od tri planete, %d ponovljenih položaja',
 	'Geometric search only: the limit applies separately to both charts; traditional orb and out-of-sign rules will be shared with the future aspect engine.': 'Geometrijska pretraga: granica važi posebno za obe karte; tradicionalni orbisi i pravila za aspekte preko granice znaka biće povezani sa budućim sistemom aspekata.',
 })
+
+# Traditional aspect engine and its settings
+TEXTS.update({
+    'Traditional aspects': 'Tradicionalni aspekti',
+    'Aspect rules': 'Pravila aspekata',
+    'Aspect preset': 'Izbor orbisa i pravila',
+    'Traditional (course)': 'Tradicionalni (kurs)',
+    'Legacy Morinus': 'Izvorni Morinus',
+    'Custom planetary orbs': 'Posebni planetarni orbisi',
+    'Combine planetary orbs': 'Kombinovanje planetarnih orbisa',
+    'Larger of the two': 'Veći od dva orbisa',
+    'Average of the two': 'Prosek dva orbisa',
+    'Out-of-sign allowance (degrees)': 'Dozvola preko granice znaka (stepeni)',
+    'Custom planetary orbs': 'Posebni planetarni orbisi',
+    'Saturn orb': 'Saturnov orbis', 'Jupiter orb': 'Jupiterov orbis',
+    'Mars orb': 'Marsov orbis', 'Sun orb': 'Sunčev orbis',
+    'Venus orb': 'Venerin orbis', 'Mercury orb': 'Merkurov orbis',
+    'Moon orb': 'Lunin orbis',
+    'Traditional uses the course planetary orbs; Legacy retains the original Morinus aspect algorithm. Custom uses the values below.':
+        'Tradicionalni koristi orbise iz kursa; izvorni Morinus zadržava stara pravila; posebno koristi vrednosti ispod.',
+    'Maximum separation from exactness: use the larger planetary orb or the average. Legacy keeps its old averaging.':
+        'Najveće odstupanje od egzaktnosti: veći orbis ili prosek. Izvorni Morinus zadržava stari prosek.',
+    'Allow degree aspects not matching their whole-sign configuration within this many degrees of exactness; 0 means strict sign boundaries.':
+        'Dozvoli aspekte po stepenu koji nisu u skladu s odnosom znakova do zadatog odstupanja; 0 znači stroge granice znakova.',
+    'Used only with the Custom planetary orbs preset.':
+        'Koristi se samo ako su izabrani posebni planetarni orbisi.',
+})

@@ -41,6 +41,7 @@ CATEGORIES = [
 		('dialog', 'OMAyanamsha', 'onAyanamsha', 'The tropical zodiac, or a sidereal one with its ayanamsa.'),
 		('dialog', 'OMOrbs', 'onOrbs', 'The orbs of each planet for the aspects and parallels, and those of planets in houses, the angles, intermediate cusps, day and night and the fixed stars.'),
 		('trad', 5),
+		('trad', 8),
 	]),
 	('Dignities', [
 		('dialog', 'OMDignities', 'onDignities', 'The domiciles and exaltations of the planets.'),
@@ -319,8 +320,32 @@ class SettingsWnd(wx.Dialog):
 			self.frame.enableOptMenus(True)
 
 	def onTradChange(self, ctrls):
-		tradoptions.set(tradoptsdlg.values(ctrls))
+		old = tradoptions.values()
+		new = tradoptsdlg.values(ctrls)
+		tradoptions.set(new)
 		self.changed()
+		if any(key.startswith('aspect_') and old.get(key) != value for key, value in new.items()):
+			# Only the planetary aspect matrix changes. No ephemeris recalculation
+			# or chart-window destruction is needed when switching presets.
+			frame = self.frame
+			if not frame.splash:
+				frame.horoscope.calcPlsAspMatrix()
+				frame.clickedPlId = None
+				frame.drawBkg()
+				frame.Refresh()
+				for window in frame.GetChildren():
+					other = getattr(window, 'chart', None)
+					if other is not None and other is not frame.horoscope and hasattr(other, 'calcPlsAspMatrix'):
+						other.calcPlsAspMatrix()
+						if hasattr(window, 'w') and hasattr(window.w, 'drawBkg'):
+							window.w.drawBkg()
+							window.Refresh()
+					if hasattr(window, 'pickers') and hasattr(window, 'queue_draw'):
+						for picker in window.pickers:
+							selection = picker.selected()
+							if selection is not None and selection is not frame.horoscope:
+								selection.calcPlsAspMatrix()
+						window.queue_draw()
 
 	def onTradDefaults(self, ctrls):
 		tradoptsdlg.fill(ctrls, copy.deepcopy(tradoptions.DEFAULTS))
