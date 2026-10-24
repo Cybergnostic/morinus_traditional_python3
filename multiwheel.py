@@ -93,6 +93,8 @@ class MultiWheel:
         self._ink_cache = {}
         self._font_cache = {}
         self.highlight_entries = []
+        self.highlight_areas = []
+        self.highlight_legend = []
         self.show_highlights = False
         self._highlight_lookup = {}
 
@@ -614,16 +616,19 @@ class MultiWheel:
                         'major', glyph_colour)
             glyph_xy = (self.cx + gx, self.cy + gy)
             if role_colours:
-                # Outlines distinguish time rulers without enlarging their
-                # glyphs or changing the collision-placement geometry.
-                extent = max(glyph_boxes[i]) * .55 + 2
-                for n, role_colour in enumerate(role_colours):
-                    radius = extent + 2.3 * n
-                    rect = (self.scaled((glyph_xy[0] - radius, glyph_xy[1] - radius)),
-                            self.scaled((glyph_xy[0] + radius, glyph_xy[1] + radius)))
-                    self.draw.ellipse(rect, outline=(
-                        (55, 55, 55) if self.bw else role_colour),
-                        width=max(1, self.scale))
+                # Tiny colored role dots preserve multiple activations without
+                # enlarging glyph hitboxes or introducing concentric outlines.
+                # Keep the glyph itself in the strongest available role color.
+                left = glyph_xy[0] - glyph_boxes[i][0] * .5
+                top = glyph_xy[1] - glyph_boxes[i][1] * .5
+                for n, role_colour in enumerate(role_colours[:4]):
+                    px = left + 2 + n * 4
+                    py = top - 3
+                    r = 1.6
+                    self.draw.ellipse(
+                        (self.scaled((px - r, py - r)),
+                         self.scaled((px + r, py + r))),
+                        fill=(55, 55, 55) if self.bw else role_colour)
             colour = self.colour(glyph_colour)
             wheel_primitives.optical_text_center(
                 self.draw, self.scaled(glyph_xy),
@@ -751,92 +756,114 @@ class MultiWheel:
         roles = self._highlight_lookup.get((ring, planet), ())
         return [multiwheel_highlight.ROLE_COLOURS[r] for r in roles]
 
-    def paint_highlight_fields(self, core, rings):
-        """Very faint house-sector tints, behind all spokes and labels.
-
-        Colour only the *occupied house* of each relevant ruler and only
-        in that ruler's natal or solar-return chart, never across other rings.
-        An annular sector is a small bounded polygon, not a bitmap mask.
-        """
-        if not self.show_highlights or not self.highlight_entries:
+    def fill_profection_sector(self, sign, inner, outer, colour):
+        """Fill the whole 30-degree profected sign, respecting ring bounds."""
+        if inner >= outer:
             return
-        charts = [self.radix] + list(self.others)
-        for mark in self.highlight_entries:
-            ring = mark['ring']
-            if ring >= len(charts):
-                continue
-            chrt = charts[ring]
+        start = sign * 30.0
+        lons = [start + i * 1.5 for i in range(21)]
+        points = [self.scaled(self.point(lon, outer)) for lon in lons]
+        points.extend(self.scaled(self.point(lon, inner))
+                      for lon in reversed(lons))
+        self.draw.polygon(points, fill=colour)
+
+    def paint_highlight_fields(self, core, zodiac, rings):
+        """Tint profected *signs*, never the houses occupied by rulers.
+
+        In Whole Sign houses the 30-degree sector equals the entire house.
+        Other house systems still follow the course's sign-based method;
+        their house cusps remain visible without implying a false match.
+        When annual and monthly signs coincide, split the band's radius
+        into two broad colored halves rather than painting one over another.
+        """
+        if not self.show_highlights or not self.highlight_areas:
+            return
+        by_ring = {}
+        for area in self.highlight_areas:
+            by_ring.setdefault(area['ring'], {})[area['role']] = area['sign']
+        for ring, areas in by_ring.items():
             if ring == 0:
-                inner, outer = core * .67, core - self.dial_width((core * .67, core)) - 2
-            else:
+                inner, outer = core * .55, core
+            elif 1 <= ring <= len(rings):
                 a, b = rings[ring - 1]
-                start = a + self.separator_width((a, b)) + 1
-                inner, outer = start + self.dial_width((start, b)) + 2, b
-            if inner >= outer:
+                inner = a + self.separator_width((a, b)) + .5
+                outer = b
+            else:
                 continue
-            cusps = [zodiac_lon(chrt, chrt.houses.cusps[k], self.options)
-                     for k in range(1, 13)]
-            h = mark['house'] - 1
-            start = cusps[h]
-            sweep = (cusps[(h + 1) % 12] - start) % 360
-            if sweep <= 0:
+            annual, monthly = areas.get('annual'), areas.get('monthly')
+            if annual is None:
                 continue
-            steps = max(2, int(math.ceil(sweep / 2)))
-            longs = [(start + sweep * j / steps) % 360
-                     for j in range(steps + 1)]
-            boundary = [self.scaled(self.point(lon, outer)) for lon in longs]
-            boundary.extend(self.scaled(self.point(lon, inner))
-                            for lon in reversed(longs))
-            base = self.ring_background_colour(ring if ring else None)
-            tint = ((224, 224, 224) if self.bw else chartstyle.mix(
-                base, multiwheel_highlight.ROLE_COLOURS[mark['role']], .14))
-            self.draw.polygon(boundary, fill=tint)
+            emerald = ((231, 231, 231) if self.bw else
+                       multiwheel_highlight.SECTOR_COLOURS['annual'])
+            amber = ((211, 211, 211) if self.bw else
+                     multiwheel_highlight.SECTOR_COLOURS['monthly'])
+            if monthly == annual:
+                halfway = (inner + outer) / 2.0
+                self.fill_profection_sector(annual, inner, halfway, amber)
+                self.fill_profection_sector(annual, halfway, outer, emerald)
+            else:
+                self.fill_profection_sector(annual, inner, outer, emerald)
+                if monthly is not None:
+                    self.fill_profection_sector(monthly, inner, outer, amber)
+        # The shared zodiac has one extra, unambiguous sign marker. It is
+        # painted before sign glyphs and degree ticks (never over them).
+        if zodiac:
+            first = by_ring.get(0, {})
+            annual = first.get('annual')
+            month = next((roles['monthly'] for _, roles in sorted(
+                by_ring.items()) if 'monthly' in roles), None)
+            if annual is not None:
+                if month == annual:
+                    middle = sum(zodiac) / 2.0
+                    self.fill_profection_sector(
+                        annual, zodiac[0], middle,
+                        (211, 211, 211) if self.bw else
+                        multiwheel_highlight.SECTOR_COLOURS['monthly'])
+                    self.fill_profection_sector(
+                        annual, middle, zodiac[1],
+                        (231, 231, 231) if self.bw else
+                        multiwheel_highlight.SECTOR_COLOURS['annual'])
+                else:
+                    self.fill_profection_sector(
+                        annual, *zodiac,
+                        (231, 231, 231) if self.bw else
+                        multiwheel_highlight.SECTOR_COLOURS['annual'])
+                    if month is not None:
+                        self.fill_profection_sector(
+                            month, *zodiac,
+                            (211, 211, 211) if self.bw else
+                            multiwheel_highlight.SECTOR_COLOURS['monthly'])
 
     def paint_highlight_legend(self):
-        """Small key in the empty upper-left corner, only when it fits.
-
-        The same legend is permanently visible in the Charts inspector;
-        the chart-corner copy follows the image into PNG export.
-        """
-        if not self.show_highlights or not self.highlight_entries:
+        """Compact four-role key outside wheel; inspector always has details."""
+        if not self.show_highlights or not self.highlight_legend:
             return
-        font_size = max(10, min(19, int(self.rmax * .023)))
+        font_size = max(10, min(16, int(self.rmax * .023)))
         font = self.font(font_size)
-        lines = []
-        for mark in self.highlight_entries:
-            name = multiwheel_highlight.NAMES[mark['planet']]
-            prefix = ('Major' if mark['role'] == 'major' else
-                      'Subperiod' if mark['role'] == 'sub' else
-                      'SR%d Asc' % mark['ring'])
-            lines.append((mark['role'], '%s: %s · H%d' %
-                          (prefix, name, mark['house'])))
-        if len(lines) > 5:
-            return
-        line_height = font_size * 1.7
+        lines = [(item['role'], item['text'])
+                 for item in self.highlight_legend]
+        line_height = font_size * 1.6
         x, y = 14.0, 14.0
-        width = max(self.measure(text, font)[0]
-                    for _, text in lines) + 35
+        width = max(self.measure(t, font)[0] for _, t in lines) + 33
         height = 13 + line_height * (len(lines) + 1)
-        # The furthest corner of the box must remain outside the wheel.
+        # Do not cover any portion of the zodiac or planets on a laptop.
         if math.hypot(self.cx - (x + width), self.cy - (y + height)) < self.rmax + 12:
             return
         background = (255, 255, 255) if self.bw else tuple(self.options.clrbackground)
         self.draw.rectangle((self.scaled((x, y)),
                              self.scaled((x + width, y + height))),
-                            fill=background,
-                            outline=(190, 190, 190), width=max(1, self.scale))
-        title_font = self.font(font_size + 1)
+                            fill=background, outline=(190, 190, 190),
+                            width=max(1, self.scale))
         self.label((x + width / 2, y + line_height * .65),
-                   'Time Lords', title_font, (45, 45, 45))
+                   'Profections & Firdaria', self.font(font_size + 1),
+                   (45, 45, 45))
         for i, (role, text) in enumerate(lines):
             yy = y + line_height * (i + 1.5)
-            colour = multiwheel_highlight.ROLE_COLOURS[role]
-            block_x = x + 13
-            block_y = yy - 4
-            self.draw.rectangle((self.scaled((block_x - 4, block_y - 4)),
-                                 self.scaled((block_x + 4, block_y + 4))),
-                                fill=(70, 70, 70) if self.bw else colour)
-            self.label((x + 27 + self.measure(text, font)[0] / 2, yy),
+            ink = ((70, 70, 70) if self.bw else
+                   multiwheel_highlight.ROLE_COLOURS[role])
+            self.draw.rectangle((self.scaled((x + 8, yy - 4)),
+                                 self.scaled((x + 16, yy + 4))), fill=ink)
+            self.label((x + 24 + self.measure(text, font)[0] / 2, yy),
                        text, font, (45, 45, 45))
 
     def draw_ring_backgrounds(self, zodiac, rings):
@@ -1046,7 +1073,7 @@ class MultiWheel:
         self.pending_planet_positions = []
         self.planet_occupied = []
         self.draw_ring_backgrounds(zodiac, rings)
-        self.paint_highlight_fields(core, rings)
+        self.paint_highlight_fields(core, zodiac, rings)
         self.draw_radix(core)
         if not self.reference_outside:
             self.draw_decans(decans)
@@ -1377,6 +1404,8 @@ class MultiWheelFrame(wx.Frame):
         self.bitmap_origin = (0, 0)
         self._last_hover = ''
         self.current_highlights = []
+        self.current_profection_areas = []
+        self._highlight_span_cache = OrderedDict()
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
         self.SetMinSize((1060, 600))
         outer = wx.BoxSizer(wx.VERTICAL)
@@ -1519,7 +1548,21 @@ class MultiWheelFrame(wx.Frame):
         self.inspector.AddPage(self.controls_page, i18n.tr('Returns + transits'))
 
         info_rail = wx.BoxSizer(wx.VERTICAL)
-        self.add_rail_heading(info_rail, 'Time Lords', self.info_page)
+        self.add_rail_heading(info_rail, 'Profections & Firdaria', self.info_page)
+        # Each technique can be toggled independently; no extra chart
+        # calculations are needed when a highlight is hidden.
+        self.highlight_role_choices = {}
+        toggle_grid = wx.GridSizer(rows=2, cols=2, vgap=4, hgap=7)
+        for role, title in (('annual', 'Annual'),
+                            ('monthly', 'Monthly'),
+                            ('major', 'Firdaria major'),
+                            ('sub', 'Firdaria minor')):
+            cb = wx.CheckBox(self.info_page, label=i18n.tr(title))
+            cb.SetValue(True)
+            self.highlight_role_choices[role] = cb
+            toggle_grid.Add(cb, 0, wx.EXPAND)
+            cb.Bind(wx.EVT_CHECKBOX, self.queue_draw)
+        info_rail.Add(toggle_grid, 0, wx.EXPAND | wx.BOTTOM, 11)
         self.legend_asof = wx.StaticText(self.info_page, label='')
         self.legend_asof.SetForegroundColour(rail_fg)
         info_rail.Add(self.legend_asof, 0, wx.EXPAND | wx.BOTTOM, 5)
@@ -1665,26 +1708,101 @@ class MultiWheelFrame(wx.Frame):
         rail.Add(heading, 0, wx.EXPAND | wx.BOTTOM, 7)
         return heading
 
+    @staticmethod
+    def utc_datetime(chrt):
+        """UTC-only return/transit timestamps, matching their chart.jd."""
+        t = chrt.time
+        if t.bc:
+            return None
+        try:
+            return datetime(t.origyear, t.origmonth, t.origday,
+                            t.hour, t.minute, t.second, tzinfo=timezone.utc)
+        except ValueError:
+            return None
+
     def highlight_reference_time(self, charts):
-        """Use the selected transit time, otherwise the current UTC time."""
-        for chrt in reversed(charts):
-            if chrt.htype == chart.Chart.TRANSIT and not chrt.time.bc:
-                t = chrt.time
-                try:
-                    return datetime(
-                        t.origyear, t.origmonth, t.origday,
-                        t.hour, t.minute, t.second, tzinfo=timezone.utc)
-                except ValueError:
-                    break
+        """Prefer a selected LR in the solar year, not an unrelated 'now'.
+
+        Lunar return selection is our monthly-navigation controller.
+        If no LR exists, prefer a selected transit, then the SR epoch.
+        """
+        for kind in (chart.Chart.LUNAR, chart.Chart.TRANSIT,
+                     chart.Chart.SOLAR):
+            for chrt in charts:
+                if chrt.htype == kind:
+                    instant = self.utc_datetime(chrt)
+                    if instant is not None:
+                        return instant
         return datetime.now(timezone.utc)
 
     def time_lord_entries(self, inner, charts):
-        instant = self.highlight_reference_time(charts)
-        return (multiwheel_highlight.entries_for(
-                    inner, charts, instant, bool(self.options.ayanamsha)),
-                instant)
+        """Derive course-defined signs/rulers from the selected SR year.
 
-    def update_highlight_legend(self, entries, instant):
+        Cache the *next* solar-return boundary: redraws and zooms should
+        never repeatedly recalculate a year's ephemeris.
+        """
+        solar = next((chrt for chrt in charts
+                      if chrt.htype == chart.Chart.SOLAR and
+                      self.return_origin(chrt) is inner), None)
+        if solar is None:
+            # A separately opened SR may lack provenance; only use it if
+            # its name and natal year clearly match the active radix.
+            solar = next((chrt for chrt in charts
+                          if chrt.htype == chart.Chart.SOLAR and
+                          chrt.name == inner.name), None)
+        year = self.solar_year(solar) if solar is not None else None
+        start_jd, end_jd = None, None
+        if solar is not None and 1 <= year <= 9997:
+            start_jd = solar.time.jd
+            key = (inner, year)
+            if key in self._highlight_span_cache:
+                end_jd = self._highlight_span_cache[key]
+            else:
+                following = returnslist.solar_return(inner, year + 1)
+                if following is not None:
+                    end_jd = returnslist.gmt_time(following, inner).jd
+                    self._highlight_span_cache[key] = end_jd
+                    if len(self._highlight_span_cache) > 8:
+                        self._highlight_span_cache.popitem(last=False)
+        when = self.highlight_reference_time(charts)
+        reference_jd = None
+        if start_jd is not None and end_jd is not None:
+            # LR determines the month even when current transits are
+            # several years away from the chosen Solar Return.
+            lr = next((chrt for chrt in charts
+                       if chrt.htype == chart.Chart.LUNAR and
+                       self.return_origin(chrt) is inner), None)
+            if lr is not None:
+                reference_jd = lr.time.jd
+                if reference_jd < start_jd:
+                    # The LR already in force at the SR belongs to
+                    # month one (the course notes this boundary case).
+                    reference_jd = start_jd
+                elif reference_jd >= end_jd:
+                    reference_jd = end_jd - 0.000001
+                when = self.utc_datetime(lr) or when
+                if lr.time.jd < start_jd:
+                    when = self.utc_datetime(solar) or when
+            else:
+                transit = next((chrt for chrt in charts
+                                if chrt.htype == chart.Chart.TRANSIT and
+                                start_jd <= chrt.time.jd < end_jd), None)
+                reference_jd = transit.time.jd if transit else start_jd
+                when = (self.utc_datetime(transit) if transit else
+                        self.utc_datetime(solar)) or when
+
+        data = multiwheel_highlight.entries_for(
+            inner, charts, when, bool(self.options.ayanamsha),
+            solar_year=year, solar_start_jd=start_jd,
+            next_solar_jd=end_jd, monthly_date_jd=reference_jd)
+        permitted = {role for role, ctrl in self.highlight_role_choices.items()
+                     if ctrl.GetValue()}
+        for field in ('marks', 'areas', 'legend'):
+            data[field] = [entry for entry in data[field]
+                           if entry['role'] in permitted]
+        return data, when
+
+    def update_highlight_legend(self, summary, instant):
         if not self.highlight_choice.GetValue():
             self.legend_asof.SetLabel(i18n.tr('Highlighting off'))
             for label in self.legend_labels:
@@ -1693,17 +1811,19 @@ class MultiWheelFrame(wx.Frame):
             return
         self.legend_asof.SetLabel(
             '%s %s UTC' % (i18n.tr('As of'), instant.strftime('%Y-%m-%d')))
-        if not entries:
-            self.legend_labels[0].SetLabel(i18n.tr('No rulers for this chart'))
+        if not summary:
+            self.legend_labels[0].SetLabel(i18n.tr('No active profection available'))
+            self.legend_labels[0].SetForegroundColour(
+                self.info_page.GetForegroundColour())
             self.legend_labels[0].Show()
         for i, label in enumerate(self.legend_labels):
-            if i >= len(entries):
+            if i >= len(summary):
                 label.Hide()
                 continue
-            mark = entries[i]
-            label.SetLabel(mark['text'])
+            role, label_text = summary[i]['role'], summary[i]['text']
+            label.SetLabel(label_text)
             label.SetForegroundColour(
-                wx.Colour(*(multiwheel_highlight.ROLE_COLOURS[mark['role']]
+                wx.Colour(*(multiwheel_highlight.ROLE_COLOURS[role]
                             if not self.options.bw else (65, 65, 65))))
             label.Show()
         self.refresh_inspector()
@@ -2525,11 +2645,14 @@ class MultiWheelFrame(wx.Frame):
         self.renderer.label_mode = self.labels_choice.GetSelection()
         self.renderer.reference_outside = bool(self.reference_choice.GetSelection())
         self.renderer.show_highlights = self.highlight_choice.GetValue()
-        entries, instant = self.time_lord_entries(inner, charts)
-        self.current_highlights = entries
-        self.renderer.highlight_entries = entries
+        data, instant = self.time_lord_entries(inner, charts)
+        self.current_highlights = data['marks']
+        self.current_profection_areas = data['areas']
+        self.renderer.highlight_entries = data['marks']
+        self.renderer.highlight_areas = data['areas']
+        self.renderer.highlight_legend = data['legend']
         self.buffer = self.renderer.drawChart()
-        self.update_highlight_legend(entries, instant)
+        self.update_highlight_legend(data['legend'], instant)
         notes = []
         if repeated:
             notes.append(i18n.tr('Repeated charts') + ': ' + ', '.join(repeated))
@@ -2605,7 +2728,10 @@ class MultiWheelFrame(wx.Frame):
             exporter.label_mode = self.labels_choice.GetSelection()
             exporter.reference_outside = bool(self.reference_choice.GetSelection())
             exporter.show_highlights = self.highlight_choice.GetValue()
-            exporter.highlight_entries, _ = self.time_lord_entries(inner, charts)
+            data, _ = self.time_lord_entries(inner, charts)
+            exporter.highlight_entries = data['marks']
+            exporter.highlight_areas = data['areas']
+            exporter.highlight_legend = data['legend']
             bitmap = exporter.drawChart()
             if bitmap.SaveFile(path, wx.BITMAP_TYPE_PNG):
                 self.mainfr.fpathimgs = os.path.dirname(path)

@@ -436,3 +436,57 @@ to be checked before merging into `main`.
 Manual color customization and advanced overlapped-planet placement are
 separate follow-ups, not prerequisites for this stage. Validate at
 normal Fit size on laptop and desktop before merging.
+
+## October 24: course-corrected whole-sign profection overlays
+
+This supersedes the earlier October 24 Solar-Ascendant and ruler-occupied-house
+highlighting design (it must **not** remain in the renderer).
+
+Source: `cw_api/astrology` distilled prognostic lessons 23, 25, 26, 27
+and raw transcripts `25 profekcije`, `26 solari`, `27 lunari i tranziti`,
+`28 divizije`. The lecturer explicitly uses whole-sign annual profections,
+starting from the natal Ascendant, and follows the activated sign through
+natal and Solar Return charts. The 12-period solar method is distinguished
+from the 13-period lunar alternative. We are **only implementing the 12-period
+solar method**. The existing `profectionsmonthly.py` lists the mean-length
+version at `30.4368492` days per segment; the multiwheel instead divides
+the *actual exact* SR-to-next-SR interval by twelve to respect its precise
+return-year timeline. This convention is documented rather than silently
+conflated with calendar-month birthdays.
+
+- Annual sign = natal Ascendant sign + attained age at selected SR year,
+  modulo 12; the annual ruler is the traditional domicile lord of that sign.
+  The **complete 30-degree sign sector** is pale mint in radix, SR, LR and
+  transits, even when the corresponding house number differs by chart.
+- Monthly sign = annual sign + month index (0–11) modulo 12. Month 1 begins
+  exactly at the chosen SR; the selected LR date determines the active month,
+  with the in-force LR before the SR clamped to month 1. If no LR exists,
+  a transit within the selected SR year determines the month, otherwise the
+  SR start. In the SR and LR rings, the complete monthly 30-degree sign
+  sector is pale amber. The course reads monthly profections principally
+  against the SR, and regards lunar returns as confirmations; they are
+  **not** incorrectly mapped one-for-one to profection months.
+- The shared zodiac reference band also indicates annual and monthly
+  signs. When the annual and monthly profection select the same sign, split
+  the affected chart/zodiac sector radially into mint and amber halves;
+  never let one color erase the other's activation.
+- **Only rulers' glyphs** are highlighted for annual Lord of Year (strong
+  emerald), Firdaria major (violet), Firdaria minor (rose), and SR/LR monthly
+  lord (strong amber). The time lord's *occupied house is not colored*,
+  except when it coincides with an independently activated profection sign.
+  When a planet has several roles, use tiny discrete colored role indicators
+  rather than large nested circles, preserving the dense-ring layout.
+- Independent technique checkboxes appear at the top of Charts inspector,
+  alongside the master Highlight rulers switch. Four-role key in Charts and
+  compact chart-corner white-space legend (when space permits); the PNG
+  exporter receives exactly the same marks, tinted sign sectors and legend.
+  Unrelated single-wheel and calculation files are untouched.
+- The course prioritizes annual profection, ruler of the year, and
+  participators; this phase depicts the two profection signs and the four
+  requested ruler roles only. Participators remain interpretive context,
+  not extra colored planet roles without an explicit design decision.
+
+Validate using a selected SR year different from today's calendar year,
+change the LR, move the transit clock, switch radix, and compare charts at
+Fit size and in high-resolution PNG. Use the pure regression module
+`tests/test_multiwheel_highlight.py` and GUI smoke test.

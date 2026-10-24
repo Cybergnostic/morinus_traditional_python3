@@ -520,20 +520,38 @@ def main():
 					chart.Chart.TRANSIT) and source is not created
 					for _, source in inner.sources)
 				assert wnd.active_transit_ring == 3
-				# Time-lord overlay must identify the natal Firdaria ruler
-				# and the *solar chart's* own Ascendant domicile ruler.
+				# Course-based whole-sign annual/monthly profections across
+				# wheels. SR and LR show the matching month; transits retain
+				# the annual sign and traditional Firdaria lord glyphs.
 				import multiwheel_highlight
 				wnd.redraw()
 				assert wnd.renderer.show_highlights
+				assert set(wnd.highlight_role_choices) == {
+					'annual', 'monthly', 'major', 'sub'}
+				assert all(ctrl.GetValue()
+					for ctrl in wnd.highlight_role_choices.values())
 				assert any(mark['role'] == 'major' and mark['ring'] == 0
 					for mark in wnd.current_highlights)
-				assert any(mark['role'] == 'solar_asc' and mark['ring'] == 1
+				assert [area['ring'] for area in wnd.current_profection_areas
+					if area['role'] == 'annual'] == [0, 1, 2, 3]
+				assert [area['ring'] for area in wnd.current_profection_areas
+					if area['role'] == 'monthly'] == [1, 2]
+				assert not any(mark['role'] == 'solar_asc'
 					for mark in wnd.current_highlights)
+				assert [item['role'] for item in wnd.renderer.highlight_legend][0] == 'annual'
+				assert 'As of' in wnd.legend_asof.GetLabel()
+				assert len(wnd.renderer.highlight_legend) <= 4
 				for mark in wnd.current_highlights:
 					assert mark['planet'] in range(9)
-					assert 1 <= mark['house'] <= 12
 					assert mark['role'] in multiwheel_highlight.ROLE_COLOURS
-				assert 'As of' in wnd.legend_asof.GetLabel()
+				# Technique toggles must affect marks, sectors AND legends.
+				wnd.highlight_role_choices['monthly'].SetValue(False)
+				wnd.redraw()
+				assert not any(a['role'] == 'monthly'
+					for a in wnd.current_profection_areas)
+				assert not any(a['role'] == 'monthly'
+					for a in wnd.renderer.highlight_legend)
+				wnd.highlight_role_choices['monthly'].SetValue(True)
 				wnd.highlight_choice.SetValue(False)
 				wnd.redraw()
 				assert not wnd.renderer.show_highlights
