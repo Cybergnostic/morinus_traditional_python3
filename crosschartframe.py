@@ -85,7 +85,8 @@ class CrossChartFrame(wx.Frame):
         names = []
         for index, chart in enumerate(charts):
             label = i18n.tr('Inner chart') if index == 0 else i18n.tr('Ring %d') % index
-            name = getattr(chart, 'name', '') or ''
+            selected_source = self.wheel.pickers[index].choice.GetStringSelection()
+            name = selected_source or (getattr(chart, 'name', '') or '')
             names.append(label + ' — ' + name)
         for choice in (self.chart_a, self.chart_b):
             choice.Set(names)
