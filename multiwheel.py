@@ -16,6 +16,7 @@ import chart
 import chartstyle
 import common
 import comparegrid
+import crosschart_aspects
 import houses
 import multiwheel_layout
 import multiwheel_highlight
@@ -53,25 +54,16 @@ def circular_distance(a, b):
 
 
 def cross_aspects(radix, secondary, options):
-    """Radix-to-one-ring Ptolemaic aspects using Morinus planet orbs.
+    """One traditional A1/A5 engine for multiwheel cross-chart ray drawing.
 
-    Uses the same two planets' averaged orbs as Chart.calcPlsAspMatrix,
-    without recalculating or replacing any Chart state.
+    Retain the renderer's (index A, index B, aspect kind, lon A, lon B)
+    interface; no alternate orb calculation or mutation of chart matrices.
     """
-    out = []
-    for i in range(planets.Planets.PLANETS_NUM):
-        a = zodiac_lon(radix, radix.planets.planets[i].data[planets.Planet.LON], options)
-        for j in range(planets.Planets.PLANETS_NUM):
-            b = zodiac_lon(secondary, secondary.planets.planets[j].data[planets.Planet.LON], options)
-            separation = circular_distance(a, b)
-            orb = (options.orbs[i] + options.orbs[j]) / 2.0
-            matches = [(abs(separation - angle), kind)
-                       for kind, angle in enumerate(chart.Chart.Aspects)
-                       if abs(separation - angle) <= orb]
-            if matches:
-                _, kind = min(matches)
-                out.append((i, j, kind, a, b))
-    return out
+    types = {name: i for i, name in enumerate(crosschart_aspects.PLANETS)}
+    aspect_ids = {name: i for i, name in enumerate(crosschart_aspects.ASPECT_NAMES)}
+    return [(types[r.first], types[r.second], aspect_ids[r.aspect],
+             r.a_longitude, r.b_longitude)
+            for r in crosschart_aspects.analyze(radix, secondary, options)]
 
 
 class MultiWheel:
@@ -1440,7 +1432,10 @@ class MultiWheelFrame(wx.Frame):
         self.side_button = wx.Button(self, label=i18n.tr('Hide charts'))
         viewrow.Add(self.side_button, 0, wx.RIGHT, 8)
         self.savebutton = wx.Button(self, label=i18n.tr('Save image (PNG)...'))
-        viewrow.Add(self.savebutton, 0, wx.RIGHT, 10)
+        viewrow.Add(self.savebutton, 0, wx.RIGHT, 8)
+        self.crosschart_button = wx.Button(self, label=i18n.tr('Cross-chart aspects...'))
+        viewrow.Add(self.crosschart_button, 0, wx.RIGHT, 10)
+        self.crosschart_window = None
         viewrow.Add(wx.StaticText(self, label=i18n.tr('Planet labels:')),
                     0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.labels_choice = wx.Choice(
@@ -1671,6 +1666,7 @@ class MultiWheelFrame(wx.Frame):
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.reference_choice)
         self.Bind(wx.EVT_CHECKBOX, self.queue_draw, self.highlight_choice)
         self.Bind(wx.EVT_BUTTON, self.onSaveAsBitmap, self.savebutton)
+        self.Bind(wx.EVT_BUTTON, self.open_cross_chart_aspects, self.crosschart_button)
         self.Bind(wx.EVT_BUTTON, self.zoom_fit, self.fit_button)
         self.Bind(wx.EVT_BUTTON, self.zoom_actual, self.actual_button)
         self.Bind(wx.EVT_BUTTON, self.zoom_in, self.in_button)
@@ -2583,6 +2579,20 @@ class MultiWheelFrame(wx.Frame):
             'Hide charts' if self.sidebar_visible else 'Show charts'))
         self.Layout()
         self.queue_draw()
+
+    def open_cross_chart_aspects(self, event=None):
+        """Compare any two live chart slots in a dedicated, readable table."""
+        import crosschartframe
+        window = self.crosschart_window
+        if window is not None and not window.IsBeingDeleted():
+            window.update_slots()
+            window.refresh()
+            window.Raise()
+            return window
+        window = crosschartframe.CrossChartFrame(self)
+        self.crosschart_window = window
+        window.Show()
+        return window
 
     def zoom_fit(self, event=None):
         self.zoom_factor = None

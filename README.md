@@ -311,6 +311,40 @@ yes/no judgments.
 Focused tests:
 `python3 -m unittest discover -s tests -p 'test_hellenistic_aspects.py' -v`
 
+## Traditional aspects: A5 cross-chart analysis
+
+In **Charts → Multi-wheel**, select the charts for the centre and 1–3
+outer rings. Click **Cross-chart aspects...** in the viewer toolbar to
+open the independent A5 comparison table.
+
+The table compares **Chart A** and **Chart B**, which can be any two
+currently active slots (radix, solar return, lunar return, transits, or
+manually loaded natal). It includes all seven visible planets in both
+layers, including Sun/Sun, Saturn/Saturn, etc. Columns identify the
+two chart-specific planets, major aspect, exact deviation, whether it is
+out-of-sign, the secondary planet's instantaneous motion relative to the
+**fixed** degree of the planet in Chart A, and **directed receptions**
+(A receives B versus B receives A). It uses the active Morinus essential
+dignity tables and separately derived chart sects; full orbital
+application across historical chart dates is never inferred.
+
+Planet filters and **Receptions only** are available. **Copy table**
+exports tab-separated rows. A single chart object cannot be compared
+with itself in two different ring slots; the window reports that selection
+instead of fabricating 49 self-aspects. The window refreshes from the
+currently selected multiwheel slots when reactivated and when Recalculate
+is clicked. It does not reassign chart slots or edit their calculated data.
+
+The existing multiwheel **Aspects between: Inner and ring N** drawing now
+uses the same `crosschart_aspects.analyze` engine rather than its former
+independent average-orb algorithm. The A1 Traditional / Custom /
+Legacy presets, larger/average planetary orbs, strict/3-degree
+out-of-sign allowance, and seven-planet scope are consistent in both
+places. Other multiwheel drawing layers are unchanged.
+
+Focused tests:
+`python3 -m unittest discover -s tests -p 'test_crosschart_aspects.py' -v`
+
 ## Automatic time zones (birth data)
 
 The Windows build and `install.sh` include what this needs. In **New Chart**

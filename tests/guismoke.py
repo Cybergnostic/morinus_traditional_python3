@@ -444,6 +444,30 @@ def main():
 				wnd.register_chart(secondary, 'Smoke transit', picker)
 				assert picker.selected() is secondary
 				assert inner.selected() is frame.horoscope
+				# A5: compare two live slots with the same traditional orb
+				# engine as the wheel's cross-ring aspect drawing.
+				import crosschart_aspects
+				analysis = wnd.open_cross_chart_aspects()
+				try:
+					assert analysis.chart_a.GetSelection() == 0
+					assert analysis.chart_b.GetSelection() == 1
+					assert analysis.table.GetItemCount() == len(
+						crosschart_aspects.analyze(frame.horoscope, secondary, frame.options))
+					analysis.planet_a.SetSelection(4)  # Sun
+					analysis.planet_b.SetSelection(7)  # Moon
+					analysis.refresh()
+					assert analysis.table.GetItemCount() <= 1
+					analysis.planet_a.SetSelection(0)
+					analysis.planet_b.SetSelection(0)
+					analysis.chart_b.SetSelection(0)
+					analysis.refresh()
+					assert analysis.table.GetItemCount() == 0
+					assert analysis.summary.GetLabel()
+					analysis.chart_b.SetSelection(1)
+					analysis.refresh()
+				finally:
+					analysis.Destroy()
+					wnd.crosschart_window = None
 				assert not any(source is secondary for _, source in inner.sources)
 				assert all(any(source is secondary for _, source in p.sources)
 					for p in wnd.pickers[1:])

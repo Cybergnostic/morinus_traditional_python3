@@ -592,3 +592,22 @@ TEXTS.update({
 TEXTS.update({
     'Domicile witnessing': 'Viđenje sopstvenih sedišta',
 })
+
+# A5 cross-chart aspects and receptions
+TEXTS.update({
+    'Cross-chart aspects': 'Aspekti između karata',
+    'Cross-chart aspects...': 'Aspekti između karata...',
+    'Chart A': 'Karta A',
+    'Chart B': 'Karta B',
+    'Recalculate': 'Preračunaj',
+    'Receptions only': 'Samo recepcije',
+    'Chart A planet': 'Planeta karte A',
+    'Chart B planet': 'Planeta karte B',
+    'B motion vs fixed A': 'Kretanje B prema fiksnoj A',
+    'A receives B': 'A prima B',
+    'B receives A': 'B prima A',
+    'Approaching A': 'Približava se A',
+    'Leaving A': 'Udaljava se od A',
+    'Select two different chart layers': 'Izaberite dva različita sloja karata',
+    '%d cross-chart aspects': '%d aspekata između karata',
+})
