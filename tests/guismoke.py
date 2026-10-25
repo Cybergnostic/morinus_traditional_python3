@@ -357,7 +357,12 @@ def main():
 	frame = morin.MFrame(None, -1, mtexts.txtscommon['ProgramTitle'], opts)
 	frame.Show(True)
 
-	steps = iter(['onLoad', 'comparisonGrid', 'multiWheel', 'onExit'] if '--multiwheel-only' in sys.argv else HANDLERS)
+	if '--a5-points-only' in sys.argv:
+		steps = iter(['onLoad', 'multiWheel', 'aspectsWorkspace', 'onExit'])
+	elif '--multiwheel-only' in sys.argv:
+		steps = iter(['onLoad', 'comparisonGrid', 'multiWheel', 'onExit'])
+	else:
+		steps = iter(HANDLERS)
 	state['n'] = 0
 
 	def settle(secs):
