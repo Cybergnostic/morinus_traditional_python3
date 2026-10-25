@@ -84,7 +84,7 @@ def install(frame):
 
 def on_tab_changed(frame, event):
     event.Skip()
-    if frame.tabs.GetSelection() == 2 and frame.a3_connection_events is None:
+    if frame.tabs.GetSelection() == 4 and frame.a3_connection_events is None:
         wx.CallAfter(analyze_connections, frame)
 
 

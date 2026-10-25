@@ -345,6 +345,46 @@ places. Other multiwheel drawing layers are unchanged.
 Focused tests:
 `python3 -m unittest discover -s tests -p 'test_crosschart_aspects.py' -v`
 
+
+## A5 extension: planetary aspects to ASC, MC and Lots
+
+The **Tables → Aspects** workspace now includes **Angles** and **Lots**
+tabs immediately after planetary Contacts. Angles cover planetary
+aspects to both ASC and MC, regardless of house system; intermediate
+house cusps remain absent for Whole Sign and Equal. The Lots tab
+calculates aspects for configured, visible Lots using each chart's
+existing Lot longitudes. Both tables have aspect/orb/sign information
+without reception, translation, collection or horary-perfection columns.
+The Lots tab can filter by named Lot.
+
+The **Cross-chart aspects...** window within Multi-wheel contains three
+tabs: **Planets**, **Angles** and **Lots**. Chart A/B selectors remain at
+the top. Both planet-to-point directions are computed independently:
+A planet → B ASC/MC/Lot, and B planet → A ASC/MC/Lot. The point rows
+explicitly label their owning chart, and have no spurious receptions or
+cross-epoch motion. The planet filters apply to the planet in the
+respective source chart, not the target point; the Lots tab has a name
+filter. The existing Planets tab remains unchanged.
+
+Point aspects reuse the A1 planet orb, **halved**, with the traditional
+sign-contact and out-of-sign boundary rules. Points have no orb of their
+own. The Legacy preset instead uses half of Morinus's stored planet
+orb. Signs and ayanamsha come from each chart; Lots already stored with
+sidereal correction are not corrected twice. If a Lot is calculated using
+Morinus's **lotsusehouses** whole-sign formula option, only its
+**whole-sign aspect** is reported, with no fictitious degree orb or
+application. Such Lots produce no degree-aspect wheel lines.
+
+In Multi-wheel's **Point aspect lines** row, two independent opt-in
+toggles draw planet-to-ASC/MC and planet-to-Lot lines using the same
+engine, with either **Inner chart only** or **Inner and ring N** selected
+under *Aspects between*. Both directions are drawn in cross-ring mode.
+The toggles are off by default, and PNG exports respect their values.
+A point participates only as the target of a planetary aspect.
+
+Focused tests:
+`python3 -m unittest discover -s tests -p 'test_point_aspects.py' -v`
+
 ## Automatic time zones (birth data)
 
 The Windows build and `install.sh` include what this needs. In **New Chart**

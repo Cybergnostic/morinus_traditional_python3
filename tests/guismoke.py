@@ -465,6 +465,19 @@ def main():
 					assert analysis.summary.GetLabel()
 					analysis.chart_b.SetSelection(1)
 					analysis.refresh()
+					import point_aspects
+					assert analysis.tabs.GetPageCount() == 3
+					assert analysis.angle_table.GetItemCount() == len(
+						point_aspects.analyze_cross(frame.horoscope, secondary,
+						                            "Angles", frame.options))
+					analysis.tabs.SetSelection(1)
+					settle(0.1)
+					assert analysis.summary.GetLabel()
+					analysis.tabs.SetSelection(2)
+					settle(0.1)
+					assert analysis.lot_table.GetItemCount() == len(
+						point_aspects.analyze_cross(frame.horoscope, secondary,
+						                            "Lots", frame.options))
 				finally:
 					analysis.Destroy()
 					wnd.crosschart_window = None
@@ -475,6 +488,15 @@ def main():
 				inner.select_chart(secondary)
 				wnd.redraw()
 				assert wnd.renderer.radix is secondary
+				wnd.aspect_choice.SetSelection(1)
+				wnd.angle_aspect_lines.SetValue(True)
+				wnd.lot_aspect_lines.SetValue(True)
+				wnd.redraw()
+				assert wnd.renderer.show_angle_aspects
+				assert wnd.renderer.show_lot_aspects
+				wnd.angle_aspect_lines.SetValue(False)
+				wnd.lot_aspect_lines.SetValue(False)
+				wnd.aspect_choice.SetSelection(0)
 				assert picker.selected() is secondary
 				inner.select_chart(frame.horoscope)
 				inner.refresh()
@@ -1088,33 +1110,41 @@ def main():
 				finally:
 					fr.Destroy()
 			elif name == 'aspectsWorkspace':
-				# A2/A3/A4: verify six tabs, connection filtering,
+				# A2–A5: verify eight tabs and both new point tables,
 				# the significator event workflow and the house-cusp layout.
 				import aspectsframe, a3_aspects_gui
 				wnd = aspectsframe.AspectsFrame(frame, frame.title, frame.horoscope, frame.options)
 				try:
 					wnd.Show()
-					assert wnd.tabs.GetPageCount() == 6
+					assert wnd.tabs.GetPageCount() == 8
 					assert wnd.contact_page is wnd.tabs.GetPage(0)
-					assert wnd.reception_page is wnd.tabs.GetPage(1)
-					classic = next(w for w in wnd.tabs.GetPage(5).GetChildren()
+					assert wnd.angle_page is wnd.tabs.GetPage(1)
+					assert wnd.lot_page is wnd.tabs.GetPage(2)
+					assert wnd.reception_page is wnd.tabs.GetPage(3)
+					assert wnd.angle_table.GetItemCount() == len(
+						__import__('point_aspects').analyze_single(
+						    wnd.chart, 'Angles', frame.options))
+					assert wnd.lot_table.GetItemCount() == len(
+						__import__('point_aspects').analyze_single(
+						    wnd.chart, 'Lots', frame.options))
+					classic = next(w for w in wnd.tabs.GetPage(7).GetChildren()
 					               if isinstance(w, wx.Window) and
 					               hasattr(w, 'show_house_cusps'))
 					assert classic.show_house_cusps == (frame.horoscope.houses.hsys not in (4, 5))
 					assert classic.COLUMN_NUM == (17 if classic.show_house_cusps else 11)
 					wnd.connection_days.SetValue(1)
-					wnd.tabs.SetSelection(2)
+					wnd.tabs.SetSelection(4)
 					settle(0.4)
 					assert wnd.a3_connection_events is not None
 					assert wnd.a3_connection_days == 1
 					assert all(r.status == 'Verified' for r in
 					    __import__('light_perfection').connections(
 					        wnd.chart, wnd.a3_connection_events))
-					wnd.tabs.SetSelection(3)
+					wnd.tabs.SetSelection(5)
 					wnd.horizon.SetValue(1)
 					a3_aspects_gui.analyze_timeline(wnd)
 					assert wnd.horary_summary.GetLabel()
-					wnd.tabs.SetSelection(4)
+					wnd.tabs.SetSelection(6)
 					settle(0.2)
 					assert wnd.hellenistic_tabs.GetPageCount() == 2
 					assert wnd.aversion_table.GetItemCount() == 12
@@ -1132,7 +1162,7 @@ def main():
 					assert all(PLANETS.index(r.caster) > PLANETS.index(r.target)
 					           for r in rays), 'Caster is not the naturally faster body'
 					wnd.hellenistic_tabs.SetSelection(0)
-					wnd.tabs.SetSelection(5)
+					wnd.tabs.SetSelection(7)
 					settle(0.1)
 					check_clipping(wnd)
 				finally:

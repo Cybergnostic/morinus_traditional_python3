@@ -17,6 +17,7 @@ import chartstyle
 import common
 import comparegrid
 import crosschart_aspects
+import point_aspects
 import houses
 import multiwheel_layout
 import multiwheel_highlight
@@ -79,6 +80,8 @@ class MultiWheel:
         self.options = options
         self.bw = bool(bw)
         self.aspect_ring = -1  # -1 = none; 0 = inner; 1..3 = inner to ring
+        self.show_angle_aspects = False
+        self.show_lot_aspects = False
         self.reference_outside = True  # Exterior reference bands are the default.
         self.hits = []
         self.buffer = None
@@ -204,6 +207,26 @@ class MultiWheel:
             for i, j, kind, a, b in cross_aspects(self.radix, other, self.options):
                 self.stroke(self.point(a, r), self.point(b, r), 'divider',
                             self.options.clraspect[kind])
+        if not self.show_angle_aspects and not self.show_lot_aspects:
+            return
+        for kind, enabled, colour in (
+                ('Angles', self.show_angle_aspects, self.options.clrAscMC),
+                ('Lots', self.show_lot_aspects, self.options.clrLoF)):
+            if not enabled:
+                continue
+            if self.aspect_ring == 0:
+                contacts = point_aspects.analyze_single(
+                    self.radix, kind, self.options)
+            else:
+                contacts = point_aspects.analyze_cross(
+                    self.radix, self.others[self.aspect_ring - 1],
+                    kind, self.options)
+            for item in contacts:
+                if not item.degree_based:
+                    continue  # sign-only Lots have no exact point to draw
+                self.stroke(self.point(item.planet_longitude, r),
+                            self.point(item.point_longitude, r),
+                            'pointer', colour)
 
     def draw_zodiac_guides(self, chrt, inner, outer, ring_index=None):
         """Faint zodiac dividers within this field; house cusps take priority.
@@ -1447,6 +1470,16 @@ class MultiWheelFrame(wx.Frame):
         self.highlight_choice.SetValue(True)
         viewrow.Add(self.highlight_choice, 0, wx.ALIGN_CENTER_VERTICAL)
         outer.Add(viewrow, 0, wx.ALL, 7)
+        pointrow = wx.BoxSizer(wx.HORIZONTAL)
+        pointrow.Add(wx.StaticText(self, label=i18n.tr('Point aspect lines:')),
+                     0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
+        self.angle_aspect_lines = wx.CheckBox(
+            self, label=i18n.tr('Planet–ASC/MC'))
+        self.lot_aspect_lines = wx.CheckBox(
+            self, label=i18n.tr('Planet–Lots'))
+        pointrow.Add(self.angle_aspect_lines, 0, wx.RIGHT, 17)
+        pointrow.Add(self.lot_aspect_lines, 0)
+        outer.Add(pointrow, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
 
         # Splitter lets the user give more room to long chart captions and
         # the return lists. Unlike a fixed-width sizer, the sash stays
@@ -1665,6 +1698,8 @@ class MultiWheelFrame(wx.Frame):
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.labels_choice)
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.reference_choice)
         self.Bind(wx.EVT_CHECKBOX, self.queue_draw, self.highlight_choice)
+        self.Bind(wx.EVT_CHECKBOX, self.queue_draw, self.angle_aspect_lines)
+        self.Bind(wx.EVT_CHECKBOX, self.queue_draw, self.lot_aspect_lines)
         self.Bind(wx.EVT_BUTTON, self.onSaveAsBitmap, self.savebutton)
         self.Bind(wx.EVT_BUTTON, self.open_cross_chart_aspects, self.crosschart_button)
         self.Bind(wx.EVT_BUTTON, self.zoom_fit, self.fit_button)
@@ -2670,6 +2705,8 @@ class MultiWheelFrame(wx.Frame):
                                    (w, h), self.options, self.options.bw)
         self.renderer.aspect_ring = aspect_ring_from_choice(
             self.aspect_choice.GetSelection())
+        self.renderer.show_angle_aspects = self.angle_aspect_lines.GetValue()
+        self.renderer.show_lot_aspects = self.lot_aspect_lines.GetValue()
         self.renderer.label_mode = self.labels_choice.GetSelection()
         self.renderer.reference_outside = bool(self.reference_choice.GetSelection())
         self.renderer.show_highlights = self.highlight_choice.GetValue()
@@ -2753,6 +2790,8 @@ class MultiWheelFrame(wx.Frame):
                                   self.options, self.options.bw)
             exporter.aspect_ring = aspect_ring_from_choice(
                 self.aspect_choice.GetSelection())
+            exporter.show_angle_aspects = self.angle_aspect_lines.GetValue()
+            exporter.show_lot_aspects = self.lot_aspect_lines.GetValue()
             exporter.label_mode = self.labels_choice.GetSelection()
             exporter.reference_outside = bool(self.reference_choice.GetSelection())
             exporter.show_highlights = self.highlight_choice.GetValue()

@@ -43,7 +43,7 @@ def install(frame):
 
 def on_open(frame, event):
     event.Skip()
-    if frame.tabs.GetSelection() != 4:
+    if frame.tabs.GetSelection() != 6:
         return
     if frame.a3_connection_events is None:
         wx.CallAfter(_first_connection_scan, frame)

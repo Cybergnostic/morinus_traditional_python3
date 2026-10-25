@@ -6,6 +6,7 @@ import aspectswnd
 import aspect_workspace
 import a3_aspects_gui
 import a4_aspects_gui
+import point_aspects
 
 
 class AspectsFrame(wx.Frame):
@@ -65,6 +66,20 @@ class AspectsFrame(wx.Frame):
              ("Mutual", 85), ("Guest position", 155)],
             '')
         self.receptions.Bind(wx.EVT_LIST_ITEM_SELECTED, self.onReceptionSelected)
+        self.angle_page = wx.Panel(self.tabs)
+        self.lot_page = wx.Panel(self.tabs)
+        point_cols = [("Planet", 130), ("Aspect", 145), ("Point", 180),
+                      ("Orb", 100), ("Motion", 145), ("Sign relation", 140)]
+        self.angle_table = self._make_table(self.angle_page, point_cols, '')
+        self.lot_table = self._make_table(self.lot_page, point_cols, '')
+        lot_bar = wx.BoxSizer(wx.HORIZONTAL)
+        lot_bar.Add(wx.StaticText(self.lot_page, label=i18n.tr('Lot') + ':'),
+                    0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 7)
+        self.lot_choice = wx.Choice(self.lot_page)
+        self.lot_choice.Append(i18n.tr('All Lots'))
+        self.lot_choice.SetSelection(0)
+        lot_bar.Add(self.lot_choice, 0)
+        self.lot_page.GetSizer().Insert(0, lot_bar, 0, wx.ALL, 9)
 
         old_matrix = aspectswnd.AspectsWnd(classic_page, chrt, options, parent)
         classic_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -78,10 +93,13 @@ class AspectsFrame(wx.Frame):
         a3_aspects_gui.install(self)
         # A4: sign-based configurations, aversions and directional rays.
         a4_aspects_gui.install(self)
+        self.tabs.InsertPage(1, self.angle_page, i18n.tr('Angles'))
+        self.tabs.InsertPage(2, self.lot_page, i18n.tr('Lots'))
         panel.SetSizer(root)
 
         self.planet.Bind(wx.EVT_CHOICE, self.populate)
         self.generosity.Bind(wx.EVT_CHECKBOX, self.populate)
+        self.lot_choice.Bind(wx.EVT_CHOICE, self.populate)
         refresh.Bind(wx.EVT_BUTTON, self.populate)
         copy.Bind(wx.EVT_BUTTON, self.copyTable)
         self.populate()
@@ -116,6 +134,24 @@ class AspectsFrame(wx.Frame):
             and (self.generosity.GetValue() or r.status == "Reception")]
         self.contacts.DeleteAllItems()
         self.receptions.DeleteAllItems()
+        self.angle_table.DeleteAllItems()
+        self.lot_table.DeleteAllItems()
+        lot_names = [p.name for p in point_aspects.lots(self.chart, self.options)]
+        current_lot = (self.lot_choice.GetStringSelection()
+                       if self.lot_choice.GetSelection() > 0 else None)
+        self.lot_choice.Set([i18n.tr('All Lots')] + list(dict.fromkeys(lot_names)))
+        if current_lot in lot_names:
+            self.lot_choice.SetStringSelection(current_lot)
+        else:
+            self.lot_choice.SetSelection(0)
+            current_lot = None
+        for row in point_aspects.analyze_single(
+                self.chart, "Angles", self.options, planet_filter=target):
+            self._point_insert(self.angle_table, row)
+        for row in point_aspects.analyze_single(
+                self.chart, "Lots", self.options, planet_filter=target,
+                point_filter=current_lot):
+            self._point_insert(self.lot_table, row)
         reception_pairs = {}
         for r in self.all_receptions:
             if r.status == "Reception":
@@ -150,6 +186,13 @@ class AspectsFrame(wx.Frame):
         a3_aspects_gui.refresh_connections(self)
         a4_aspects_gui.refresh(self)
 
+    def _point_insert(self, table, row):
+        self._insert(table, (
+            i18n.tr(row.planet), i18n.tr(row.aspect), i18n.tr(row.point),
+            self._degrees(row.deviation) if row.degree_based else "—",
+            i18n.tr(row.motion),
+            i18n.tr("Out of sign" if row.out_of_sign else "By sign")))
+
     @staticmethod
     def _degrees(decimal):
         minutes = round(float(decimal) * 60.0)
@@ -163,26 +206,31 @@ class AspectsFrame(wx.Frame):
             self.SetStatusText(reason) if self.GetStatusBar() else None
 
     def copyTable(self, event):
-        current = self.tabs.GetSelection()
-        if current not in (0, 1, 2, 3, 4):
+        page = self.tabs.GetPage(self.tabs.GetSelection())
+        tables = {
+            self.contact_page: self.contacts,
+            self.angle_page: self.angle_table,
+            self.lot_page: self.lot_table,
+            self.reception_page: self.receptions,
+            self.tabs.GetPage(4): self.connection_table,
+            self.tabs.GetPage(5): self.horary_table,
+        }
+        if page is self.tabs.GetPage(6):
+            table = (self.aversion_table if self.hellenistic_tabs.GetSelection() == 0
+                     else self.ray_table)
+        else:
+            table = tables.get(page)
+        if table is None:
             wx.MessageBox(i18n.tr("Select a table tab to copy."),
                           i18n.tr("Copy table"), wx.OK | wx.ICON_INFORMATION, self)
             return
-        tables = (self.contacts, self.receptions, self.connection_table,
-                  self.horary_table)
-        table = (tables[current] if current < len(tables) else
-                 (self.aversion_table if self.hellenistic_tabs.GetSelection() == 0
-                  else self.ray_table))
-        rows = []
-        for index in range(table.GetItemCount()):
-            rows.append("\t".join(table.GetItemText(index, col)
-                                  for col in range(table.GetColumnCount())))
-        if not rows:
-            return
-        labels = "\t".join(table.GetColumn(col).GetText()
-                           for col in range(table.GetColumnCount()))
+        rows = ["\\t".join(table.GetColumn(i).GetText()
+                          for i in range(table.GetColumnCount()))]
+        for line in range(table.GetItemCount()):
+            rows.append("\\t".join(table.GetItemText(line, i)
+                         for i in range(table.GetColumnCount())))
         if wx.TheClipboard.Open():
             try:
-                wx.TheClipboard.SetData(wx.TextDataObject(labels + "\n" + "\n".join(rows)))
+                wx.TheClipboard.SetData(wx.TextDataObject("\\n".join(rows)))
             finally:
                 wx.TheClipboard.Close()

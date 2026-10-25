@@ -611,3 +611,21 @@ TEXTS.update({
     'Select two different chart layers': 'Izaberite dva različita sloja karata',
     '%d cross-chart aspects': '%d aspekata između karata',
 })
+
+# A5 extension: chart points (Angles and Lots)
+TEXTS.update({
+    'Angles': 'Uglovi',
+    'Lots': 'Tačke',
+    'Lot': 'Tačka',
+    'All Lots': 'Sve tačke',
+    'Planets': 'Planete',
+    'Point': 'Tačka',
+    'Planet': 'Planeta',
+    'Point chart': 'Karta tačke',
+    'Planet chart': 'Karta planete',
+    'Point aspect lines:': 'Aspektne linije ka tačkama:',
+    'Planet–ASC/MC': 'Planeta–ASC/MC',
+    'Planet–Lots': 'Planeta–tačke',
+    '%d angle aspects': '%d aspekata prema uglovima',
+    '%d Lot aspects': '%d aspekata prema tačkama',
+})
