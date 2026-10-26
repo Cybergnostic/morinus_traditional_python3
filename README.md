@@ -73,13 +73,12 @@ Added in this version:
   optional *Repeated natal configurations* search. It finds the same named
   traditional planet pairs forming the same Ptolemaic aspects in both natal
   and solar charts; complete three-planet aspect patterns are listed on their
-  own tab. An adjustable maximum deviation (default 5 degrees, separately
-  enforced in both charts) controls how tight a repetition must be. You can
-  also search repeated zodiac signs and whole-sign houses, or restrict results
-  to the annual profection ruler. No extra aspect marks are drawn on the chart.
-  This is a **geometric pattern search**, not a replacement for the existing
-  aspect-orb settings or the planned traditional aspect engine; the current
-  search does not assess sign-boundary exceptions, reception or application.
+  own tab. A pair repeats when it is configured in both charts by the course
+  rule of Tables → Aspects (the larger planetary orb, three degrees across a
+  sign boundary, each chart's own zodiac); an optional limit narrows the list.
+  You can also search repeated zodiac signs and whole-sign houses, or restrict
+  results to the annual profection ruler. No extra aspect marks are drawn on
+  the chart. Reception and application are not assessed here.
 - **Steppers** (right-click in a chart window) — *Step solar/lunar returns*
   moves to the previous or next return; *Step time* moves transits over the
   natal chart by seconds up to years.
@@ -198,7 +197,7 @@ buffers in the Swiss Ephemeris module.
 ## Tests
 
 ```sh
-python3 tests/refdump.py . /tmp/py3.json                         # with default settings (empty Opts/)
+python3 tests/refdump.py . /tmp/py3.json                         # Morinus 6.2 settings, see below
 python3 tests/refcompare.py tests/reference/se210.json.gz /tmp/py3.json
 python3 tests/check_arp_lots.py parts.arp                        # Solar Fire conversion
 xvfb-run python3 tests/guismoke.py /path/to/copy /tmp/smoke [--variant 1|2|3]
@@ -207,7 +206,10 @@ xvfb-run python3 tests/guismoke.py /path/to/copy /tmp/smoke [--variant 1|2|3]
 `refdump.py` computes a set of charts and dumps every value; `refcompare.py`
 compares them with a reference: `se210.json.gz` is this version's (Swiss
 Ephemeris 2.10), `py2.json.gz` the recovered Python 2 program's, which the port
-matched exactly with Swiss Ephemeris 1.76 (the `clean-port` branch). `guismoke.py` opens a chart and
+matched exactly with Swiss Ephemeris 1.76 (the `clean-port` branch). The dump
+uses the settings of Morinus 6.2 (Placidus houses, the original aspect
+algorithm), whatever the defaults of new configurations and `Opts/` hold, so
+it checks the calculations themselves. `guismoke.py` opens a chart and
 triggers every menu command and popup-menu item (run it on a copy of the
 folder, since it saves options).
 
@@ -223,6 +225,9 @@ contact, station or ingress first invalidates that candidate and suppresses
 it from the table. An absence of a matching perfection within the selected
 horizon also suppresses that candidate rather than claiming success.
 Use **Search days** and **Analyze connections** to rescan 1–180 days.
+As the course teaches, light is translated or collected only between
+planets that cannot connect themselves: two planets that apply to each
+other in the chart meet anyway and are not listed.
 No receptions are required by this initial geometric filter. The Classic
 matrix remains available. Under Whole Sign or Equal houses, the Classic matrix hides
 the six intermediary house-cusp aspect columns; quadrant-like systems keep them.
@@ -280,22 +285,28 @@ In **Tables → Aspects → Hellenistic**, select one of two sub-tabs:
 
 - **Domicile witnessing** lists all seven traditional planets and
   **each of their domiciles** (12 rows total). For every domicile it shows
-  the planet's sign, the whole-sign witnessing relation (co-presence,
-  sextile, square, trine, opposition or aversion), and any mitigation.
-  The status is Witnesses, Averse or Mitigated. The earlier unrelated
-  planet-to-Ascendant and redundant planet-pair aversion rows are removed.
-  An averse planet occupying its *other* domicile is mitigated by common
-  rulership (for example Venus in Libra in relation to Taurus). Other
-  mitigations include antiscia/contra-antiscia sign relationships and
-  **verified** A3 translation/collection through occupants of the domicile.
-  The sign's midpoint is never treated as a real degree-level contact.
-- **Rays & domination** shows **one entry per planetary pair**, judged
-  exclusively from the **naturally faster planet in Chaldean order**
-  (Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon), *not* current
-  instantaneous speed. Dexter/sinister, overcoming, orb and close
-  counter-ray/aktinobolia are judged from that chosen caster's position.
-  Aktinobolia requires the caster to overcome its target, the selected
-  degree aspect to be within 3°, and the caster to be individually applying.
+  the planet's sign and the whole-sign witnessing relation (co-presence,
+  sextile, square, trine, opposition or aversion). Following the course:
+  a planet is **not averse** to its domicile when the two signs are joined
+  by antiscia, contra-antiscia or a common ruler (Venus in Libra and
+  Taurus; the Moon in Gemini or Sagittarius and Cancer). An aversion is
+  **mitigated** by a mediator, a planet that sees both the averse planet
+  and its domicile by a Ptolemaic aspect (sextile, square, trine,
+  opposition; not co-presence, not antiscia) and is neither cadent nor
+  combust, or by **verified** A3 translation/collection with an occupant of
+  the domicile. The status is Witnesses, Not averse, Mitigated or Averse.
+  In a natal chart seeing is enough; horary judgment (which requires the
+  mediator to apply) is left to the astrologer.
+- **Rays & domination** shows **one entry per planetary pair**, cast by
+  the planet that is actually faster in the chart (the course judges
+  dexter and sinister from the faster, applying planet; the natural order
+  only breaks a tie). The *Overcoming* column names the planet in the 9th,
+  10th or 11th sign from the other, whichever of the two it is (Saturn in
+  the 10th from the Moon overcomes the Moon), configured or not; the 10th
+  (square) is the decisive one. *Motion* gives the application or
+  separation of a configured pair. **Aktinobolia**: the faster planet
+  overcomes the slower within 3° of the exact aspect, applying or
+  separating, and is struck by the overcome planet's ray.
 
 Opening Hellenistic uses the same 90-day A3 verified-light search when
 no search has run. Change the horizon under **Connections** and choose

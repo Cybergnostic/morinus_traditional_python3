@@ -31,8 +31,7 @@ def chart(lons, speeds=None, ayan=0, day=True):
 
 def setup(a, b, **kwargs):
     opts = options()
-    base = {'aspect_preset': 'traditional',
-            'aspect_combine': 'larger', 'aspect_boundary': 3.0}
+    base = {'aspect_preset': 'traditional'}
     base.update(kwargs)
     return cross.analyze(a, b, opts, base)
 
@@ -50,20 +49,25 @@ class CrossChartAspectTests(unittest.TestCase):
         one = chart([0] * 7)
         self.assertEqual(setup(one, one), ())
 
-    def test_larger_vs_average_course_orbs(self):
+    def test_larger_orb_of_the_two_planets(self):
+        # Sun (15) and Venus (7) 12 degrees apart: within the Sun's orb.
         a = chart([90, 90, 90, 0, 90, 90, 90])
         b = chart([90, 90, 90, 90, 12, 90, 90])
-        larger = setup(a, b, aspect_combine='larger')
-        average = setup(a, b, aspect_combine='average')
         pred = lambda x: x.first == 'Sun' and x.second == 'Venus'
-        self.assertTrue(any(pred(x) for x in larger))
-        self.assertFalse(any(pred(x) for x in average))
+        self.assertTrue(any(pred(x) for x in setup(a, b)))
+        # Venus (7) and Moon (12) 10 degrees apart: within the Moon's orb.
+        c = chart([90, 90, 90, 90, 90, 90, 10])
+        d = chart([90, 90, 90, 90, 0, 90, 90])
+        self.assertTrue(any(x.first == 'Moon' and x.second == 'Venus'
+                            for x in setup(c, d)))
+        d.planets.planets[4].data[0] = 357  # 13 degrees: beyond both orbs
+        self.assertFalse(any(x.first == 'Moon' and x.second == 'Venus'
+                             for x in setup(c, d)))
 
     def test_custom_planet_orbs_used(self):
         a = chart([90, 90, 90, 0, 90, 90, 90])
         b = chart([90, 90, 90, 90, 12, 90, 90])
-        opts = {'aspect_preset': 'custom', 'aspect_combine': 'larger',
-                'aspect_boundary': 3}
+        opts = {'aspect_preset': 'custom'}
         opts.update({'aspect_custom_' + name.lower(): 5
                      for name in PLANETS})
         result = cross.analyze(a, b, options(), opts)
@@ -71,17 +75,17 @@ class CrossChartAspectTests(unittest.TestCase):
                              for r in result))
         self.assertEqual(len(COURSE_ORBS), 7)
 
-    def test_strict_vs_3_degree_out_of_sign(self):
+    def test_three_degree_rule_out_of_sign(self):
         a = chart([359] + [80] * 6)
         b = chart([80, 80, 1] + [80] * 4)
-        permitted = setup(a, b, aspect_boundary=3)
-        strict = setup(a, b, aspect_boundary=0)
         def pair(rows):
             return [r for r in rows
                     if r.first == 'Saturn' and r.second == 'Mars']
+        permitted = setup(a, b)
         self.assertEqual(len(pair(permitted)), 1)
         self.assertTrue(pair(permitted)[0].out_of_sign)
-        self.assertFalse(pair(strict))
+        b.planets.planets[2].data[0] = 3  # 4 degrees across the boundary
+        self.assertFalse(pair(setup(a, b)))
 
     def test_chart_order_is_not_collapsed(self):
         a = chart([0] + [70] * 6)
@@ -135,8 +139,7 @@ class CrossChartAspectTests(unittest.TestCase):
     def test_planet_filters_independent(self):
         a, b = chart([0] * 7), chart([0] * 7)
         rows = cross.analyze(a, b, options(), {
-            'aspect_preset': 'traditional', 'aspect_combine': 'larger',
-            'aspect_boundary': 3}, only_first='Sun', only_second='Moon')
+            'aspect_preset': 'traditional'}, only_first='Sun', only_second='Moon')
         self.assertEqual(len(rows), 1)
         self.assertEqual((rows[0].first, rows[0].second), ('Sun','Moon'))
 
@@ -146,8 +149,7 @@ class CrossChartAspectTests(unittest.TestCase):
         a = chart([350] + [90] * 6, ayan=20)
         b = chart([330] + [90] * 6, ayan=0)
         rows = cross.analyze(a, b, opts, {
-            'aspect_preset': 'traditional', 'aspect_combine': 'larger',
-            'aspect_boundary': 3}, only_first='Saturn', only_second='Saturn')
+            'aspect_preset': 'traditional'}, only_first='Saturn', only_second='Saturn')
         self.assertEqual(len(rows), 1)
         self.assertAlmostEqual(rows[0].a_longitude, 330)
         self.assertAlmostEqual(rows[0].b_longitude, 330)

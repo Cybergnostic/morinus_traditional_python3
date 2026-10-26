@@ -1,6 +1,7 @@
 """A5 cross-chart planetary, angle and Lot comparison tables."""
 import wx
 import i18n
+import chart
 import crosschart_aspects
 import point_aspects
 from traditional_aspects import PLANETS
@@ -227,12 +228,17 @@ class CrossChartFrame(wx.Frame):
             only_first=only_first, only_second=only_second)
         if self.only_receptions.GetValue():
             rows = [r for r in rows if r.a_receives_b or r.b_receives_a]
+        # Only a chart that moves through time (transits, directions,
+        # elections) approaches or leaves the other; a natal, a return or a
+        # horary chart is a fixed moment, so its planets' speed says nothing.
+        moving = getattr(second, 'htype', None) == chart.Chart.TRANSIT
         for r in rows:
             self._add_row(self.table, (
                 i18n.tr(r.first), i18n.tr(r.aspect), i18n.tr(r.second),
                 self._orb(r.deviation),
                 i18n.tr('Out of sign' if r.out_of_sign else 'By sign'),
-                i18n.tr(r.motion_b), self._dignities(r.a_receives_b),
+                i18n.tr(r.motion_b) if moving else '—',
+                self._dignities(r.a_receives_b),
                 self._dignities(r.b_receives_a)))
 
         for kind, table in (('Angles', self.angle_table), ('Lots', self.lot_table)):

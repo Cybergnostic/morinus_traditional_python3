@@ -1,7 +1,7 @@
 """On-demand repeated natal configurations in a solar return.
 
-No chart overlays are changed. This viewer deliberately uses a geometric
-threshold independent of Morinus's legacy, user-configurable aspect orbs.
+No chart overlays are changed. Aspects are configured as in Tables > Aspects
+(the course orbs); an optional limit narrows the list.
 """
 
 import chart
@@ -11,6 +11,8 @@ import i18n
 import planets
 import repeatedconfigs
 import returnslist
+import tradoptions
+import traditional_aspects
 import wx
 
 
@@ -59,9 +61,9 @@ class RepeatedConfigsFrame(wx.Frame):
             'Find the same named planets forming the same aspect in both natal and solar charts.'))
         description.Wrap(940)
         controls = wx.BoxSizer(wx.HORIZONTAL)
-        controls.Add(wx.StaticText(panel, label=i18n.tr('Maximum deviation from exact aspect (degrees):')),
+        controls.Add(wx.StaticText(panel, label=i18n.tr('Only closer than (degrees, optional):')),
                      0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 7)
-        self.deviation = wx.TextCtrl(panel, value='5', size=(62, -1))
+        self.deviation = wx.TextCtrl(panel, value='', size=(62, -1))
         controls.Add(self.deviation, 0, wx.RIGHT, 14)
         self.placements = wx.CheckBox(panel, label=i18n.tr('Include repeated signs and whole-sign houses'))
         controls.Add(self.placements, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 12)
@@ -93,8 +95,9 @@ class RepeatedConfigsFrame(wx.Frame):
 
         self.summary = wx.StaticText(panel, label='')
         note = wx.StaticText(panel, label=i18n.tr(
-            'Geometric search only: the limit applies separately to both charts; '
-            'traditional orb and out-of-sign rules will be shared with the future aspect engine.'))
+            'Aspects as in Tables > Aspects, in both charts: within the larger '
+            'planetary orb, and across a sign boundary only within three degrees. '
+            'The optional limit applies to both charts.'))
         note.Wrap(940)
 
         layout = wx.BoxSizer(wx.VERTICAL)
@@ -109,7 +112,10 @@ class RepeatedConfigsFrame(wx.Frame):
 
     def onSearch(self, event):
         try:
-            tolerance = float(self.deviation.GetValue().replace(',', '.'))
+            text = self.deviation.GetValue().strip().replace(',', '.')
+            tolerance = float(text) if text else None
+            orbs = dict(zip(repeatedconfigs.PLANETS,
+                            traditional_aspects.doctrinal_orbs(tradoptions.values())))
             result = repeatedconfigs.search(
                 chart_longitudes(self.radix), chart_longitudes(self.solar),
                 max_deviation=tolerance, year_lord=self.year_lord,
@@ -119,6 +125,7 @@ class RepeatedConfigsFrame(wx.Frame):
                 solar_asc=self.solar.houses.ascmc[houses.Houses.ASC],
                 natal_ayanamsha=(self.radix.ayanamsha if self.radix.options.ayanamsha else 0.0),
                 solar_ayanamsha=(self.solar.ayanamsha if self.solar.options.ayanamsha else 0.0),
+                orbs=orbs,
             )
         except (ValueError, OverflowError) as exc:
             wx.MessageBox(str(exc), i18n.tr('Repeated natal configurations'),

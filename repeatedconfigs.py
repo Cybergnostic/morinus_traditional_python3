@@ -1,12 +1,13 @@
 """Search for repeated natal configurations in a solar return.
 
-This is a deliberately *on-demand* geometric comparison, not a replacement
-for Morinus's aspect engine. The maximum distance from exactness is explicitly
-set by the person searching. Future traditional aspect presets can be shared
-with this search without changing its reporting/UI code.
+Course doctrine (solar revolutions): repetitions are significant - the same
+aspects between planets, returns to natal places and the same house
+positions. An aspect repeats when the same two planets are CONFIGURED in the
+same aspect in both charts by the course rule of Tables > Aspects (the larger
+planetary orb, the three-degree rule across sign boundaries, the signs of
+each chart's own zodiac). An optional limit only narrows that down.
 
 Only the seven visible planets and five Ptolemaic aspects are considered.
-Pairs must contain the SAME named planets and the SAME aspect in both charts.
 Three-planet groups require every one of their three pairwise aspects to recur.
 """
 
@@ -14,6 +15,8 @@ from dataclasses import dataclass
 from itertools import combinations
 from math import isfinite
 from typing import Mapping
+
+import traditional_aspects
 
 
 PLANETS = ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')
@@ -54,12 +57,20 @@ class SearchResults:
     placements: tuple[RepeatedPlacement, ...]
 
 
-def aspect_between(longitude_a: float, longitude_b: float, max_deviation: float):
-    """Return (aspect name, actual orb) if within a geometric threshold."""
-    distance = abs((longitude_b - longitude_a + 180.0) % 360.0 - 180.0)
-    name, angle = min(ASPECTS, key=lambda a: abs(distance - a[1]))
-    orb = abs(distance - angle)
-    return (name, orb) if orb <= max_deviation else None
+COURSE_ORBS = dict(zip(PLANETS, traditional_aspects.COURSE_ORBS))
+
+
+def configured(longitude_a: float, longitude_b: float, orb_a: float,
+               orb_b: float, shift: float = 0.0):
+    """(aspect name, deviation) when the two planets are configured, else None.
+
+    shift is the chart's ayanamsha: sign relations follow its zodiac.
+    """
+    contact = traditional_aspects.evaluate(
+        longitude_a - shift, longitude_b - shift, 0.0, 0.0, orb_a, orb_b)
+    if contact is None:
+        return None
+    return ASPECTS[contact.index][0], contact.deviation
 
 
 def _validate(longitudes, label):
@@ -76,21 +87,30 @@ def _sign(lon, shift=0.0):
 
 def search(
     natal: Mapping[str, float], solar: Mapping[str, float],
-    max_deviation: float = 5.0, year_lord: str | None = None,
+    max_deviation: float | None = None, year_lord: str | None = None,
     include_placements: bool = False, annual_only: bool = False,
     natal_asc: float | None = None, solar_asc: float | None = None,
     natal_ayanamsha: float = 0.0, solar_ayanamsha: float = 0.0,
+    orbs: Mapping[str, float] | None = None,
 ) -> SearchResults:
-    """Find repeated geometric aspects, complete triples and optional placements.
+    """Find repeated configured aspects, complete triples and placements.
 
-    Orb is the deviation from exact aspect in *each* chart separately; it is
-    not the sum/average of planetary moieties. Neither applying/separating nor
-    cross-chart aspects are inferred from this comparison.
+    orbs: planet name -> orb (the course orbs by default). max_deviation,
+    if given, additionally requires both charts' deviations from exactness
+    to be no larger. Neither applying/separating nor cross-chart aspects are
+    inferred from this comparison.
     """
     _validate(natal, 'natal')
     _validate(solar, 'solar')
-    if not isfinite(max_deviation) or not 0.0 < max_deviation <= 10.0:
-        raise ValueError('Maximum deviation must be greater than 0 and at most 10 degrees')
+    orbs = dict(COURSE_ORBS if orbs is None else orbs)
+    if set(orbs) != set(PLANETS) or not all(
+            isfinite(orbs[p]) and orbs[p] >= 0 for p in PLANETS):
+        raise ValueError('An orb is required for each of the seven planets')
+    if max_deviation is not None and (
+            not isfinite(max_deviation) or not 0.0 < max_deviation <= 15.0):
+        raise ValueError('Maximum deviation must be greater than 0 and at most 15 degrees')
+    if not all(isfinite(value) for value in (natal_ayanamsha, solar_ayanamsha)):
+        raise ValueError('Ascendants and ayanamshas must be finite')
     if year_lord is not None and year_lord not in PLANETS:
         raise ValueError('Unknown traditional ruler of the year')
     if annual_only and year_lord is None:
@@ -100,8 +120,11 @@ def search(
     # with the annual lord still requires its other two planets' mutual aspect.
     repeated = {}
     for p, q in combinations(PLANETS, 2):
-        na = aspect_between(natal[p], natal[q], max_deviation)
-        sa = aspect_between(solar[p], solar[q], max_deviation)
+        na = configured(natal[p], natal[q], orbs[p], orbs[q], natal_ayanamsha)
+        sa = configured(solar[p], solar[q], orbs[p], orbs[q], solar_ayanamsha)
+        if max_deviation is not None and None not in (na, sa) and (
+                na[1] > max_deviation + 1e-10 or sa[1] > max_deviation + 1e-10):
+            continue
         if na is not None and sa is not None and na[0] == sa[0]:
             repeated[(p, q)] = RepeatedAspect(
                 (p, q), na[0], na[1], sa[1], year_lord in (p, q),

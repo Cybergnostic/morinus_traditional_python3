@@ -341,7 +341,9 @@ class Options:
         self.def_fixedstarsorb = self.fixedstarsorb = 3.0
         self.def_zodprof = self.zodprof = True
         self.def_usezodprojsprof = self.usezodprojsprof = False
-        self.def_isfirbonatti = self.isfirbonatti = True
+        # New configurations use the course order of the nocturnal firdaria
+        # (the nodes after all the planets); load() keeps a saved choice.
+        self.def_isfirbonatti = self.isfirbonatti = False
         self.def_deflocname = self.deflocname = ''
         self.def_deflocplus = self.deflocplus = True
         self.def_defloczhour = self.defloczhour = 0

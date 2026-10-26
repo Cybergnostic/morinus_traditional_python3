@@ -390,7 +390,8 @@ TEXTS.update({
 	'Planet': 'Planeta', 'Repeated placement': 'Ponovljeni položaj',
 	'Sign / house': 'Znak / kuća', 'Sign': 'Znak', 'Whole-sign house': 'Kuća po celim znakovima',
 	'%d repeated aspects, %d three-planet groups, %d repeated placements': '%d ponovljenih aspekata, %d grupa od tri planete, %d ponovljenih položaja',
-	'Geometric search only: the limit applies separately to both charts; traditional orb and out-of-sign rules will be shared with the future aspect engine.': 'Geometrijska pretraga: granica važi posebno za obe karte; tradicionalni orbisi i pravila za aspekte preko granice znaka biće povezani sa budućim sistemom aspekata.',
+	'Aspects as in Tables > Aspects, in both charts: within the larger planetary orb, and across a sign boundary only within three degrees. The optional limit applies to both charts.': 'Aspekti kao u Tabele > Aspekti, u obe karte: u okviru većeg planetarnog orbisa, a preko granice znaka samo do tri stepena. Neobavezna granica važi za obe karte.',
+	'Only closer than (degrees, optional):': 'Samo bliže od (stepeni, neobavezno):',
 })
 
 # Traditional aspect engine and its settings
@@ -401,21 +402,13 @@ TEXTS.update({
     'Traditional (course)': 'Tradicionalni (kurs)',
     'Legacy Morinus': 'Izvorni Morinus',
     'Custom planetary orbs': 'Posebni planetarni orbisi',
-    'Combine planetary orbs': 'Kombinovanje planetarnih orbisa',
-    'Larger of the two': 'Veći od dva orbisa',
-    'Average of the two': 'Prosek dva orbisa',
-    'Out-of-sign allowance (degrees)': 'Dozvola preko granice znaka (stepeni)',
     'Custom planetary orbs': 'Posebni planetarni orbisi',
     'Saturn orb': 'Saturnov orbis', 'Jupiter orb': 'Jupiterov orbis',
     'Mars orb': 'Marsov orbis', 'Sun orb': 'Sunčev orbis',
     'Venus orb': 'Venerin orbis', 'Mercury orb': 'Merkurov orbis',
     'Moon orb': 'Lunin orbis',
-    'Traditional uses the course planetary orbs; Legacy retains the original Morinus aspect algorithm. Custom uses the values below.':
-        'Tradicionalni koristi orbise iz kursa; izvorni Morinus zadržava stara pravila; posebno koristi vrednosti ispod.',
-    'Maximum separation from exactness: use the larger planetary orb or the average. Legacy keeps its old averaging.':
-        'Najveće odstupanje od egzaktnosti: veći orbis ili prosek. Izvorni Morinus zadržava stari prosek.',
-    'Allow degree aspects not matching their whole-sign configuration within this many degrees of exactness; 0 means strict sign boundaries.':
-        'Dozvoli aspekte po stepenu koji nisu u skladu s odnosom znakova do zadatog odstupanja; 0 znači stroge granice znakova.',
+    'Traditional uses the course planetary orbs and Custom the values below; two planets are configured within the larger of their two orbs, and across a sign boundary only within three degrees. Legacy retains the original Morinus aspect algorithm.':
+        'Tradicionalni koristi orbise iz kursa, a posebni vrednosti ispod; dve planete su konfigurisane u okviru većeg od njihova dva orbisa, a preko granice znaka samo do tri stepena. Izvorni Morinus zadržava stara pravila.',
     'Used only with the Custom planetary orbs preset.':
         'Koristi se samo ako su izabrani posebni planetarni orbisi.',
 })
@@ -567,6 +560,7 @@ TEXTS.update({
     'Planet pair': 'Par planeta', 'Ruler to domicile': 'Vladar prema sedištu',
     'Ascendant': 'Ascendent', 'Averse': 'Averzija',
     'Mitigated': 'Ublažena', 'Common domicile ruler': 'Zajednički vladar sedišta',
+    'Not averse': 'Bez averzije',
     'Antiscia': 'Antiscija', 'Contra-antiscia': 'Kontraantiscija',
     'sign': 'znak', 'degree': 'stepen',
     'via': 'preko',

@@ -15,12 +15,16 @@ def position_provider(chart):
     options = chart.options
     flags = astrology.SEFLG_SWIEPH | astrology.SEFLG_SPEED
     if options.topocentric:
-        astrology.swe_set_topo(chart.place.lon, chart.place.lat,
-                               chart.place.altitude)
         flags |= astrology.SEFLG_TOPOCTR
-    if options.ayanamsha != 0:
-        astrology.swe_set_sid_mode(options.ayanamsha - 1, 0, 0)
     def positions(jd):
+        # The Swiss Ephemeris settings are global and every Chart() resets
+        # them (swe_close), so set them again for each call: a chart built
+        # between two calls must not change the ayanamsha or observer.
+        if options.topocentric:
+            astrology.swe_set_topo(chart.place.lon, chart.place.lat,
+                                   chart.place.altitude)
+        if options.ayanamsha != 0:
+            astrology.swe_set_sid_mode(options.ayanamsha - 1, 0, 0)
         # Apply a fresh ayanamsha for each step rather than holding the chart
         # epoch's offset constant. All seven planets share the same correction.
         shift = astrology.swe_get_ayanamsa_ut(jd) if options.ayanamsha != 0 else 0.0

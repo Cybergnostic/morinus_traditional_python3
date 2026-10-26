@@ -343,16 +343,19 @@ class Chart:
         if settings['aspect_preset'] == 'legacy':
             return
         orbs = traditional_aspects.configured_orbs(settings)
+        # Whole-sign relations depend on the zodiac: planet longitudes are
+        # tropical here, so sidereal charts are judged by their sidereal signs.
+        shift = self.ayanamsha if self.options.ayanamsha != 0 else 0.0
         for i in range(planets.Planets.PLANETS_NUM):
             for j in range(i):
                 a = self.planets.planets[i]
                 b = self.planets.planets[j]
                 cell = self.aspmatrix[i][j]
                 found = traditional_aspects.evaluate(
-                    a.data[planets.Planet.LON], b.data[planets.Planet.LON],
+                    a.data[planets.Planet.LON] - shift,
+                    b.data[planets.Planet.LON] - shift,
                     a.data[planets.Planet.SPLON], b.data[planets.Planet.SPLON],
-                    orbs[i], orbs[j], settings['aspect_combine'],
-                    settings['aspect_boundary'])
+                    orbs[i], orbs[j])
                 cell.dif = traditional_aspects.angular_distance(
                     a.data[planets.Planet.LON], b.data[planets.Planet.LON])
                 cell.typ = found.index if found is not None else Chart.NONE

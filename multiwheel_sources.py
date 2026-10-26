@@ -96,6 +96,18 @@ CREATE_GROUPS = (
 )
 
 
+def keep_selected(sources, selected, label):
+    """Append the current selection if it is no longer among the sources.
+
+    Only real charts (objects with an htype) are kept; a lazy recent-file
+    entry or nothing at all is not.
+    """
+    if (selected is None or not hasattr(selected, 'htype') or
+            any(chrt is selected for _, chrt in sources)):
+        return list(sources)
+    return list(sources) + [(label, selected)]
+
+
 def merge_chart_sources(active, open_charts, retained):
     """Return selectable (label, chart) pairs, once per chart object.
 

@@ -27,6 +27,7 @@ import multiwheel_sources
 import multiwheel_time
 import wheel_primitives
 import planets
+import radixlend
 import returnslist
 import util
 
@@ -1271,6 +1272,11 @@ class RingChartPicker(comparegrid.ChartPicker):
         else:
             sources = multiwheel_sources.merge_chart_sources(
                 self.mainfr.horoscope, opened, self.owner.registered_charts)
+        # Closing the window a selected chart came from must not change this
+        # ring (for the centre, that would also recast every SR/LR/transit
+        # for another person). It stays listed while it remains selected.
+        sources = multiwheel_sources.keep_selected(
+            sources, previous, i18n.tr('Open'))
         self.sources = [(self.chart_caption(label, chrt), chrt)
                         for label, chrt in sources]
         self.choice.Clear()
@@ -1369,23 +1375,30 @@ class RingChartPicker(comparegrid.ChartPicker):
             returns = {
                 'saturn': 0, 'jupiter': 1, 'mars': 2, 'solar': 3,
                 'venus': 4, 'mercury': 5, 'lunar': 6}
-            if action in returns:
-                self.mainfr.onRevolutions(None, planet=returns[action])
-            else:
-                methods = {
-                    'transits': 'onTransits',
-                    'sun_transits': 'onSunTransits',
-                    'secondary': 'onSecondaryDirs',
-                    'profections': 'onProfectionsChart',
-                    'elections': 'onElections',
-                    'syzygy': 'onSyzygyChart',
-                    'syzygy_other': 'onSyzygyChart2',
-                    'synastry': 'onSynastry',
-                }
-                getattr(self.mainfr, methods[action])(None)
+            methods = {
+                'transits': 'onTransits',
+                'sun_transits': 'onSunTransits',
+                'secondary': 'onSecondaryDirs',
+                'profections': 'onProfectionsChart',
+                'elections': 'onElections',
+                'syzygy': 'onSyzygyChart',
+                'syzygy_other': 'onSyzygyChart2',
+                'synastry': 'onSynastry',
+            }
+            # Returns, transits etc. of an outer ring belong to the natal
+            # chart in the centre, not to the chart of the main window.
+            with radixlend.lend(self.mainfr, self.owner.creation_radix(self)):
+                if action in returns:
+                    self.mainfr.onRevolutions(None, planet=returns[action])
+                else:
+                    getattr(self.mainfr, methods[action])(None)
             created = [w for w in wx.GetTopLevelWindows()
                        if id(w) not in before and not w.IsBeingDeleted()
                        and isinstance(getattr(w, 'chart', None), chart.Chart)]
+            # Elections also open a stepper dialog whose .chart is the radix:
+            # the new chart is the one shown in a chart frame.
+            frames = [w for w in created if not isinstance(w, wx.Dialog)]
+            created = frames or created
             chrt = created[-1].chart if created else None
             radix = getattr(created[-1], 'radix', None) if created else None
         if chrt is not None:
@@ -1422,6 +1435,8 @@ class MultiWheelFrame(wx.Frame):
         self.manual_rings = set()
         self.auto_transit_radix = {}
         self.moving_transits = set()
+        # Returns made by SR/LR navigation and auto-filling (not by the user).
+        self.generated_returns = set()
         self._auto_filling = False
         self.registered_charts = []
         self.opened_paths = set()
@@ -2120,7 +2135,7 @@ class MultiWheelFrame(wx.Frame):
             try:
                 new_solar = returnslist.return_chart(
                     t, radix, chart.Chart.SOLAR, radix.place)
-                self.register_chart(new_solar, i18n.tr('Solar return'),
+                self.register_generated(new_solar, i18n.tr('Solar return'),
                                     self.pickers[1], radix=radix,
                                     solar_year=year)
             finally:
@@ -2146,7 +2161,7 @@ class MultiWheelFrame(wx.Frame):
                             abs(current.time.jd - expected) < .02):
                         lunar = returnslist.return_chart(
                             rows[1].t, radix, chart.Chart.LUNAR, radix.place)
-                        self.register_chart(lunar, i18n.tr('Lunar return'),
+                        self.register_generated(lunar, i18n.tr('Lunar return'),
                                             self.pickers[2], radix=radix)
             if (count >= 3 and 3 not in self.manual_rings
                     and self.auto_transit_radix.get(3) is not radix):
@@ -2260,6 +2275,47 @@ class MultiWheelFrame(wx.Frame):
             self.refresh_return_navigation()
             self.queue_draw()
 
+    def creation_radix(self, picker):
+        """The natal a ring's Create-chart commands are computed for.
+
+        Outer rings use the natal in the centre; the centre itself (or a
+        non-natal centre) keeps the main window's chart, as before.
+        """
+        centre = self.pickers[0].selected()
+        if (picker.ring_index != 0 and isinstance(centre, chart.Chart)
+                and centre.htype == chart.Chart.RADIX):
+            return centre
+        return self.mainfr.horoscope
+
+    def register_generated(self, chrt, label, picker, **kwargs):
+        """register_chart() for a return made by navigation or auto-filling.
+
+        Such a chart is forgotten again once no ring shows it, so stepping
+        through returns does not keep adding entries to every ring's menu.
+        Charts the user created or loaded are never forgotten.
+        """
+        replaced = picker.selected()
+        self.generated_returns.add(chrt)
+        self.register_chart(chrt, label, picker, **kwargs)
+        self.forget_generated(replaced)
+
+    def forget_generated(self, old):
+        if (old not in self.generated_returns or
+                any(p.selected() is old for p in self.pickers)):
+            return
+        self.generated_returns.discard(old)
+        self.registered_charts = [entry for entry in self.registered_charts
+                                  if entry[1] is not old]
+        for table in (self.return_origins, self.return_years, self.lunar_years):
+            table.pop(old, None)
+        previous = self._updating_returns
+        self._updating_returns = True
+        try:
+            for picker in self.pickers:
+                picker.refresh()
+        finally:
+            self._updating_returns = previous
+
     def return_origin(self, chrt):
         """Only documented natal provenance can link two returns.
 
@@ -2292,7 +2348,9 @@ class MultiWheelFrame(wx.Frame):
         This is an explicit change of the *inner* chart, not the ordinary
         SR/LR stepper. Recompute all currently selected derived ring types,
         even if they were selected manually. Unrelated chart types are left
-        untouched. Preserve each SR year and each transit's civil timestamp.
+        untouched. Preserve each SR year, each LR's place in its solar year,
+        each transit's civil timestamp and a transit's chosen place. Returns
+        are cast for the new natal's birthplace.
         Do not rename or mutate charts in independently opened windows.
         """
         # Auto-rebase is strictly natal-to-natal. An arbitrary chart may
@@ -2312,7 +2370,8 @@ class MultiWheelFrame(wx.Frame):
         if not dependents:
             return False
 
-        assignments = self.ring_assignments()
+        # Every picker is rebased, including rings hidden by the ring count.
+        assignments = self.ring_assignments(len(self.pickers))
         solar_years = {i: self.solar_year(old)
                        for i, old in dependents
                        if old.htype == chart.Chart.SOLAR}
@@ -2330,6 +2389,15 @@ class MultiWheelFrame(wx.Frame):
         # display a clear error instead of partially relabelling the wheel.
         rows_by_year = {}
         replacements = []
+
+        def place_for(old):
+            # Course doctrine: a solar return is cast only for the place of
+            # birth (lunar returns likewise). A transit cast for a chosen
+            # place (where one lives) keeps it.
+            if old.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR):
+                return radix.place
+            return multiwheel_returnnav.rebased_place(
+                old.place, previous_radix.place, radix.place)
         try:
             for year in set(lunar_years.values()):
                 rows = self.return_rows(radix, year)
@@ -2344,22 +2412,29 @@ class MultiWheelFrame(wx.Frame):
                     if t is None:
                         raise ValueError('Cannot calculate solar return for %s' % year)
                     new = returnslist.return_chart(
-                        t, radix, chart.Chart.SOLAR, radix.place)
+                        t, radix, chart.Chart.SOLAR, place_for(old))
                     replacements.append((i, old, new, i18n.tr('Solar return'), year))
                 elif old.htype == chart.Chart.LUNAR:
                     year = lunar_years[i]
+                    # Keep the lunar month: the 5th lunar return of the old
+                    # natal's year becomes the 5th of the new natal's year.
+                    origin = self.return_origin(old)
+                    old_rows = (self.return_rows(origin, year)[1:]
+                                if origin is not None else [])
+                    row = multiwheel_returnnav.corresponding_return(
+                        old_rows, old.time.jd, rows_by_year[year][1:])
                     new = returnslist.return_chart(
-                        rows_by_year[year][1].t, radix, chart.Chart.LUNAR,
-                        radix.place)
+                        row.t, radix, chart.Chart.LUNAR, place_for(old))
                     replacements.append((i, old, new, i18n.tr('Lunar return'), None))
                 else:
                     t = old.time
+                    place = place_for(old)
                     instant = chart.Time(
                         t.origyear, t.origmonth, t.origday,
                         t.hour, t.minute, t.second, t.bc, t.cal, t.zt,
-                        t.plus, t.zh, t.zm, t.daylightsaving, radix.place)
+                        t.plus, t.zh, t.zm, t.daylightsaving, place)
                     new = chart.Chart(
-                        radix.name, radix.male, instant, radix.place,
+                        radix.name, radix.male, instant, place,
                         chart.Chart.TRANSIT, '', self.options, False)
                     replacements.append((i, old, new, i18n.tr('Transits'), None))
         except (ValueError, OverflowError, RuntimeError) as exc:
@@ -2373,7 +2448,10 @@ class MultiWheelFrame(wx.Frame):
         self._auto_filling = True
         try:
             for i, old, new, label, year in replacements:
-                self.register_chart(
+                register = (self.register_generated if new.htype in (
+                    chart.Chart.SOLAR, chart.Chart.LUNAR)
+                    else self.register_chart)
+                register(
                     new, label, self.pickers[i],
                     radix=radix if new.htype in (
                         chart.Chart.SOLAR, chart.Chart.LUNAR) else None,
@@ -2417,8 +2495,9 @@ class MultiWheelFrame(wx.Frame):
                 self.maybe_autofill_rings()
             self.refresh_return_navigation()
 
-    def ring_assignments(self):
-        count = self.count_choice.GetSelection() + 2  # centre + outer fields
+    def ring_assignments(self, count=None):
+        if count is None:
+            count = self.count_choice.GetSelection() + 2  # centre + outer fields
         out = []
         for picker in self.pickers[:count]:
             selected = picker.selected()
@@ -2510,16 +2589,15 @@ class MultiWheelFrame(wx.Frame):
         self._updating_returns = True
         try:
             new_solar = returnslist.return_chart(
-                solar_t, radix, chart.Chart.SOLAR, solar.place)
-            self.register_chart(new_solar, i18n.tr('Solar return'),
+                solar_t, radix, chart.Chart.SOLAR, radix.place)
+            self.register_generated(new_solar, i18n.tr('Solar return'),
                                 self.pickers[ring_index], radix=radix,
                                 solar_year=year)
             for index in linked:
-                old_lunar = self.pickers[index].selected()
                 row = overrides.get(index, rows[1])
                 new_lunar = returnslist.return_chart(
-                    row.t, radix, chart.Chart.LUNAR, old_lunar.place)
-                self.register_chart(new_lunar, i18n.tr('Lunar return'),
+                    row.t, radix, chart.Chart.LUNAR, radix.place)
+                self.register_generated(new_lunar, i18n.tr('Lunar return'),
                                     self.pickers[index], radix=radix)
         finally:
             self._updating_returns = prior
@@ -2533,8 +2611,8 @@ class MultiWheelFrame(wx.Frame):
         if old.htype != chart.Chart.LUNAR or self.return_origin(old) is not radix:
             return False
         new_lunar = returnslist.return_chart(
-            row.t, radix, chart.Chart.LUNAR, old.place)
-        self.register_chart(new_lunar, i18n.tr('Lunar return'),
+            row.t, radix, chart.Chart.LUNAR, radix.place)
+        self.register_generated(new_lunar, i18n.tr('Lunar return'),
                             self.pickers[ring_index], radix=radix)
         return True
 
@@ -2556,9 +2634,10 @@ class MultiWheelFrame(wx.Frame):
         if solar_index is None:
             # For an unrelated or standalone lunar ring, no other chart is
             # changed. Morinus's ordinary return stepper already handles it.
-            new_lunar = returnslist.step_return(radix, selected, forward)
+            new_lunar = returnslist.step_return(radix, selected, forward,
+                                                radix.place)
             if new_lunar is not None:
-                self.register_chart(new_lunar, i18n.tr('Lunar return'),
+                self.register_generated(new_lunar, i18n.tr('Lunar return'),
                                     self.pickers[ring_index], radix=radix)
             else:
                 self.SetStatusText(i18n.tr('The next return could not be computed.'))

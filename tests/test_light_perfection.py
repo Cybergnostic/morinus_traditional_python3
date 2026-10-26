@@ -29,6 +29,28 @@ class LightTests(unittest.TestCase):
             r.actor == 'Moon' and r.source == 'Mars' and
             r.target == 'Venus' for r in rows))
 
+    def test_no_translation_between_planets_that_apply_to_each_other(self):
+        # Mars (8) applies to Venus (15) by itself: they meet anyway, so the
+        # Moon translates nothing (course: only planets that cannot connect).
+        ch = fixture([100, 140, 8, 200, 15, 270, 10],
+                     [0, 0, .3, 1, .2, 1, 13],
+                     [(6, 2, 0), (6, 4, 0), (2, 4, 0)])
+        self.assertFalse(any(r.kind == 'Translation' and r.actor == 'Moon'
+                             for r in connections(ch)))
+        # Separating from each other, they cannot connect: translation.
+        ch = fixture([100, 140, 8, 200, 15, 270, 10],
+                     [0, 0, .1, 1, .2, 1, 13],
+                     [(6, 2, 0), (6, 4, 0), (2, 4, 0)])
+        self.assertTrue(any(r.kind == 'Translation' and r.actor == 'Moon'
+                            for r in connections(ch)))
+
+    def test_no_collection_of_planets_that_apply_to_each_other(self):
+        # The Moon (9) applies to Venus (10) itself: no collection by Saturn.
+        ch = fixture([12, 100, 160, 200, 10, 290, 9],
+                     [.1, 0, 0, 1, 1, 0, 13],
+                     [(0, 4, 0), (0, 6, 0), (4, 6, 0)])
+        self.assertFalse(any(r.kind == 'Collection' for r in connections(ch)))
+
     def test_collection(self):
         # Saturn receives Venus from 10 and Moon from 9.
         ch = fixture([12, 100, 160, 200, 10, 290, 9],

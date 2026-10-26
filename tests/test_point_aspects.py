@@ -27,8 +27,7 @@ def chart(longs, asc=0, mc=90, lot_positions=(( "Fortune", 60),("Spirit", 150)),
 
 
 def config(**custom):
-    data = dict(aspect_preset="traditional",
-                aspect_combine="larger", aspect_boundary=3.0)
+    data = dict(aspect_preset="traditional")
     data.update(custom)
     return data
 
@@ -42,40 +41,42 @@ class PointTests(unittest.TestCase):
         self.assertTrue(all(r.point in ("ASC", "MC") for r in rows))
         self.assertEqual(len(rows), 14)
 
-    def test_sun_half_orb_accepts_7_rejects_8(self):
-        ch = chart([140, 140, 140, 7, 140, 140, 140])
+    def test_sun_full_orb_accepts_15_rejects_16(self):
+        # Points have no orb: the planet's own (full) orb applies.
+        ch = chart([140, 140, 140, 15, 140, 140, 140])
         rows = p.analyze_single(ch, "Angles", opts(), config(),
                                 planet_filter="Sun", point_filter="ASC")
         self.assertEqual(len(rows), 1)
-        self.assertAlmostEqual(rows[0].deviation, 7)
-        ch.planets.planets[3].data[0] = 8
+        self.assertAlmostEqual(rows[0].deviation, 15)
+        ch.planets.planets[3].data[0] = 16
         self.assertEqual(p.analyze_single(ch, "Angles", opts(), config(),
                                           planet_filter="Sun",
                                           point_filter="ASC"), ())
 
-    def test_custom_orb_halved(self):
-        ch = chart([140, 140, 140, 4, 140, 140, 140])
+    def test_custom_orb_is_used_in_full(self):
+        ch = chart([140, 140, 140, 6, 140, 140, 140])
         vals = config(aspect_preset="custom")
         vals.update({"aspect_custom_" + planet.lower(): 6 for planet in PLANETS})
+        self.assertEqual(len(p.analyze_single(ch, "Angles", opts(), vals,
+                                              planet_filter="Sun",
+                                              point_filter="ASC")), 1)
+        ch.planets.planets[3].data[0] = 7
         self.assertEqual(p.analyze_single(ch, "Angles", opts(), vals,
                                           planet_filter="Sun",
                                           point_filter="ASC"), ())
-        vals["aspect_custom_sun"] = 9
-        self.assertEqual(len(p.analyze_single(
-            ch, "Angles", opts(), vals, planet_filter="Sun",
-            point_filter="ASC")), 1)
 
-    def test_strict_sign_vs_boundary(self):
+    def test_three_degree_rule_across_sign_boundary(self):
         ch = chart([359] + [140] * 6, asc=1)
-        with_allowance = p.analyze_single(
+        across = p.analyze_single(
             ch, "Angles", opts(), config(), planet_filter="Saturn",
             point_filter="ASC")
-        self.assertEqual(len(with_allowance), 1)
-        self.assertTrue(with_allowance[0].out_of_sign)
-        strict = p.analyze_single(
-            ch, "Angles", opts(), config(aspect_boundary=0),
-            planet_filter="Saturn", point_filter="ASC")
-        self.assertFalse(strict)
+        self.assertEqual(len(across), 1)
+        self.assertTrue(across[0].out_of_sign)
+        # 4 degrees across the boundary: no contact, although within 9.
+        ch.planets.planets[0].data[0] = 357
+        self.assertFalse(p.analyze_single(
+            ch, "Angles", opts(), config(), planet_filter="Saturn",
+            point_filter="ASC"))
 
     def test_lots_visibility_and_names(self):
         ch = chart([60] * 7)

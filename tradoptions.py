@@ -30,8 +30,6 @@ DEFAULTS = {
 	# fixed stars on the angles
 	'fsa_minutes': 30,
 	'fsa_paranminutes': 4,
-	# antiscia table
-	'ant_rule': 'degrees',		# degrees (whole degrees adding up to 29), orb (conjunction orbs)
 	# places and time zones
 	'place_atlas': True,
 	'place_online': True,
@@ -47,8 +45,7 @@ DEFAULTS = {
 	'sidebar_width': 310,		# resizable panel width in logical pixels
 	# traditional aspects (Legacy uses the original Morinus aspect algorithm and orbs)
 	'aspect_preset': 'traditional',  # traditional, legacy, custom
-	'aspect_combine': 'larger',      # larger or average
-	'aspect_boundary': 3.0,         # 0 = strict sign boundaries
+	# (always the larger orb of the two planets and the three-degree rule)
 	'aspect_custom_saturn': 9.0,
 	'aspect_custom_jupiter': 9.0,
 	'aspect_custom_mars': 8.0,
@@ -63,6 +60,41 @@ DEFAULTS = {
 
 _values = None
 
+# Values every chart calculation depends on: a bad one in a hand-edited or
+# foreign traditional.json would make every chart fail, so it is replaced by
+# its default when loading.
+CHOICES = {
+	'aspect_preset': ('traditional', 'legacy', 'custom'),
+}
+RANGES = {
+	'aspect_custom_saturn': (0.0, 20.0),
+	'aspect_custom_jupiter': (0.0, 20.0),
+	'aspect_custom_mars': (0.0, 20.0),
+	'aspect_custom_sun': (0.0, 20.0),
+	'aspect_custom_venus': (0.0, 20.0),
+	'aspect_custom_mercury': (0.0, 20.0),
+	'aspect_custom_moon': (0.0, 20.0),
+}
+
+
+def valid(key, value):
+	"""Is value usable for key (the type of its default, and its range)?"""
+	default = DEFAULTS[key]
+	if isinstance(default, bool):
+		ok = isinstance(value, bool)
+	elif isinstance(default, (int, float)):
+		ok = isinstance(value, (int, float)) and not isinstance(value, bool) and value == value
+	else:
+		ok = isinstance(value, type(default))
+	if ok and key in CHOICES:
+		ok = value in CHOICES[key]
+	if ok and key in RANGES:
+		low, high = RANGES[key]
+		ok = low <= value <= high
+	if ok and isinstance(default, list):
+		ok = len(value) == len(default)
+	return ok
+
 
 def load():
 	global _values
@@ -70,7 +102,9 @@ def load():
 	try:
 		with open(FILENAME, encoding='utf-8') as f:
 			saved = json.load(f)
-		_values.update({k: v for k, v in saved.items() if k in DEFAULTS})
+		if isinstance(saved, dict):
+			_values.update({k: v for k, v in saved.items()
+				if k in DEFAULTS and valid(k, v)})
 	except (OSError, ValueError):
 		pass
 	return _values

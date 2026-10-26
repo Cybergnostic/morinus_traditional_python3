@@ -26,6 +26,7 @@ def install(frame):
     frame.connection_summary = wx.StaticText(connections, -1, '')
     layout.Insert(0, controls, 0, wx.EXPAND | wx.ALL, 9)
     layout.Insert(1, frame.connection_summary, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
+    frame.connection_page = connections
     frame.tabs.InsertPage(2, connections, i18n.tr('Connections'))
     # Recompute when this tab is first selected rather than displaying
     # unverified natal translation/collection candidates.
@@ -76,6 +77,7 @@ def install(frame):
         frame.horary_table.InsertColumn(col, i18n.tr(label), width=width)
     outer.Add(frame.horary_table, 2, wx.EXPAND | wx.LEFT | wx.RIGHT, 9)
     horary.SetSizer(outer)
+    frame.horary_page = horary
     frame.tabs.InsertPage(3, horary, i18n.tr('Horary perfection'))
     frame.a3_connection_events = None
     frame.a3_connection_days = 0
@@ -84,7 +86,9 @@ def install(frame):
 
 def on_tab_changed(frame, event):
     event.Skip()
-    if frame.tabs.GetSelection() == 4 and frame.a3_connection_events is None:
+    selection = frame.tabs.GetSelection()
+    if (selection >= 0 and frame.tabs.GetPage(selection) is frame.connection_page
+            and frame.a3_connection_events is None):
         wx.CallAfter(analyze_connections, frame)
 
 

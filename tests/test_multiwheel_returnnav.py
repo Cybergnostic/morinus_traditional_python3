@@ -2,8 +2,8 @@ import unittest
 from types import SimpleNamespace
 
 from multiwheel_returnnav import (
-    linked_lunar_indices, match_return_index, nearest_inner_solar,
-    next_return_index, solar_year_window)
+    corresponding_return, linked_lunar_indices, match_return_index,
+    nearest_inner_solar, next_return_index, rebased_place, solar_year_window)
 
 
 class ReturnNavigationTests(unittest.TestCase):
@@ -43,6 +43,33 @@ class ReturnNavigationTests(unittest.TestCase):
         self.assertEqual(next_return_index(old, 160., False), 1)
         self.assertIsNone(next_return_index(old, 160., True))
         self.assertIsNone(next_return_index(new, 160., False))
+
+
+class RebaseTests(unittest.TestCase):
+    def rows(self, *jds):
+        return [SimpleNamespace(jd=jd) for jd in jds]
+
+    def test_lunar_return_keeps_its_position_in_the_year(self):
+        old = self.rows(100., 127., 155., 182.)
+        new = self.rows(110., 138., 165., 192.)
+        self.assertIs(corresponding_return(old, 155., new), new[2])
+        self.assertIs(corresponding_return(old, 100., new), new[0])
+
+    def test_unknown_or_missing_position_falls_back_to_in_force(self):
+        new = self.rows(110., 138.)
+        self.assertIs(corresponding_return([], 155., new), new[0])
+        self.assertIs(corresponding_return(self.rows(1., 2., 3.), 3., new), new[0])
+        self.assertIs(corresponding_return(self.rows(1.), 50., new), new[0])
+        self.assertIsNone(corresponding_return(self.rows(1.), 1., []))
+
+    def test_birthplace_charts_follow_the_natal(self):
+        born_a = SimpleNamespace(lon=19.05, lat=47.5)
+        born_b = SimpleNamespace(lon=-74.0, lat=40.7)
+        lives = SimpleNamespace(lon=2.35, lat=48.85)
+        same_as_a = SimpleNamespace(lon=19.05, lat=47.5)
+        self.assertIs(rebased_place(same_as_a, born_a, born_b), born_b)
+        self.assertIs(rebased_place(lives, born_a, born_b), lives)
+        self.assertIs(rebased_place(None, born_a, born_b), born_b)
 
 
 if __name__ == '__main__':

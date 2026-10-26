@@ -1,9 +1,10 @@
 """Planet-to-point contacts shared by natal, cross-chart and multiwheel.
 
 Asc/MC and Lots are targets, never planets: no reception, translation,
-collection or double application. A point contributes no planetary orb, so
-the permitted deviation is half the selected planet's orb. For lots defined
-by whole signs, only the by-sign relation is meaningful (no false orb).
+collection or double application. Course doctrine: points have no light and
+no orb of their own and cannot aspect; they are aspected by planets, within
+the PLANET's full orb (and the three-degree rule across sign boundaries).
+For lots defined by whole signs, only the by-sign relation is meaningful.
 """
 from dataclasses import dataclass
 from math import isfinite
@@ -92,7 +93,7 @@ def points(chrt, options, kind="Angles", visible_only=True):
     raise ValueError("Unknown point category")
 
 
-def _contact(planet_lon, speed, point, orb, boundary):
+def _contact(planet_lon, speed, point, orb):
     if not point.degree_based:
         # A whole-sign lot is not a point with a reliable exact longitude.
         config = sign_configuration(planet_lon, point.longitude)
@@ -100,11 +101,9 @@ def _contact(planet_lon, speed, point, orb, boundary):
             return None
         return config, None, False, "By sign"
 
-    # The point's contribution to the orb is zero. Evaluate with the
-    # half-orb as the permitted contact limit and the standard A1
-    # geometric aspect / out-of-sign rules.
-    contact = evaluate(planet_lon, point.longitude, speed, 0.0,
-                       orb / 2.0, orb / 2.0, "larger", boundary)
+    # The point has no orb: the planet's own orb is the limit, with the
+    # standard A1 geometric aspect / out-of-sign rules.
+    contact = evaluate(planet_lon, point.longitude, speed, 0.0, orb, 0.0)
     if contact is None:
         return None
     if contact.exact:
@@ -121,14 +120,16 @@ def _contact(planet_lon, speed, point, orb, boundary):
 def _orb_settings(options, settings):
     cfg = dict(settings if settings is not None else tradoptions.values())
     if cfg.get("aspect_preset", "traditional") == "legacy":
-        return tuple(float(options.orbs[index]) for index in range(7)), 0.0
-    return (configured_orbs(cfg), float(cfg.get("aspect_boundary", 3.0)))
+        # Morinus 6.2 has no planet-to-Lot aspects: its orb values are used
+        # with the same rule (the planet's orb).
+        return tuple(float(options.orbs[index]) for index in range(7))
+    return configured_orbs(cfg)
 
 
 def analyze_single(chrt, kind="Angles", options=None, settings=None,
                    planet_filter=None, point_filter=None):
     options = options or chrt.options
-    orbs, boundary = _orb_settings(options, settings)
+    orbs = _orb_settings(options, settings)
     targets = points(chrt, options, kind)
     shift = _shift(chrt, options)
     rows = []
@@ -141,7 +142,7 @@ def analyze_single(chrt, kind="Angles", options=None, settings=None,
         for target in targets:
             if point_filter is not None and target.name != point_filter:
                 continue
-            result = _contact(lon, speed, target, orbs[index], boundary)
+            result = _contact(lon, speed, target, orbs[index])
             if result is None:
                 continue
             kind_index, orb, outside, motion = result
@@ -160,7 +161,7 @@ def analyze_cross(first_chart, second_chart, kind="Angles", options=None,
     if first_chart is second_chart:
         return ()
     options = options or first_chart.options
-    orbs, boundary = _orb_settings(options, settings)
+    orbs = _orb_settings(options, settings)
     rows = []
     for source_label, source, target_label, target in (
             ("A", first_chart, "B", second_chart),
@@ -176,7 +177,7 @@ def analyze_cross(first_chart, second_chart, kind="Angles", options=None,
                 if point_filter is not None and target_point.name != point_filter:
                     continue
                 result = _contact(lon, float(pl.data[3]), target_point,
-                                  orbs[index], boundary)
+                                  orbs[index])
                 if result is None:
                     continue
                 kind_index, deviation, outside, _motion = result

@@ -10,8 +10,9 @@ from dataclasses import dataclass
 from math import isfinite
 
 import tradoptions
-from traditional_aspects import (PLANETS, ASPECT_ANGLES, angular_distance,
-                                 evaluate, sign_configuration, configured_orbs)
+from traditional_aspects import (PLANETS, ASPECT_ANGLES, RATE_TOLERANCE,
+                                 angular_distance, deviation_rate, evaluate,
+                                 sign_configuration, configured_orbs)
 from aspect_workspace import (ASPECT_NAMES, SIGNS, dignity_holds,
                               qualifies_for_reception)
 
@@ -66,10 +67,10 @@ def _b_motion(fixed_a, moving_b, b_speed, angle):
         return "Exact"
     if abs(b_speed) < 1e-10:
         return "Stationary"
-    ahead = abs(angular_distance(fixed_a, moving_b + b_speed * .001) - angle)
-    if ahead < current - 1e-10:
+    rate = deviation_rate(fixed_a, moving_b, 0.0, b_speed, angle)
+    if rate < -RATE_TOLERANCE:
         return "Approaching A"
-    if ahead > current + 1e-10:
+    if rate > RATE_TOLERANCE:
         return "Leaving A"
     return "Stationary"
 
@@ -91,8 +92,6 @@ def analyze(first_chart, second_chart, options=None, settings=None,
         orbs = None
     else:
         orbs = configured_orbs(settings)
-    method = settings.get("aspect_combine", "larger")
-    boundary = float(settings.get("aspect_boundary", 3.0))
     a_positions = chart_positions(first_chart, options)
     b_positions = chart_positions(second_chart, options)
     day_a = _sect(first_chart, options)
@@ -112,8 +111,7 @@ def analyze(first_chart, second_chart, options=None, settings=None,
                     continue
                 aspect_index, deviation, out_of_sign = result
             else:
-                contact = evaluate(a, b, 0.0, speed_b, orbs[i], orbs[j],
-                                   method, boundary)
+                contact = evaluate(a, b, 0.0, speed_b, orbs[i], orbs[j])
                 if contact is None:
                     continue
                 aspect_index = contact.index

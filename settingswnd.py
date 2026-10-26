@@ -27,7 +27,7 @@ CATEGORIES = [
 		('dialog', 'OMLanguages', 'onLanguages', 'The language of the menus, dialogs and tables.'),
 		('dialog', 'OMMenuSelFirst', 'onMenuSelFirst', 'Which items of the File, Tables and Charts menus are shown.', 'Menu selection: File, Tables, Charts'),
 		('dialog', 'OMMenuSelSecond', 'onMenuSelSecond', 'Which items of the Settings and Help menus are shown.', 'Menu selection: Settings, Help'),
-		('trad', 7),
+		('trad', 6),
 	]),
 	('Appearance', [
 		('dialog', 'Chart look', 'onChartLook', 'The colour theme (Ink, Instrument or Classic), the weight of the lines and smooth drawing, with a preview.'),
@@ -40,8 +40,7 @@ CATEGORIES = [
 		('houses',),
 		('dialog', 'OMAyanamsha', 'onAyanamsha', 'The tropical zodiac, or a sidereal one with its ayanamsa.'),
 		('dialog', 'OMOrbs', 'onOrbs', 'The orbs of each planet for the aspects and parallels, and those of planets in houses, the angles, intermediate cusps, day and night and the fixed stars.'),
-		('trad', 5),
-		('trad', 8),
+		('trad', 7),
 	]),
 	('Dignities', [
 		('dialog', 'OMDignities', 'onDignities', 'The domiciles and exaltations of the planets.'),
@@ -74,7 +73,7 @@ CATEGORIES = [
 	]),
 	('Places and time zones', [
 		('dialog', 'OMDefLocationOpt', 'onDefLocationOpt', 'The place, time zone and daylight saving filled in for a new chart.'),
-		('trad', 6),
+		('trad', 5),
 	]),
 ]
 
@@ -329,23 +328,41 @@ class SettingsWnd(wx.Dialog):
 			# or chart-window destruction is needed when switching presets.
 			frame = self.frame
 			if not frame.splash:
-				frame.horoscope.calcPlsAspMatrix()
-				frame.clickedPlId = None
-				frame.drawBkg()
-				frame.Refresh()
-				for window in frame.GetChildren():
-					other = getattr(window, 'chart', None)
-					if other is not None and other is not frame.horoscope and hasattr(other, 'calcPlsAspMatrix'):
-						other.calcPlsAspMatrix()
-						if hasattr(window, 'w') and hasattr(window.w, 'drawBkg'):
-							window.w.drawBkg()
-							window.Refresh()
-					if hasattr(window, 'pickers') and hasattr(window, 'queue_draw'):
-						for picker in window.pickers:
-							selection = picker.selected()
-							if selection is not None and selection is not frame.horoscope:
-								selection.calcPlsAspMatrix()
-						window.queue_draw()
+				self.recalcAspects()
+
+	def recalcAspects(self):
+		"""New aspect settings for every chart held by any window, once each,
+		then redraw the wheels and refill the aspect tables showing them."""
+		import aspectsframe
+		import crosschartframe
+		frame = self.frame
+		windows = [w for w in wx.GetTopLevelWindows() if not w.IsBeingDeleted()]
+		charts = {id(frame.horoscope): frame.horoscope}
+		for window in windows:
+			held = [getattr(window, 'chart', None)]
+			held += [picker.selected() for picker in getattr(window, 'pickers', ())]
+			# Charts a multi-wheel keeps for its menus, though not shown now.
+			held += [chrt for _, chrt in getattr(window, 'registered_charts', ())]
+			for chrt in held:
+				if hasattr(chrt, 'calcPlsAspMatrix'):
+					charts[id(chrt)] = chrt
+		for chrt in charts.values():
+			chrt.calcPlsAspMatrix()
+		frame.clickedPlId = None
+		frame.drawBkg()
+		frame.Refresh()
+		for window in windows:
+			if window is frame:
+				continue
+			if hasattr(window, 'w') and hasattr(window.w, 'drawBkg'):
+				window.w.drawBkg()
+				window.Refresh()
+			if hasattr(window, 'pickers') and hasattr(window, 'queue_draw'):
+				window.queue_draw()
+			if isinstance(window, aspectsframe.AspectsFrame):
+				window.populate()
+			elif isinstance(window, crosschartframe.CrossChartFrame):
+				window.refresh()
 
 	def onTradDefaults(self, ctrls):
 		tradoptsdlg.fill(ctrls, copy.deepcopy(tradoptions.DEFAULTS))

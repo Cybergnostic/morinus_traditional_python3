@@ -7,7 +7,8 @@ Astrological configurations are distinguished from verified future events.
 from dataclasses import dataclass
 from itertools import combinations
 
-from traditional_aspects import PLANETS, ASPECT_ANGLES, angular_distance
+from traditional_aspects import (PLANETS, ASPECT_ANGLES, RATE_TOLERANCE,
+                                 angular_distance, deviation_rate, motion_status)
 
 ASPECTS = ('Conjunction', 'Sextile', 'Square', 'Trine', 'Opposition')
 
@@ -32,11 +33,10 @@ def individual_motion(moving_lon, fixed_lon, moving_speed, angle):
         return 'Exact'
     if abs(moving_speed) < 1e-10:
         return 'Stationary'
-    projected = abs(angular_distance(moving_lon + moving_speed * 0.001,
-                                     fixed_lon) - angle)
-    if projected < deviation - 1e-10:
+    rate = deviation_rate(moving_lon, fixed_lon, moving_speed, 0.0, angle)
+    if rate < -RATE_TOLERANCE:
         return 'Applying'
-    if projected > deviation + 1e-10:
+    if rate > RATE_TOLERANCE:
         return 'Separating'
     return 'Stationary'
 
@@ -49,6 +49,20 @@ def _positions(chart):
 def _contact(chart, i, j):
     c = chart.aspmatrix[max(i, j)][min(i, j)]
     return c.typ if c.typ in range(5) else None
+
+
+def _connect_themselves(chart, pos, i, j):
+    """Do these two planets apply to each other in the chart?
+
+    Course doctrine: translation and collection matter only for planets that
+    cannot connect themselves; if they apply to each other they will meet
+    anyway, whatever a third planet does.
+    """
+    kind = _contact(chart, i, j)
+    if kind is None:
+        return False
+    return motion_status(pos[i][0], pos[j][0], pos[i][1], pos[j][1],
+                         ASPECT_ANGLES[kind]) in ('Applying', 'Double application')
 
 
 def _future_status(events, movers, targets, aspect_indexes):
@@ -85,6 +99,7 @@ def connections(chart, events=None):
 
     Translation: faster messenger individually separates from A, applies to B.
     Collection: both faster contributors individually apply to a slower collector.
+    Both only join planets that do not apply to each other themselves.
     Intervening events are evaluated only when an actual ephemeris scan exists.
     """
     pos = _positions(chart)
@@ -97,6 +112,8 @@ def connections(chart, events=None):
             if past is None or future is None:
                 continue
             if abs(pos[messenger][1]) <= max(abs(pos[source][1]), abs(pos[target][1])):
+                continue
+            if _connect_themselves(chart, pos, source, target):
                 continue
             if individual_motion(pos[messenger][0], pos[source][0],
                                  pos[messenger][1], ASPECT_ANGLES[past]) != 'Separating':
@@ -122,6 +139,8 @@ def connections(chart, events=None):
             if a is None or b is None:
                 continue
             if abs(pos[collector][1]) >= min(abs(pos[first][1]), abs(pos[second][1])):
+                continue
+            if _connect_themselves(chart, pos, first, second):
                 continue
             if individual_motion(pos[first][0], pos[collector][0],
                                  pos[first][1], ASPECT_ANGLES[a]) != 'Applying':
