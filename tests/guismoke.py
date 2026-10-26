@@ -516,6 +516,16 @@ def main():
 				inner.select_chart(secondary)
 				wnd.redraw()
 				assert wnd.renderer.radix is secondary
+				# Regression: while the centre has a temporary non-natal
+				# override, choosing a different natal from its dropdown
+				# must not be reset to the first entry during refresh.
+				natal_idx = next(i for i, (_, ch) in enumerate(inner.sources)
+					if ch is frame.horoscope)
+				inner.choice.SetSelection(natal_idx)
+				inner.changed(None)
+				assert inner.selected() is frame.horoscope
+				inner.select_chart(secondary)
+				assert inner.selected() is secondary
 				wnd.count_choice.SetSelection(1)  # assigned tri-wheel
 				wnd.change_count()
 				original_slots = [p.selected() for p in wnd.pickers[:3]]
