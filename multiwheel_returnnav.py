@@ -50,6 +50,39 @@ def match_return_index(rows, jd, tolerance=JD_TOLERANCE):
     return index if abs(rows[index].jd - jd) <= tolerance else None
 
 
+def corresponding_return(old_rows, old_jd, new_rows):
+    """The new natal's lunar return in the same position of the solar year.
+
+    old_rows/new_rows are the lunar returns of one solar year (the one in
+    force at the solar return first). A lunar ring that showed the 5th lunar
+    return of the year shows the 5th one of the new natal's year; if that is
+    unknown or does not exist, the one in force at the solar return.
+    """
+    if not new_rows:
+        return None
+    index = match_return_index(old_rows, old_jd) if old_rows else None
+    if index is None or index >= len(new_rows):
+        index = 0
+    return new_rows[index]
+
+
+def rebased_place(old_place, previous_natal_place, natal_place):
+    """Where a recast TRANSIT is cast for the new natal.
+
+    A transit cast for the previous natal's birthplace follows the natal;
+    one the user cast for another place (where one lives) keeps it. Returns
+    never use this: the course casts them for the birthplace only.
+    """
+    def key(place):
+        return (round(float(place.lon), 6), round(float(place.lat), 6))
+    try:
+        if old_place is None or key(old_place) == key(previous_natal_place):
+            return natal_place
+    except (AttributeError, TypeError, ValueError):
+        return natal_place
+    return old_place
+
+
 def next_return_index(rows, jd, forward, tolerance=JD_TOLERANCE):
     """First event strictly after/before jd, never the current event again.
 

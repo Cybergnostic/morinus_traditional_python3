@@ -61,13 +61,14 @@ def solar_year_for_chart(radix, solar):
     raise ValueError('Cannot match chart to a solar return anniversary')
 
 
-def step_return(radix, current, forward):
+def step_return(radix, current, forward, place=None):
     """The next (or previous) return of the same kind as the chart `current`,
-    cast for the same place; None if it cannot be found."""
+    cast for `place` (by default the same place); None if it cannot be found."""
+    place = place or current.place
     if current.htype == chart.Chart.SOLAR:
         year = current.time.year+(1 if forward else -1)
         t = solar_return(radix, year)
-        return return_chart(t, radix, chart.Chart.SOLAR, current.place) if t else None
+        return return_chart(t, radix, chart.Chart.SOLAR, place) if t else None
     jd = current.time.jd
     y, m = current.time.year, current.time.month
     found = []
@@ -81,7 +82,7 @@ def step_return(radix, current, forward):
     else:
         earlier = [f for f in found if f[0] < jd-1.0]
         hit = earlier[-1] if earlier else None
-    return return_chart(hit[1], radix, chart.Chart.LUNAR, current.place) if hit else None
+    return return_chart(hit[1], radix, chart.Chart.LUNAR, place) if hit else None
 
 
 def _month_returns(year, month, radix, planet, pos=None):

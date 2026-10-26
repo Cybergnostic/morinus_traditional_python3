@@ -46,6 +46,10 @@ class ChartPicker(wx.Panel):
                 sources.append((i18n.tr('Open') + ': ' + caption(chrt), chrt))
         for fpath, chrt in self.loaded:
             sources.append((i18n.tr('File') + ': ' + caption(chrt), chrt))
+        # A chart whose window has been closed stays selected (and listed)
+        # rather than being replaced by the radix on the next refresh.
+        if all(chrt is not previous for _, chrt in sources):
+            sources.append((i18n.tr('Open') + ': ' + caption(previous), previous))
         self.sources = sources
         self.choice.Clear()
         for title, _ in sources:

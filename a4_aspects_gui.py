@@ -30,11 +30,12 @@ def install(frame):
         ('Caster', 110), ('Target', 110), ('Aspect', 105),
         ('Caster sign', 100), ('Target sign', 100),
         ('Direction', 105), ('Overcoming', 105), ('Orb', 90),
-        ('Within orb', 95), ('Counter-ray', 100), ('Aktinobolia', 105)])
+        ('Within orb', 95), ('Motion', 140), ('Aktinobolia', 105)])
     frame.hellenistic_tabs.AddPage(aversions, i18n.tr('Domicile witnessing'))
     frame.hellenistic_tabs.AddPage(rays, i18n.tr('Rays & domination'))
     main.Add(frame.hellenistic_tabs, 1, wx.EXPAND)
     page.SetSizer(main)
+    frame.hellenistic_page = page
     frame.tabs.InsertPage(4, page, i18n.tr('Hellenistic'))
     frame.tabs.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED,
                     lambda event: on_open(frame, event))
@@ -43,7 +44,8 @@ def install(frame):
 
 def on_open(frame, event):
     event.Skip()
-    if frame.tabs.GetSelection() != 6:
+    selection = frame.tabs.GetSelection()
+    if selection < 0 or frame.tabs.GetPage(selection) is not frame.hellenistic_page:
         return
     if frame.a3_connection_events is None:
         wx.CallAfter(_first_connection_scan, frame)
@@ -62,9 +64,9 @@ def _first_connection_scan(frame):
 def _methods_text(methods):
     result = []
     for method in methods:
-        if method.startswith('Common domicile ruler: '):
-            planet = method.split(': ', 1)[1]
-            result.append(i18n.tr('Common domicile ruler') + ': ' + i18n.tr(planet))
+        if method.startswith('Common domicile ruler: ') or method.startswith('Mediator: '):
+            label, planet = method.split(': ', 1)
+            result.append(i18n.tr(label) + ': ' + i18n.tr(planet))
         elif method.startswith('Translation via ') or method.startswith('Collection via '):
             label, planet = method.split(' via ', 1)
             result.append(i18n.tr(label) + ' ' + i18n.tr('via') + ' ' + i18n.tr(planet))
@@ -102,5 +104,5 @@ def refresh(frame):
             i18n.tr(row.direction), i18n.tr(row.overcoming),
             frame._degrees(row.degree_orb),
             i18n.tr('Yes' if row.in_orb else 'No'),
-            i18n.tr('Yes' if row.close_counter_ray else 'No'),
+            i18n.tr(row.motion) if row.motion else '—',
             i18n.tr('Yes' if row.aktinobolia else 'No')))

@@ -113,7 +113,7 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 HANDLERS = ['onLoad', 'comparisonGrid', 'multiWheel', 'chartQuality', 'tablePresentation', 'aspectsWorkspace', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'transitSearch', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
-	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
+	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
 	'onProfectionsChart', 'onHelioChart', 'onEphemeris', 'onFindTime', 'onSynastry', 'onSaveAsBitmap', 'onSave', 'onHereAndNow',
 	'onNew', 'onData', 'onLoad',
 	'onAppearance1', 'onAppearance2', 'onDignities', 'onTriplicities', 'onTerms', 'onDecans', 'onChartAlmuten', 'onTopicals',
@@ -553,6 +553,28 @@ def main():
 				assert any(source is secondary for _, source in
 					wnd.registered_charts)
 				assert not any(source is secondary for _, source in inner.sources)
+				# Regression: a ring keeps its chart when the window that chart
+				# came from is closed; reactivating the multiwheel used to put
+				# the main horoscope in its place (and rebase the centre's rings).
+				import transitframe, comparegrid
+				kept = chart.Chart(frame.horoscope.name, frame.horoscope.male,
+					frame.horoscope.time, frame.horoscope.place, chart.Chart.TRANSIT,
+					'', frame.options, False)
+				host = transitframe.TransitFrame(frame, 'Smoke source', kept,
+					frame.horoscope, frame.options)
+				host.Show(True)
+				settle(0.2)
+				picker.refresh()
+				picker.choice.SetSelection(next(i for i, (_, ch) in
+					enumerate(picker.sources) if ch is kept))
+				picker.changed(None)
+				host.Destroy()
+				settle(0.2)
+				comparegrid.refresh_pickers(wnd.pickers)
+				assert picker.selected() is kept
+				assert inner.selected() is frame.horoscope
+				picker.select_chart(secondary)
+				assert picker.selected() is secondary
 				# Creation through one ring selects that chart in that ring only.
 				created = chart.Chart(frame.horoscope.name, frame.horoscope.male,
 					frame.horoscope.time, frame.horoscope.place, chart.Chart.HORARY,
@@ -871,20 +893,24 @@ def main():
 				for count in (1, 2, 3):
 					wnd.count_choice.SetSelection(count - 1)
 					wnd.change_count()
-					# Default is no aspects; keep it in the saved reference images.
-					wnd.aspect_choice.SetSelection(0)
+					# Default is no aspect lines; keep it in the saved reference
+					# images. The scope and line toggles live in the cross-chart
+					# window and reach the wheel through set_aspect_display().
+					wnd.set_aspect_display(target_slot=0, planets=False,
+						angles=False, lots=False)
 					settle(0.3)
 					wnd.redraw()
-					assert wnd.renderer.aspect_ring == -1
+					assert not wnd.renderer.show_planet_aspects
 					assert wnd.buffer is not None and wnd.buffer.IsOk()
 					# Radix-only and radix-to-outer-ring remain available.
-					wnd.aspect_choice.SetSelection(1)
+					wnd.set_aspect_display(target_slot=0, planets=True)
 					wnd.redraw()
 					assert wnd.renderer.aspect_ring == 0
-					wnd.aspect_choice.SetSelection(2)
+					assert wnd.renderer.show_planet_aspects
+					wnd.set_aspect_display(target_slot=1)
 					wnd.redraw()
 					assert wnd.renderer.aspect_ring == 1
-					wnd.aspect_choice.SetSelection(0)
+					wnd.set_aspect_display(target_slot=0, planets=False)
 					wnd.redraw()
 					# Thin chart boundaries are local to multiwheel; do not
 					# weaken the normal Morinus chart's global pen settings.
@@ -1209,9 +1235,13 @@ def main():
 					rays = hellenistic_aspects.analyze_rays(wnd.chart)
 					pairs = [frozenset((r.caster, r.target)) for r in rays]
 					assert len(pairs) == len(set(pairs)), 'Repeated Hellenistic rays'
+					# Course: the ray is judged from the planet actually faster.
 					from traditional_aspects import PLANETS
-					assert all(PLANETS.index(r.caster) > PLANETS.index(r.target)
-					           for r in rays), 'Caster is not the naturally faster body'
+					speed = {name: abs(p.data[3]) for name, p in
+					         zip(PLANETS, wnd.chart.planets.planets)}
+					assert all(speed[r.caster] >= speed[r.target]
+					           for r in rays), 'Caster is not the faster planet'
+					assert all(r.overcoming in (r.caster, r.target) for r in rays)
 					wnd.hellenistic_tabs.SetSelection(0)
 					wnd.tabs.SetSelection(7)
 					settle(0.1)

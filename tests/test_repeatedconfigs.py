@@ -11,8 +11,27 @@ SOLAR = dict(zip(rc.PLANETS, (40.0, 73.0, 130.0, 175.0, 259.0, 312.0, 349.0)))
 
 class RepeatedConfigTests(unittest.TestCase):
     def test_wraparound_conjunction_and_opposition(self):
-        self.assertEqual(rc.aspect_between(359.0, 1.0, 3.0), ('Conjunction', 2.0))
-        self.assertEqual(rc.aspect_between(2.0, 181.0, 2.0), ('Opposition', 1.0))
+        self.assertEqual(rc.configured(359.0, 1.0, 9, 9), ('Conjunction', 2.0))
+        self.assertEqual(rc.configured(2.0, 181.0, 9, 9), ('Opposition', 1.0))
+
+    def test_aspects_are_configured_by_the_course_rule(self):
+        # Venus (7) and Moon (12) 10 degrees apart: within the Moon's orb.
+        self.assertEqual(rc.configured(0.0, 10.0, 7, 12), ('Conjunction', 10.0))
+        self.assertIsNone(rc.configured(0.0, 13.0, 7, 12))
+        # Across a sign boundary only within three degrees.
+        self.assertIsNone(rc.configured(357.0, 1.0, 9, 9))
+        # Sidereal: the signs of the chart's own zodiac decide.
+        self.assertIsNone(rc.configured(28.0, 35.0, 9, 9))
+        self.assertEqual(rc.configured(28.0, 35.0, 9, 9, shift=24.0)[0], 'Conjunction')
+
+    def test_repetition_needs_configuration_in_both_charts(self):
+        natal = dict(NATAL, Venus=190.0, Moon=200.0)    # 10 apart in Libra: configured
+        solar = dict(SOLAR, Venus=259.0, Moon=269.0)
+        self.assertTrue(any(a.planets == ('Venus', 'Moon')
+                            for a in rc.search(natal, solar).aspects))
+        solar = dict(SOLAR, Venus=259.0, Moon=272.0)    # 13 apart: not
+        self.assertFalse(any(a.planets == ('Venus', 'Moon')
+                             for a in rc.search(natal, solar).aspects))
 
     def test_same_named_pair_same_aspect_both_charts(self):
         found = rc.search(NATAL, SOLAR, 5.0, year_lord='Mars')

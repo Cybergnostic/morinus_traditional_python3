@@ -212,10 +212,10 @@ class AspectsFrame(wx.Frame):
             self.angle_page: self.angle_table,
             self.lot_page: self.lot_table,
             self.reception_page: self.receptions,
-            self.tabs.GetPage(4): self.connection_table,
-            self.tabs.GetPage(5): self.horary_table,
+            self.connection_page: self.connection_table,
+            self.horary_page: self.horary_table,
         }
-        if page is self.tabs.GetPage(6):
+        if page is self.hellenistic_page:
             table = (self.aversion_table if self.hellenistic_tabs.GetSelection() == 0
                      else self.ray_table)
         else:
@@ -224,13 +224,20 @@ class AspectsFrame(wx.Frame):
             wx.MessageBox(i18n.tr("Select a table tab to copy."),
                           i18n.tr("Copy table"), wx.OK | wx.ICON_INFORMATION, self)
             return
-        rows = ["\\t".join(table.GetColumn(i).GetText()
-                          for i in range(table.GetColumnCount()))]
-        for line in range(table.GetItemCount()):
-            rows.append("\\t".join(table.GetItemText(line, i)
-                         for i in range(table.GetColumnCount())))
+        # The Horary tab has two tables: its findings, then the event list.
+        tables = ((self.horary_findings, table) if table is self.horary_table
+                  else (table,))
+        rows = []
+        for table in tables:
+            if rows:
+                rows.append("")
+            rows.append("\t".join(table.GetColumn(i).GetText()
+                                  for i in range(table.GetColumnCount())))
+            for line in range(table.GetItemCount()):
+                rows.append("\t".join(table.GetItemText(line, i)
+                                      for i in range(table.GetColumnCount())))
         if wx.TheClipboard.Open():
             try:
-                wx.TheClipboard.SetData(wx.TextDataObject("\\n".join(rows)))
+                wx.TheClipboard.SetData(wx.TextDataObject("\n".join(rows)))
             finally:
                 wx.TheClipboard.Close()

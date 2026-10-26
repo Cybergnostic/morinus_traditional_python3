@@ -76,12 +76,12 @@ class DomicileWitnessingTests(unittest.TestCase):
                 self.assertEqual(row.status, 'Witnesses')
                 self.assertFalse(row.mitigations)
 
-    def test_venus_libra_to_taurus_is_mitigated_by_co_rulership(self):
+    def test_venus_libra_to_taurus_is_not_averse_by_co_rulership(self):
         rows = analyze_aversions(chart())
         venus = domicile(rows, 'Venus', 'Taurus')
         self.assertEqual(venus.placement, 'Libra')
         self.assertEqual(venus.witnessing, 'Averse')
-        self.assertEqual(venus.status, 'Mitigated')
+        self.assertEqual(venus.status, 'Not averse')
         self.assertIn('Common domicile ruler: Venus', venus.mitigations)
         self.assertEqual(domicile(rows, 'Venus', 'Libra').status, 'Witnesses')
 
@@ -90,10 +90,53 @@ class DomicileWitnessingTests(unittest.TestCase):
         rows = analyze_aversions(chart(lons=lons))
         saturn = domicile(rows, 'Saturn', 'Aquarius')
         self.assertEqual(saturn.witnessing, 'Averse')
-        self.assertEqual(saturn.status, 'Mitigated')
+        self.assertEqual(saturn.status, 'Not averse')
         self.assertIn('Common domicile ruler: Saturn', saturn.mitigations)
         self.assertEqual(domicile(rows, 'Saturn', 'Capricorn').witnessing,
                          'Co-presence')
+
+    def test_course_moon_examples_antiscia_and_contra_antiscia(self):
+        # The Moon rules Cancer: in Gemini (antiscia) or in Sagittarius
+        # (contra-antiscia) it is not averse; in Aquarius it is.
+        for lon, status in ((75, 'Not averse'), (255, 'Not averse')):
+            rows = analyze_aversions(chart(lons=[5, 105, 273, 235, 195, 70, lon]))
+            self.assertEqual(domicile(rows, 'Moon', 'Cancer').status, status, lon)
+        rows = analyze_aversions(chart(lons=[5, 105, 273, 235, 195, 70, 315],
+                                       asc=130))
+        moon = domicile(rows, 'Moon', 'Cancer')
+        self.assertIn(moon.status, ('Averse', 'Mitigated'))
+        self.assertFalse(any('antiscia' in m.lower() for m in moon.mitigations))
+
+    def test_course_saturn_in_pisces_mediators(self):
+        # Saturn in Pisces is averse to Aquarius. Venus (Taurus) and Jupiter
+        # (Scorpio) see both Pisces and Aquarius; the Sun in Cancer does not
+        # see Aquarius; Mars, Mercury and the Moon are averse to Pisces.
+        lons = [345, 220, 130, 100, 40, 95, 140]
+        saturn = domicile(analyze_aversions(chart(lons=lons, asc=130)),
+                          'Saturn', 'Aquarius')
+        self.assertEqual(saturn.status, 'Mitigated')
+        self.assertEqual(set(saturn.mitigations),
+                         {'Mediator: Jupiter', 'Mediator: Venus'})
+
+    def test_cadent_and_combust_planets_cannot_mediate(self):
+        lons = [345, 220, 130, 100, 40, 95, 140]
+        # Ascendant in Gemini: Scorpio is the 6th, Taurus the 12th (cadent).
+        saturn = domicile(analyze_aversions(chart(lons=lons, asc=70)),
+                          'Saturn', 'Aquarius')
+        self.assertEqual(saturn.status, 'Averse')
+        # Venus combust 5 degrees from the Sun, which itself sees both signs.
+        lons = [345, 160, 130, 45, 40, 95, 140]
+        saturn = domicile(analyze_aversions(chart(lons=lons, asc=130)),
+                          'Saturn', 'Aquarius')
+        self.assertEqual(saturn.mitigations, ('Mediator: Sun',))
+
+    def test_co_presence_does_not_mediate(self):
+        # Jupiter in Pisces with Saturn sees Aquarius not at all, and
+        # co-presence with the averse planet is not a Ptolemaic aspect.
+        lons = [345, 350, 130, 100, 160, 95, 140]
+        saturn = domicile(analyze_aversions(chart(lons=lons, asc=130)),
+                          'Saturn', 'Aquarius')
+        self.assertNotIn('Mediator: Jupiter', saturn.mitigations)
 
     def test_antiscia_sign_and_degree_geometry_remains_separate(self):
         reflections = _reflections(14.25, 165.75)
@@ -114,18 +157,20 @@ class DomicileWitnessingTests(unittest.TestCase):
                                  for method in row.mitigations))
 
     def test_only_verified_light_mitigates_domicile_aversion(self):
-        # Jupiter in Cancer is averse to Sagittarius, occupied by Mars.
-        lons = [5, 105, 245, 235, 195, 70, 300]
-        ch = chart(lons=lons)
+        # Jupiter in Leo is averse to Pisces (no sign link), occupied by Mars.
+        lons = [100, 125, 345, 160, 175, 70, 300]
+        ch = chart(lons=lons, asc=130)
         make = lambda status: Connection(
             'Translation', 'Moon', 'Jupiter', 'Mars',
             'Sextile', 'Trine', status)
         unsupported = domicile(analyze_aversions(ch, [make('Candidate')]),
-                               'Jupiter', 'Sagittarius')
+                               'Jupiter', 'Pisces')
         confirmed = domicile(analyze_aversions(ch, [make('Verified')]),
-                             'Jupiter', 'Sagittarius')
+                             'Jupiter', 'Pisces')
+        self.assertEqual(unsupported.witnessing, 'Averse')
         self.assertNotIn('Translation via Moon', unsupported.mitigations)
         self.assertIn('Translation via Moon', confirmed.mitigations)
+        self.assertEqual(confirmed.status, 'Mitigated')
 
     def test_sidereal_chart_adjusts_planet_sign_only(self):
         ch = chart(ayan=30)
@@ -149,14 +194,18 @@ class DirectedRayTests(unittest.TestCase):
         self.assertFalse(overcomes(0, 9))
 
     def test_only_one_ray_per_pair(self):
-        rays = analyze_rays(chart())
+        ch = chart()
+        rays = analyze_rays(ch)
         pairs = [frozenset((r.caster, r.target)) for r in rays]
         self.assertEqual(len(pairs), len(set(pairs)))
         self.assertLessEqual(len(rays), 21)
-        self.assertTrue(all(PLANETS.index(r.caster) >
-                            PLANETS.index(r.target) for r in rays))
+        speed = {name: abs(p.data[3]) for name, p in
+                 zip(PLANETS, ch.planets.planets)}
+        self.assertTrue(all(speed[r.caster] >= speed[r.target] for r in rays))
 
-    def test_jupiter_mars_uses_mars_even_when_jupiter_moves_faster_today(self):
+    def test_caster_is_the_planet_actually_faster(self):
+        # The course judges dexter/sinister from the applying, faster planet:
+        # its actual speed, so Jupiter casts when Mars is nearly stationary.
         ch = chart(lons=[5, 105, 15, 235, 195, 70, 300],
                    speeds=[0, 5, .001, .9, 1, 1, 12],
                    contacts=[(1, 2, 2)])
@@ -164,9 +213,15 @@ class DirectedRayTests(unittest.TestCase):
                 if {r.caster, r.target} == {'Jupiter', 'Mars'}]
         self.assertEqual(len(rays), 1)
         self.assertEqual((rays[0].caster, rays[0].target),
-                         ('Mars', 'Jupiter'))
-        self.assertEqual(rays[0].direction, 'Sinister')
+                         ('Jupiter', 'Mars'))
+        self.assertEqual(rays[0].direction, 'Dexter')
         self.assertEqual(rays[0].aspect, 'Square')
+
+    def test_course_dexter_and_sinister_examples(self):
+        # Mercury in Aries applies to Saturn in Capricorn: dexter;
+        # to Saturn in Cancer: sinister.
+        self.assertEqual(directed_ray(0, 9), ('Square', 'Dexter'))
+        self.assertEqual(directed_ray(0, 3), ('Square', 'Sinister'))
 
     def test_mars_squares_and_overcomes_saturn(self):
         ch = chart(contacts=[(0, 2, 2)])
@@ -177,24 +232,65 @@ class DirectedRayTests(unittest.TestCase):
         self.assertEqual(mars.caster, 'Mars')
         self.assertEqual(mars.target, 'Saturn')
         self.assertEqual(mars.direction, 'Sinister')
-        self.assertEqual(mars.overcoming, 'Yes')
+        self.assertEqual(mars.overcoming, 'Mars')
         self.assertEqual(mars.degree_orb, 2.0)
-        self.assertTrue(mars.close_counter_ray)
         self.assertTrue(mars.aktinobolia)
+        self.assertIn(mars.motion, ('Applying', 'Double application'))
 
-    def test_no_aktinobolia_when_caster_separates(self):
+    def test_slower_planet_overcoming_is_named(self):
+        # Saturn in Capricorn is in the 10th sign from the Moon in Aries:
+        # the row is still cast from the Moon, but Saturn overcomes.
+        ch = chart(lons=[275, 105, 150, 235, 195, 70, 5],
+                   speeds=[0, 0, 1, 1, 1, 1, 13], contacts=[(0, 6, 2)])
+        row = next(r for r in analyze_rays(ch)
+                   if {r.caster, r.target} == {'Moon', 'Saturn'})
+        self.assertEqual((row.caster, row.target), ('Moon', 'Saturn'))
+        self.assertEqual(row.direction, 'Dexter')
+        self.assertEqual(row.overcoming, 'Saturn')
+        self.assertFalse(row.aktinobolia)
+
+    def test_every_ray_names_one_overcoming_planet(self):
+        for row in analyze_rays(chart()):
+            self.assertIn(row.overcoming, (row.caster, row.target))
+
+    def test_aktinobolia_applying_or_separating(self):
+        # Course: limited to three degrees, applying or separating.
         ch = chart(speeds=[0, 0, -1, .9, 1, 1, 12],
                    contacts=[(0, 2, 2)])
         mars = next(r for r in analyze_rays(ch) if r.caster == 'Mars'
                     and r.target == 'Saturn')
-        self.assertTrue(mars.close_counter_ray)
-        self.assertFalse(mars.aktinobolia)
+        self.assertTrue(mars.aktinobolia)
+        self.assertEqual(mars.motion, 'Separating')
+
+    def test_course_aktinobolia_mercury_saturn(self):
+        # Saturn 15 Cancer, Mercury 14 Aries applying: Mercury overcomes
+        # Saturn by a sinister square and is struck by Saturn's ray.
+        ch = chart(lons=[105, 160, 200, 235, 300, 14, 50],
+                   speeds=[0.03, .1, .5, 1, 1, 1.5, 13], contacts=[(0, 5, 2)])
+        row = next(r for r in analyze_rays(ch)
+                   if {r.caster, r.target} == {'Mercury', 'Saturn'})
+        self.assertEqual((row.caster, row.direction), ('Mercury', 'Sinister'))
+        self.assertEqual(row.overcoming, 'Mercury')
+        self.assertTrue(row.aktinobolia)
+
+    def test_no_aktinobolia_beyond_three_degrees_or_when_overcome(self):
+        ch = chart(lons=[105, 160, 200, 235, 300, 10, 50],
+                   speeds=[0.03, .1, .5, 1, 1, 1.5, 13], contacts=[(0, 5, 2)])
+        row = next(r for r in analyze_rays(ch)
+                   if {r.caster, r.target} == {'Mercury', 'Saturn'})
+        self.assertFalse(row.aktinobolia)  # 5 degrees from exact
+        # Saturn in Capricorn overcomes the Moon in Aries: no aktinobolia.
+        ch = chart(lons=[275, 105, 150, 235, 195, 70, 5],
+                   speeds=[0, 0, 1, 1, 1, 1, 13], contacts=[(0, 6, 2)])
+        row = next(r for r in analyze_rays(ch)
+                   if {r.caster, r.target} == {'Moon', 'Saturn'})
+        self.assertFalse(row.aktinobolia)
 
     def test_sign_based_ray_outside_degree_orb(self):
         ch = chart(lons=[20, 105, 270, 235, 195, 70, 300])
         mars = next(r for r in analyze_rays(ch) if r.caster == 'Mars'
                     and r.target == 'Saturn')
-        self.assertEqual(mars.overcoming, 'Yes')
+        self.assertEqual(mars.overcoming, 'Mars')
         self.assertFalse(mars.in_orb)
         self.assertFalse(mars.aktinobolia)
 

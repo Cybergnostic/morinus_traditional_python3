@@ -142,8 +142,22 @@ def main():
 				time = T(*(t+(place,)))
 				return chart.Chart(cname, True, time, place, htype, '', opts, full)
 
+	# The reference was dumped from Morinus 6.2, so compare with its settings:
+	# Placidus houses and the original aspect algorithm, whatever the defaults
+	# of new configurations are (Whole Sign and traditional aspects) and
+	# whatever Opts/traditional.json holds.
+	try:
+		import tradoptions
+	except ImportError:	# Morinus 6.2 itself
+		tradoptions = None
+	if tradoptions is not None:
+		tradoptions.load()
+		tradoptions.set(dict(tradoptions.DEFAULTS, aspect_preset='legacy'))
+
 	def defopts():
 		opts = options.Options()
+		opts.hsys = 0	# Placidus, the default of Morinus 6.2
+		opts.isfirbonatti = True	# Bonatti's nocturnal firdaria, likewise
 		return opts
 
 	for cname, t, p in CHARTS:

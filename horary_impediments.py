@@ -15,7 +15,8 @@ Events after an ingress/other station require fresh interpretation.
 
 from dataclasses import dataclass
 
-from traditional_aspects import PLANETS, ASPECT_ANGLES, motion_status, angular_distance
+from traditional_aspects import (PLANETS, ASPECT_ANGLES, RATE_TOLERANCE,
+                                 motion_status, angular_distance, deviation_rate)
 
 EPS = 1e-7
 APPLYING = ("Applying", "Double application")
@@ -56,8 +57,7 @@ def _individual_applying(mover, other, angle):
     diff = abs(angular_distance(lon, other[0]) - angle)
     if diff <= EPS or abs(speed) < EPS:
         return False
-    projected = abs(angular_distance(lon + speed * .001, other[0]) - angle)
-    return projected < diff - 1e-10
+    return deviation_rate(lon, other[0], speed, 0.0, angle) < -RATE_TOLERANCE
 
 
 def assess(events, first, second, current_aspect, initial, positions_at=None,

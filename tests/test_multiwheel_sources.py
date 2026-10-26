@@ -1,6 +1,7 @@
 """Chart picker policies tested without a GUI or Swiss Ephemeris."""
 
 import unittest
+import multiwheel_sources
 import io
 import os
 import pickle
@@ -96,6 +97,25 @@ class MultiWheelSourcesTests(unittest.TestCase):
         })
         self.assertGreaterEqual(len(CREATE_GROUPS), 3)
         self.assertTrue(all(entries for _, entries in CREATE_GROUPS))
+
+
+class KeepSelectedTests(unittest.TestCase):
+    def test_closed_source_stays_selected(self):
+        from types import SimpleNamespace
+        natal = SimpleNamespace(htype=0)
+        other = SimpleNamespace(htype=0)
+        sources = [('Active', natal)]
+        kept = multiwheel_sources.keep_selected(sources, other, 'Open')
+        self.assertEqual(kept, [('Active', natal), ('Open', other)])
+        self.assertEqual(sources, [('Active', natal)])  # not mutated
+
+    def test_present_or_lazy_selection_unchanged(self):
+        from types import SimpleNamespace
+        natal = SimpleNamespace(htype=0)
+        recent = multiwheel_sources.RecentNatal('/x.hor', 'X', '2000')
+        for selected in (natal, recent, None):
+            self.assertEqual(multiwheel_sources.keep_selected(
+                [('Active', natal)], selected, 'Open'), [('Active', natal)])
 
 
 if __name__ == '__main__':
