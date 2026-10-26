@@ -357,7 +357,9 @@ def main():
 	frame = morin.MFrame(None, -1, mtexts.txtscommon['ProgramTitle'], opts)
 	frame.Show(True)
 
-	if '--a5-points-only' in sys.argv:
+	if '--multiwheel-visibility-only' in sys.argv:
+		steps = iter(['onLoad', 'multiWheel', 'onExit'])
+	elif '--a5-points-only' in sys.argv:
 		steps = iter(['onLoad', 'multiWheel', 'aspectsWorkspace', 'onExit'])
 	elif '--multiwheel-only' in sys.argv:
 		steps = iter(['onLoad', 'comparisonGrid', 'multiWheel', 'onExit'])
