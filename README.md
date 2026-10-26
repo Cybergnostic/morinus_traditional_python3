@@ -385,6 +385,43 @@ A point participates only as the target of a planetary aspect.
 Focused tests:
 `python3 -m unittest discover -s tests -p 'test_point_aspects.py' -v`
 
+
+## Multiwheel: non-destructive chart visibility and aspect-line controls
+
+Each of the four **source slots** (Inner chart, Rings 1–3) has its own
+visibility checkbox, checked by default. Uncheck a slot to omit that
+chart from the **rendered wheel only**. All source charts, SR/LR links,
+date controllers, and slot assignments remain unchanged. The first
+visible assigned slot becomes the displayed centre and the others
+become contiguous outer rings in original slot order. Thus, with
+Radix/SR/LR assigned, hiding Radix displays an SR/LR bi-wheel; rechecking
+it immediately restores the radix-centred tri-wheel. Changing the
+source count is *not* needed. At least two visible charts are required;
+unchecking a second-to-last chart is rejected.
+
+The profection and Firdaria calculations remain anchored to the
+original natal and return sources; only visible chart-specific marks
+and tinted sign bands are remapped to the rendered ring positions.
+Their global legend remains intact. Exported PNGs use **exactly the
+same visible chart stack and aspect settings** as the on-screen wheel.
+
+The top toolbar no longer displays **Aspects between** or **Point aspect
+lines**. Instead, open **Cross-chart aspects...**, where the compact
+**Wheel aspect scope** selector chooses the visible centre alone, or
+the centre and a particular visible outer ring. The independent
+**Planet–planet**, **Planet–ASC/MC**, and **Planet–Lots** checkboxes
+enable only their own line types. They are all unchecked by default,
+so ordinary chart inspection remains visually uncluttered. The
+comparison tables are available regardless of chart visibility or
+these drawing settings; hidden slots are still selectable for
+comparison if desired.
+
+Pure regression tests:
+`python3 -m unittest discover -s tests -p 'test_multiwheel_visibility.py' -v`
+
+Focused GUI smoke:
+`python3 tests/guismoke.py <app_copy> <results_dir> --multiwheel-only`
+
 ## Automatic time zones (birth data)
 
 The Windows build and `install.sh` include what this needs. In **New Chart**

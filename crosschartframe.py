@@ -47,6 +47,22 @@ class CrossChartFrame(wx.Frame):
         filters.Add(self.only_receptions, 0, wx.ALIGN_CENTER_VERTICAL)
         layout.Add(filters, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
+        # Aspect drawing belongs here rather than in the wheel's
+        # reading/display toolbar. The user opts in explicitly.
+        drawrow = wx.BoxSizer(wx.HORIZONTAL)
+        drawrow.Add(wx.StaticText(root, label=i18n.tr('Wheel aspect scope:')),
+                    0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        self.aspect_display_choice = wx.Choice(root)
+        self._aspect_targets = []
+        drawrow.Add(self.aspect_display_choice, 0, wx.RIGHT, 16)
+        self.planet_lines = wx.CheckBox(root, label=i18n.tr('Planet–planet'))
+        drawrow.Add(self.planet_lines, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 14)
+        self.angle_lines = wx.CheckBox(root, label=i18n.tr('Planet–ASC/MC'))
+        self.lot_lines = wx.CheckBox(root, label=i18n.tr('Planet–Lots'))
+        drawrow.Add(self.angle_lines, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 14)
+        drawrow.Add(self.lot_lines, 0, wx.ALIGN_CENTER_VERTICAL)
+        layout.Add(drawrow, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
+
         self.tabs = wx.Notebook(root)
         self.planet_page = wx.Panel(self.tabs)
         self.angle_page = wx.Panel(self.tabs)
@@ -84,9 +100,14 @@ class CrossChartFrame(wx.Frame):
         self.only_receptions.Bind(wx.EVT_CHECKBOX, self.refresh)
         self.recalculate.Bind(wx.EVT_BUTTON, self.refresh)
         self.copy.Bind(wx.EVT_BUTTON, self.copy_table)
+        self.aspect_display_choice.Bind(wx.EVT_CHOICE, self.on_display_change)
+        self.planet_lines.Bind(wx.EVT_CHECKBOX, self.on_display_change)
+        self.angle_lines.Bind(wx.EVT_CHECKBOX, self.on_display_change)
+        self.lot_lines.Bind(wx.EVT_CHECKBOX, self.on_display_change)
         self.tabs.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab)
         self.Bind(wx.EVT_ACTIVATE, self.on_active)
         self.update_slots(preserve=False)
+        self.sync_wheel_controls()
         self.refresh()
 
     @staticmethod
@@ -98,6 +119,33 @@ class CrossChartFrame(wx.Frame):
         sizer.Add(table, 1, wx.EXPAND | wx.ALL, 7)
         parent.SetSizer(sizer)
         return table
+
+    def sync_wheel_controls(self):
+        """Keep chart-slot identity stable when the drawing omits layers."""
+        visible = self.wheel.visible_slot_indices()
+        self._aspect_targets = [0] + list(visible[1:])
+        labels = [i18n.tr('Visible centre only')]
+        labels += [
+            i18n.tr('Visible centre and ring %d') % ring
+            for ring in range(1, len(visible))]
+        self.aspect_display_choice.Set(labels)
+        current = self.wheel.aspect_target_slot
+        chosen = (self._aspect_targets.index(current)
+                  if current in self._aspect_targets else 0)
+        self.aspect_display_choice.SetSelection(chosen)
+        self.planet_lines.SetValue(self.wheel.show_planet_aspects)
+        self.angle_lines.SetValue(self.wheel.show_angle_aspects)
+        self.lot_lines.SetValue(self.wheel.show_lot_aspects)
+
+    def on_display_change(self, event=None):
+        idx = self.aspect_display_choice.GetSelection()
+        if idx < 0 or idx >= len(self._aspect_targets):
+            return
+        self.wheel.set_aspect_display(
+            target_slot=self._aspect_targets[idx],
+            planets=self.planet_lines.GetValue(),
+            angles=self.angle_lines.GetValue(),
+            lots=self.lot_lines.GetValue())
 
     def selected_charts(self):
         count = self.wheel.count_choice.GetSelection() + 2
@@ -121,6 +169,7 @@ class CrossChartFrame(wx.Frame):
     def on_active(self, event):
         if event.GetActive():
             self.update_slots()
+            self.sync_wheel_controls()
             self.refresh()
         event.Skip()
 

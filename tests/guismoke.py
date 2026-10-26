@@ -483,6 +483,21 @@ def main():
 					assert analysis.lot_table.GetItemCount() == len(
 						point_aspects.analyze_cross(frame.horoscope, secondary,
 						                            "Lots", frame.options))
+					assert not wnd.show_planet_aspects
+					assert not wnd.show_angle_aspects
+					assert not wnd.show_lot_aspects
+					analysis.planet_lines.SetValue(True)
+					analysis.angle_lines.SetValue(True)
+					analysis.lot_lines.SetValue(True)
+					analysis.on_display_change()
+					wnd.redraw()
+					assert wnd.renderer.show_planet_aspects
+					assert wnd.renderer.show_angle_aspects
+					assert wnd.renderer.show_lot_aspects
+					analysis.planet_lines.SetValue(False)
+					analysis.angle_lines.SetValue(False)
+					analysis.lot_lines.SetValue(False)
+					analysis.on_display_change()
 				finally:
 					analysis.Destroy()
 					wnd.crosschart_window = None
@@ -493,15 +508,24 @@ def main():
 				inner.select_chart(secondary)
 				wnd.redraw()
 				assert wnd.renderer.radix is secondary
-				wnd.aspect_choice.SetSelection(1)
-				wnd.angle_aspect_lines.SetValue(True)
-				wnd.lot_aspect_lines.SetValue(True)
+				wnd.count_choice.SetSelection(1)  # assigned tri-wheel
+				wnd.change_count()
+				original_slots = [p.selected() for p in wnd.pickers[:3]]
+				wnd.visibility_checks[0].SetValue(False)
+				wnd.on_visibility_change(0)
 				wnd.redraw()
-				assert wnd.renderer.show_angle_aspects
-				assert wnd.renderer.show_lot_aspects
-				wnd.angle_aspect_lines.SetValue(False)
-				wnd.lot_aspect_lines.SetValue(False)
-				wnd.aspect_choice.SetSelection(0)
+				assert wnd.visible_slot_indices() == (1, 2)
+				assert wnd.renderer.radix is original_slots[1]
+				assert wnd.renderer.others == [original_slots[2]]
+				assert wnd.count_choice.GetSelection() == 1
+				assert [p.selected() for p in wnd.pickers[:3]] == original_slots
+				wnd.visibility_checks[0].SetValue(True)
+				wnd.on_visibility_change(0)
+				wnd.redraw()
+				assert len(wnd.renderer.others) == 2
+				# Leave the initial bi-wheel setup for the remaining smoke steps.
+				wnd.count_choice.SetSelection(0)
+				wnd.change_count()
 				assert picker.selected() is secondary
 				inner.select_chart(frame.horoscope)
 				inner.refresh()

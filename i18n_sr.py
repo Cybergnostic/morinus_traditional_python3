@@ -629,3 +629,12 @@ TEXTS.update({
     '%d angle aspects': '%d aspekata prema uglovima',
     '%d Lot aspects': '%d aspekata prema tačkama',
 })
+
+# Multiwheel visibility and aspect display
+TEXTS.update({
+    'Show this chart in the wheel': 'Prikaži ovu kartu u krugu',
+    'Wheel aspect scope:': 'Aspektne linije za:',
+    'Visible centre only': 'Samo vidljiva unutrašnja karta',
+    'Visible centre and ring %d': 'Vidljiva unutrašnja i spoljašnji krug %d',
+    'Planet–planet': 'Planeta–planeta',
+})

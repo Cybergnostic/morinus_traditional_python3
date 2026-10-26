@@ -18,6 +18,7 @@ import common
 import comparegrid
 import crosschart_aspects
 import point_aspects
+import multiwheel_visibility
 import houses
 import multiwheel_layout
 import multiwheel_highlight
@@ -80,6 +81,7 @@ class MultiWheel:
         self.options = options
         self.bw = bool(bw)
         self.aspect_ring = -1  # -1 = none; 0 = inner; 1..3 = inner to ring
+        self.show_planet_aspects = True
         self.show_angle_aspects = False
         self.show_lot_aspects = False
         self.reference_outside = True  # Exterior reference bands are the default.
@@ -191,22 +193,24 @@ class MultiWheel:
         if self.aspect_ring < 0:
             return
         r = core * 0.52
-        matrix = getattr(self.radix, 'aspmatrix', None)
-        if matrix is not None:
-            for i in range(planets.Planets.PLANETS_NUM):
-                for j in range(i):
-                    item = matrix[i][j]
-                    kind = item.typ
-                    if 0 <= kind < chart.Chart.ASPECT_NUM:
-                        a = self.longitude(self.radix, i)
-                        b = self.longitude(self.radix, j)
-                        self.stroke(self.point(a, r), self.point(b, r), 'divider',
-                                    self.options.clraspect[kind])
-        if self.aspect_ring > 0:
-            other = self.others[self.aspect_ring - 1]
-            for i, j, kind, a, b in cross_aspects(self.radix, other, self.options):
-                self.stroke(self.point(a, r), self.point(b, r), 'divider',
-                            self.options.clraspect[kind])
+        if self.show_planet_aspects:
+            matrix = getattr(self.radix, 'aspmatrix', None)
+            if matrix is not None:
+                for i in range(planets.Planets.PLANETS_NUM):
+                    for j in range(i):
+                        item = matrix[i][j]
+                        kind = item.typ
+                        if 0 <= kind < chart.Chart.ASPECT_NUM:
+                            a = self.longitude(self.radix, i)
+                            b = self.longitude(self.radix, j)
+                            self.stroke(self.point(a, r), self.point(b, r),
+                                        'divider', self.options.clraspect[kind])
+            if self.aspect_ring > 0:
+                other = self.others[self.aspect_ring - 1]
+                for i, j, kind, a, b in cross_aspects(
+                        self.radix, other, self.options):
+                    self.stroke(self.point(a, r), self.point(b, r), 'divider',
+                                self.options.clraspect[kind])
         if not self.show_angle_aspects and not self.show_lot_aspects:
             return
         for kind, enabled, colour in (
@@ -1431,12 +1435,12 @@ class MultiWheelFrame(wx.Frame):
             self, choices=i18n.tr(['1 (bi-wheel)', '2 (tri-wheel)', '3 (quad-wheel)']))
         self.count_choice.SetSelection(0)
         row.Add(self.count_choice, 0, wx.RIGHT, 15)
-        row.Add(wx.StaticText(self, label=i18n.tr('Aspects between:')), 0,
-                wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
-        self.aspect_choice = wx.Choice(
-            self, choices=i18n.tr(['None', 'Inner chart only', 'Inner and ring 1']))
-        self.aspect_choice.SetSelection(0)
-        row.Add(self.aspect_choice, 0, wx.RIGHT, 15)
+        # Aspect drawing is controlled from Cross-chart aspects, not from
+        # the reading-focused multiwheel toolbar.
+        self.aspect_target_slot = 0  # comparison scope; all line toggles off
+        self.show_planet_aspects = False
+        self.show_angle_aspects = False
+        self.show_lot_aspects = False
         row.Add(wx.StaticText(self, label=i18n.tr('Reference bands:')),
                 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 6)
         self.reference_choice = wx.Choice(
@@ -1470,16 +1474,6 @@ class MultiWheelFrame(wx.Frame):
         self.highlight_choice.SetValue(True)
         viewrow.Add(self.highlight_choice, 0, wx.ALIGN_CENTER_VERTICAL)
         outer.Add(viewrow, 0, wx.ALL, 7)
-        pointrow = wx.BoxSizer(wx.HORIZONTAL)
-        pointrow.Add(wx.StaticText(self, label=i18n.tr('Point aspect lines:')),
-                     0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
-        self.angle_aspect_lines = wx.CheckBox(
-            self, label=i18n.tr('Planet–ASC/MC'))
-        self.lot_aspect_lines = wx.CheckBox(
-            self, label=i18n.tr('Planet–Lots'))
-        pointrow.Add(self.angle_aspect_lines, 0, wx.RIGHT, 17)
-        pointrow.Add(self.lot_aspect_lines, 0)
-        outer.Add(pointrow, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 9)
 
         # Splitter lets the user give more room to long chart captions and
         # the return lists. Unlike a fixed-width sizer, the sash stays
@@ -1493,15 +1487,25 @@ class MultiWheelFrame(wx.Frame):
         controls = wx.BoxSizer(wx.VERTICAL)
         self.pickers = []
         self.picker_rows = []
+        self.visibility_checks = []
         for i in range(4):
             strip = wx.Panel(self.sidebar)
             line = wx.BoxSizer(wx.VERTICAL)
+            heading = wx.BoxSizer(wx.HORIZONTAL)
+            visible = wx.CheckBox(strip, label='')
+            visible.SetValue(True)
+            visible.SetToolTip(i18n.tr('Show this chart in the wheel'))
+            visible.Bind(wx.EVT_CHECKBOX,
+                         lambda event, index=i: self.on_visibility_change(index))
+            heading.Add(visible, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
             tag = wx.StaticText(
                 strip, label=(i18n.tr('Inner chart') if i == 0
                               else i18n.tr('Ring %d') % i) + ':')
             if i and not self.options.bw:
                 tag.SetForegroundColour(wx.Colour(*RING_COLOURS[i - 1]))
-            line.Add(tag, 0, wx.BOTTOM, 4)
+            heading.Add(tag, 0, wx.ALIGN_CENTER_VERTICAL)
+            line.Add(heading, 0, wx.BOTTOM, 4)
+            self.visibility_checks.append(visible)
             picker = RingChartPicker(strip, mainfr, self,
                                      lambda index=i: self.on_picker_change(index), i)
             line.Add(picker, 0, wx.EXPAND)
@@ -1694,12 +1698,9 @@ class MultiWheelFrame(wx.Frame):
         self.SetSizer(outer)
         self.CreateStatusBar()
         self.Bind(wx.EVT_CHOICE, self.change_count, self.count_choice)
-        self.Bind(wx.EVT_CHOICE, self.queue_draw, self.aspect_choice)
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.labels_choice)
         self.Bind(wx.EVT_CHOICE, self.queue_draw, self.reference_choice)
         self.Bind(wx.EVT_CHECKBOX, self.queue_draw, self.highlight_choice)
-        self.Bind(wx.EVT_CHECKBOX, self.queue_draw, self.angle_aspect_lines)
-        self.Bind(wx.EVT_CHECKBOX, self.queue_draw, self.lot_aspect_lines)
         self.Bind(wx.EVT_BUTTON, self.onSaveAsBitmap, self.savebutton)
         self.Bind(wx.EVT_BUTTON, self.open_cross_chart_aspects, self.crosschart_button)
         self.Bind(wx.EVT_BUTTON, self.zoom_fit, self.fit_button)
@@ -2117,18 +2118,62 @@ class MultiWheelFrame(wx.Frame):
         count = self.count_choice.GetSelection() + 1
         for i, strip in enumerate(self.picker_rows):
             strip.Show(i <= count)
-        prior = self.aspect_choice.GetSelection()
-        self.aspect_choice.Clear()
-        self.aspect_choice.Append(i18n.tr('None'))
-        self.aspect_choice.Append(i18n.tr('Inner chart only'))
-        for i in range(count):
-            self.aspect_choice.Append(i18n.tr('Inner and ring %d') % (i + 1))
-        self.aspect_choice.SetSelection(min(max(prior, 0), count + 1))
+        # Slot visibility is independent of the number of assigned rings.
+        # When hiding inactive slots leaves fewer than two, keep the first
+        # two displayed instead of silently changing picker assignments.
+        if sum(c.GetValue() for c in self.visibility_checks[:count + 1]) < 2:
+            self.visibility_checks[0].SetValue(True)
+            self.visibility_checks[1].SetValue(True)
+        if self.aspect_target_slot > count:
+            self.aspect_target_slot = -1
         self.sidebar.Layout()
         self.sidebar.FitInside()
         self.Layout()
         self.maybe_autofill_rings()
         self.refresh_return_navigation()
+        self.queue_draw()
+
+    def active_slot_count(self):
+        return self.count_choice.GetSelection() + 2
+
+    def visible_slot_indices(self):
+        return multiwheel_visibility.visible_slot_indices(
+            self.active_slot_count(),
+            [ctrl.GetValue() for ctrl in self.visibility_checks])
+
+    def visible_chart_layers(self):
+        slots = [p.selected() for p in self.pickers[:self.active_slot_count()]]
+        visible = self.visible_slot_indices()
+        centre, others = multiwheel_visibility.displayed_charts(slots, visible)
+        return visible, centre, others
+
+    def on_visibility_change(self, index):
+        # Do not destroy or reassign charts just to hide a rendered layer.
+        if sum(ctrl.GetValue() for ctrl in
+               self.visibility_checks[:self.active_slot_count()]) < 2:
+            self.visibility_checks[index].SetValue(True)
+            wx.Bell()
+            return
+        self.queue_draw()
+        self.refresh_inspector()
+        window = self.crosschart_window
+        if window is not None:
+            try:
+                if not window.IsBeingDeleted():
+                    window.sync_wheel_controls()
+            except RuntimeError:
+                pass
+
+    def set_aspect_display(self, target_slot=None, planets=None,
+                           angles=None, lots=None):
+        if target_slot is not None:
+            self.aspect_target_slot = target_slot
+        if planets is not None:
+            self.show_planet_aspects = bool(planets)
+        if angles is not None:
+            self.show_angle_aspects = bool(angles)
+        if lots is not None:
+            self.show_lot_aspects = bool(lots)
         self.queue_draw()
 
     def register_chart(self, chrt, label, picker, radix=None, solar_year=None,
@@ -2690,27 +2735,37 @@ class MultiWheelFrame(wx.Frame):
         vw, vh = self.canvas.GetClientSize()
         if vw < 100 or vh < 100:
             return
-        count = self.count_choice.GetSelection() + 1
+        visible, inner, charts = self.visible_chart_layers()
+        count = len(charts)  # Rendering count, not permanent source slots.
         w, h = self.canvas_size(count)
-        inner = self.pickers[0].selected()
-        charts = [picker.selected() for picker in self.pickers[1:count + 1]]
         repeated = []
-        seen = {id(inner): i18n.tr('Inner chart')}
-        for i, selected in enumerate(charts, 1):
+        seen = {}
+        for slot in visible:
+            selected = self.pickers[slot].selected()
+            label = (i18n.tr('Inner chart') if slot == 0 else
+                     i18n.tr('Ring %d') % slot)
             if id(selected) in seen:
-                repeated.append(i18n.tr('Ring %d') % i + ' = ' + seen[id(selected)])
+                repeated.append(label + ' = ' + seen[id(selected)])
             else:
-                seen[id(selected)] = i18n.tr('Ring %d') % i
+                seen[id(selected)] = label
         self.renderer = MultiWheel(inner, charts,
                                    (w, h), self.options, self.options.bw)
-        self.renderer.aspect_ring = aspect_ring_from_choice(
-            self.aspect_choice.GetSelection())
-        self.renderer.show_angle_aspects = self.angle_aspect_lines.GetValue()
-        self.renderer.show_lot_aspects = self.lot_aspect_lines.GetValue()
+        self.renderer.aspect_ring = multiwheel_visibility.aspect_ring(
+            self.aspect_target_slot, visible)
+        self.renderer.show_planet_aspects = self.show_planet_aspects
+        self.renderer.show_angle_aspects = self.show_angle_aspects
+        self.renderer.show_lot_aspects = self.show_lot_aspects
         self.renderer.label_mode = self.labels_choice.GetSelection()
         self.renderer.reference_outside = bool(self.reference_choice.GetSelection())
         self.renderer.show_highlights = self.highlight_choice.GetValue()
-        data, instant = self.time_lord_entries(inner, charts)
+        # Natal-driven time lords stay grounded in the original source slots.
+        # Only the visual ring indexes are remapped; no SR/LR links change.
+        original_centre = self.pickers[0].selected()
+        original_others = [p.selected()
+                           for p in self.pickers[1:self.active_slot_count()]]
+        original_data, instant = self.time_lord_entries(
+            original_centre, original_others)
+        data = multiwheel_visibility.remap_highlights(original_data, visible)
         self.current_highlights = data['marks']
         self.current_profection_areas = data['areas']
         self.renderer.highlight_entries = data['marks']
@@ -2781,21 +2836,25 @@ class MultiWheelFrame(wx.Frame):
                 path += '.png'
             # Export from a fresh high-resolution render. Never export
             # the reduced Fit-to-window bitmap.
-            count = self.count_choice.GetSelection() + 1
-            diameter = {1: 1600, 2: 2000, 3: 2400}[count]
-            inner = self.pickers[0].selected()
-            charts = [p.selected() for p in self.pickers[1:count + 1]]
+            visible, inner, charts = self.visible_chart_layers()
+            diameter = {1: 1600, 2: 2000, 3: 2400}[len(charts)]
             exporter = MultiWheel(inner, charts,
                                   (diameter, diameter),
                                   self.options, self.options.bw)
-            exporter.aspect_ring = aspect_ring_from_choice(
-                self.aspect_choice.GetSelection())
-            exporter.show_angle_aspects = self.angle_aspect_lines.GetValue()
-            exporter.show_lot_aspects = self.lot_aspect_lines.GetValue()
+            exporter.aspect_ring = multiwheel_visibility.aspect_ring(
+                self.aspect_target_slot, visible)
+            exporter.show_planet_aspects = self.show_planet_aspects
+            exporter.show_angle_aspects = self.show_angle_aspects
+            exporter.show_lot_aspects = self.show_lot_aspects
             exporter.label_mode = self.labels_choice.GetSelection()
             exporter.reference_outside = bool(self.reference_choice.GetSelection())
             exporter.show_highlights = self.highlight_choice.GetValue()
-            data, _ = self.time_lord_entries(inner, charts)
+            original_centre = self.pickers[0].selected()
+            original_others = [p.selected()
+                               for p in self.pickers[1:self.active_slot_count()]]
+            original_data, _ = self.time_lord_entries(
+                original_centre, original_others)
+            data = multiwheel_visibility.remap_highlights(original_data, visible)
             exporter.highlight_entries = data['marks']
             exporter.highlight_areas = data['areas']
             exporter.highlight_legend = data['legend']
