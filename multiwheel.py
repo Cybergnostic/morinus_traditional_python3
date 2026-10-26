@@ -1187,8 +1187,18 @@ class RingChartPicker(comparegrid.ChartPicker):
                     return
                 if source is not self._inner_override:
                     if self._inner_override is not None:
+                        # Clearing an old centre override refreshes the
+                        # dropdown, which previously reset the new user's
+                        # selection to index 0 before on_change() fired.
+                        # Preserve the actual object they just selected.
+                        chosen = source
                         self._inner_override = None
                         self.refresh()
+                        match = next(
+                            (n for n, (_, chrt) in enumerate(self.sources)
+                             if chrt is chosen), None)
+                        if match is not None:
+                            self.choice.SetSelection(match)
         self.owner.manual_rings.add(self.ring_index)
         self.update_step_buttons()
         super().changed(event)
@@ -1895,7 +1905,7 @@ class MultiWheelFrame(wx.Frame):
             line.Show(is_return)
             previous.Enable(is_return)
             following.Enable(is_return)
-        self.return_section.Show(has_returns)
+        self.return_section.Show(True)
         self.refresh_inspector()
 
     def refresh_transit_controls(self):
@@ -1930,7 +1940,7 @@ class MultiWheelFrame(wx.Frame):
             self._transit_fields_ring = self.active_transit_ring
         for entry in self.transit_inputs.values():
             entry.Enable(bool(slots))
-        self.transit_section.Show(bool(slots))
+        self.transit_section.Show(True)
         self.refresh_inspector()
 
     def on_transit_ring_choice(self, event):
@@ -2075,13 +2085,51 @@ class MultiWheelFrame(wx.Frame):
         if self._auto_filling or self._updating_returns:
             return
         count = self.count_choice.GetSelection() + 1
-        if count < 2:
-            return
         radix = self.pickers[0].selected()
+        if radix.htype != chart.Chart.RADIX:
+            return
         solar = self.pickers[1].selected()
-        if (radix.htype != chart.Chart.RADIX or
-                solar.htype != chart.Chart.SOLAR or
-                self.return_origin(solar) is not radix):
+        if not (solar.htype == chart.Chart.SOLAR and
+                self.return_origin(solar) is radix):
+            # A newly selected natal should have its own SR, not an
+            # unrelated return left in the first ring. This is safe only
+            # when Ring 1 has never been manually assigned; explicit ring
+            # selections always win. A pre-existing SR is recast by
+            # sync_radix_dependents() instead.
+            if 1 in self.manual_rings:
+                return
+            now = datetime.now(timezone.utc)
+            year = now.year
+            if (now.month, now.day) < (radix.time.origmonth,
+                                       radix.time.origday):
+                year -= 1
+            try:
+                t = returnslist.solar_return(radix, year)
+            except (ValueError, OverflowError, RuntimeError) as exc:
+                self.SetStatusText(
+                    i18n.tr('Could not calculate the solar return.') +
+                    ' ' + str(exc))
+                return
+            if t is None:
+                self.SetStatusText(
+                    i18n.tr('Could not calculate the solar return.'))
+                return
+            self._auto_filling = True
+            previous_auto = self._updating_returns
+            self._updating_returns = True
+            try:
+                new_solar = returnslist.return_chart(
+                    t, radix, chart.Chart.SOLAR, radix.place)
+                self.register_chart(new_solar, i18n.tr('Solar return'),
+                                    self.pickers[1], radix=radix,
+                                    solar_year=year)
+            finally:
+                self._updating_returns = previous_auto
+                self._auto_filling = False
+            solar = self.pickers[1].selected()
+        if count < 2:
+            self.refresh_return_navigation()
+            self.queue_draw()
             return
         self._auto_filling = True
         previous = self._updating_returns
@@ -2544,7 +2592,9 @@ class MultiWheelFrame(wx.Frame):
                        if kind == 'solar' and radix is not None]
         lunar_slots = [i for i, (kind, radix) in enumerate(assignments)
                        if kind == 'lunar' and radix is not None]
-        self.return_panel.Show(bool(solar_slots or lunar_slots))
+        # Keep SR/LR navigation present even when selections are not yet
+        # linked. It should never disappear when the natal is switched.
+        self.return_panel.Show(True)
         self._nav_solar_slots = solar_slots
         self._nav_lunar_slots = lunar_slots
         if self._nav_solar_ring not in solar_slots:
@@ -2562,6 +2612,9 @@ class MultiWheelFrame(wx.Frame):
         if self._nav_solar_ring is not None:
             self.solar_ring_choice.SetSelection(
                 solar_slots.index(self._nav_solar_ring))
+        if not solar_slots:
+            self.solar_ring_choice.Append(i18n.tr('No solar return selected'))
+            self.solar_ring_choice.SetSelection(0)
         self.solar_ring_choice.Enable(bool(solar_slots))
         self.lunar_ring_choice.Clear()
         for i in lunar_slots:
@@ -2569,6 +2622,9 @@ class MultiWheelFrame(wx.Frame):
         if self._nav_lunar_ring is not None:
             self.lunar_ring_choice.SetSelection(
                 lunar_slots.index(self._nav_lunar_ring))
+        if not lunar_slots:
+            self.lunar_ring_choice.Append(i18n.tr('No lunar return selected'))
+            self.lunar_ring_choice.SetSelection(0)
         self.lunar_ring_choice.Enable(bool(lunar_slots))
 
         self._nav_years = []

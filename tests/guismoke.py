@@ -439,6 +439,12 @@ def main():
 						wnd.sidebar.GetBackgroundColour())
 				assert isinstance(wnd.inspector, wx.Notebook)
 				assert wnd.inspector.GetPageCount() == 2
+				assert wnd.inspector.GetPageText(1) == i18n.tr('Returns + transits')
+				# Navigation pages and controls must remain visible even when no
+				# return is linked yet (a fresh or newly loaded natal chart).
+				assert wnd.return_panel.IsShown()
+				assert wnd.return_section.IsShown()
+				assert wnd.transit_section.IsShown()
 				assert wnd.highlight_choice.GetValue()
 				assert len(wnd.legend_labels) == 5
 				wnd.toggle_sidebar()
@@ -691,6 +697,10 @@ def main():
 				assert wnd.return_origin(picker.selected()) is other_natal
 				assert wnd.return_origin(lunar_picker.selected()) is other_natal
 				assert wnd.solar_year(picker.selected()) == base_year
+				assert wnd.return_panel.IsShown()
+				assert wnd.return_section.IsShown()
+				assert wnd.transit_section.IsShown()
+				assert wnd.inspector.GetPageText(1) == i18n.tr('Returns + transits')
 				assert lunar_picker.selected().time.jd == sample_rows(
 					other_natal, base_year)[1].jd
 				new_t = transit_picker.selected().time

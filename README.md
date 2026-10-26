@@ -422,6 +422,27 @@ Pure regression tests:
 Focused GUI smoke:
 `python3 tests/guismoke.py <app_copy> <results_dir> --multiwheel-only`
 
+
+### Return navigation and dependent-chart preservation
+
+**Returns + transits** remains a permanent notebook tab. The sidebar's
+**Return navigation** remains visible even when there is no selected
+SR/LR; its controls display inactive placeholders until charts are linked.
+The return arrows and transit controller remain present (disabled where
+their chart type is not currently selected), not conditionally removed.
+Temporarily hiding a wheel layer never changes its SR/LR/transit source
+or disables navigation.
+
+Selecting a different natal chart in the original **Inner chart** source
+slot rebases assigned solar/lunar returns and transits to that new natal,
+preserving the SR year and manual transit time. If Ring 1 has **not**
+been manually assigned and no matching solar return is present, Morinus
+generates the current solar year for the new natal; the existing LR and
+current-transit autofill then follows for tri-/quad-wheel layouts.
+Explicitly assigned ring charts are never overwritten merely to
+perform an autofill. The inner source picker preserves the user's
+new natal selection when clearing a temporary non-natal override.
+
 ## Automatic time zones (birth data)
 
 The Windows build and `install.sh` include what this needs. In **New Chart**

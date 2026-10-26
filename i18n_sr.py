@@ -638,3 +638,10 @@ TEXTS.update({
     'Visible centre and ring %d': 'Vidljiva unutrašnja i spoljašnji krug %d',
     'Planet–planet': 'Planeta–planeta',
 })
+
+# Multiwheel return-navigation visibility and fresh-natal autofill
+TEXTS.update({
+    'No solar return selected': 'Nije izabran solarni povratak',
+    'No lunar return selected': 'Nije izabran lunarni povratak',
+    'Could not calculate the solar return.': 'Nije moguće izračunati solarni povratak.',
+})
