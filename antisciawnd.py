@@ -15,8 +15,6 @@ import fortune
 import houses
 
 PLANETS_ON = 'Planets on it'
-# The rule: in the antiscion's sign, whole degrees adding up to 29.
-NOTE = 'Planets on it: in its sign, the whole degrees adding up to 29 (minutes not counted); distance from the exact point'
 
 class AntisciaWnd(commonwnd.CommonWnd):
 
@@ -47,8 +45,8 @@ class AntisciaWnd(commonwnd.CommonWnd):
         self.LINE_NUM = 12
         self.TABLE_HEIGHT = self.TITLE_HEIGHT + self.SPACE_TITLEY + self.LINE_NUM * self.LINE_HEIGHT
         self.TABLE_WIDTH = self.SMALL_CELL_WIDTH + self.TITLE_WIDTH
-        self.WIDTH = commonwnd.CommonWnd.BORDER + max(self.TABLE_WIDTH, measure.textbbox((0, 0), NOTE, self.fntText)[2]) + commonwnd.CommonWnd.BORDER
-        self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + self.LINE_HEIGHT + commonwnd.CommonWnd.BORDER
+        self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
+        self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
         self.drawBkg()
 
@@ -157,8 +155,6 @@ class AntisciaWnd(commonwnd.CommonWnd):
             self.drawline(draw, x, y + i * self.LINE_HEIGHT, txts[j], tableclr, data[j], j, ascmc)
             i += 1
 
-        w, h = draw.textbbox((0, 0), NOTE, self.fntText)[2:]
-        draw.text((x, y + i * self.LINE_HEIGHT + (self.LINE_HEIGHT - h) // 2), NOTE, fill=txtclr, font=self.fntText)
         wxImg = wx.Image(img.size[0], img.size[1])
         wxImg.SetData(img.tobytes())
         self.buffer = wx.Bitmap(wxImg)

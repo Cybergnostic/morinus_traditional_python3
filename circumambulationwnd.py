@@ -8,7 +8,6 @@ import circumambulation as ca
 import zodiacalreleasing as zr
 
 HEADERS = ('Age', 'Date', 'Point', 'Distributor', 'Participant', '')
-NOTE = "%s, %s; bounds from Options > Terms (Options > Circumambulation)."
 
 
 class CircumambulationWnd(tablewnd.TableWnd):
@@ -40,9 +39,7 @@ class CircumambulationWnd(tablewnd.TableWnd):
 			colours.append(colour)
 		self.sections = [tablewnd.Section(rows, HEADERS, colours)]
 		point = ca.tradoptions.get('ca_point')
-		self.notes = ['Circumambulation of the %s through the bounds' % ('Midheaven' if point == 'mc' else 'Ascendant'),
-			NOTE % ('The Midheaven under the right ascensions' if point == 'mc' else 'The Ascendant under the oblique ascensions of the birth latitude',
-			'a year for each 0\xb059\'08" (Naibod)' if ca.tradoptions.get('ca_key') == 'naibod' else 'a year for each degree (Ptolemy)')]
+		self.notes = ['Circumambulation of the %s through the bounds' % ('Midheaven' if point == 'mc' else 'Ascendant')]
 		self.layout()
 
 	def getExt(self):

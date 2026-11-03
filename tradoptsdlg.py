@@ -131,16 +131,16 @@ class TradOptsDlg(wx.Dialog):
 DIALOGS = [
 	('Zodiacal releasing', [
 		(SECTION, 'Periods'),
-		(CHOICE, 'zr_yeardays', 'Length of a year', [(360.0, '360 days (Valens)'), (365.25, '365.25 days (solar year)')],
-			'Valens counts the periods in years of 360 days (12 months of 30 days); some astrologers use solar years.'),
+		(CHOICE, 'zr_yeardays', 'Length of a year', [(360.0, '360 days'), (365.25, '365.25 days (solar year)')],
+			'The length of a year of the periods.'),
 		(INT, 'zr_years', 'Years shown', 30, 150, 'How many years after the birth the table lists.'),
 	]),
 	('Decennials', [
 		(SECTION, 'Periods'),
-		(CHOICE, 'dec_start', 'Start from', [('sect', 'the sect light (Valens)'), ('sun', 'the Sun'), ('moon', 'the Moon'),
+		(CHOICE, 'dec_start', 'Start from', [('sect', 'the sect light'), ('sun', 'the Sun'), ('moon', 'the Moon'),
 			('asc', 'the first planet after the Ascendant'), ('fortune', 'the first planet after the Lot of Fortune')],
 			'The planet that rules the first 10 years 9 months; the others follow in the zodiacal order of the chart.'),
-		(CHOICE, 'dec_monthdays', 'Length of a month', [(30.0, '30 days (Valens)'), (30.4375, 'a twelfth of a solar year (30.44 days)')],
+		(CHOICE, 'dec_monthdays', 'Length of a month', [(30.0, '30 days'), (30.4375, 'a twelfth of a solar year (30.44 days)')],
 			'The periods are counted in months: 129 for each planet at level 1, the minor years as months at level 2.'),
 		(INT, 'dec_years', 'Years shown', 30, 150, 'How many years after the birth the table lists.'),
 	]),
@@ -156,7 +156,7 @@ DIALOGS = [
 	]),
 	('Heliacal phenomena', [
 		(SECTION, 'Phasis'),
-		(INT, 'hel_phasisdays', 'Phasis within (days)', 1, 30, 'A visibility event or station this close to the birth counts as phasis (7 days in the Hellenistic texts).'),
+		(INT, 'hel_phasisdays', 'Phasis within (days)', 1, 30, 'A visibility event or station this close to the birth counts as phasis.'),
 		(INT, 'hel_stationdays', 'Stations within (days)', 7, 60, 'Stations are listed when this close to the birth.'),
 		(SECTION, 'Observer and atmosphere'),
 		(FLOAT, 'hel_pressure', 'Air pressure (hPa, 0 = standard)', 0.0, 1100.0, 1.0, 0, 'Atmospheric pressure at the place; 0 uses the standard 1013.25 hPa.'),
@@ -200,16 +200,16 @@ DIALOGS = [
 	('Sect, conditions, temperament and hyleg', [
 		(SECTION, 'Sect'),
 		(FLOAT, 'sect_ask_window', 'Ask when the Sun is this near the day/night orb (degrees)', 0.0, 3.0, 0.1, 1,
-			'With "Use day/night orb" on (Almuten of the chart), the Sun up to the day/night orb (Orbs) below the horizon makes a day chart, in every table alike. When the Sun is this close to the orb a dialog asks whether the chart is diurnal or nocturnal; 0 never asks.'),
+			'When the Sun is this close to the day/night orb, ask whether the chart is diurnal or nocturnal; 0 never asks.'),
 		(SECTION, 'Planetary conditions'),
 		(CHOICE, 'speed_means', 'Swift and slow against', [('traditional', 'the traditional mean daily motions'), ('astronomical', 'the astronomical mean motions')],
-			'Traditional: Sun, Mercury and Venus 0\xb059\', Moon 13\xb023\', Mars 0\xb031\', Jupiter 0\xb005\', Saturn 0\xb003\'. The astronomical mean motions are Moon 13\xb011\', Mercury 1\xb036\', Venus 1\xb010\', Saturn 0\xb002\'.'),
+			'The mean daily motions swift and slow are judged against.'),
 		(SECTION, 'Temperament'),
-		(FLOAT, 'temp_orb', 'Orb of the aspects to the Ascendant and its ruler', 0.0, 12.0, 0.5, 1, 'Traditionally about 5-6 degrees.'),
-		(FLOAT, 'temp_moon_orb', 'Orb of the aspects to the Moon', 0.0, 12.0, 0.5, 1, 'Traditionally about 6 degrees.'),
+		(FLOAT, 'temp_orb', 'Orb of the aspects to the Ascendant and its ruler', 0.0, 12.0, 0.5, 1, 'The orb of the aspects to the Ascendant and its ruler.'),
+		(FLOAT, 'temp_moon_orb', 'Orb of the aspects to the Moon', 0.0, 12.0, 0.5, 1, 'The orb of the aspects to the Moon.'),
 		(SECTION, 'Hyleg and alcocoden'),
 		(CHOICE, 'hyleg_places', 'Hylegical places', [('wholesign', 'whole-sign houses'), ('porphyry', 'Porphyry houses')],
-			'Whether the Sun, Moon and Fortune are in a hylegical place is judged by whole-sign houses or by Porphyry houses. The strength of the alcocoden (angular, succedent, cadent) is always by Porphyry, the trisection of the quadrants.'),
+			'The houses that decide the hylegical places.'),
 	]),
 ]
 

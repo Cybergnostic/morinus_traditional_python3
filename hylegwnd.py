@@ -12,7 +12,6 @@ import hyleg
 import util
 
 ASPECTS = {0: 'conjunction', 60: 'sextile', 90: 'square', 120: 'trine', 180: 'opposition'}
-CAUTION = 'Rules about the length of life are delicate and uncertain; never state them categorically.'
 
 
 def text(item):
@@ -36,7 +35,7 @@ class HylegWnd(commonwnd.CommonWnd):
 		measure = ImageDraw.Draw(Image.new('RGB', (1, 1)))
 		width = lambda txt: measure.textbbox((0, 0), txt, self.fntText)[2]
 		self.COL1 = max(width(r[0]) for r in self.rows) + 2 * self.SPACE
-		self.COL2 = max([width(r[1]) for r in self.rows] + [width(i18n.tr(CAUTION)), 12 * self.FONT_SIZE]) + 2 * self.SPACE
+		self.COL2 = max([width(r[1]) for r in self.rows] + [12 * self.FONT_SIZE]) + 2 * self.SPACE
 		self.TABLE_WIDTH = self.COL1 + self.COL2
 		self.TABLE_HEIGHT = len(self.rows) * self.LINE_HEIGHT
 		self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
@@ -96,8 +95,6 @@ class HylegWnd(commonwnd.CommonWnd):
 			draw.line((x, y, x, y + self.LINE_HEIGHT), fill=tableclr)
 			y += self.LINE_HEIGHT
 		draw.line((BOR, y, BOR + self.TABLE_WIDTH, y), fill=tableclr)
-		w, h = draw.textbbox((0, 0), i18n.tr(CAUTION), self.fntText)[2:]
-		draw.text((BOR, y + (self.LINE_HEIGHT - h) // 2), i18n.tr(CAUTION), fill=txtclr, font=self.fntText)
 		wxImg = wx.Image(img.size[0], img.size[1])
 		wxImg.SetData(img.tobytes())
 		self.buffer = wx.Bitmap(wxImg)

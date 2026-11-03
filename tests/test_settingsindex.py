@@ -13,7 +13,7 @@ class SettingsSearchTests(unittest.TestCase):
         self.data = [
             rec('Terms', 'Dignities', 'Egyptian, Ptolemaic, or edited bounds', index=3),
             rec('House system', 'Calculation', 'Regiomontanus, Whole Sign, Alcabitius', index=2),
-            rec('Length of a year', 'Time lords', '360 days (Valens), solar year',
+            rec('Length of a year', 'Time lords', '360 days, solar year',
                 group='Zodiacal releasing', index=6),
             rec('Years shown', 'Time lords', 'How many years after birth',
                 group='Decennials', index=6),

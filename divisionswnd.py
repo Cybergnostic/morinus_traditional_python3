@@ -66,7 +66,7 @@ def schedule_for_chart(radix, solar):
 
 
 class DivisionsWnd(tablewnd.TableWnd):
-    HEADERS = ('No.', 'Lord', 'Start (UTC)', 'End (UTC)', 'Valens days', 'SR house')
+    HEADERS = ('No.', 'Lord', 'Start (UTC)', 'End (UTC)', 'Days', 'SR house')
 
     def __init__(self, parent, radix, solar, options, mainfr):
         tablewnd.TableWnd.__init__(self, parent, solar, options, mainfr)
@@ -89,10 +89,7 @@ class DivisionsWnd(tablewnd.TableWnd):
             ))
             colours.append(options.clrplanets[PLANET_IDS[period.ruler]])
         self.sections = [tablewnd.Section(summary), tablewnd.Section(rows, self.HEADERS, colours)]
-        self.notes = [
-            'Secondary zodiacal order from the ruler of the year; * = current period.',
-            'Fixed 365-day Valens cycle; last lord continues until the next solar return.',
-        ]
+        self.notes = ['* = current period']
         self.layout()
 
     def getExt(self):
@@ -102,6 +99,6 @@ class DivisionsWnd(tablewnd.TableWnd):
 class DivisionsFrame(tablewnd.TableFrame):
     def __init__(self, parent, title, radix, solar, options):
         tablewnd.TableFrame.__init__(
-            self, parent, title + ' - ' + i18n.tr('Divisions (Valens)'),
+            self, parent, title + ' - ' + i18n.tr('Divisions'),
             lambda frame: DivisionsWnd(frame, radix, solar, options, parent),
         )

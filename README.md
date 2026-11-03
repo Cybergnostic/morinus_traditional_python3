@@ -64,13 +64,9 @@ Added in this version:
   II and Steve Jobs), or Porphyry houses (Settings). No length of life is
   computed.
 - **Natures of the fixed stars** — Tables → Fixed stars, tab Natures: the
-  planets each star is like, from the 111 descriptions in Vivian Robson's
-  *Fiksne zvezde i sazvežđa u astrologiji* (1991, pp. 62-111), with other
-  writers' attributions apart and the star's position at the date of the
-  chart; also in the star-angles tab and, for the stars conjunct each planet,
-  in Tables → Planetary conditions. Stars Robson does not describe have no
-  nature. Alnilam is given Jupiter and Saturn (the book prints Neptune and
-  Saturn, which cannot be Ptolemy's).
+  planetary nature of each star with its position at the date of the chart;
+  also in the star-angles tab and, for the stars conjunct each planet, in
+  Tables → Planetary conditions.
 - **Charts → Lunar returns of the year** — the lunar returns covering a solar
   year: the one in force at the solar return, every one beginning during the
   year, the last of which is in force at its end. Each row shows the return's
