@@ -81,6 +81,8 @@ class OverviewWnd(tablewnd.TableWnd):
 		self.sections = [tablewnd.Section(rows, headers, colours),
 			tablewnd.Section(points, ['', 'Longitude', 'Right asc.', 'Declination']),
 			tablewnd.Section(data)]
+		self.notes = ['House: by longitude, with the cusp orbs of Settings > Orbs. Mundane position: 1st, 50% is half way through the 1st house.',
+			'Speculum (semi-arcs, poles, mundane positions of every method): the Speculum tab.']
 		self.layout()
 
 	def getExt(self):

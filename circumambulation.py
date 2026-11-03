@@ -1,4 +1,4 @@
-"""Circumambulation of the Ascendant through the bounds (Ptolemy, Tetrabiblos III;
+"""Circumambulation of the Ascendant through the bounds (Ptolemy;
 Valens): the Ascendant is directed under the oblique ascensions of the birth
 latitude, one year for each degree (Ptolemy's key). The lord of each bound it
 enters is the distributor; the planets whose bodies or rays (sextile, square,

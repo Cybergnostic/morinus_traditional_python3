@@ -9,6 +9,7 @@ import decennials
 import zodiacalreleasing as zr
 
 HEADERS = ('Level', 'Planet', 'Starts', 'Ends', 'Length', '')
+NOTE = 'In zodiacal order from the starting planet; dates in the time of the chart (Options > Decennials).'
 
 
 def lengthstr(p):
@@ -41,7 +42,7 @@ class DecennialsWnd(tablewnd.TableWnd):
 				'now' if p.start <= now < p.end else ''])
 			colours.append(self.options.clrplanets[p.planet])
 		self.sections = [tablewnd.Section(rows, HEADERS, colours)]
-		self.notes = [title or 'Decennials']
+		self.notes = [title or 'Decennials', NOTE]
 		if self.drillable:
 			self.notes.append('Click a level 2 period for its levels 3 and 4.')
 			self.Bind(wx.EVT_LEFT_UP, self.onClick)

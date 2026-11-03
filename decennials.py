@@ -1,4 +1,4 @@
-"""Decennials (Vettius Valens, Anthology IV): each of the seven planets rules
+"""Decennials (Vettius Valens): each of the seven planets rules
 129 months (10 years 9 months) in turn, from the sect light (Sun by day, Moon by
 night) and then in the zodiacal order of the planets in the chart. Within each
 period the planets, from its ruler on, rule their minor years in months; at

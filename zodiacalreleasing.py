@@ -1,4 +1,4 @@
-"""Zodiacal releasing (Vettius Valens, Anthology IV) from the Lot of Fortune or the
+"""Zodiacal releasing (Vettius Valens) from the Lot of Fortune or the
 Lot of Spirit.
 
 Each sign gives a period of the minor years of its ruler; level 1 counts them in

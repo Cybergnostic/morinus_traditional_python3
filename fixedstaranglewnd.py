@@ -32,6 +32,8 @@ class FixedStarAnglesWnd(tablewnd.TableWnd):
 		minutes, paran = fsa.tradoptions.get('fsa_minutes'), fsa.tradoptions.get('fsa_paranminutes')
 		self.sections = [tablewnd.Section(at or [['none within %d minutes' % minutes, '', '', '', '']], AT_BIRTH),
 			tablewnd.Section(pr or [['', '', 'none', '', '', '', '']], PARANS, colours or None)]
+		self.notes = ['Above: stars on an angle within %d minutes of the birth. Below: paranatellonta of the birth day, a planet and a star on angles within %d minutes.' % (minutes, paran),
+			'Stars from Options > Fixed stars; times in the time of the chart.']
 		self.layout()
 
 	def getExt(self):

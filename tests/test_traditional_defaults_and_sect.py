@@ -215,7 +215,7 @@ class HylegExamples(unittest.TestCase):
 
 
 class StarNatures(unittest.TestCase):
-	"""Robson's list (Fiksne zvezde i sazvezdja u astrologiji, 1991, pp. 62-111)."""
+	"""Robson's list."""
 
 	def test_robson_list(self):
 		import starnatures as sn

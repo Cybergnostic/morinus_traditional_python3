@@ -72,7 +72,7 @@ class TransitFrame(wx.Frame):
             self.pmenu.Append(wx.MenuItem(self.pmenu, self.ID_PrimaryDirections, mtexts.txtspopupmenu['PrimaryDirs'], subMenu=self.pdselmenu))
             self.pdtoradix.Enable(False)
         if self.chart.htype == chart.Chart.SOLAR:
-            self.pmenu.Append(self.ID_Divisions, i18n.tr('Divisions'),
+            self.pmenu.Append(self.ID_Divisions, i18n.tr('Divisions (Valens)'),
                               i18n.tr('Planetary periods in this solar year'))
             self.pmenu.Append(self.ID_MonthlySolar, i18n.tr('Monthly solar revolutions...'),
                               i18n.tr('Solar monthly charts for this solar year'))
@@ -278,7 +278,7 @@ class TransitFrame(wx.Frame):
             frame = divisionswnd.DivisionsFrame(self, self.title, self.radix, self.chart, self.options)
             frame.Show(True)
         except (ValueError, OverflowError) as exc:
-            wx.MessageBox(str(exc), i18n.tr('Divisions'), wx.OK | wx.ICON_WARNING, self)
+            wx.MessageBox(str(exc), i18n.tr('Divisions (Valens)'), wx.OK | wx.ICON_WARNING, self)
 
     def onMonthlySolar(self, event):
         import monthlysolarframe

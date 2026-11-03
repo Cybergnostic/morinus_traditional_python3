@@ -1,4 +1,5 @@
-"""The natures of the fixed stars as a Morinus table, in zodiacal order."""
+"""The natures of the fixed stars (starnatures.py, Robson's list) as a Morinus
+table: every star Robson describes, at the date of the chart, in zodiacal order."""
 
 import i18n
 import wx
@@ -6,7 +7,8 @@ import astrology
 import starnatures
 import tablewnd
 
-HEADERS = ('Star', 'Longitude', 'Latitude', 'Magnitude', 'Nature')
+HEADERS = ('Star', 'Robson', 'Longitude', 'Latitude', 'Magnitude', 'Nature', 'Other attributions')
+NOTE = "The nature of a star: the planets it is like, the first the stronger, from Robson; other writers' attributions apart. Alnilam: Jupiter and Saturn (Robson prints Neptune and Saturn). Positions at the date of the chart."
 
 
 def rows(chrt):
@@ -14,8 +16,9 @@ def rows(chrt):
 	flag = astrology.SEFLG_SWIEPH
 	cat = starnatures.catalogue()
 	for e in starnatures.ENTRIES:
-		cells = [i18n.tr(e.name)]
+		cells = [i18n.tr(e.name), e.robson]
 		nature = starnatures.text(e.planets, True, i18n.tr, e.either)
+		others = i18n.tr(e.others) if e.others else ''
 		nomen = cat.get(e.name)
 		dat = None
 		if nomen is not None:
@@ -26,13 +29,13 @@ def rows(chrt):
 			except Exception:
 				dat = None
 		if dat is None:
-			unplaced.append(cells + ['-', '', '', nature])
+			unplaced.append(cells + ['-', '', '', nature, others])
 			continue
 		try:
 			magtxt = '%.2f' % astrology.swe_fixstar_mag(',' + nomen)[2][0]
 		except Exception:
 			magtxt = ''
-		out.append((dat[0], cells + [(tablewnd.POSITION, dat[0]), '%+.2f\xb0' % dat[1], magtxt, nature]))
+		out.append((dat[0], cells + [(tablewnd.POSITION, dat[0]), '%+.2f\xb0' % dat[1], magtxt, nature, others]))
 	out.sort(key=lambda r: r[0])
 	return [cells for lon, cells in out] + unplaced
 
@@ -42,6 +45,7 @@ class StarNaturesWnd(tablewnd.TableWnd):
 	def __init__(self, parent, chrt, options, mainfr, id=-1, size=wx.DefaultSize):
 		tablewnd.TableWnd.__init__(self, parent, chrt, options, mainfr, id, size)
 		self.sections = [tablewnd.Section(rows(chrt), HEADERS)]
+		self.notes = [NOTE]
 		self.layout()
 
 	def getExt(self):

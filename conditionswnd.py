@@ -14,7 +14,9 @@ from hor_tools import output as hout
 PLANETIDS = {'Saturn': planets.Planets.SATURN, 'Jupiter': planets.Planets.JUPITER, 'Mars': planets.Planets.MARS, 'Sun': planets.Planets.SUN,
 	'Venus': planets.Planets.VENUS, 'Mercury': planets.Planets.MERCURY, 'Moon': planets.Planets.MOON}
 HEADERS = ('', 'Position', 'House', 'Sect', 'Hayz / halb', 'Orientation', 'Synodic phase', 'Station', 'Motion', 'Joy', 'Latitude', 'Via Combusta')
+NOTE = "Sect: the Sun above the horizon, or within the day/night orb below it (Settings); whole-sign houses; Via Combusta 19\xb0 Libra - 3\xb0 Scorpio"
 STARS = ('', 'Fixed stars conjunct (longitude)', 'Nature')
+STARNOTE = 'Stars within 1\xb030\' (first magnitude) or 1\xb0 of the planet; the nature: the planets the star is like (Robson); - when he gives none.'
 
 
 
@@ -32,8 +34,10 @@ class ConditionsWnd(tablewnd.TableWnd):
 		self.sections = [tablewnd.Section(self.summary)]
 		if self.rows:
 			self.sections.append(tablewnd.Section([cells for idx, cells in self.rows], HEADERS, [self.options.clrplanets[idx] for idx, cells in self.rows]))
+			self.notes = [NOTE]
 		if self.stars:
 			self.sections.append(tablewnd.Section([cells for idx, cells in self.stars], STARS, [self.options.clrplanets[idx] for idx, cells in self.stars]))
+			self.notes.append(STARNOTE)
 		self.layout()
 
 	def analyse(self, a):

@@ -115,7 +115,7 @@ def participators(radix, sign, solar=None, sidereal=False):
     return [], None
 
 
-# Ptolemy's ages of man (Tetrabiblos IV.10): (last year of life, planet)
+# Ptolemy's ages of man: (last year of life, planet)
 PTOLEMAIC_AGES = ((3, 6), (13, 5), (21, 4), (40, 3), (55, 2), (67, 1), (None, 0))
 
 

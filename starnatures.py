@@ -1,13 +1,11 @@
-"""The natures of the fixed stars as Vivian Robson gives them ("Fiksne zvezde i
-sazvezdja u astrologiji", Decje novine 1991, chapter V, the numbered
-descriptions on pages 62-111): the planets each star is like, the first the
+"""The natures of the fixed stars as Vivian Robson gives them: the planets each star is like, the first the
 stronger. Later writers' attributions (Alvidas, Simmonite, Wilson,
 Pearce) are kept apart from the main nature. A star Robson does not describe
 has no nature here.
 
-One deliberate difference from the printed book: Alnilam is printed as
-"Neptune and Saturn, according to Ptolemy", which cannot be Ptolemy's; the
-Jupiter and Saturn (Ptolemy's Orion) are used.
+One deliberate difference from Robson: Alnilam is printed as "Neptune and
+Saturn, according to Ptolemy", which cannot be Ptolemy's; Jupiter and Saturn
+(Ptolemy's Orion) are used.
 
 No wx: used by the tables and tested headless."""
 
