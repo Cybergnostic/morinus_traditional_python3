@@ -10,6 +10,8 @@ from PIL import ImageFont
 import fixedstars
 import util
 import mtexts
+import i18n
+import starnatures
 
 class FixedStarsWnd(commonwnd.CommonWnd):
 
@@ -24,11 +26,16 @@ class FixedStarsWnd(commonwnd.CommonWnd):
         self.BIG_CELL_WIDTH = 10 * self.FONT_SIZE
         self.CELL_WIDTH = 8 * self.FONT_SIZE
         self.COLUMN_NUM = 6
+        self.fntText = util.truetype(common.common.abc, self.FONT_SIZE)
+        # the nature of each star (starnatures.py), in a last column as wide as its longest text
+        self.natures = [self.starNature(d) for d in self.chart.fixedstars.data]
+        measure = ImageDraw.Draw(Image.new('RGB', (1, 1)))
+        self.NATURE_WIDTH = max([self.CELL_WIDTH] + [measure.textbbox((0, 0), t, self.fntText)[2] + 2 * self.SPACE for t in self.natures + [i18n.tr('Nature')]])
         self.TITLE_HEIGHT = self.LINE_HEIGHT
-        self.TITLE_WIDTH = self.BIG_CELL_WIDTH + (self.COLUMN_NUM - 1) * self.CELL_WIDTH
+        self.TITLE_WIDTH = self.BIG_CELL_WIDTH + (self.COLUMN_NUM - 1) * self.CELL_WIDTH + self.NATURE_WIDTH
         self.SPACE_TITLEY = 0
         self.TABLE_HEIGHT = self.TITLE_HEIGHT + self.SPACE_TITLEY + self.LINE_NUM * self.LINE_HEIGHT
-        self.TABLE_WIDTH = self.SMALL_CELL_WIDTH + self.BIG_CELL_WIDTH + (self.COLUMN_NUM - 1) * self.CELL_WIDTH
+        self.TABLE_WIDTH = self.SMALL_CELL_WIDTH + self.BIG_CELL_WIDTH + (self.COLUMN_NUM - 1) * self.CELL_WIDTH + self.NATURE_WIDTH
         self.WIDTH = commonwnd.CommonWnd.BORDER + self.TABLE_WIDTH + commonwnd.CommonWnd.BORDER
         self.HEIGHT = commonwnd.CommonWnd.BORDER + self.TABLE_HEIGHT + commonwnd.CommonWnd.BORDER
         self.SetVirtualSize((self.WIDTH, self.HEIGHT))
@@ -37,6 +44,10 @@ class FixedStarsWnd(commonwnd.CommonWnd):
         self.signs = common.common.signs
         self.deg_symbol = '\xb0'
         self.drawBkg()
+
+    def starNature(self, data):
+        e = starnatures.entry(data[fixedstars.FixedStars.NAME], data[fixedstars.FixedStars.NOMNAME])
+        return starnatures.text(e.planets, True, i18n.tr, e.either) if e else '-'
 
     def getExt(self):
         return mtexts.txtsabbrevs['Fix']
@@ -57,9 +68,9 @@ class FixedStarsWnd(commonwnd.CommonWnd):
         if not self.bw:
             txtclr = self.options.clrtexts
         draw.rectangle(((BOR + self.SMALL_CELL_WIDTH, BOR), (BOR + self.SMALL_CELL_WIDTH + self.TITLE_WIDTH, BOR + self.TITLE_HEIGHT)), outline=tableclr, fill=self.bkgclr)
-        txt = (mtexts.txtsfixedstars['Name'], mtexts.txtsfixedstars['Nomencl'], mtexts.txtsfixedstars['Longitude'], mtexts.txtsfixedstars['Latitude'], mtexts.txtsfixedstars['Rectascension'], mtexts.txtsfixedstars['Declination'])
+        txt = (mtexts.txtsfixedstars['Name'], mtexts.txtsfixedstars['Nomencl'], mtexts.txtsfixedstars['Longitude'], mtexts.txtsfixedstars['Latitude'], mtexts.txtsfixedstars['Rectascension'], mtexts.txtsfixedstars['Declination'], i18n.tr('Nature'))
         summa = 0
-        offs = (self.BIG_CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH)
+        offs = (self.BIG_CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.CELL_WIDTH, self.NATURE_WIDTH)
         for i in range(len(txt)):
             w, h = draw.textbbox((0, 0), txt[i], self.fntText)[2:]
             draw.text((BOR + self.SMALL_CELL_WIDTH + summa + (offs[i] - w) // 2, BOR + (self.TITLE_HEIGHT - h) // 2), txt[i], fill=txtclr, font=self.fntText)
@@ -128,3 +139,8 @@ class FixedStarsWnd(commonwnd.CommonWnd):
                 w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
                 draw.text((x + summa + (offs[i] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
             summa += offs[i]
+
+        txt = self.natures[idx]
+        w, h = draw.textbbox((0, 0), txt, self.fntText)[2:]
+        draw.text((x + summa + self.SPACE, y + (self.LINE_HEIGHT - h) // 2), txt, fill=txtclr, font=self.fntText)
+        draw.line((x + summa + self.NATURE_WIDTH, y, x + summa + self.NATURE_WIDTH, y + self.LINE_HEIGHT), fill=clr)
