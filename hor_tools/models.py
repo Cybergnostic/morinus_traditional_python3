@@ -29,6 +29,9 @@ class ChartInput:
     location_name: str | None = None
     altitude_m: float | None = None
     male: bool | None = None
+    # Morinus Traditional: the sect decided by the host program ("day"/"night");
+    # None keeps the true-horizon rule.
+    sect: str | None = None
 
 
 @dataclass

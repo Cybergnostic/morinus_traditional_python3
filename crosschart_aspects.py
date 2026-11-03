@@ -40,6 +40,8 @@ def chart_positions(chrt, options):
 
 
 def _sect(chrt, options):
+    if hasattr(chrt, 'isDaySect'):
+        return bool(chrt.isDaySect())
     day = bool(chrt.planets.planets[3].speculums[0].abovehorizon)
     if options.usedaynightorb:
         day = bool(chrt.abovehorizonwithorb)

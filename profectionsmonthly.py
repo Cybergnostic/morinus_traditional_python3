@@ -8,7 +8,7 @@ class ProfectionsMonthly:
 	def __init__(self, pchrts, step12, rownum):
 		self.dates = []
 
-		y = pchrts[0][1]+rownum
+		y = pchrts[0][1]+int(rownum)
 		m = pchrts[0][2]
 		d = pchrts[0][3]
 		if (not util.checkDate(y, m, d)):

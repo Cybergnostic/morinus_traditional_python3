@@ -501,7 +501,7 @@ class GraphChart:
                                 lonLot = util.normalize(lonLot)
                             lonLot = util.normalize(lonLot + addendum)
                             lonslot.append(lonLot)
-                            txt = self.chart.lots.lots[i][lots.Lots.NAME]
+                            txt = i18n.tr(self.chart.lots.lots[i][lots.Lots.NAME])
                             txt.strip()
                             objslot.append(txt)
                             fntslot.append(self.fntText)

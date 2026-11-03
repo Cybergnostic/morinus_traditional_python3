@@ -31,9 +31,7 @@ class Essentials:
         self.tripls = [0, 3, 1, 2, 0, 3, 1, 2, 0, 3, 1, 2]
         collections = (
          chrt.planets.planets[planets.Planets.SUN].data[planets.Planet.LON], chrt.planets.planets[planets.Planets.MOON].data[planets.Planet.LON], chrt.houses.ascmc[houses.Houses.ASC], chrt.lots.lots[0][lots.Lots.LON], chrt.syzygy.lon)
-        daytime = chrt.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
-        if chrt.options.usedaynightorb:
-            daytime = chrt.abovehorizonwithorb
+        daytime = chrt.isDaySect()
         numcoll = len(collections)
         for i in range(planets.Planets.PLANETS_NUM):
             score = [
@@ -312,9 +310,7 @@ class Topicals:
          2, 4, 5, 6, 3, 5, 4, 2, 1, 0, 0, 1]
         self.exals = [3, 6, -1, 1, -1, 5, 0, -1, -1, 2, -1, 4]
         self.tripls = [0, 3, 1, 2, 0, 3, 1, 2, 0, 3, 1, 2]
-        daytime = chrt.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
-        if chrt.options.usedaynightorb:
-            daytime = chrt.abovehorizonwithorb
+        daytime = chrt.isDaySect()
         self.names = []
         self.collections = []
         num = len(chrt.options.topicals)
@@ -426,9 +422,7 @@ class Topicals:
             if ok:
                 lons.append(lon)
         elif typ == Topicals.LIGHTOFTHETIME:
-            abovehorizonSun = chrt.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
-            if chrt.options.usedaynightorb:
-                abovehorizonSun = chrt.abovehorizonwithorb
+            abovehorizonSun = chrt.isDaySect()
             longitude = chrt.planets.planets[planets.Planets.SUN].data[planets.Planet.LON]
             if not abovehorizonSun:
                 longitude = chrt.planets.planets[planets.Planets.MOON].data[planets.Planet.LON]

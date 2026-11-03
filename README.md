@@ -54,6 +54,23 @@ Added in this version:
   and unexpected errors are shown and written to `morinus-error.log`.
 - **Tables → Temperament** — the temperament worksheet with every factor and
   its points.
+- **Tables → Hyleg and alcocoden** — the course method: the hyleg candidates
+  in order (by day the Sun, the Moon, then the Ascendant or Fortune by the
+  prenatal syzygy, then the syzygy), each with the reason it is taken or
+  rejected; the alcocoden (the ruler of the hyleg's place that aspects it,
+  the highest dignity first) with its planetary years, its Porphyry house
+  strength and the conditions that shorten them. The hylegical places are
+  whole-sign houses, as in the course's examples (Princess Diana, Elizabeth
+  II, Steve Jobs), or Porphyry houses (Settings). No length of life is
+  computed.
+- **Natures of the fixed stars** — Tables → Fixed stars, tab Natures: the
+  planets each star is like, from the 111 descriptions in Vivian Robson's
+  *Fiksne zvezde i sazvežđa u astrologiji* (1991, pp. 62-111), with other
+  writers' attributions apart and the star's position at the date of the
+  chart; also in the star-angles tab and, for the stars conjunct each planet,
+  in Tables → Planetary conditions. Stars Robson does not describe have no
+  nature. Alnilam is given Jupiter and Saturn as in the course (the book
+  prints Neptune and Saturn).
 - **Charts → Lunar returns of the year** — the lunar returns covering a solar
   year: the one in force at the solar return, every one beginning during the
   year, the last of which is in force at its end. Each row shows the return's
@@ -188,11 +205,42 @@ The first commit is the recovered Python 2 program.
   export has no name for it. This is in the original program and is left
   as is.
 - On Linux the chart notes field has no length limit (GTK cannot enforce one).
+- Above the polar circles the Swiss Ephemeris cannot calculate Placidus or
+  Koch houses and falls back silently; the sect of a chart in polar day or
+  night comes from Morinus's semi-arcs. Use Whole Sign houses there.
 
 Fixed from the original: Placidian under-the-pole directions from transit and
 revolution windows (a misspelt attribute stopped the calculation); the Lots
-table showing the luminary of the time reversed; and uninitialised string
-buffers in the Swiss Ephemeris module.
+table showing the luminary of the time reversed; uninitialised string
+buffers in the Swiss Ephemeris module; and the planetary day and hour, which
+were wrong for Julian-calendar dates and for births between local mean
+midnight and midnight of the zone time (about 6% of births between 22:00 and
+03:00 at Belgrade): the day ruler is now that of the sunrise beginning the
+planetary day. It counts in the almuten of the chart and in lots by the hour.
+Clicking a year of a zoomed profections table to open its months failed with
+"'float' object cannot be interpreted as an integer" (since the table zoom).
+
+## Course defaults
+
+A new installation starts with the course's choices, and every one of them can
+be changed in Settings:
+
+- almutens: all three triplicity rulers score, Mercury is exalted in Virgo,
+  Ibn Ezra's house points (I 12, X 11, VII 10, IV 9, XI 8, V 7, II 6, VIII 5,
+  IX 4, III 3, XII 2, VI 1) and the rulers of the day and hour;
+- the seven Hermetic lots (Fortune, Spirit, Necessity, Eros, Courage,
+  Victory, Nemesis), reversed by night;
+- one sect for every table: the Sun above the horizon or up to the day/night
+  orb (3 degrees of its diurnal arc, about 12 minutes) below it. When the Sun
+  is within 30 minutes of arc of the orb, a dialog asks whether the chart is
+  diurnal or nocturnal (Settings > Sect, conditions and temperament);
+- swift and slow against the course's mean daily motions;
+- the temperament with the Sun's quality by season and the Moon's by phase,
+  orbs of 6 degrees, and the Almuten Figuris of Tables > Almutens.
+
+The sidebar's Time lords also show the participators of the annual profection
+(natal planets in the profected sign, otherwise those of the solar return) and
+the ruler of Ptolemy's age; the profection year changes at the solar return.
 
 ## Tests
 

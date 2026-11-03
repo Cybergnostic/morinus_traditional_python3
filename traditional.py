@@ -21,6 +21,8 @@ from hor_tools.models import ChartInput	# noqa: E402
 from hor_tools.analysis import build_reports	# noqa: E402
 from hor_tools.analysis.technical import build_natal_technical_report	# noqa: E402
 from hor_tools.analysis import aspects as hor_aspects	# noqa: E402
+from hor_tools.analysis import dignity as hor_dignity	# noqa: E402
+from hor_tools.analysis import temperament as hor_temperament	# noqa: E402
 import tradoptions	# noqa: E402
 import traditional_aspects	# noqa: E402
 
@@ -77,7 +79,8 @@ def chart_input(chrt):
         zodiac='T',
         location_name=p.placename,
         altitude_m=float(p.altitude),
-        male=chrt.male)
+        male=chrt.male,
+        sect='day' if chrt.isDaySect() else 'night')
 
 
 def planet_orbs():
@@ -92,19 +95,52 @@ def planet_orbs():
                     traditional_aspects.doctrinal_orbs(tradoptions.values())))
 
 
+# Mean daily motions for swift and slow (Options > Planetary conditions):
+# the course slide (basic lesson 5, "PROSECNE BRZINE") or the astronomical
+# mean motions hor_tools ships.
+COURSE_SPEEDS = {'Sun': 59.0/60.0, 'Moon': 13.0+23.0/60.0, 'Mercury': 59.0/60.0, 'Venus': 59.0/60.0,
+	'Mars': 31.0/60.0, 'Jupiter': 5.0/60.0, 'Saturn': 3.0/60.0}
+ASTRONOMICAL_SPEEDS = dict(hor_dignity.MEAN_SPEED)
+
+
+def mean_speeds():
+    return COURSE_SPEEDS if tradoptions.get('speed_means') == 'course' else ASTRONOMICAL_SPEEDS
+
+
+PLANETNAMES = ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')
+
+
+def almuten_figuris(chrt):
+    """Morinus's Almuten Figuris (Tables > Almutens, with its options) as a
+    one-element tuple of the planet name, None when tied; None when the chart
+    has no almutens (not a full chart)."""
+    alm = getattr(chrt, 'almutens', None)
+    if alm is None:
+        return None
+    pl, score, tie = alm.maxscore
+    return (None if tie or pl < 0 else PLANETNAMES[pl],)
+
+
 def analyse(chrt):
     orbs = planet_orbs()
-    # Updated in place: hor_tools modules hold this same dict object.
+    speeds = mean_speeds()
+    almuten = almuten_figuris(chrt)
+    settings = (orbs, chrt.isDaySect(), tuple(sorted(speeds.items())), tradoptions.get('temp_orb'),
+                tradoptions.get('temp_moon_orb'), almuten)
+    # Updated in place: hor_tools modules hold these same objects.
     hor_aspects.PLANET_ORBS.update(orbs)
+    hor_dignity.MEAN_SPEED.update(speeds)
+    hor_temperament.ASC_CONTACT_ORB = tradoptions.get('temp_orb')
+    hor_temperament.MOON_CONTACT_ORB = tradoptions.get('temp_moon_orb')
     cached = getattr(chrt, '_traditional', None)
-    if cached is not None and getattr(chrt, '_traditional_orbs', None) == orbs:
+    if cached is not None and getattr(chrt, '_traditional_settings', None) == settings:
         return cached
     ci = chart_input(chrt)
     planets = astro_engine.compute_planets(ci)
     houses = astro_engine.compute_houses(ci)
     reports, relationships = build_reports(ci, planets, houses)
-    technical = build_natal_technical_report(ci, planets, houses, reports, relationships)
+    technical = build_natal_technical_report(ci, planets, houses, reports, relationships, almuten)
     result = Analysis(ci, planets, houses, reports, relationships, technical)
     chrt._traditional = result
-    chrt._traditional_orbs = orbs
+    chrt._traditional_settings = settings
     return result

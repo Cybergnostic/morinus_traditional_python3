@@ -99,8 +99,13 @@ def build_natal_technical_report(
     houses: Houses,
     reports: list[PlanetReport],
     relationships: ChartRelationships,
+    almuten_override: tuple[str | None] | None = None,
 ) -> NatalTechnicalReport:
-    """Calculate all source-backed technical sections for one natal chart."""
+    """Calculate all source-backed technical sections for one natal chart.
+
+    Morinus Traditional: almuten_override, a one-element tuple, is the Almuten
+    Figuris of the host program (its own scores and options; None when tied)
+    for the temperament."""
 
     del relationships  # relationships are already reflected into PlanetReport objects
     solar = solar_frame_for_chart(chart)
@@ -108,6 +113,8 @@ def build_natal_technical_report(
     almuten = build_almuten_figuris(chart, planets, houses)
     lots = build_lots(planets, houses, solar.is_day, chart.male)
     almuten_name = almuten.almuten[0] if len(almuten.almuten) == 1 else None
+    if almuten_override is not None:
+        almuten_name = almuten_override[0]
     temperament = build_temperament(chart, planets, houses, reports, almuten_name)
     behaviour = build_behaviour_ruler(planets, houses, reports)
     behaviour.evidence.append(

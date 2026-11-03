@@ -60,7 +60,8 @@ class ProfectionsWnd(commonwnd.CommonWnd):
         scrolledoffs = yu * ys / self.zoom
         x, y = self.unzoom(*event.GetPosition())
         if y + scrolledoffs > commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TITLE_HEIGHT and y + scrolledoffs < commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TABLE_HEIGHT and x > commonwnd.CommonWnd.BORDER and x < commonwnd.CommonWnd.BORDER + self.CELL_WIDTH:
-            rownum = (y + scrolledoffs - (commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TITLE_HEIGHT)) // self.LINE_HEIGHT
+            # positions are floats once unzoomed: the row must be an int (it becomes a year)
+            rownum = int((y + scrolledoffs - (commonwnd.CommonWnd.BORDER + 2 * self.LINE_HEIGHT + self.TITLE_HEIGHT)) // self.LINE_HEIGHT)
             dlg = proftablemondlg.ProfTableMonDlg(self)
             val = dlg.ShowModal()
             if val == wx.ID_OK:

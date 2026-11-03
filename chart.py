@@ -171,6 +171,10 @@ class Chart:
     Signboundaries = (
      (0.0, 30.0), (30.0, 60.0), (60.0, 90.0), (90.0, 120.0), (120.0, 150.0), (150.0, 180.0), (180.0, 210.0), (210.0, 240.0), (240.0, 270.0), (270.0, 300.0), (300.0, 330.0), (330.0, 360.0))
     SHOWNONE, SHOWFIXEDSTARS, SHOWANTIS, SHOWLOTS, SHOWDODECATEMORIA = list(range(0, 5))
+    # Set by the main window: called as sectquestion(chart, arc) when the Sun is
+    # so near the day/night orb that the sect is doubtful; returns True (day),
+    # False (night) or None (keep the rule). Headless use leaves it None.
+    sectquestion = None
 
     def __init__(self, name, male, time, place, htype, notes, opts, full=True, nolat=False):
         self.name = name
@@ -201,12 +205,11 @@ class Chart:
         self.houses = houses.Houses(self.time.jd, 0, self.place.lat, self.place.lon, self.options.hsys, self.obl[0], self.options.ayanamsha, self.ayanamsha)
         self.planets = planets.Planets(self.time.jd, self.options.meannode, pflag, self.place.lat, self.houses.ascmc2, self.nolat, self.obl[0])
         self.abovehorizonwithorb = self.isAboveHorizonWithOrb()
+        self.decideSect()
         self.syzygy = None
         if self.full:
             self.syzygy = syzygy.Syzygy(self)
-        abovehor = self.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
-        if self.options.usedaynightorb:
-            abovehor = self.abovehorizonwithorb
+        abovehor = self.isDaySect()
         self.lots = lots.Lots(self.options.lots, self.houses.ascmc, self.planets, self.houses, self.houses.cusps, self.syzygy, self.time.ph.planetaryhour, self.options, abovehor, self.ayanamsha)
         self.fortune = fortune.Fortune(self.lots.lots[0][lots.Lots.LON], self.houses.ascmc2, self.obl[0], self.place.lat)
         self.risetimeofsigns = None
@@ -223,7 +226,7 @@ class Chart:
         self.usersigpd = None
         if self.full:
             self.risetimeofsigns = rtofsigns.RiseTimeOfSigns(self.place.lat, self.obl[0])
-            self.firdaria = firdaria.Firdaria(self.time.origyear, self.time.origmonth, self.time.origday, self.options, self.abovehorizonwithorb)
+            self.firdaria = firdaria.Firdaria(self.time.origyear, self.time.origmonth, self.time.origday, self.options, self.isDaySect())
             self.munfortune = munfortune.MundaneFortune(self.houses.ascmc2, self.planets, self.obl[0], self.place.lat)
             self.antiscia = antiscia.Antiscia(self.planets, self.houses.ascmc, self.fortune.fortune, self.obl[0])
             self.dodecatemoria = dodecatemoria.Dodecatemoria(self.planets, self.houses.ascmc, self.fortune.fortune, self.options.ayanamsha, self.ayanamsha)
@@ -715,9 +718,7 @@ class Chart:
     def calcLots(self):
         del self.lots
         self.abovehorizonwithorb = self.isAboveHorizonWithOrb()
-        abovehor = self.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
-        if self.options.usedaynightorb:
-            abovehor = self.abovehorizonwithorb
+        abovehor = self.isDaySect()
         self.lots = lots.Lots(self.options.lots, self.houses.ascmc, self.planets, self.houses, self.houses.cusps, self.syzygy, self.time.ph.planetaryhour, self.options, abovehor, self.ayanamsha)
 
     def calcAlmutens(self):
@@ -735,6 +736,42 @@ class Chart:
             del self.usersigpd
         self.usersigpd = upd
         return
+
+    def sunArcBelowHorizon(self):
+        """How far the Sun is below the horizon, measured as the day/night orb
+        is (meridian distance beyond the semi-arc); None when it is above."""
+        sun = self.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN]
+        if sun.abovehorizon:
+            return None
+        md = sun.speculum[placspec.PlacidianSpeculum.MD]
+        sa = sun.speculum[placspec.PlacidianSpeculum.SA]
+        if md < 0.0:
+            md += 180.0
+        if sa < 0.0:
+            sa += 180.0
+        return md - sa
+
+    def decideSect(self):
+        """Ask (Chart.sectquestion) when the Sun is within the doubt window of
+        the day/night orb (Options > Appearance... Day/night orb)."""
+        self.sectoverride = None
+        if not self.full or not self.options.usedaynightorb or Chart.sectquestion is None:
+            return
+        arc = self.sunArcBelowHorizon()
+        window = tradoptions.get('sect_ask_window')
+        if arc is not None and window > 0.0 and abs(arc - self.options.daynightorb) <= window:
+            self.sectoverride = Chart.sectquestion(self, arc)
+
+    def isDaySect(self):
+        """The sect of the chart, the same for every technique: the Sun above
+        the horizon, or within the day/night orb below it when that option is
+        on, or the user's answer when that was doubtful."""
+        override = getattr(self, 'sectoverride', None)
+        if override is not None:
+            return override
+        if self.options.usedaynightorb:
+            return self.abovehorizonwithorb
+        return self.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
 
     def isAboveHorizonWithOrb(self):
         mdsun = self.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].speculum[placspec.PlacidianSpeculum.MD]

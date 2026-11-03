@@ -22,7 +22,8 @@ def isnum(v):
 # which differs between Py2 (hash order) and Py3 (insertion order) for the
 # built-in defaults (all unselected). Saved option files keep their pickled Py2
 # order, and pdfixedstarssel is indexed consistently with it, so this is not a behavior change.
-IGNORE = [r'/fixedstars/mixed\[']
+# sectoverride (added later) is the user's answer when the sect is doubtful; None headless.
+IGNORE = [r'/fixedstars/mixed\[', r'/sectoverride$']
 
 
 # Primary directions are sorted by arc; two directions whose arcs agree to the
@@ -55,6 +56,8 @@ def compare(a, b, path, diffs, rtol, atol):
 	elif isinstance(a, dict) and isinstance(b, dict):
 		for k in sorted(set(a) | set(b)):
 			if k not in a or k not in b:
+				if any(re.search(p, path+'/'+k) for p in IGNORE):
+					continue
 				diffs.append((path+'/'+k, a.get(k, '<missing>'), b.get(k, '<missing>')))
 			else:
 				compare(a[k], b[k], path+'/'+k, diffs, rtol, atol)
@@ -76,10 +79,22 @@ FIXES = (
 )
 
 
+# Planetary day and hour (and the almuten scores of the day and hour rulers):
+# Morinus 6.2 took the weekday of the entered date as if it were Gregorian and
+# went back a day after local mean midnight, wrong for Julian dates and when
+# the zone time and the local mean time fall on different dates. The new values
+# were checked against sunrise/sunset from pyswisseph (final audit, 2026-11).
+HOURFIX = 'planetary day taken from the date of the sunrise/sunset (final audit 2026-11)'
+HOURFIX_CASES = r'^(chart/(sydney|bc|rome_julian|greenwich_dst)|pd/sydney/)'
+HOURFIX_PATHS = r'/ph/(weekday|planetaryhour)$|/almutens/(scores|maxscore|accidentals/(scores|dayruler|hourruler))\[\d+\]$'
+
+
 def fixed(case, path, a, b):
 	for prefix, suffix, old, new, why in FIXES:
 		if case.startswith(prefix) and path.endswith(suffix) and str(a) == old and str(b) in new:
 			return why
+	if re.search(HOURFIX_CASES, case) and re.search(HOURFIX_PATHS, path):
+		return HOURFIX
 	return None
 
 

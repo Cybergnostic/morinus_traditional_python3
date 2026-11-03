@@ -126,6 +126,8 @@ def solar_frame_for_chart(chart: ChartInput) -> SolarFrame:
     sunrise_jd, sunset_jd = rise_set_for_local_day(chart)
     sun_true_altitude = _sun_true_altitude(chart)
     is_day = sun_true_altitude > 0.0
+    if getattr(chart, "sect", None) in ("day", "night"):
+        is_day = chart.sect == "day"
 
     offset = timedelta(hours=chart.tz_offset_hours)
     sunrise_local = None if sunrise_jd is None else (_jd_to_utc_datetime(sunrise_jd) + offset).replace(tzinfo=None)

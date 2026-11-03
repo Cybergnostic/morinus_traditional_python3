@@ -31,6 +31,9 @@ class PlanetaryHours:
             ret, self.settime, serr = astrology.swe_rise_trans(jd, astrology.SE_SUN, '', astrology.SEFLG_SWIEPH, astrology.SE_CALC_SET, lon, lat, float(altitude), 0.0, 10.0)
             self.risetime += offs
             self.settime += offs
+            # The planetary day begins at this sunrise: its ruler is the ruler of
+            # the local date of the sunrise (the entered date can be another day).
+            self.weekday = PlanetaryHours.localWeekday(self.risetime, self.weekday)
             self.hrlen = (self.settime - self.risetime) / HOURSPERHALFDAY
             for i in range(int(HOURSPERHALFDAY)):
                 if jd + offs < self.risetime + self.hrlen * (i + 1):
@@ -43,8 +46,15 @@ class PlanetaryHours:
             ret, self.settime, serr = astrology.swe_rise_trans(jd - 1.0, astrology.SE_SUN, '', astrology.SEFLG_SWIEPH, astrology.SE_CALC_SET, lon, lat, float(altitude), 0.0, 10.0)
             self.risetime += offs
             self.settime += offs
+            # The night belongs to the day that ended with this sunset. (Morinus
+            # 6.2 took the weekday of the entered date and went back a day after
+            # local mean midnight, which was wrong when the zone time and the
+            # local mean time fell on different dates.)
             if jd + offs > int(jd + offs) + 0.5:
-                self.weekday = util.getPrevDay(self.weekday)
+                fallback = util.getPrevDay(self.weekday)
+            else:
+                fallback = self.weekday
+            self.weekday = PlanetaryHours.localWeekday(self.settime, fallback)
             self.hrlen = (self.risetime - self.settime) / HOURSPERHALFDAY
             for i in range(int(HOURSPERHALFDAY)):
                 if jd + offs < self.settime + self.hrlen * (i + 1):
@@ -53,6 +63,17 @@ class PlanetaryHours:
 
         self.planetaryhour = PlanetaryHours.PHs[self.weekday][hr]
         return
+
+    @staticmethod
+    def localWeekday(localjd, fallback):
+        """Weekday (Monday 0, as datetime.weekday) of a Julian day already shifted
+        to local mean time; fallback when the Sun did not rise or set (polar day
+        or night) and the time is not valid."""
+        # swe_rise_trans gives 0.0 when there is no rise or set; with the
+        # longitude offset added it stays below 1.0
+        if localjd is None or localjd < 1.0:
+            return fallback
+        return int(localjd + 0.5) % 7
 
     def revTime(self, tjd, cal):
         calflag = astrology.SE_GREG_CAL

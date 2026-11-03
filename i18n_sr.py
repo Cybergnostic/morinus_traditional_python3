@@ -639,3 +639,142 @@ TEXTS.update({
     'No lunar return selected': 'Nije izabran lunarni povratak',
     'Could not calculate the solar return.': 'Nije moguće izračunati solarni povratak.',
 })
+
+# Final audit (2026-11): course defaults, sect, temperament, time lords
+TEXTS.update({
+    'Lot of Necessity': 'Nužnost', 'Lot of Eros': 'Eros', 'Lot of Courage': 'Hrabrost',
+    'Lot of Victory': 'Pobeda', 'Lot of Nemesis': 'Neprijatelji',
+})
+TEXTS.update({
+    'Sect, conditions, temperament and hyleg': 'Sekta, stanje planeta, temperament i hajleg',
+    'Sect': 'Sekta',
+    'Ask when the Sun is this near the day/night orb (degrees)': 'Pitaj kada je Sunce ovoliko blizu orbisa dana/noći (stepeni)',
+    'With "Use day/night orb" on (Almuten of the chart), the Sun up to the day/night orb (Orbs) below the horizon makes a day chart, in every table alike. When the Sun is this close to the orb a dialog asks whether the chart is diurnal or nocturnal; 0 never asks.':
+        'Kada je uključeno „Koristi orbis dana/noći“ (Almuten karte), Sunce do orbisa dana/noći (Orbisi) ispod horizonta daje dnevnu kartu, u svim tabelama jednako. Kada je Sunce ovoliko blizu orbisa, dijalog pita da li je karta dnevna ili noćna; 0 nikad ne pita.',
+    'Planetary conditions': 'Stanje planeta',
+    'Swift and slow against': 'Brzo i sporo u odnosu na',
+    'the mean daily motions of the course': 'prosečne dnevne brzine iz kursa',
+    'the astronomical mean motions': 'astronomske prosečne brzine',
+    "The course: Sun, Mercury and Venus 0\xb059', Moon 13\xb023', Mars 0\xb031', Jupiter 0\xb005', Saturn 0\xb003'. The astronomical mean motions are Moon 13\xb011', Mercury 1\xb036', Venus 1\xb010', Saturn 0\xb002'.":
+        "Kurs: Sunce, Merkur i Venera 0\xb059', Luna 13\xb023', Mars 0\xb031', Jupiter 0\xb005', Saturn 0\xb003'. Astronomske prosečne brzine su Luna 13\xb011', Merkur 1\xb036', Venera 1\xb010', Saturn 0\xb002'.",
+    'Temperament': 'Temperament',
+    'Orb of the aspects to the Ascendant and its ruler': 'Orbis aspekata prema ascendentu i njegovom vladaru',
+    'Orb of the aspects to the Moon': 'Orbis aspekata prema Luni',
+    'The course: up to 5-6 degrees.': 'Kurs: do 5-6 stepeni.',
+    'The course: up to 6 degrees.': 'Kurs: do 6 stepeni.',
+    'Day or night chart?': 'Dnevna ili noćna karta?',
+    'Day chart': 'Dnevna karta', 'Night chart': 'Noćna karta',
+    'The Sun is %.2f\xb0 below the horizon, %s the day/night orb of %.1f\xb0, so the sect of this chart is doubtful.\n\nTreat it as a day chart?':
+        'Sunce je %.2f\xb0 ispod horizonta, %s orbisa dana/noći od %.1f\xb0, pa je sekta ove karte nesigurna.\n\nDa li je tretirati kao dnevnu kartu?',
+    'within': 'unutar', 'beyond': 'izvan',
+})
+TEXTS.update({
+    'Participators': 'Participatori', 'natal': 'natal', 'solar return': 'solar', 'solar': 'solar',
+    'Participators (%s): %s': 'Participatori (%s): %s',
+    "Ptolemy's age": 'Ptolemejevo doba', 'Ruler of the age': 'Vladar doba',
+    '%d-%d years': '%d-%d godina', 'from %d years': 'od %d godina',
+})
+TEXTS.update({
+    'Hyleg and alcocoden': 'Hajleg i alkohoden', 'The giver of life and the giver of years': 'Davalac života i davalac godina',
+    'Hyleg': 'Hajleg', 'Alcocoden': 'Alkohoden', 'Chart': 'Karta', 'day chart': 'dnevna karta', 'night chart': 'noćna karta',
+    'after a new Moon': 'posle mladog meseca', 'after a full Moon': 'posle punog meseca',
+    'hyleg': 'hajleg', 'rejected': 'odbačen', 'Ascendant': 'Ascendent', 'Lot of Fortune': 'Fortuna', 'Prenatal syzygy': 'Prenatalna sizigija',
+    'in house %d': 'u %d. kući', 'in house %d, in a %s sign': 'u %d. kući, u %s znaku', 'masculine': 'muškom', 'feminine': 'ženskom',
+    'in house %d: not a hylegical place': 'u %d. kući: nije hajlegično mesto', 'in house %d: cadent': 'u %d. kući: kadentna',
+    'under the beams': 'pod zracima', 'eclipsed': 'pomračeno', 'seen by %s': 'vidi ga %s',
+    'none of its rulers sees it': 'ne vidi ga nijedan od njegovih vladara',
+    'the prenatal syzygy was a %s': 'prenatalna sizigija je bila %s', 'new Moon': 'mlad mesec', 'full Moon': 'pun mesec',
+    '%s (%d points), %s %.1f\xb0, house %d (Porphyry), %s': '%s (%d poena), %s %.1f\xb0, %d. kuća (Porfirije), %s',
+    'domicile': 'domicil', 'exaltation': 'egzaltacija', 'triplicity': 'triplicitet', 'term': 'termin',
+    'conjunction': 'konjunkcija', 'sextile': 'sekstil', 'square': 'kvadrat', 'trine': 'trigon', 'opposition': 'opozicija',
+    'angular': 'ugaona', 'succedent': 'sukcedentna', 'cadent': 'kadentna',
+    'no ruler of the place of the hyleg aspects it': 'nijedan vladar mesta hajlega ga ne aspektuje',
+    '%s in house %d (Porphyry): %s; its years: greater %s, middle %s, lesser %s': '%s u %d. kući (Porfirije): %s; njegove godine: veće %s, srednje %s, manje %s',
+    'retrograde: the years are diminished by a fifth': 'retrogradan: godine se umanjuju za petinu',
+    'in its fall: the years are diminished by a fifth': 'u padu: godine se umanjuju za petinu',
+    'in its detriment': 'u izgonu', 'in its domicile': 'u domicilu', 'in its exaltation': 'u egzaltaciji',
+    'under the beams of the Sun: gives no years unless the Sun receives it': 'pod zracima Sunca: ne daje godine osim ako ga Sunce prima',
+    'The course: rules about the length of life are delicate and uncertain; never state them categorically.':
+        'Kurs: pravila o dužini života su osetljiva i nesigurna; nikada ih ne saopštavati kategorično.',
+    'Hylegical places': 'Hajlegična mesta', 'whole-sign houses (the course examples)': 'kuće celih znakova (primeri iz kursa)',
+    'Porphyry houses': 'Porfirijeve kuće',
+    'Whether the Sun, Moon and Fortune are in a hylegical place is judged by whole-sign houses, as in the course examples, or by Porphyry houses. The strength of the alcocoden (angular, succedent, cadent) is always by Porphyry, the trisection of the quadrants.':
+        'Da li su Sunce, Luna i Fortuna na hajlegičnom mestu procenjuje se po kućama celih znakova, kao u primerima iz kursa, ili po Porfirijevim kućama. Snaga alkohodena (ugaona, sukcedentna, kadentna) uvek je po Porfiriju, trisekciji kvadranata.',
+})
+TEXTS.update({
+    'Natures': 'Prirode', 'Nature': 'Priroda', 'constellation': 'sazvežđe', 'Natures of the fixed stars': 'Prirode fiksnih zvezda',
+    'Designation': 'Oznaka', 'Magnitude': 'Magnituda', 'Star': 'Zvezda', 'Longitude': 'Longituda', 'Latitude': 'Latituda',
+    'Every star tradition gives a nature: the planets it is like (Ptolemy, Robson), at the date of the chart.':
+        'Svaka zvezda kojoj tradicija daje prirodu: planete kojima je slična (Ptolemej, Robson), na datum karte.',
+    "The nature of a star: the planets it is like (Ptolemy, Tetrabiblos I.9, as listed by Robson), the first the stronger. Positions at the date of the chart.":
+        'Priroda zvezde: planete kojima je slična (Ptolemej, Tetrabiblos I.9, prema Robsonu), prva je jača. Položaji na datum karte.',
+    'Fixed stars conjunct (longitude)': 'Fiksne zvezde u konjunkciji (longituda)',
+    "Stars within 1\xb030' (first magnitude) or 1\xb0 of the planet; the nature: the planets the star is like (Ptolemy, Robson), in brackets that of its constellation.":
+        "Zvezde do 1\xb030' (prva magnituda) ili 1\xb0 od planete; priroda: planete kojima je zvezda slična (Ptolemej, Robson), u zagradi priroda njenog sazvežđa.",
+    "Sect: the Sun above the horizon, or within the day/night orb below it (Settings); whole-sign houses; Via Combusta 19\xb0 Libra - 3\xb0 Scorpio":
+        'Sekta: Sunce iznad horizonta ili unutar orbisa dana/noći ispod njega (Podešavanja); cele kuće; Via Combusta 19\xb0 Vage - 3\xb0 Škorpije',
+})
+# Robson's star natures: other writers' attributions
+TEXTS.update({
+    'Robson': 'Robson', 'p.': 'str.', 'Other attributions': 'Druga pripisivanja', 'or': 'ili',
+    "Stars within 1\xb030' (first magnitude) or 1\xb0 of the planet; the nature: the planets the star is like (Robson); - when he gives none.":
+        "Zvezde do 1\xb030' (prva magnituda) ili 1\xb0 od planete; priroda: planete kojima je zvezda slična (Robson); - kada je on ne navodi.",
+    "The nature of a star: the planets it is like, the first the stronger, from Vivian Robson's descriptions (Fiksne zvezde i sazvežđa u astrologiji, 1991, pp. 62-111); other writers' attributions apart. Alnilam: Jupiter and Saturn as in the course (the book prints Neptune and Saturn). Positions at the date of the chart.":
+        'Priroda zvezde: planete kojima je slična, prva je jača, prema opisima Vivijana Robsona (Fiksne zvezde i sazvežđa u astrologiji, 1991, str. 62-111); pripisivanja drugih autora posebno. Alnilam: Jupiter i Saturn kao u kursu (u knjizi piše Neptun i Saturn). Položaji na datum karte.',
+    'Copula': 'Kopula', 'Pleiades': 'Plejade', 'Terebellum': 'Terebelum', 'Manubrium': 'Manubrium', 'Spiculum': 'Spikulum',
+    'Alvidas adds Mars to Jupiter + Venus.': 'Alvidas Jupiteru i Veneri dodaje Mars.',
+    'Alvidas: Jupiter + Mercury, sextile Mars.': 'Alvidas: Jupiter + Merkur, sekstil Mars.',
+    'Alvidas: Jupiter + Venus.': 'Alvidas: Jupiter + Venera.',
+    'Alvidas: Jupiter sextile Venus.': 'Alvidas: Jupiter u sekstilu sa Venerom.',
+    'Alvidas: Jupiter square Moon.': 'Alvidas: Jupiter u kvadratu sa Lunom.',
+    'Alvidas: Jupiter square Saturn in Pisces and Sagittarius.': 'Alvidas: Jupiter u kvadratu sa Saturnom u Ribama i Strelcu.',
+    'Alvidas: Jupiter square Saturn, with Moon also indicated.': 'Alvidas: Jupiter u kvadratu sa Saturnom, uz naznačenu i Lunu.',
+    'Alvidas: Mars + Mercury.': 'Alvidas: Mars + Merkur.',
+    'Alvidas: Mars + Moon + Sun in opposition.': 'Alvidas: Mars + Luna + Sunce u opoziciji.',
+    'Alvidas: Mars + Moon.': 'Alvidas: Mars + Luna.',
+    'Alvidas: Mars + Saturn + Mercury.': 'Alvidas: Mars + Saturn + Merkur.',
+    'Alvidas: Mars conjunct Mercury.': 'Alvidas: Mars u konjunkciji sa Merkurom.',
+    'Alvidas: Mars with Moon and Uranus in Scorpio.': 'Alvidas: Mars sa Lunom i Uranom u Škorpiji.',
+    'Alvidas: Mercury + Mars + Jupiter.': 'Alvidas: Merkur + Mars + Jupiter.',
+    'Alvidas: Mercury + Mars; Simmonite: Mars (Robson considers this probably erroneous).': 'Alvidas: Merkur + Mars; Simonajt: Mars (Robson to smatra verovatno pogrešnim).',
+    'Alvidas: Mercury + Moon.': 'Alvidas: Merkur + Luna.',
+    'Alvidas: Mercury + Saturn + Jupiter.': 'Alvidas: Merkur + Saturn + Jupiter.',
+    'Alvidas: Mercury + Saturn.': 'Alvidas: Merkur + Saturn.',
+    'Alvidas: Mercury conjunct Saturn.': 'Alvidas: Merkur u konjunkciji sa Saturnom.',
+    'Alvidas: Moon + Jupiter + Mars.': 'Alvidas: Luna + Jupiter + Mars.',
+    'Alvidas: Moon + Mars + Uranus.': 'Alvidas: Luna + Mars + Uran.',
+    'Alvidas: Moon + Mars.': 'Alvidas: Luna + Mars.',
+    'Alvidas: Moon + Venus.': 'Alvidas: Luna + Venera.',
+    'Alvidas: North Asellus - Sun sextile Mars; South Asellus - Sun and Mars in semisquare.': 'Alvidas: Severni Aselus - Sunce u sekstilu sa Marsom; Južni Aselus - Sunce i Mars u polukvadratu.',
+    'Alvidas: Saturn + Mercury.': 'Alvidas: Saturn + Merkur.',
+    'Alvidas: Saturn trine Jupiter in earth signs.': 'Alvidas: Saturn u trigonu sa Jupiterom u zemljanim znacima.',
+    'Alvidas: Sun sextile Jupiter.': 'Alvidas: Sunce u sekstilu sa Jupiterom.',
+    'Alvidas: Uranus + Mercury in Aquarius opposing Saturn in Leo.': 'Alvidas: Uran + Merkur u Vodoliji u opoziciji sa Saturnom u Lavu.',
+    'Alvidas: Uranus conjunct Saturn, square Mercury.': 'Alvidas: Uran u konjunkciji sa Saturnom, u kvadratu sa Merkurom.',
+    'Alvidas: Venus + Jupiter + Mercury.': 'Alvidas: Venera + Jupiter + Merkur.',
+    'Alvidas: Venus + Saturn.': 'Alvidas: Venera + Saturn.',
+    'Alvidas: Venus conjunct Mercury.': 'Alvidas: Venera u konjunkciji sa Merkurom.',
+    'Alvidas: Venus sextile Mercury.': 'Alvidas: Venera u sekstilu sa Merkurom.',
+    'Alvidas: favorable Mercury-Mars aspect.': 'Alvidas: povoljan aspekt Merkura i Marsa.',
+    'Alvidas: favorable aspect of Mercury, Saturn and Jupiter.': 'Alvidas: povoljan aspekt Merkura, Saturna i Jupitera.',
+    'Later writers: Jupiter + Mars; Alvidas: Mars sextile Jupiter.': 'Kasniji autori: Jupiter + Mars; Alvidas: Mars u sekstilu sa Jupiterom.',
+    'Later writers: Jupiter + Mars; Alvidas: Mercury + Mars + Jupiter.': 'Kasniji autori: Jupiter + Mars; Alvidas: Merkur + Mars + Jupiter.',
+    'Later writers: Saturn + Venus, or Saturn + Mercury; Alvidas: Mars + Venus + Saturn.': 'Kasniji autori: Saturn + Venera ili Saturn + Merkur; Alvidas: Mars + Venera + Saturn.',
+    'Many later writers: Mars alone; Alvidas: favorable aspect of Sun and Uranus.': 'Mnogi kasniji autori: samo Mars; Alvidas: povoljan aspekt Sunca i Urana.',
+    'Same nature as Akuleus (stated by Robson).': 'Iste prirode kao Akuleus (navodi Robson).',
+    'Simmonite: Mars + Venus; Alvidas: Jupiter square Mercury and Saturn.': 'Simonajt: Mars + Venera; Alvidas: Jupiter u kvadratu sa Merkurom i Saturnom.',
+    'Simmonite: Mars; Alvidas: Venus + Moon.': 'Simonajt: Mars; Alvidas: Venera + Luna.',
+    'Simmonite: Mercury alone; Alvidas: Venus + Mercury.': 'Simonajt: samo Merkur; Alvidas: Venera + Merkur.',
+    'Simmonite: Saturn + Jupiter; Alvidas: Jupiter and Uranus sextile Sun in Pisces or Taurus.': 'Simonajt: Saturn + Jupiter; Alvidas: Jupiter i Uran u sekstilu sa Suncem u Ribama ili Biku.',
+    'Simmonite: Saturn + Venus (Robson suggests printing error); Wilson and Pearce: Saturn + Venus + Mercury; Alvidas: adverse Mercury-Saturn aspect.': 'Simonajt: Saturn + Venera (Robson misli da je štamparska greška); Vilson i Pirs: Saturn + Venera + Merkur; Alvidas: nepovoljan aspekt Merkura i Saturna.',
+    'Simmonite: Saturn + Venus; Pearce: Saturn + Venus + Mars; Alvidas: Mars and Saturn opposing Venus.': 'Simonajt: Saturn + Venera; Pirs: Saturn + Venera + Mars; Alvidas: Mars i Saturn u opoziciji sa Venerom.',
+    'Simmonite: Saturn alone.': 'Simonajt: samo Saturn.',
+    'Simmonite: Saturn; others: Saturn + Mercury; Alvidas: Neptune square Saturn or Mars.': 'Simonajt: Saturn; drugi: Saturn + Merkur; Alvidas: Neptun u kvadratu sa Saturnom ili Marsom.',
+    'Simmonite: Uranus; Alvidas: Sun sextile Uranus.': 'Simonajt: Uran; Alvidas: Sunce u sekstilu sa Uranom.',
+    'Simmonite: Uranus; Alvidas: Uranus and Venus sextile Mercury.': 'Simonajt: Uran; Alvidas: Uran i Venera u sekstilu sa Merkurom.',
+    'Simmonite: Venus + Mars (Robson suggests printing error); Alvidas: Moon + Jupiter + Uranus.': 'Simonajt: Venera + Mars (Robson misli da je štamparska greška); Alvidas: Luna + Jupiter + Uran.',
+    'Simmonite: Venus + Mercury; Alvidas: Uranus sextile Venus.': 'Simonajt: Venera + Merkur; Alvidas: Uran u sekstilu sa Venerom.',
+    'Wilson and Pearce: Saturn + Venus + Mercury; Simmonite: Uranus; Alvidas: Mercury + Uranus + Mars.': 'Vilson i Pirs: Saturn + Venera + Merkur; Simonajt: Uran; Alvidas: Merkur + Uran + Mars.',
+    'Wilson, Simmonite and Pearce: Mars + Venus + Saturn; Alvidas: Moon + Mars + Uranus.': 'Vilson, Simonajt i Pirs: Mars + Venera + Saturn; Alvidas: Luna + Mars + Uran.',
+    'Wilson: Saturn + Mercury; Simmonite: Uranus; Alvidas: Uranus and Mercury sextile Sun.': 'Vilson: Saturn + Merkur; Simonajt: Uran; Alvidas: Uran i Merkur u sekstilu sa Suncem.',
+})

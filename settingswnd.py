@@ -41,6 +41,7 @@ CATEGORIES = [
 		('dialog', 'OMAyanamsha', 'onAyanamsha', 'The tropical zodiac, or a sidereal one with its ayanamsa.'),
 		('dialog', 'OMOrbs', 'onOrbs', 'The orbs of each planet for the aspects and parallels, and those of planets in houses, the angles, intermediate cusps, day and night and the fixed stars.'),
 		('trad', 7),
+		('trad', 8),
 	]),
 	('Dignities', [
 		('dialog', 'OMDignities', 'onDignities', 'The domiciles and exaltations of the planets.'),
