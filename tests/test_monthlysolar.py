@@ -1,4 +1,4 @@
-"""Course definition and chronological boundaries for monthly solar returns."""
+"""Definition and chronological boundaries for monthly solar returns."""
 
 import unittest
 

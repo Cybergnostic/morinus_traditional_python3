@@ -54,7 +54,7 @@ def _contact(chart, i, j):
 def _connect_themselves(chart, pos, i, j):
     """Do these two planets apply to each other in the chart?
 
-    Course doctrine: translation and collection matter only for planets that
+    Doctrine: translation and collection matter only for planets that
     cannot connect themselves; if they apply to each other they will meet
     anyway, whatever a third planet does.
     """

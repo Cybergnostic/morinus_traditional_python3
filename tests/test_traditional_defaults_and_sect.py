@@ -1,4 +1,4 @@
-"""Course defaults, the one sect rule, planetary hours near midnight, the
+"""Traditional defaults, the one sect rule, planetary hours near midnight, the
 temperament natures of the lights, Ptolemy's ages and profection participators
 (final audit, November 2026)."""
 import os
@@ -45,9 +45,9 @@ class PtolemaicAgesAndParticipators(unittest.TestCase):
 		self.assertEqual(mh.participators(natal, 1)[0], [0])
 
 
-class CourseDefaults(unittest.TestCase):
+class TraditionalDefaults(unittest.TestCase):
 
-	def test_factory_defaults_follow_the_course(self):
+	def test_factory_defaults(self):
 		import options
 		import lots
 		o = options.Options.__new__(options.Options)
@@ -69,7 +69,7 @@ class CourseDefaults(unittest.TestCase):
 
 	def test_tradoptions(self):
 		import tradoptions
-		self.assertEqual(tradoptions.DEFAULTS['speed_means'], 'course')
+		self.assertEqual(tradoptions.DEFAULTS['speed_means'], 'traditional')
 		self.assertEqual(tradoptions.DEFAULTS['temp_orb'], 6.0)
 		self.assertEqual(tradoptions.DEFAULTS['temp_moon_orb'], 6.0)
 		self.assertEqual(tradoptions.DEFAULTS['sect_ask_window'], 0.5)
@@ -166,8 +166,8 @@ if __name__ == '__main__':
 
 
 @unittest.skipIf(astrology is None, 'sweastrology extension not built')
-class HylegCourseExamples(unittest.TestCase):
-	"""The worked examples of natal lesson 10 (birth data: Astro-Databank, AA)."""
+class HylegExamples(unittest.TestCase):
+	"""Worked examples (birth data: Astro-Databank, AA)."""
 
 	@classmethod
 	def setUpClass(cls):
@@ -205,8 +205,8 @@ class HylegCourseExamples(unittest.TestCase):
 		self.assertEqual(r.years[0], 79)
 
 	def test_elizabeth_hyleg(self):
-		# the course takes the Moon as alcocoden for her mutual reception with
-		# the Sun; by the written rules Venus has more dignity: only the hyleg is checked
+		# the Moon is often taken as alcocoden for her mutual reception with the
+		# Sun; by the written rules Venus has more dignity: only the hyleg is checked
 		import chart
 		T = chart.Time
 		h, r = self.calc((1926, 4, 21, 2, 40, 0, False, T.GREGORIAN, T.ZONE, True, 0, 0, True), ('London', 0, 9, 0, False, 51, 31, 0, True, 0))
@@ -228,7 +228,7 @@ class StarNatures(unittest.TestCase):
 				('El Nath', ('Mars', 'Mercury')), ('Asellus Australis', ('Mars', 'Sun')), ('Deneb', ('Venus', 'Mercury')),
 				('Deneb el Okab Australis', ('Mars', 'Jupiter'))):
 			self.assertEqual(sn.nature(name), (planets, True), name)
-		# printed as Neptune and Saturn; the course: Jupiter and Saturn
+		# printed as Neptune and Saturn; Ptolemy: Jupiter and Saturn
 		self.assertEqual(sn.nature('Alnilam'), (('Jupiter', 'Saturn'), True))
 		self.assertEqual(sn.describe('Alhena'), 'Mercury or Venus')
 		self.assertEqual(sn.nature('Vertex'), (('Mars', 'Moon'), True))		# alias

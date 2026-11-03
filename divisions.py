@@ -1,4 +1,4 @@
-"""Course-based annual divisions (Valens) for a solar return.
+"""Annual divisions (Valens) for a solar return.
 
 The seven planetary periods use *fixed* day counts adding to 365 days.
 The final ruler remains in force through the small remaining interval until
@@ -79,7 +79,7 @@ def calculate_divisions(
     solar_asc: float,
     solar_longitudes: Mapping[str, float],
 ) -> DivisionSchedule:
-    """Return the seven periods for one solar year using the course method.
+    """Return the seven periods for one solar year by Valens's method.
 
     Dates must be timezone-aware and represent the two consecutive exact solar
     returns. The tiny difference between a 365-day Valens cycle and the actual

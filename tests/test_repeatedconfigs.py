@@ -14,7 +14,7 @@ class RepeatedConfigTests(unittest.TestCase):
         self.assertEqual(rc.configured(359.0, 1.0, 9, 9), ('Conjunction', 2.0))
         self.assertEqual(rc.configured(2.0, 181.0, 9, 9), ('Opposition', 1.0))
 
-    def test_aspects_are_configured_by_the_course_rule(self):
+    def test_aspects_are_configured_by_the_rule(self):
         # Venus (7) and Moon (12) 10 degrees apart: within the Moon's orb.
         self.assertEqual(rc.configured(0.0, 10.0, 7, 12), ('Conjunction', 10.0))
         self.assertIsNone(rc.configured(0.0, 13.0, 7, 12))

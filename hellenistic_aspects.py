@@ -1,6 +1,6 @@
 """A4 Hellenistic domicile witnessing and directed planetary rays.
 
-Course doctrine (aspects, receptions and degrees):
+Doctrine (aspects, receptions and degrees):
 
 - Whole-sign witnessing of each planet's domiciles. A planet is NOT averse
   to its domicile when the two signs are joined by antiscia, contra-antiscia
@@ -103,7 +103,7 @@ def overcomes(caster_sign, target_sign):
 
 
 def _reflections(source_lon, target_lon):
-    """Keep sign-level and course whole-degree reflection evidence separate."""
+    """Keep sign-level and whole-degree reflection evidence separate."""
     out = []
     target_sign = sign_of(target_lon)
     for name, mirror in (
@@ -245,7 +245,7 @@ def analyze_rays(chart):
     """Directional sign-based aspects, overcoming and aktinobolia.
 
     One row per pair in aspecting signs, cast by the faster planet (its
-    actual speed; the natural order only breaks an exact tie), as the course
+    actual speed; the natural order only breaks an exact tie), as the tradition
     judges dexter and sinister from the applying planet.
     """
     raw = {name: (float(p.data[0]), float(p.data[3]))

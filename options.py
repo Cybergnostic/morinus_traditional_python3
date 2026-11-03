@@ -221,17 +221,17 @@ class Options:
           [
            1, 6, 2]]]
         self.def_decans = copy.deepcopy(self.decans)
-        self.def_oneruler = self.oneruler = False	# course: all three triplicity rulers score
+        self.def_oneruler = self.oneruler = False	# all three triplicity rulers score
         self.def_usedaynightorb = self.usedaynightorb = True	# sect with the day/night orb everywhere
         self.def_dignityscores = self.dignityscores = [5, 4, 3, 2, 1]
         self.def_useaccidental = self.useaccidental = True
         self.def_housescores = self.housescores = [12, 6, 3, 9, 7, 1, 10, 5, 4, 11, 8, 2]
         self.def_sunphases = self.sunphases = [3, 2, 1]
         self.def_dayhourscores = self.dayhourscores = [7, 6]
-        self.def_useexaltationmercury = self.useexaltationmercury = True	# course: Mercury exalted in Virgo
+        self.def_useexaltationmercury = self.useexaltationmercury = True	# Mercury exalted in Virgo
         self.def_topicals = self.topicals = None
         self.def_lotsref = self.lotsref = 0
-        # The seven Hermetic lots of the course (Fortune, Spirit, Necessity,
+        # The seven Hermetic lots (Fortune, Spirit, Necessity,
         # Eros, Courage, Victory, Nemesis), reversed by night. A lot of the
         # REF kind uses the lot whose (1-based) number is in the second tuple:
         # 1 Fortune, 2 Spirit.
@@ -353,7 +353,7 @@ class Options:
         self.def_fixedstarsorb = self.fixedstarsorb = 3.0
         self.def_zodprof = self.zodprof = True
         self.def_usezodprojsprof = self.usezodprojsprof = False
-        # New configurations use the course order of the nocturnal firdaria
+        # New configurations use the order of the nocturnal firdaria with the nodes last
         # (the nodes after all the planets); load() keeps a saved choice.
         self.def_isfirbonatti = self.isfirbonatti = False
         self.def_deflocname = self.deflocname = ''

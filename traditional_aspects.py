@@ -2,7 +2,7 @@
 
 Only the seven visible planets. The five Ptolemaic aspects are distinguished
 from whole-sign configurations.
-Orbs follow the course: the larger orb of the two planets, never their sum
+Orbs: the larger orb of the two planets, never their sum
 or half-orbs, and the three-degree rule across sign boundaries.
 The legacy Morinus matrix remains available unchanged via Settings.
 """
@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from math import isfinite
 
 PLANETS = ("Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon")
-COURSE_ORBS = (9.0, 9.0, 8.0, 15.0, 7.0, 7.0, 12.0)
+TRADITIONAL_ORBS = (9.0, 9.0, 8.0, 15.0, 7.0, 7.0, 12.0)
 # The three-degree rule: across a sign boundary planets are configured only
 # when no more than three degrees apart (from exactness), never more.
 SIGN_BOUNDARY = 3.0
@@ -104,7 +104,7 @@ def deviation_rate(a: float, b: float, speed_a: float, speed_b: float,
 def combine_orbs(orb_a: float, orb_b: float) -> float:
     """The orb within which two planets are configured: the LARGER one.
 
-    Course doctrine: the contact begins when the centre of one planet
+    The contact begins when the centre of one planet
     touches the orb of the other, and only the planet with the larger orb
     counts. Orbs are never added, and half-orbs (moieties) are not used.
     Venus (7) and the Moon (12) 10 degrees apart are configured, because
@@ -155,10 +155,10 @@ def evaluate(a: float, b: float, speed_a: float, speed_b: float,
 
 
 def configured_orbs(values):
-    """Traditional course preset or individually editable custom orbs."""
+    """Traditional preset or individually editable custom orbs."""
     preset = values.get("aspect_preset", "traditional")
     if preset == "traditional":
-        return COURSE_ORBS
+        return TRADITIONAL_ORBS
     if preset == "custom":
         orbs = tuple(float(values["aspect_custom_" + name.lower()]) for name in PLANETS)
         if not all(isfinite(x) and 0 <= x <= 20 for x in orbs):
@@ -171,8 +171,8 @@ def doctrinal_orbs(values):
     """Planet orbs for the traditional techniques (by name, Chaldean order).
 
     The Legacy preset only switches Morinus's own aspect matrix back to the
-    original algorithm; techniques of the course keep the course orbs.
+    original algorithm; the traditional techniques keep the traditional orbs.
     """
     if values.get("aspect_preset", "traditional") == "legacy":
-        return COURSE_ORBS
+        return TRADITIONAL_ORBS
     return configured_orbs(values)

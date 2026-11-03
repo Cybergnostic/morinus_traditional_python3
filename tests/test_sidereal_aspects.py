@@ -48,7 +48,7 @@ class SiderealAspectMatrixTests(unittest.TestCase):
             for j in range(i):
                 cell = chrt.aspmatrix[i][j]
                 expected = ta.evaluate(lon[i] - shift, lon[j] - shift,
-                                       0, 0, ta.COURSE_ORBS[i], ta.COURSE_ORBS[j])
+                                       0, 0, ta.TRADITIONAL_ORBS[i], ta.TRADITIONAL_ORBS[j])
                 self.assertEqual(cell.typ, expected.index if expected else -1,
                                  (ta.PLANETS[i], ta.PLANETS[j]))
                 if ta.sign_configuration(lon[i], lon[j]) != \
@@ -64,7 +64,7 @@ class SiderealAspectMatrixTests(unittest.TestCase):
         for i in range(7):
             for j in range(i):
                 expected = ta.evaluate(lon[i], lon[j], 0, 0,
-                                       ta.COURSE_ORBS[i], ta.COURSE_ORBS[j])
+                                       ta.TRADITIONAL_ORBS[i], ta.TRADITIONAL_ORBS[j])
                 self.assertEqual(chrt.aspmatrix[i][j].typ,
                                  expected.index if expected else -1)
 

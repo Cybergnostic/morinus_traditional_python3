@@ -3,7 +3,7 @@ import unittest
 from types import SimpleNamespace as NS
 
 import crosschart_aspects as cross
-from traditional_aspects import PLANETS, COURSE_ORBS
+from traditional_aspects import PLANETS, TRADITIONAL_ORBS
 
 
 def options():
@@ -73,7 +73,7 @@ class CrossChartAspectTests(unittest.TestCase):
         result = cross.analyze(a, b, options(), opts)
         self.assertFalse(any(r.first == 'Sun' and r.second == 'Venus'
                              for r in result))
-        self.assertEqual(len(COURSE_ORBS), 7)
+        self.assertEqual(len(TRADITIONAL_ORBS), 7)
 
     def test_three_degree_rule_out_of_sign(self):
         a = chart([359] + [80] * 6)

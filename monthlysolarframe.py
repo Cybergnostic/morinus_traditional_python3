@@ -1,4 +1,4 @@
-"""On-demand monthly solar returns for one solar year (Natalna 27)."""
+"""On-demand monthly solar returns for one solar year."""
 
 import astrology
 import chart

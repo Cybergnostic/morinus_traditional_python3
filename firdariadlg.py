@@ -15,7 +15,7 @@ class FirdariaDlg(wx.Dialog):
         sfirdaria = wx.StaticBox(self, label=mtexts.txtsfirdariadlg['Nocturnal'])
         firdariasizer = wx.StaticBoxSizer(sfirdaria, wx.VERTICAL)
         vsizer = wx.BoxSizer(wx.VERTICAL)
-        # The course order (the nodes after all the planets) comes first.
+        # The order with the nodes after all the planets comes first.
         self.birrb = wx.RadioButton(self, -1, mtexts.txtsfirdariadlg['AlBiruni'], style=wx.RB_GROUP)
         vsizer.Add(self.birrb, 0, wx.ALIGN_CENTER, 5)
         self.bonrb = wx.RadioButton(self, -1, mtexts.txtsfirdariadlg['Bonatus'])

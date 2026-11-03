@@ -1,4 +1,4 @@
-"""Pure tests for twelve-period course profections + Morinus Firdaria."""
+"""Pure tests for twelve-period profections + Morinus Firdaria."""
 import unittest
 from datetime import datetime
 from types import SimpleNamespace as NS

@@ -95,7 +95,7 @@ class DomicileWitnessingTests(unittest.TestCase):
         self.assertEqual(domicile(rows, 'Saturn', 'Capricorn').witnessing,
                          'Co-presence')
 
-    def test_course_moon_examples_antiscia_and_contra_antiscia(self):
+    def test_moon_examples_antiscia_and_contra_antiscia(self):
         # The Moon rules Cancer: in Gemini (antiscia) or in Sagittarius
         # (contra-antiscia) it is not averse; in Aquarius it is.
         for lon, status in ((75, 'Not averse'), (255, 'Not averse')):
@@ -107,7 +107,7 @@ class DomicileWitnessingTests(unittest.TestCase):
         self.assertIn(moon.status, ('Averse', 'Mitigated'))
         self.assertFalse(any('antiscia' in m.lower() for m in moon.mitigations))
 
-    def test_course_saturn_in_pisces_mediators(self):
+    def test_saturn_in_pisces_mediators(self):
         # Saturn in Pisces is averse to Aquarius. Venus (Taurus) and Jupiter
         # (Scorpio) see both Pisces and Aquarius; the Sun in Cancer does not
         # see Aquarius; Mars, Mercury and the Moon are averse to Pisces.
@@ -204,7 +204,7 @@ class DirectedRayTests(unittest.TestCase):
         self.assertTrue(all(speed[r.caster] >= speed[r.target] for r in rays))
 
     def test_caster_is_the_planet_actually_faster(self):
-        # The course judges dexter/sinister from the applying, faster planet:
+        # Dexter/sinister is judged from the applying, faster planet:
         # its actual speed, so Jupiter casts when Mars is nearly stationary.
         ch = chart(lons=[5, 105, 15, 235, 195, 70, 300],
                    speeds=[0, 5, .001, .9, 1, 1, 12],
@@ -217,7 +217,7 @@ class DirectedRayTests(unittest.TestCase):
         self.assertEqual(rays[0].direction, 'Dexter')
         self.assertEqual(rays[0].aspect, 'Square')
 
-    def test_course_dexter_and_sinister_examples(self):
+    def test_dexter_and_sinister_examples(self):
         # Mercury in Aries applies to Saturn in Capricorn: dexter;
         # to Saturn in Cancer: sinister.
         self.assertEqual(directed_ray(0, 9), ('Square', 'Dexter'))
@@ -254,7 +254,7 @@ class DirectedRayTests(unittest.TestCase):
             self.assertIn(row.overcoming, (row.caster, row.target))
 
     def test_aktinobolia_applying_or_separating(self):
-        # Course: limited to three degrees, applying or separating.
+        # Limited to three degrees, applying or separating.
         ch = chart(speeds=[0, 0, -1, .9, 1, 1, 12],
                    contacts=[(0, 2, 2)])
         mars = next(r for r in analyze_rays(ch) if r.caster == 'Mars'
@@ -262,7 +262,7 @@ class DirectedRayTests(unittest.TestCase):
         self.assertTrue(mars.aktinobolia)
         self.assertEqual(mars.motion, 'Separating')
 
-    def test_course_aktinobolia_mercury_saturn(self):
+    def test_aktinobolia_mercury_saturn(self):
         # Saturn 15 Cancer, Mercury 14 Aries applying: Mercury overcomes
         # Saturn by a sinister square and is struck by Saturn's ray.
         ch = chart(lons=[105, 160, 200, 235, 300, 14, 50],

@@ -56,13 +56,13 @@ DEFAULTS = {
 	# sect: with the day/night orb (Options > Almutens), ask when the Sun is
 	# within this many degrees of the orb
 	'sect_ask_window': 0.5,
-	# swift/slow against the mean daily motions of the course slide, or the
+	# swift/slow against the traditional mean daily motions, or the
 	# astronomical mean motions
-	'speed_means': 'course',	# course, astronomical
+	'speed_means': 'traditional',	# traditional, astronomical
 	# temperament: orbs of the aspects to the Ascendant and its ruler, and to the Moon
 	'temp_orb': 6.0,
 	'temp_moon_orb': 6.0,
-	# hyleg: the hylegical places by whole signs (the course's examples) or Porphyry
+	# hyleg: the hylegical places by whole signs or Porphyry
 	'hyleg_places': 'wholesign',	# wholesign, porphyry
 	# windows and errors
 	'win_remember': True,
@@ -76,7 +76,7 @@ _values = None
 # its default when loading.
 CHOICES = {
 	'aspect_preset': ('traditional', 'legacy', 'custom'),
-	'speed_means': ('course', 'astronomical'),
+	'speed_means': ('traditional', 'astronomical'),
 	'hyleg_places': ('wholesign', 'porphyry'),
 }
 RANGES = {

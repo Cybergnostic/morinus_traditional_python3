@@ -1,6 +1,6 @@
 """Monthly solar-revolution targets and chronological event selection.
 
-Following Natalna 27, each monthly return occurs when the Sun reaches the
+Each monthly return occurs when the Sun reaches the
 same degree it occupied natally, successively in the twelve zodiacal signs.
 The first is the annual solar return; eleven more follow before the next one.
 """

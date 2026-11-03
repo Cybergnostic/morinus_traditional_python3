@@ -86,25 +86,25 @@ def chart_input(chrt):
 def planet_orbs():
     """The planetary orbs of Tables > Aspects, for hor_tools as well.
 
-    hor_tools ships its own orb values; the course orbs (or the Custom ones)
+    hor_tools ships its own orb values; the traditional orbs (or the Custom ones)
     must apply everywhere. It already uses the larger orb of two planets and
     the full planet orb towards Lots. Legacy Morinus has no say here: these
-    analyses are traditional techniques, so they keep the course orbs.
+    analyses are traditional techniques, so they keep the traditional orbs.
     """
     return dict(zip(traditional_aspects.PLANETS,
                     traditional_aspects.doctrinal_orbs(tradoptions.values())))
 
 
 # Mean daily motions for swift and slow (Options > Planetary conditions):
-# the course slide (basic lesson 5, "PROSECNE BRZINE") or the astronomical
+# the traditional values or the astronomical
 # mean motions hor_tools ships.
-COURSE_SPEEDS = {'Sun': 59.0/60.0, 'Moon': 13.0+23.0/60.0, 'Mercury': 59.0/60.0, 'Venus': 59.0/60.0,
+TRADITIONAL_SPEEDS = {'Sun': 59.0/60.0, 'Moon': 13.0+23.0/60.0, 'Mercury': 59.0/60.0, 'Venus': 59.0/60.0,
 	'Mars': 31.0/60.0, 'Jupiter': 5.0/60.0, 'Saturn': 3.0/60.0}
 ASTRONOMICAL_SPEEDS = dict(hor_dignity.MEAN_SPEED)
 
 
 def mean_speeds():
-    return COURSE_SPEEDS if tradoptions.get('speed_means') == 'course' else ASTRONOMICAL_SPEEDS
+    return TRADITIONAL_SPEEDS if tradoptions.get('speed_means') == 'traditional' else ASTRONOMICAL_SPEEDS
 
 
 PLANETNAMES = ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')

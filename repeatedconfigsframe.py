@@ -1,7 +1,7 @@
 """On-demand repeated natal configurations in a solar return.
 
 No chart overlays are changed. Aspects are configured as in Tables > Aspects
-(the course orbs); an optional limit narrows the list.
+(the traditional orbs); an optional limit narrows the list.
 """
 
 import chart

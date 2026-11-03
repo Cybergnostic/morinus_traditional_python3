@@ -1,7 +1,7 @@
 """Planet-to-point contacts shared by natal, cross-chart and multiwheel.
 
 Asc/MC and Lots are targets, never planets: no reception, translation,
-collection or double application. Course doctrine: points have no light and
+collection or double application. Doctrine: points have no light and
 no orb of their own and cannot aspect; they are aspected by planets, within
 the PLANET's full orb (and the three-degree rule across sign boundaries).
 For lots defined by whole signs, only the by-sign relation is meaningful.

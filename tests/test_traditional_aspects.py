@@ -4,11 +4,11 @@ import traditional_aspects as t
 
 
 class TraditionalAspectTests(unittest.TestCase):
-    def test_course_orbs(self):
-        self.assertEqual(t.COURSE_ORBS, (9, 9, 8, 15, 7, 7, 12))
+    def test_traditional_orbs(self):
+        self.assertEqual(t.TRADITIONAL_ORBS, (9, 9, 8, 15, 7, 7, 12))
 
     def test_larger_orb_only(self):
-        # Course doctrine: the larger orb; never summed, never half-orbs.
+        # The larger orb; never summed, never half-orbs.
         self.assertEqual(t.combine_orbs(15, 7), 15)
         self.assertEqual(t.combine_orbs(7, 12), 12)
 
@@ -46,7 +46,7 @@ class TraditionalAspectTests(unittest.TestCase):
     def test_out_of_sign_limit(self):
         self.assertIsNotNone(t.evaluate(358, 1, 0, 0, 9, 9))
         self.assertIsNone(t.evaluate(357, 1, 0, 0, 9, 9))
-        # The course example: Mercury 27 Gemini and Jupiter 1 Cancer are
+        # Example: Mercury 27 Gemini and Jupiter 1 Cancer are
         # 4 degrees apart, no conjunction; Mercury on 28 Gemini, conjunction.
         self.assertIsNone(t.evaluate(87, 91, 1, 0.1, 7, 9))
         self.assertIsNotNone(t.evaluate(88, 91, 1, 0.1, 7, 9))
@@ -128,8 +128,8 @@ class TraditionalAspectTests(unittest.TestCase):
     def test_custom_orb_validation(self):
         values = {"aspect_preset": "custom"}
         values.update({"aspect_custom_" + name.lower(): orb
-                       for name, orb in zip(t.PLANETS, t.COURSE_ORBS)})
-        self.assertEqual(t.configured_orbs(values), t.COURSE_ORBS)
+                       for name, orb in zip(t.PLANETS, t.TRADITIONAL_ORBS)})
+        self.assertEqual(t.configured_orbs(values), t.TRADITIONAL_ORBS)
         values["aspect_custom_mars"] = -2
         with self.assertRaises(ValueError):
             t.configured_orbs(values)

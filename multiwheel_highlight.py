@@ -1,11 +1,10 @@
-"""Course-based annual and monthly profection highlighting for multiwheel.
+"""Annual and monthly profection highlighting for multiwheel.
 
 No wxPython dependency. Annual whole-sign profections are anchored to the
 natal Ascendant; monthly profections take twelve *equal time divisions*
 between exact successive Solar Returns. This deliberately does not implement
 the optional thirteen-period method.
 
-Doctrine: Natalna 25, 26, 27 + original lecture transcripts, cw_api/astrology.
 Firdaria follows Morinus's existing day/night and Bonatti/Biruni settings.
 """
 from datetime import datetime, timezone
@@ -100,7 +99,7 @@ def sign_of(chrt, lon, sidereal=False):
 
 
 def participators(radix, sign, solar=None, sidereal=False):
-    """The participators of an annual profection (natal lesson 25): the natal
+    """The participators of an annual profection: the natal
     planets in the profected sign; when there are none, the planets of the
     solar return in that sign. Returns (planets, 'natal'|'solar'|None)."""
     def planets_in(chrt):
@@ -116,7 +115,7 @@ def participators(radix, sign, solar=None, sidereal=False):
     return [], None
 
 
-# Ptolemy's ages of man (natal lesson 23): (last year of life, planet)
+# Ptolemy's ages of man (Tetrabiblos IV.10): (last year of life, planet)
 PTOLEMAIC_AGES = ((3, 6), (13, 5), (21, 4), (40, 3), (55, 2), (67, 1), (None, 0))
 
 

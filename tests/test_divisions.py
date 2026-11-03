@@ -1,4 +1,4 @@
-"""Pure rules for course-based planetary divisions."""
+"""Pure rules for planetary divisions (Valens)."""
 
 import unittest
 from datetime import datetime, timedelta, timezone

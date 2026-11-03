@@ -791,7 +791,7 @@ class MultiWheel:
         """Tint profected *signs*, never the houses occupied by rulers.
 
         In Whole Sign houses the 30-degree sector equals the entire house.
-        Other house systems still follow the course's sign-based method;
+        Other house systems still follow the sign-based method;
         their house cusps remain visible without implying a false match.
         When annual and monthly signs coincide, split the band's radius
         into two broad colored halves rather than painting one over another.
@@ -1793,7 +1793,7 @@ class MultiWheelFrame(wx.Frame):
         return datetime.now(timezone.utc)
 
     def time_lord_entries(self, inner, charts):
-        """Derive course-defined signs/rulers from the selected SR year.
+        """Derive the signs/rulers from the selected SR year.
 
         Cache the *next* solar-return boundary: redraws and zooms should
         never repeatedly recalculate a year's ephemeris.
@@ -1833,7 +1833,7 @@ class MultiWheelFrame(wx.Frame):
                 reference_jd = lr.time.jd
                 if reference_jd < start_jd:
                     # The LR already in force at the SR belongs to
-                    # month one (the course notes this boundary case).
+                    # month one (a boundary case).
                     reference_jd = start_jd
                 elif reference_jd >= end_jd:
                     reference_jd = end_jd - 0.000001
@@ -2391,7 +2391,7 @@ class MultiWheelFrame(wx.Frame):
         replacements = []
 
         def place_for(old):
-            # Course doctrine: a solar return is cast only for the place of
+            # A solar return is cast only for the place of
             # birth (lunar returns likewise). A transit cast for a chosen
             # place (where one lives) keeps it.
             if old.htype in (chart.Chart.SOLAR, chart.Chart.LUNAR):

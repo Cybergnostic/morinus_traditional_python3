@@ -15,7 +15,7 @@ import fortune
 import houses
 
 PLANETS_ON = 'Planets on it'
-# The course rule: in the antiscion's sign, whole degrees adding up to 29.
+# The rule: in the antiscion's sign, whole degrees adding up to 29.
 NOTE = 'Planets on it: in its sign, the whole degrees adding up to 29 (minutes not counted); distance from the exact point'
 
 class AntisciaWnd(commonwnd.CommonWnd):

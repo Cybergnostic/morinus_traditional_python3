@@ -1,5 +1,5 @@
-"""Hyleg and alcocoden by the course method (natal lesson 10, "Hajleg i
-alkohoden"), without wx so it can be tested headless.
+"""Hyleg and alcocoden by the traditional method, without wx so it can be
+tested headless.
 
 Hyleg, by day: (1) the Sun in I, XI or X, or in VII or IX in a masculine sign;
 (2) the Moon in I, II, III or VII, or in X, XI, IV or V in a feminine sign;
@@ -10,10 +10,10 @@ By night: (1) the Moon in I, XI or X, or in VII or IX in a feminine sign;
 (2) the Sun in I or II in a masculine sign, or in IV, V or VII; (3) and (4) as
 by day. A candidate is the hyleg only if one of its rulers sees it by a
 classical aspect of the signs; the Moon under the beams and an eclipsed Sun
-cannot be the hyleg. The places are whole-sign houses from the Ascendant (so
-the course's examples: Elizabeth II, Steve Jobs, Princess Diana), or Porphyry
-houses (Options); the strength of the alcocoden (angular, succedent, cadent)
-is by Porphyry, the trisection of the quadrants, as the course says.
+cannot be the hyleg. The places are whole-sign houses from the Ascendant
+(checked on the charts of Elizabeth II, Steve Jobs and Princess Diana), or
+Porphyry houses (Options); the strength of the alcocoden (angular, succedent,
+cadent) is by Porphyry, the trisection of the quadrants.
 
 Alcocoden: a planet with dignity in the place of the hyleg (domicile,
 exaltation, triplicity, term; not the face) that aspects it; with several, the
@@ -21,7 +21,7 @@ one with the highest dignity there (domicile, exaltation, triplicity, term:
 Steve Jobs's Jupiter by domicile before Venus by exaltation, triplicity and
 term), then more dignity, then the closer aspect, then the stronger house.
 
-The course gives no computed length of life here: only the planetary years
+No length of life is computed here: only the planetary years
 of the alcocoden and the conditions the astrologer weighs.
 """
 
@@ -31,8 +31,7 @@ import tradoptions
 
 SATURN, JUPITER, MARS, SUN, VENUS, MERCURY, MOON = range(7)
 NAMES = ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')
-# greater, middle, lesser years (the course's examples: Jupiter 79/45.5,
-# Moon 108, Mars 15)
+# greater, middle, lesser years
 YEARS = {SATURN: (57, 43.5, 30), JUPITER: (79, 45.5, 12), MARS: (66, 40.5, 15), SUN: (120, 69.5, 19),
 	VENUS: (82, 45, 8), MERCURY: (76, 48, 20), MOON: (108, 66.5, 25)}
 TRIPLS = (0, 3, 1, 2, 0, 3, 1, 2, 0, 3, 1, 2)	# fire, air, water, earth as options.trips

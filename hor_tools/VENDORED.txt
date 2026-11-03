@@ -9,7 +9,7 @@ Also local: comments, docstrings and a few printed texts are reworded to name
 no source material, and two star-table constants are renamed CATALOGUE_STARS
 and FIRST_MAGNITUDE_PRIMARY_NATURE (no change in behaviour).
 
-Local changes from the final audit (November 2026), to follow the course:
+Local changes from the final audit (November 2026):
 - models.ChartInput has an optional `sect` ("day"/"night"); analysis/sect.chart_sect
   and analysis/solar.solar_frame_for_chart use it when given, so every table
   takes the one sect Morinus decides (its day/night orb, or the user's answer).
@@ -17,8 +17,8 @@ Local changes from the final audit (November 2026), to follow the course:
   temperament uses Morinus's own Almuten Figuris (Tables > Almutens and its
   options) instead of this package's.
 - analysis/temperament: the Sun has the quality of its season and the Moon of
-  its phase (natal lesson 6); a planet in House I is not counted again as an
+  its phase; a planet in House I is not counted again as an
   aspect to the Ascendant; ASC_CONTACT_ORB is 6 (the host sets it and
   MOON_CONTACT_ORB from its options).
 - dignity.MEAN_SPEED is replaced in place by the host (traditional.py): the
-  course's mean daily motions by default, these astronomical ones as an option.
+  traditional mean daily motions by default, these astronomical ones as an option.

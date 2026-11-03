@@ -8,7 +8,7 @@ import starnatures
 import tablewnd
 
 HEADERS = ('Star', 'Robson', 'Longitude', 'Latitude', 'Magnitude', 'Nature', 'Other attributions')
-NOTE = "The nature of a star: the planets it is like, the first the stronger, from Vivian Robson's descriptions (Fiksne zvezde i sazvežđa u astrologiji, 1991, pp. 62-111); other writers' attributions apart. Alnilam: Jupiter and Saturn as in the course (the book prints Neptune and Saturn). Positions at the date of the chart."
+NOTE = "The nature of a star: the planets it is like, the first the stronger, from Vivian Robson's descriptions (Fiksne zvezde i sazvežđa u astrologiji, 1991, pp. 62-111); other writers' attributions apart. Alnilam: Jupiter and Saturn (the book prints Neptune and Saturn). Positions at the date of the chart."
 
 
 def rows(chrt):

@@ -1,14 +1,13 @@
 """The natures of the fixed stars as Vivian Robson gives them ("Fiksne zvezde i
 sazvezdja u astrologiji", Decje novine 1991, chapter V, the numbered
 descriptions on pages 62-111): the planets each star is like, the first the
-stronger (natal/basic lesson 11: "the nature of a star is expressed by one or
-two planets"). Later writers' attributions (Alvidas, Simmonite, Wilson,
+stronger. Later writers' attributions (Alvidas, Simmonite, Wilson,
 Pearce) are kept apart from the main nature. A star Robson does not describe
 has no nature here.
 
 One deliberate difference from the printed book: Alnilam is printed as
 "Neptune and Saturn, according to Ptolemy", which cannot be Ptolemy's; the
-course (basic lesson 11) gives Jupiter and Saturn, which is used.
+Jupiter and Saturn (Ptolemy's Orion) are used.
 
 No wx: used by the tables and tested headless."""
 
@@ -159,7 +158,7 @@ CATALOGUE_NAMES = {
 # English names of the stars that the catalogue does not have by name
 OTHER_NAMES = {'Kopula': 'Copula', 'Manubrium': 'Manubrium', 'Plejade (Pleiades)': 'Pleiades', 'Spikulum': 'Spiculum',
 	'Terebelum': 'Terebellum'}
-COURSE = {'Alnilam': ('Jupiter', 'Saturn')}	# see the module text
+CORRECTED = {'Alnilam': ('Jupiter', 'Saturn')}	# see the module text
 
 
 class Entry:
@@ -183,7 +182,7 @@ def _entries():
 		planets = tuple(p.strip() for p in main.replace(' OR ', ' + ').split('+'))
 		names = target if isinstance(target, tuple) else (target or OTHER_NAMES.get(robson, robson),)
 		for name in names:
-			planets_used = COURSE.get(name, planets)
+			planets_used = CORRECTED.get(name, planets)
 			out.append(Entry(number, robson, planets_used, either, others, page, name))
 	return out
 

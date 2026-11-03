@@ -399,7 +399,7 @@ TEXTS.update({
     'Traditional aspects': 'Tradicionalni aspekti',
     'Aspect rules': 'Pravila aspekata',
     'Aspect preset': 'Izbor orbisa i pravila',
-    'Traditional (course)': 'Tradicionalni (kurs)',
+    'Traditional': 'Tradicionalni',
     'Legacy Morinus': 'Izvorni Morinus',
     'Custom planetary orbs': 'Posebni planetarni orbisi',
     'Custom planetary orbs': 'Posebni planetarni orbisi',
@@ -407,8 +407,8 @@ TEXTS.update({
     'Mars orb': 'Marsov orbis', 'Sun orb': 'Sunčev orbis',
     'Venus orb': 'Venerin orbis', 'Mercury orb': 'Merkurov orbis',
     'Moon orb': 'Lunin orbis',
-    'Traditional uses the course planetary orbs and Custom the values below; two planets are configured within the larger of their two orbs, and across a sign boundary only within three degrees. Legacy retains the original Morinus aspect algorithm.':
-        'Tradicionalni koristi orbise iz kursa, a posebni vrednosti ispod; dve planete su konfigurisane u okviru većeg od njihova dva orbisa, a preko granice znaka samo do tri stepena. Izvorni Morinus zadržava stara pravila.',
+    'Traditional uses the traditional planetary orbs and Custom the values below; two planets are configured within the larger of their two orbs, and across a sign boundary only within three degrees. Legacy retains the original Morinus aspect algorithm.':
+        'Tradicionalni koristi tradicionalne orbise, a posebni vrednosti ispod; dve planete su konfigurisane u okviru većeg od njihova dva orbisa, a preko granice znaka samo do tri stepena. Izvorni Morinus zadržava stara pravila.',
     'Used only with the Custom planetary orbs preset.':
         'Koristi se samo ako su izabrani posebni planetarni orbisi.',
 })
@@ -640,7 +640,7 @@ TEXTS.update({
     'Could not calculate the solar return.': 'Nije moguće izračunati solarni povratak.',
 })
 
-# Final audit (2026-11): course defaults, sect, temperament, time lords
+# Final audit (2026-11): traditional defaults, sect, temperament, time lords
 TEXTS.update({
     'Lot of Necessity': 'Nužnost', 'Lot of Eros': 'Eros', 'Lot of Courage': 'Hrabrost',
     'Lot of Victory': 'Pobeda', 'Lot of Nemesis': 'Neprijatelji',
@@ -653,15 +653,15 @@ TEXTS.update({
         'Kada je uključeno „Koristi orbis dana/noći“ (Almuten karte), Sunce do orbisa dana/noći (Orbisi) ispod horizonta daje dnevnu kartu, u svim tabelama jednako. Kada je Sunce ovoliko blizu orbisa, dijalog pita da li je karta dnevna ili noćna; 0 nikad ne pita.',
     'Planetary conditions': 'Stanje planeta',
     'Swift and slow against': 'Brzo i sporo u odnosu na',
-    'the mean daily motions of the course': 'prosečne dnevne brzine iz kursa',
+    'the traditional mean daily motions': 'tradicionalne prosečne dnevne brzine',
     'the astronomical mean motions': 'astronomske prosečne brzine',
-    "The course: Sun, Mercury and Venus 0\xb059', Moon 13\xb023', Mars 0\xb031', Jupiter 0\xb005', Saturn 0\xb003'. The astronomical mean motions are Moon 13\xb011', Mercury 1\xb036', Venus 1\xb010', Saturn 0\xb002'.":
-        "Kurs: Sunce, Merkur i Venera 0\xb059', Luna 13\xb023', Mars 0\xb031', Jupiter 0\xb005', Saturn 0\xb003'. Astronomske prosečne brzine su Luna 13\xb011', Merkur 1\xb036', Venera 1\xb010', Saturn 0\xb002'.",
+    "Traditional: Sun, Mercury and Venus 0\xb059', Moon 13\xb023', Mars 0\xb031', Jupiter 0\xb005', Saturn 0\xb003'. The astronomical mean motions are Moon 13\xb011', Mercury 1\xb036', Venus 1\xb010', Saturn 0\xb002'.":
+        "Tradicionalno: Sunce, Merkur i Venera 0\xb059', Luna 13\xb023', Mars 0\xb031', Jupiter 0\xb005', Saturn 0\xb003'. Astronomske prosečne brzine su Luna 13\xb011', Merkur 1\xb036', Venera 1\xb010', Saturn 0\xb002'.",
     'Temperament': 'Temperament',
     'Orb of the aspects to the Ascendant and its ruler': 'Orbis aspekata prema ascendentu i njegovom vladaru',
     'Orb of the aspects to the Moon': 'Orbis aspekata prema Luni',
-    'The course: up to 5-6 degrees.': 'Kurs: do 5-6 stepeni.',
-    'The course: up to 6 degrees.': 'Kurs: do 6 stepeni.',
+    'Traditionally about 5-6 degrees.': 'Tradicionalno oko 5-6 stepeni.',
+    'Traditionally about 6 degrees.': 'Tradicionalno oko 6 stepeni.',
     'Day or night chart?': 'Dnevna ili noćna karta?',
     'Day chart': 'Dnevna karta', 'Night chart': 'Noćna karta',
     'The Sun is %.2f\xb0 below the horizon, %s the day/night orb of %.1f\xb0, so the sect of this chart is doubtful.\n\nTreat it as a day chart?':
@@ -694,12 +694,12 @@ TEXTS.update({
     'in its fall: the years are diminished by a fifth': 'u padu: godine se umanjuju za petinu',
     'in its detriment': 'u izgonu', 'in its domicile': 'u domicilu', 'in its exaltation': 'u egzaltaciji',
     'under the beams of the Sun: gives no years unless the Sun receives it': 'pod zracima Sunca: ne daje godine osim ako ga Sunce prima',
-    'The course: rules about the length of life are delicate and uncertain; never state them categorically.':
-        'Kurs: pravila o dužini života su osetljiva i nesigurna; nikada ih ne saopštavati kategorično.',
-    'Hylegical places': 'Hajlegična mesta', 'whole-sign houses (the course examples)': 'kuće celih znakova (primeri iz kursa)',
+    'Rules about the length of life are delicate and uncertain; never state them categorically.':
+        'Pravila o dužini života su osetljiva i nesigurna; nikada ih ne saopštavati kategorično.',
+    'Hylegical places': 'Hajlegična mesta', 'whole-sign houses': 'kuće celih znakova',
     'Porphyry houses': 'Porfirijeve kuće',
-    'Whether the Sun, Moon and Fortune are in a hylegical place is judged by whole-sign houses, as in the course examples, or by Porphyry houses. The strength of the alcocoden (angular, succedent, cadent) is always by Porphyry, the trisection of the quadrants.':
-        'Da li su Sunce, Luna i Fortuna na hajlegičnom mestu procenjuje se po kućama celih znakova, kao u primerima iz kursa, ili po Porfirijevim kućama. Snaga alkohodena (ugaona, sukcedentna, kadentna) uvek je po Porfiriju, trisekciji kvadranata.',
+    'Whether the Sun, Moon and Fortune are in a hylegical place is judged by whole-sign houses or by Porphyry houses. The strength of the alcocoden (angular, succedent, cadent) is always by Porphyry, the trisection of the quadrants.':
+        'Da li su Sunce, Luna i Fortuna na hajlegičnom mestu procenjuje se po kućama celih znakova ili po Porfirijevim kućama. Snaga alkohodena (ugaona, sukcedentna, kadentna) uvek je po Porfiriju, trisekciji kvadranata.',
 })
 TEXTS.update({
     'Natures': 'Prirode', 'Nature': 'Priroda', 'constellation': 'sazvežđe', 'Natures of the fixed stars': 'Prirode fiksnih zvezda',
@@ -719,8 +719,8 @@ TEXTS.update({
     'Robson': 'Robson', 'p.': 'str.', 'Other attributions': 'Druga pripisivanja', 'or': 'ili',
     "Stars within 1\xb030' (first magnitude) or 1\xb0 of the planet; the nature: the planets the star is like (Robson); - when he gives none.":
         "Zvezde do 1\xb030' (prva magnituda) ili 1\xb0 od planete; priroda: planete kojima je zvezda slična (Robson); - kada je on ne navodi.",
-    "The nature of a star: the planets it is like, the first the stronger, from Vivian Robson's descriptions (Fiksne zvezde i sazvežđa u astrologiji, 1991, pp. 62-111); other writers' attributions apart. Alnilam: Jupiter and Saturn as in the course (the book prints Neptune and Saturn). Positions at the date of the chart.":
-        'Priroda zvezde: planete kojima je slična, prva je jača, prema opisima Vivijana Robsona (Fiksne zvezde i sazvežđa u astrologiji, 1991, str. 62-111); pripisivanja drugih autora posebno. Alnilam: Jupiter i Saturn kao u kursu (u knjizi piše Neptun i Saturn). Položaji na datum karte.',
+    "The nature of a star: the planets it is like, the first the stronger, from Vivian Robson's descriptions (Fiksne zvezde i sazvežđa u astrologiji, 1991, pp. 62-111); other writers' attributions apart. Alnilam: Jupiter and Saturn (the book prints Neptune and Saturn). Positions at the date of the chart.":
+        'Priroda zvezde: planete kojima je slična, prva je jača, prema opisima Vivijana Robsona (Fiksne zvezde i sazvežđa u astrologiji, 1991, str. 62-111); pripisivanja drugih autora posebno. Alnilam: Jupiter i Saturn (u knjizi piše Neptun i Saturn). Položaji na datum karte.',
     'Copula': 'Kopula', 'Pleiades': 'Plejade', 'Terebellum': 'Terebelum', 'Manubrium': 'Manubrium', 'Spiculum': 'Spikulum',
     'Alvidas adds Mars to Jupiter + Venus.': 'Alvidas Jupiteru i Veneri dodaje Mars.',
     'Alvidas: Jupiter + Mercury, sextile Mars.': 'Alvidas: Jupiter + Merkur, sekstil Mars.',

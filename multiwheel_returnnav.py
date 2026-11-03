@@ -71,7 +71,7 @@ def rebased_place(old_place, previous_natal_place, natal_place):
 
     A transit cast for the previous natal's birthplace follows the natal;
     one the user cast for another place (where one lives) keeps it. Returns
-    never use this: the course casts them for the birthplace only.
+    never use this: they are cast for the birthplace only.
     """
     def key(place):
         return (round(float(place.lon), 6), round(float(place.lat), 6))

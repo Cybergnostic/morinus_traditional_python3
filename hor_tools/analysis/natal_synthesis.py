@@ -269,7 +269,7 @@ def build_primary_motivation(
             "Planet on Ascendant" if kind == "conjunction" else "Aspect to Ascendant"
         )
         edge_note = (
-            " — edge of course's approximate 5–6° range"
+            " — edge of the approximate 5–6° range"
             if orb > PRIMARY_CONTACT_CORE_ORB
             else ""
         )

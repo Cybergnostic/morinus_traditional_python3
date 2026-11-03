@@ -31,7 +31,7 @@ class LightTests(unittest.TestCase):
 
     def test_no_translation_between_planets_that_apply_to_each_other(self):
         # Mars (8) applies to Venus (15) by itself: they meet anyway, so the
-        # Moon translates nothing (course: only planets that cannot connect).
+        # Moon translates nothing (only planets that cannot connect).
         ch = fixture([100, 140, 8, 200, 15, 270, 10],
                      [0, 0, .3, 1, .2, 1, 13],
                      [(6, 2, 0), (6, 4, 0), (2, 4, 0)])

@@ -54,14 +54,14 @@ Added in this version:
   and unexpected errors are shown and written to `morinus-error.log`.
 - **Tables → Temperament** — the temperament worksheet with every factor and
   its points.
-- **Tables → Hyleg and alcocoden** — the course method: the hyleg candidates
+- **Tables → Hyleg and alcocoden** — the hyleg candidates
   in order (by day the Sun, the Moon, then the Ascendant or Fortune by the
   prenatal syzygy, then the syzygy), each with the reason it is taken or
   rejected; the alcocoden (the ruler of the hyleg's place that aspects it,
   the highest dignity first) with its planetary years, its Porphyry house
   strength and the conditions that shorten them. The hylegical places are
-  whole-sign houses, as in the course's examples (Princess Diana, Elizabeth
-  II, Steve Jobs), or Porphyry houses (Settings). No length of life is
+  whole-sign houses (checked on the charts of Princess Diana, Elizabeth
+  II and Steve Jobs), or Porphyry houses (Settings). No length of life is
   computed.
 - **Natures of the fixed stars** — Tables → Fixed stars, tab Natures: the
   planets each star is like, from the 111 descriptions in Vivian Robson's
@@ -69,8 +69,8 @@ Added in this version:
   writers' attributions apart and the star's position at the date of the
   chart; also in the star-angles tab and, for the stars conjunct each planet,
   in Tables → Planetary conditions. Stars Robson does not describe have no
-  nature. Alnilam is given Jupiter and Saturn as in the course (the book
-  prints Neptune and Saturn).
+  nature. Alnilam is given Jupiter and Saturn (the book prints Neptune and
+  Saturn, which cannot be Ptolemy's).
 - **Charts → Lunar returns of the year** — the lunar returns covering a solar
   year: the one in force at the solar return, every one beginning during the
   year, the last of which is in force at its end. Each row shows the return's
@@ -90,7 +90,7 @@ Added in this version:
   optional *Repeated natal configurations* search. It finds the same named
   traditional planet pairs forming the same Ptolemaic aspects in both natal
   and solar charts; complete three-planet aspect patterns are listed on their
-  own tab. A pair repeats when it is configured in both charts by the course
+  own tab. A pair repeats when it is configured in both charts by the
   rule of Tables → Aspects (the larger planetary orb, three degrees across a
   sign boundary, each chart's own zodiac); an optional limit narrows the list.
   You can also search repeated zodiac signs and whole-sign houses, or restrict
@@ -220,9 +220,9 @@ planetary day. It counts in the almuten of the chart and in lots by the hour.
 Clicking a year of a zoomed profections table to open its months failed with
 "'float' object cannot be interpreted as an integer" (since the table zoom).
 
-## Course defaults
+## Traditional defaults
 
-A new installation starts with the course's choices, and every one of them can
+A new installation starts with these traditional choices, and every one of them can
 be changed in Settings:
 
 - almutens: all three triplicity rulers score, Mercury is exalted in Virgo,
@@ -234,7 +234,7 @@ be changed in Settings:
   orb (3 degrees of its diurnal arc, about 12 minutes) below it. When the Sun
   is within 30 minutes of arc of the orb, a dialog asks whether the chart is
   diurnal or nocturnal (Settings > Sect, conditions and temperament);
-- swift and slow against the course's mean daily motions;
+- swift and slow against the traditional mean daily motions;
 - the temperament with the Sun's quality by season and the Moon's by phase,
   orbs of 6 degrees, and the Almuten Figuris of Tables > Almutens.
 
@@ -273,7 +273,7 @@ contact, station or ingress first invalidates that candidate and suppresses
 it from the table. An absence of a matching perfection within the selected
 horizon also suppresses that candidate rather than claiming success.
 Use **Search days** and **Analyze connections** to rescan 1–180 days.
-As the course teaches, light is translated or collected only between
+Light is translated or collected only between
 planets that cannot connect themselves: two planets that apply to each
 other in the chart meet anyway and are not listed.
 No receptions are required by this initial geometric filter. The Classic
@@ -334,7 +334,7 @@ In **Tables → Aspects → Hellenistic**, select one of two sub-tabs:
 - **Domicile witnessing** lists all seven traditional planets and
   **each of their domiciles** (12 rows total). For every domicile it shows
   the planet's sign and the whole-sign witnessing relation (co-presence,
-  sextile, square, trine, opposition or aversion). Following the course:
+  sextile, square, trine, opposition or aversion). As a rule:
   a planet is **not averse** to its domicile when the two signs are joined
   by antiscia, contra-antiscia or a common ruler (Venus in Libra and
   Taurus; the Moon in Gemini or Sagittarius and Cancer). An aversion is
@@ -346,7 +346,7 @@ In **Tables → Aspects → Hellenistic**, select one of two sub-tabs:
   In a natal chart seeing is enough; horary judgment (which requires the
   mediator to apply) is left to the astrologer.
 - **Rays & domination** shows **one entry per planetary pair**, cast by
-  the planet that is actually faster in the chart (the course judges
+  the planet that is actually faster in the chart (it is judged
   dexter and sinister from the faster, applying planet; the natural order
   only breaks a tie). The *Overcoming* column names the planet in the 9th,
   10th or 11th sign from the other, whichever of the two it is (Saturn in
@@ -361,7 +361,7 @@ no search has run. Change the horizon under **Connections** and choose
 **Analyze connections** to recalculate any mediated-aversion testimony;
 the two views share the same results rather than separate calculations.
 
-A4 follows the Hellenistic sign rules from course lesson 09 and aligns
+A4 follows the Hellenistic sign rules and aligns
 its underlying geometry with the existing `hor_tools/analysis` helpers,
 without importing `hor_tools`' separate `swisseph` dependency into Morinus.
 The interface intentionally contains no interpretation tutorials or

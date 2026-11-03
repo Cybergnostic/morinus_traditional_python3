@@ -23,8 +23,7 @@ from .stars import (
     _resolve_star,
 )
 
-# Morinus Traditional: the course gives "do 5-6°" (Asc, its ruler) and 6°
-# (Moon); the host sets ASC_CONTACT_ORB and MOON_CONTACT_ORB from its options.
+# Morinus Traditional: about 5-6° (Asc, its ruler) and 6° (Moon); the host sets ASC_CONTACT_ORB and MOON_CONTACT_ORB from its options.
 ASC_CONTACT_ORB = 6.0
 DUAD_CONTACT_ORB = 5.0
 MOON_CONTACT_ORB = 6.0
@@ -92,9 +91,8 @@ def _score_sign(longitude: float) -> dict[str, int]:
 
 
 # Longitudes of the Sun and Moon of the chart being judged (set by
-# build_temperament): the course gives the Sun the quality of its season and
-# the Moon the quality of its phase (natal lesson 6, "LUNARNE FAZE",
-# "SEZONE - SUNCE").
+# build_temperament): the Sun has the quality of its season and the Moon the
+# quality of its phase.
 _LIGHTS = {"Sun": None, "Moon": None}
 _PHASE_QUALITIES = ({"hot", "moist"}, {"hot", "dry"}, {"cold", "dry"}, {"cold", "moist"})
 _SEASON_QUALITIES = ({"hot", "moist"}, {"hot", "dry"}, {"cold", "dry"}, {"cold", "moist"})

@@ -640,7 +640,7 @@ def main():
 					chart.Chart.TRANSIT) and source is not created
 					for _, source in inner.sources)
 				assert wnd.active_transit_ring == 3
-				# Course-based whole-sign annual/monthly profections across
+				# Whole-sign annual/monthly profections across
 				# wheels. SR and LR show the matching month; transits retain
 				# the annual sign and traditional Firdaria lord glyphs.
 				import multiwheel_highlight
@@ -1261,7 +1261,7 @@ def main():
 					rays = hellenistic_aspects.analyze_rays(wnd.chart)
 					pairs = [frozenset((r.caster, r.target)) for r in rays]
 					assert len(pairs) == len(set(pairs)), 'Repeated Hellenistic rays'
-					# Course: the ray is judged from the planet actually faster.
+					# The ray is judged from the planet actually faster.
 					from traditional_aspects import PLANETS
 					speed = {name: abs(p.data[3]) for name, p in
 					         zip(PLANETS, wnd.chart.planets.planets)}

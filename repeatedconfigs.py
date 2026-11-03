@@ -1,9 +1,9 @@
 """Search for repeated natal configurations in a solar return.
 
-Course doctrine (solar revolutions): repetitions are significant - the same
+Doctrine (solar revolutions): repetitions are significant - the same
 aspects between planets, returns to natal places and the same house
 positions. An aspect repeats when the same two planets are CONFIGURED in the
-same aspect in both charts by the course rule of Tables > Aspects (the larger
+same aspect in both charts by the rule of Tables > Aspects (the larger
 planetary orb, the three-degree rule across sign boundaries, the signs of
 each chart's own zodiac). An optional limit only narrows that down.
 
@@ -57,7 +57,7 @@ class SearchResults:
     placements: tuple[RepeatedPlacement, ...]
 
 
-COURSE_ORBS = dict(zip(PLANETS, traditional_aspects.COURSE_ORBS))
+TRADITIONAL_ORBS = dict(zip(PLANETS, traditional_aspects.TRADITIONAL_ORBS))
 
 
 def configured(longitude_a: float, longitude_b: float, orb_a: float,
@@ -95,14 +95,14 @@ def search(
 ) -> SearchResults:
     """Find repeated configured aspects, complete triples and placements.
 
-    orbs: planet name -> orb (the course orbs by default). max_deviation,
+    orbs: planet name -> orb (the traditional orbs by default). max_deviation,
     if given, additionally requires both charts' deviations from exactness
     to be no larger. Neither applying/separating nor cross-chart aspects are
     inferred from this comparison.
     """
     _validate(natal, 'natal')
     _validate(solar, 'solar')
-    orbs = dict(COURSE_ORBS if orbs is None else orbs)
+    orbs = dict(TRADITIONAL_ORBS if orbs is None else orbs)
     if set(orbs) != set(PLANETS) or not all(
             isfinite(orbs[p]) and orbs[p] >= 0 for p in PLANETS):
         raise ValueError('An orb is required for each of the seven planets')

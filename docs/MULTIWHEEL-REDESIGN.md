@@ -437,14 +437,12 @@ Manual color customization and advanced overlapped-planet placement are
 separate follow-ups, not prerequisites for this stage. Validate at
 normal Fit size on laptop and desktop before merging.
 
-## October 24: course-corrected whole-sign profection overlays
+## October 24: corrected whole-sign profection overlays
 
 This supersedes the earlier October 24 Solar-Ascendant and ruler-occupied-house
 highlighting design (it must **not** remain in the renderer).
 
-Source: `cw_api/astrology` distilled prognostic lessons 23, 25, 26, 27
-and raw transcripts `25 profekcije`, `26 solari`, `27 lunari i tranziti`,
-`28 divizije`. The lecturer explicitly uses whole-sign annual profections,
+The method uses whole-sign annual profections,
 starting from the natal Ascendant, and follows the activated sign through
 natal and Solar Return charts. The 12-period solar method is distinguished
 from the 13-period lunar alternative. We are **only implementing the 12-period
@@ -463,7 +461,7 @@ conflated with calendar-month birthdays.
   with the in-force LR before the SR clamped to month 1. If no LR exists,
   a transit within the selected SR year determines the month, otherwise the
   SR start. In the SR and LR rings, the complete monthly 30-degree sign
-  sector is pale amber. The course reads monthly profections principally
+  sector is pale amber. Monthly profections are read principally
   against the SR, and regards lunar returns as confirmations; they are
   **not** incorrectly mapped one-for-one to profection months.
 - The shared zodiac reference band also indicates annual and monthly
@@ -481,7 +479,7 @@ conflated with calendar-month birthdays.
   compact chart-corner white-space legend (when space permits); the PNG
   exporter receives exactly the same marks, tinted sign sectors and legend.
   Unrelated single-wheel and calculation files are untouched.
-- The course prioritizes annual profection, ruler of the year, and
+- The method prioritizes annual profection, ruler of the year, and
   participators; this phase depicts the two profection signs and the four
   requested ruler roles only. Participators remain interpretive context,
   not extra colored planet roles without an explicit design decision.

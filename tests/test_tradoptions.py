@@ -42,7 +42,7 @@ class LoadValidationTests(unittest.TestCase):
 		self.assertNotIn('unknown', values)
 
 	def test_removed_orb_options_are_ignored(self):
-		# Files written before the course rules became fixed.
+		# Files written before the rules became fixed.
 		values = self.load({'aspect_combine': 'average', 'aspect_boundary': 0})
 		self.assertNotIn('aspect_combine', values)
 		self.assertNotIn('aspect_boundary', values)

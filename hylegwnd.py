@@ -12,7 +12,7 @@ import hyleg
 import util
 
 ASPECTS = {0: 'conjunction', 60: 'sextile', 90: 'square', 120: 'trine', 180: 'opposition'}
-CAUTION = 'The course: rules about the length of life are delicate and uncertain; never state them categorically.'
+CAUTION = 'Rules about the length of life are delicate and uncertain; never state them categorically.'
 
 
 def text(item):
