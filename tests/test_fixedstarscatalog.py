@@ -7,8 +7,9 @@ class FixedStarsCatalogTests(unittest.TestCase):
     def test_legacy_commands(self):
         self.assertEqual(f.ALIASES,
                          {'onFixedStars': 0, 'onFixedStarsAsps': 1, 'onStarAngles': 2})
-        self.assertEqual(len(f.TABS), 3)
-        self.assertEqual(len(f.DESCRIPTIONS), 3)
+        # the fourth tab (Natures) has no legacy command of its own
+        self.assertEqual(len(f.TABS), 4)
+        self.assertEqual(len(f.DESCRIPTIONS), 4)
         self.assertEqual(set(f.ALIASES.values()), set(range(3)))
 
     def test_no_star_guard(self):

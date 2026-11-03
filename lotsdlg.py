@@ -653,9 +653,7 @@ class LotsDlg(wx.Dialog):
         chrt = getattr(parent, 'horoscope', None)
         if chrt is None or getattr(parent, 'splash', True):
             return False
-        if chrt.options.usedaynightorb:
-            return not chrt.abovehorizonwithorb
-        return not chrt.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
+        return not chrt.isDaySect()
 
     def onSect(self, event):
         self.li.setNight(self.sectcb.GetSelection() == 1)

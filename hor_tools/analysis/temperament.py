@@ -23,7 +23,9 @@ from .stars import (
     _resolve_star,
 )
 
-ASC_CONTACT_ORB = 5.0
+# Morinus Traditional: the course gives "do 5-6°" (Asc, its ruler) and 6°
+# (Moon); the host sets ASC_CONTACT_ORB and MOON_CONTACT_ORB from its options.
+ASC_CONTACT_ORB = 6.0
 DUAD_CONTACT_ORB = 5.0
 MOON_CONTACT_ORB = 6.0
 STAR_ASC_ORB = 1.5
@@ -89,9 +91,32 @@ def _score_sign(longitude: float) -> dict[str, int]:
     return {key: int(key == winner) for key in TEMPERAMENTS}
 
 
+# Longitudes of the Sun and Moon of the chart being judged (set by
+# build_temperament): the course gives the Sun the quality of its season and
+# the Moon the quality of its phase (natal lesson 6, "LUNARNE FAZE",
+# "SEZONE - SUNCE").
+_LIGHTS = {"Sun": None, "Moon": None}
+_PHASE_QUALITIES = ({"hot", "moist"}, {"hot", "dry"}, {"cold", "dry"}, {"cold", "moist"})
+_SEASON_QUALITIES = ({"hot", "moist"}, {"hot", "dry"}, {"cold", "dry"}, {"cold", "moist"})
+
+
+def _light_qualities(name: str) -> set[str] | None:
+    sun, moon = _LIGHTS["Sun"], _LIGHTS["Moon"]
+    if sun is None:
+        return None
+    if name == "Sun":
+        return set(_SEASON_QUALITIES[sign_index_from_longitude(sun) // 3])
+    if name == "Moon" and moon is not None:
+        return set(_PHASE_QUALITIES[int(((moon - sun) % 360.0) // 90.0)])
+    return None
+
+
 def _planet_qualities(report: PlanetReport) -> set[str]:
     """Return the planetary nature used in the working method."""
     name = report.planet.name
+    light = _light_qualities(name)
+    if light is not None:
+        return light
     if name == "Sun":
         return {"hot", "dry"}
     if name == "Moon":
@@ -131,6 +156,10 @@ def _add_planet_nature(row: TemperamentRow, report: PlanetReport, label: str) ->
     if report.planet.name in {"Venus", "Mercury"}:
         phase = "oriental" if report.oriental else "occidental"
         context = f"{phase}; {', '.join(sorted(qualities))}"
+    elif report.planet.name == "Sun" and _LIGHTS["Sun"] is not None:
+        context = f"by season; {', '.join(sorted(qualities))}"
+    elif report.planet.name == "Moon" and _LIGHTS["Sun"] is not None:
+        context = f"by phase; {', '.join(sorted(qualities))}"
     else:
         context = ", ".join(sorted(qualities))
     row.evidence.append(f"{label}: {report.planet.name} ({context})")
@@ -239,6 +268,7 @@ def build_temperament(
     asc_ruler_report = by_name[asc_ruler]
     moon = pos["Moon"]
     sun = pos["Sun"]
+    _LIGHTS["Sun"], _LIGHTS["Moon"] = sun.longitude, moon.longitude
 
     rows: list[TemperamentRow] = []
 
@@ -264,8 +294,10 @@ def build_temperament(
     rows.append(row)
 
     row = TemperamentRow("Planets and nodes in House I")
+    in_first = set()
     for report in reports:
         if report.planet.house == 1:
+            in_first.add(report.planet.name)
             _add_planet_nature(row, report, report.planet.name)
     north, south = _node_longitudes(chart)
     asc_sign = sign_index_from_longitude(houses.asc)
@@ -300,6 +332,10 @@ def build_temperament(
 
     row = TemperamentRow("Aspects to ASC")
     for report in reports:
+        # a planet in House I is already counted by its nature (factor 4);
+        # factor 7 is the sign from which a planet sends its aspect
+        if report.planet.name in in_first:
+            continue
         _score_aspect_witness(row, report, houses.asc, ASC_CONTACT_ORB)
     rows.append(row)
 

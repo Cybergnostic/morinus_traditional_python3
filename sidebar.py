@@ -19,6 +19,8 @@ import tradoptions
 import traditional
 import zodiacalreleasing
 import decennials
+import multiwheel_highlight
+import returnslist
 
 WIDTH = 310
 MIN_WIDTH = 250
@@ -292,12 +294,32 @@ class Sidebar(wx.Panel):
 			return '<p>%s</p>' % i18n.tr('Before the birth: no time lords.')
 		age = (now - h.time.jd) / 365.2425
 		out = ['<p>%s %s: %s</p>' % (i18n.tr('Of the radix at this chart,' if self.radix else 'Today,'), jdstr(h, now), i18n.tr('age %d') % int(age))]
-		ascsign = int(h.houses.ascmc[houses.Houses.ASC] // 30.0)
-		prof = (ascsign + int(age)) % 12
+		# the profection year changes at the exact solar return
+		sidereal = h.options.ayanamsha != 0
+		year = multiwheel_highlight.solar_year_at(h, now)
+		annual = multiwheel_highlight.annual_profection(h, year, sidereal) if year is not None else None
+		if annual is not None:
+			prof = annual[0]
+		else:
+			prof = (multiwheel_highlight.asc_sign(h, sidereal) + int(age)) % 12
 		night = lotswnd.LotsWnd.isNightChart(h)
 		lord = rulers(h.options, prof * 30.0, night)[0]
 		out.append(self.head('Annual profection'))
-		out.append(self.rows([('Ascendant profected to', signname(prof)), ('Lord of the year', planetname(lord))]))
+		pairs = [('Ascendant profected to', signname(prof)), ('Lord of the year', planetname(lord))]
+		solar = None
+		found, source = multiwheel_highlight.participators(h, prof, None, sidereal)
+		if not found and year is not None:
+			try:
+				solar = returnslist.return_chart(returnslist.solar_return(h, year), h, chart.Chart.SOLAR)
+				found, source = multiwheel_highlight.participators(h, prof, solar, sidereal)
+			except Exception:
+				pass
+		pairs.append(('Participators', '%s (%s)' % (', '.join(planetname(p) for p in found), i18n.tr('natal' if source == 'natal' else 'solar return'))
+			if found else i18n.tr('none')))
+		out.append(self.rows(pairs))
+		pl, first, last = multiwheel_highlight.ptolemaic_age(int(age))
+		out.append(self.head("Ptolemy's age"))
+		out.append(self.rows([("Ruler of the age", '%s (%s)' % (planetname(pl), (i18n.tr('%d-%d years') % (first, last)) if last is not None else (i18n.tr('from %d years') % first)))]))
 		fir = self.firdariaNow(h, night, age)
 		if fir:
 			out.append(self.head('Firdaria'))

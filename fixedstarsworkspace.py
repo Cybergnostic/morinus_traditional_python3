@@ -9,6 +9,7 @@ import fixedstarsaspectsframe
 import fixedstaranglewnd
 import legacytabworkspace
 import fixedstarscatalog
+import starnatureswnd
 
 
 def show(mainfr, tab=0):
@@ -36,6 +37,9 @@ def show(mainfr, tab=0):
         (fixedstarscatalog.TABS[2], fixedstarscatalog.DESCRIPTIONS[2],
          lambda parent: fixedstaranglewnd.FixedStarAnglesWnd(parent, chart, options, mainfr),
          lambda view: _separate(fixedstaranglewnd.FixedStarAnglesFrame, mainfr)),
+        (fixedstarscatalog.TABS[3], fixedstarscatalog.DESCRIPTIONS[3],
+         lambda parent: starnatureswnd.StarNaturesWnd(parent, chart, options, mainfr),
+         lambda view: _separate(starnatureswnd.StarNaturesFrame, mainfr)),
     )
     wnd = legacytabworkspace.TableWorkspace(
         mainfr, i18n.tr('Fixed Stars') + ' — ' + chart.name, specs, tab,

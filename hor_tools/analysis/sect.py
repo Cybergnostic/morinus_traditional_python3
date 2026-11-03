@@ -32,6 +32,8 @@ def is_above_horizon(chart: ChartInput, planet: PlanetPosition) -> bool:
 
 def chart_sect(chart: ChartInput, sun: PlanetPosition) -> str:
     """Return day/night sect from the Sun's actual position relative to the horizon."""
+    if getattr(chart, "sect", None) in ("day", "night"):
+        return chart.sect
     return "day" if is_above_horizon(chart, sun) else "night"
 
 

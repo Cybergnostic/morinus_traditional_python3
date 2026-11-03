@@ -158,6 +158,13 @@ def main():
 		opts = options.Options()
 		opts.hsys = 0	# Placidus, the default of Morinus 6.2
 		opts.isfirbonatti = True	# Bonatti's nocturnal firdaria, likewise
+		# and its almuten and lot defaults (the course defaults came later)
+		opts.oneruler = True
+		opts.useexaltationmercury = False
+		opts.usedaynightorb = False
+		opts.daynightorb = 0.0
+		opts.lots = opts.lots[:1]
+		opts.lotsvisible = opts.lotsvisible[:1]
 		return opts
 
 	for cname, t, p in CHARTS:

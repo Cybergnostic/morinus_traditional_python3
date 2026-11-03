@@ -110,10 +110,10 @@ class TracingFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 		exec(compile(tree, fn, 'exec'), module.__dict__)
 
 
-HANDLERS = ['onLoad', 'comparisonGrid', 'multiWheel', 'chartQuality', 'tablePresentation', 'aspectsWorkspace', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'transitSearch', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
+HANDLERS = ['onLoad', 'comparisonGrid', 'multiWheel', 'chartQuality', 'tablePresentation', 'profectionsMonthly', 'aspectsWorkspace', 'positionsWorkspace', 'fixedStarsWorkspace', 'hoursRiseSetWorkspace', 'lunationNavigator', 'ephemerisWorkspace', 'legacyShortcuts', 'transitSearch', 'clickWheel', 'onPositions', 'onAlmutenZodiacal', 'onAlmutenChart', 'onAlmutenTopical', 'onMisc', 'onMunPos', 'onAntiscia',
 	'onAspects', 'onMidpoints', 'onRiseSet', 'onSpeeds', 'onZodPars', 'onFixedStars', 'onFixedStarsAsps', 'onLots', 'onStrip',
 	'onPlanetaryHours', 'onExactTransits', 'onProfections', 'onUserSpeculum', 'onFirdaria', 'onPrimaryDirs', 'onTransits',
-	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
+	'onRevolutions', 'onSunTransits', 'onSecondaryDirs', 'onElections', 'onReturnsList', 'menu:mcharts', 'menu:mview', 'onChartLook', 'settings', 'onConditions', 'onTemperament', 'onHyleg', 'onZRFortune', 'onZRSpirit', 'onDecennials', 'onCircumambulation', 'onHeliacal', 'onStarAngles', 'onDodecaCalc', 'onTradOpts:0', 'onTradOpts:1', 'onTradOpts:2', 'onTradOpts:3', 'onTradOpts:4', 'onTradOpts:5', 'onTradOpts:6', 'onTradOpts:7', 'onTradOpts:8', 'onSquareChart', 'onSyzygyChart', 'onSyzygyChart2',
 	'onProfectionsChart', 'onHelioChart', 'onEphemeris', 'onFindTime', 'onSynastry', 'onSaveAsBitmap', 'onSave', 'onHereAndNow',
 	'onNew', 'onData', 'onLoad',
 	'onAppearance1', 'onAppearance2', 'onDignities', 'onTriplicities', 'onTerms', 'onDecans', 'onChartAlmuten', 'onTopicals',
@@ -1186,6 +1186,32 @@ def main():
 					assert table.zoom == 1.0
 				finally:
 					fr.Destroy()
+			elif name == 'profectionsMonthly':
+				# Clicking a year of a zoomed profections table opens its months
+				# (the zoomed position is a float; it used to reach datetime()).
+				import profstableframe, proftablemondlg, profstablemonframe
+				h = frame.horoscope
+				pcharts = [(h, h.time.year + cyc, h.time.month, min(h.time.day, 28), h.time.time) for cyc in range(12)]
+				fr = profstableframe.ProfsTableFrame(frame, frame.title, pcharts, frame.options, True)
+				opened = []
+				origmodal, origshow = proftablemondlg.ProfTableMonDlg.ShowModal, profstablemonframe.ProfsTableMonFrame.Show
+				try:
+					proftablemondlg.ProfTableMonDlg.ShowModal = lambda self: wx.ID_OK
+					profstablemonframe.ProfsTableMonFrame.Show = lambda self, show=True: opened.append(self)
+					wnd = fr.sw
+					wnd.setZoom(1.25, keep=False)
+					y = (wnd.BORDER + 2 * wnd.LINE_HEIGHT + wnd.TITLE_HEIGHT + 2.5 * wnd.LINE_HEIGHT) * wnd.zoom
+					x = (wnd.BORDER + wnd.CELL_WIDTH / 2) * wnd.zoom
+					class Click:
+						def GetPosition(self):
+							return wx.Point(int(x), int(y))
+					wnd.onMonthly(Click())
+					assert opened, 'no monthly profections window'
+				finally:
+					proftablemondlg.ProfTableMonDlg.ShowModal, profstablemonframe.ProfsTableMonFrame.Show = origmodal, origshow
+					for w in opened:
+						w.Destroy()
+					fr.Destroy()
 			elif name == 'aspectsWorkspace':
 				# A2–A5: verify eight tabs and both new point tables,
 				# the significator event workflow and the house-cusp layout.
@@ -1318,6 +1344,9 @@ def main():
 						assert wnd.activeView().chart is frame.horoscope
 						wnd.selectTab(0)
 						assert len(wnd.views) == 2, 'Lazy third tab was constructed early'
+						wnd.selectTab(3)	# star natures
+						view = wnd.activeView()
+						assert view.chart is frame.horoscope and len(view.sections[0].rows) > 100, 'star natures table'
 						wnd.Close()
 			elif name == 'hoursRiseSetWorkspace':
 				import hoursrisesetworkspace

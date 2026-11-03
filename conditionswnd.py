@@ -7,13 +7,17 @@ import planets
 import tablewnd
 import sidebar
 import traditional
+import starnatures
 from hor_tools import output as hout
 
 # hor_tools planet names -> Morinus planet index
 PLANETIDS = {'Saturn': planets.Planets.SATURN, 'Jupiter': planets.Planets.JUPITER, 'Mars': planets.Planets.MARS, 'Sun': planets.Planets.SUN,
 	'Venus': planets.Planets.VENUS, 'Mercury': planets.Planets.MERCURY, 'Moon': planets.Planets.MOON}
 HEADERS = ('', 'Position', 'House', 'Sect', 'Hayz / halb', 'Orientation', 'Synodic phase', 'Station', 'Motion', 'Joy', 'Latitude', 'Via Combusta')
-NOTE = "Sect from the Sun's true altitude; whole-sign houses; Via Combusta 19\xb0 Libra - 3\xb0 Scorpio"
+NOTE = "Sect: the Sun above the horizon, or within the day/night orb below it (Settings); whole-sign houses; Via Combusta 19\xb0 Libra - 3\xb0 Scorpio"
+STARS = ('', 'Fixed stars conjunct (longitude)', 'Nature')
+STARNOTE = 'Stars within 1\xb030\' (first magnitude) or 1\xb0 of the planet; the nature: the planets the star is like (Robson); - when he gives none.'
+
 
 
 class ConditionsWnd(tablewnd.TableWnd):
@@ -22,6 +26,7 @@ class ConditionsWnd(tablewnd.TableWnd):
 		tablewnd.TableWnd.__init__(self, parent, chrt, options, mainfr, id, size)
 		self.summary = []
 		self.rows = []
+		self.stars = []
 		try:
 			self.analyse(traditional.analyse(chrt))
 		except traditional.NotAvailable as e:
@@ -30,6 +35,9 @@ class ConditionsWnd(tablewnd.TableWnd):
 		if self.rows:
 			self.sections.append(tablewnd.Section([cells for idx, cells in self.rows], HEADERS, [self.options.clrplanets[idx] for idx, cells in self.rows]))
 			self.notes = [NOTE]
+		if self.stars:
+			self.sections.append(tablewnd.Section([cells for idx, cells in self.stars], STARS, [self.options.clrplanets[idx] for idx, cells in self.stars]))
+			self.notes.append(STARNOTE)
 		self.layout()
 
 	def analyse(self, a):
@@ -61,6 +69,10 @@ class ConditionsWnd(tablewnd.TableWnd):
 				'joy' if r.is_in_planetary_joy else '-',
 				lat,
 				'yes' if r.is_in_via_combusta else '-']))
+			for hit in r.fixed_stars:
+				name, _, rest = hit.partition(' (')
+				self.stars.append((idx, [(tablewnd.GLYPH, common.common.planets[idx]), name + (' (' + rest if rest else ''),
+					starnatures.describe(name, i18n.tr)]))
 
 	def getExt(self):
 		return '_Conditions'

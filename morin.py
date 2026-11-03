@@ -6,6 +6,7 @@ import wx
 import wx.adv
 import conditionswnd
 import temperamentwnd
+import hylegwnd
 import zodiacalreleasing
 import zodiacalreleasingwnd
 import decennialswnd
@@ -139,6 +140,8 @@ class MFrame(wx.Frame):
 
     def __init__(self, parent, id, title, opts):
         wx.Frame.__init__(self, parent, id, i18n.tr(title), wx.DefaultPosition, wx.Size(MFrame.XSIZE, MFrame.YSIZE))
+        self.sectanswers = {}
+        chart.Chart.sectquestion = self.askSect
         self.fpath = ''
         self.fpathhors = 'Hors'
         self.fpathimgs = 'Images'
@@ -344,6 +347,7 @@ class MFrame(wx.Frame):
         self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials = 143, 145, 146, 147, 148
         new(self.mtables, i18n.tr('Planetary conditions'), i18n.tr('Sect, hayz, synodic phase, stations, joys, latitude, Via Combusta, void of course'), self.onConditions, self.ID_TradConditions)
         new(self.mtables, i18n.tr('Temperament'), i18n.tr('Temperament worksheet'), self.onTemperament, self.ID_TradTemperament)
+        self.ID_Hyleg = new(self.mtables, i18n.tr('Hyleg and alcocoden'), i18n.tr('The giver of life and the giver of years'), self.onHyleg).GetId()
         sep(self.mtables)
         add(self.mtables, self.ID_Aspects, 'TMAspects', self.onAspects)
         add(self.mtables, self.ID_Antiscia, 'TMAntiscia', self.onAntiscia)
@@ -1043,6 +1047,12 @@ class MFrame(wx.Frame):
         if not self.splash:
             wait = wx.BusyCursor()
             frame = zodiacalreleasingwnd.ReleasingFrame(self, self.title, self.horoscope, self.options, lot)
+            frame.Show(True)
+
+    def onHyleg(self, event):
+        if not self.splash:
+            wait = wx.BusyCursor()
+            frame = hylegwnd.HylegFrame(self, self.title, self.horoscope, self.options)
             frame.Show(True)
 
     def onTemperament(self, event):
@@ -2208,6 +2218,21 @@ class MFrame(wx.Frame):
     def onSettings(self, event):
         settingswnd.show(self)
 
+    def askSect(self, chrt, arc):
+        """Chart.sectquestion: day (True) or night (False) for a chart whose Sun
+        is within the doubt window of the day/night orb; asked once per chart
+        (time and place) in a session."""
+        key = (round(chrt.time.jd, 7), round(chrt.place.lat, 5), round(chrt.place.lon, 5))
+        if key not in self.sectanswers:
+            orb = chrt.options.daynightorb
+            msg = i18n.tr('The Sun is %.2f\xb0 below the horizon, %s the day/night orb of %.1f\xb0, so the sect of this chart is doubtful.\n\nTreat it as a day chart?') % (
+                arc, i18n.tr('within' if arc < orb else 'beyond'), orb)
+            dlg = wx.MessageDialog(self, msg, i18n.tr('Day or night chart?'), wx.YES_NO | wx.ICON_QUESTION)
+            dlg.SetYesNoLabels(i18n.tr('Day chart'), i18n.tr('Night chart'))
+            self.sectanswers[key] = dlg.ShowModal() == wx.ID_YES
+            dlg.Destroy()
+        return self.sectanswers[key]
+
     def onTradOpts(self, index):
         if tradoptsdlg.show(self, index, self.options.autosave):
             if not self.options.autosave:
@@ -2316,7 +2341,7 @@ class MFrame(wx.Frame):
                 menubar.Enable(iid, not bEnable)
         ids = [self.ID_Data, self.ID_Save, self.ID_SaveAsBitmap, self.ID_Synastry, self.ID_Close, self.ID_TAlmutens] + list(range(self.ID_Positions, self.ID_PrimaryDirs + 1))
         ids += list(range(self.ID_Transits, self.ID_HelioChart + 1)) + self.returnids
-        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace, self.ID_LunationNavigator, self.ID_TransitSearch, self.ID_CompareGrid, self.ID_MultiWheel]
+        ids += [self.ID_TradConditions, self.ID_TradTemperament, self.ID_Hyleg, self.ID_ZRFortune, self.ID_ZRSpirit, self.ID_Decennials, self.ID_Circumambulation, self.ID_Heliacal, self.ID_ReturnsList, self.ID_PositionsWorkspace, self.ID_FixedStarsWorkspace, self.ID_HoursRiseSetWorkspace, self.ID_LunationNavigator, self.ID_TransitSearch, self.ID_CompareGrid, self.ID_MultiWheel]
         for iid in ids:
             if menubar.FindItemById(iid):
                 menubar.Enable(iid, bEnable)
@@ -2412,9 +2437,7 @@ class MFrame(wx.Frame):
         zones = (mtexts.txtscommon['ZN'], mtexts.txtscommon['UT'], mtexts.txtscommon['LC'], mtexts.txtscommon['LC'])
         date = '%s%d.%s.%02d  %02d:%02d:%02d %s' % ('-' if t.bc else '', t.origyear, mtexts.months[t.origmonth - 1], t.origday, t.hour, t.minute, t.second, zones[t.zt])
         self.statusbar.SetStatusText('   '.join(x for x in (h.name, date, h.place.placename) if x), 0)
-        day = h.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
-        if self.options.usedaynightorb:
-            day = h.abovehorizonwithorb
+        day = h.isDaySect()
         self.statusbar.SetStatusText(i18n.tr('Day chart' if day else 'Night chart'), 1)
         names = [mtexts.txtscommon[k] for k in ('Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon')]
         ar = (6, 2, 5, 1, 4, 0, 3)

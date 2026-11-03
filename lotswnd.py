@@ -52,9 +52,7 @@ class LotsWnd(commonwnd.CommonWnd):
     @staticmethod
     def isNightChart(chrt):
         """Day/night as the lot calculation decides it (chart.Chart)"""
-        if chrt.options.usedaynightorb:
-            return not chrt.abovehorizonwithorb
-        return not chrt.planets.planets[planets.Planets.SUN].speculums[planets.Planet.PLACIDIAN].abovehorizon
+        return not chrt.isDaySect()
 
     def setNight(self, night):
         self.night = night
@@ -122,7 +120,7 @@ class LotsWnd(commonwnd.CommonWnd):
                 w, h = draw.textbbox((0, 0), str(idx + 1), self.fntText)[2:]
                 draw.text((x + summa + (offs[(i + 1)] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), str(idx + 1), fill=txtclr, font=self.fntText)
             elif i == lots.Lots.NAME + 1:
-                name = data[idx][(i - 1)]
+                name = i18n.tr(data[idx][(i - 1)])
                 w, h = draw.textbbox((0, 0), name, self.fntText)[2:]
                 draw.text((x + summa + self.SMALL_CELL_WIDTH + (offs[(i + 1)] - w) // 2, y + (self.LINE_HEIGHT - h) // 2), name, fill=txtclr, font=self.fntText)
             elif i == lots.Lots.FORMULA + 1:

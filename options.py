@@ -221,18 +221,30 @@ class Options:
           [
            1, 6, 2]]]
         self.def_decans = copy.deepcopy(self.decans)
-        self.def_oneruler = self.oneruler = True
-        self.def_usedaynightorb = self.usedaynightorb = False
+        self.def_oneruler = self.oneruler = False	# course: all three triplicity rulers score
+        self.def_usedaynightorb = self.usedaynightorb = True	# sect with the day/night orb everywhere
         self.def_dignityscores = self.dignityscores = [5, 4, 3, 2, 1]
         self.def_useaccidental = self.useaccidental = True
         self.def_housescores = self.housescores = [12, 6, 3, 9, 7, 1, 10, 5, 4, 11, 8, 2]
         self.def_sunphases = self.sunphases = [3, 2, 1]
         self.def_dayhourscores = self.dayhourscores = [7, 6]
-        self.def_useexaltationmercury = self.useexaltationmercury = False
+        self.def_useexaltationmercury = self.useexaltationmercury = True	# course: Mercury exalted in Virgo
         self.def_topicals = self.topicals = None
         self.def_lotsref = self.lotsref = 0
-        self.def_lots = self.lots = [[mtexts.txtslots['LotOfFortune'], (lots.Lots.ASC, lots.Lots.MOON, lots.Lots.SUN), (0, 0, 0), True, 0.0, [[-1, 0], [-1, 0], [-1, 0]]]]
-        self.lotsvisible = [True]
+        # The seven Hermetic lots of the course (Fortune, Spirit, Necessity,
+        # Eros, Courage, Victory, Nemesis), reversed by night. A lot of the
+        # REF kind uses the lot whose (1-based) number is in the second tuple:
+        # 1 Fortune, 2 Spirit.
+        L = lots.Lots
+        self.def_lots = self.lots = [
+            [mtexts.txtslots['LotOfFortune'], (L.ASC, L.MOON, L.SUN), (0, 0, 0), True, 0.0, [[-1, 0], [-1, 0], [-1, 0]]],
+            ['Lot of Spirit', (L.ASC, L.SUN, L.MOON), (0, 0, 0), True, 0.0, [[-1, 0], [-1, 0], [-1, 0]]],
+            ['Lot of Necessity', (L.ASC, L.REF, L.MERCURY), (0, 1, 0), True, 0.0, [[-1, 0], [-1, 0], [-1, 0]]],
+            ['Lot of Eros', (L.ASC, L.VENUS, L.REF), (0, 0, 2), True, 0.0, [[-1, 0], [-1, 0], [-1, 0]]],
+            ['Lot of Courage', (L.ASC, L.REF, L.MARS), (0, 1, 0), True, 0.0, [[-1, 0], [-1, 0], [-1, 0]]],
+            ['Lot of Victory', (L.ASC, L.JUPITER, L.REF), (0, 0, 2), True, 0.0, [[-1, 0], [-1, 0], [-1, 0]]],
+            ['Lot of Nemesis', (L.ASC, L.REF, L.SATURN), (0, 1, 0), True, 0.0, [[-1, 0], [-1, 0], [-1, 0]]]]
+        self.lotsvisible = [True] * len(self.def_lots)
         self.def_lotsvisible = self.lotsvisible[:]
         self.def_lotsusehouses = self.lotsusehouses = False
         self.def_ayanamsha = self.ayanamsha = 0
@@ -264,7 +276,7 @@ class Options:
         self.def_orbsplanetspar = self.orbsplanetspar[:]
         self.def_orbscuspAscMC = self.orbscuspAscMC = 5.0
         self.def_orbscuspH = self.orbscuspH = 3.0
-        self.def_daynightorb = self.daynightorb = 0.0
+        self.def_daynightorb = self.daynightorb = 3.0
         self.def_primarydir = self.primarydir = 0
         self.def_subprimarydir = self.subprimarydir = 0
         self.def_subzodiacal = self.subzodiacal = 0

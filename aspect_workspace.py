@@ -124,9 +124,12 @@ def analyze(chrt):
     aspects.sort(key=lambda a: (a.deviation, a.first, a.second))
 
     options = chrt.options
-    day = bool(chrt.planets.planets[3].speculums[0].abovehorizon)
-    if options.usedaynightorb:
-        day = bool(chrt.abovehorizonwithorb)
+    if hasattr(chrt, 'isDaySect'):
+        day = bool(chrt.isDaySect())
+    else:
+        day = bool(chrt.planets.planets[3].speculums[0].abovehorizon)
+        if options.usedaynightorb:
+            day = bool(chrt.abovehorizonwithorb)
     adjustment = chrt.ayanamsha if options.ayanamsha != 0 else 0.0
     potential = {}
     for host in range(7):

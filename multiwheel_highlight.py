@@ -8,7 +8,7 @@ the optional thirteen-period method.
 Doctrine: Natalna 25, 26, 27 + original lecture transcripts, cw_api/astrology.
 Firdaria follows Morinus's existing day/night and Bonatti/Biruni settings.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 
 import firdaria
 
@@ -47,7 +47,7 @@ def at_firdaria(radix, when):
             t = radix.time
             fird = firdaria.Firdaria(
                 t.origyear, t.origmonth, t.origday, radix.options,
-                radix.abovehorizonwithorb)
+                radix.isDaySect())
         current = when.replace(tzinfo=None)
         if current < fird.startdate:
             return None
@@ -93,6 +93,61 @@ def annual_profection(radix, solar_year, sidereal=False):
     return sign, DOMICILE[sign], age % 12 + 1, age
 
 
+def sign_of(chrt, lon, sidereal=False):
+    if sidereal:
+        lon -= chrt.ayanamsha
+    return int(lon % 360 // 30)
+
+
+def participators(radix, sign, solar=None, sidereal=False):
+    """The participators of an annual profection (natal lesson 25): the natal
+    planets in the profected sign; when there are none, the planets of the
+    solar return in that sign. Returns (planets, 'natal'|'solar'|None)."""
+    def planets_in(chrt):
+        return [i for i in range(7)
+                if sign_of(chrt, chrt.planets.planets[i].data[0], sidereal) == sign]
+    found = planets_in(radix)
+    if found:
+        return found, 'natal'
+    if solar is not None:
+        found = planets_in(solar)
+        if found:
+            return found, 'solar'
+    return [], None
+
+
+# Ptolemy's ages of man (natal lesson 23): (last year of life, planet)
+PTOLEMAIC_AGES = ((3, 6), (13, 5), (21, 4), (40, 3), (55, 2), (67, 1), (None, 0))
+
+
+def ptolemaic_age(age):
+    """(planet, first year, last year or None) of Ptolemy's age for an age in
+    completed years: Moon 0-3, Mercury 4-13, Venus 14-21, Sun 22-40,
+    Mars 41-55, Jupiter 56-67, Saturn from 68."""
+    first = 0
+    for last, planet in PTOLEMAIC_AGES:
+        if last is None or age <= last:
+            return planet, first, last
+        first = last + 1
+
+
+def solar_year_at(radix, jd):
+    """The solar year (the calendar year of its solar return) in force at jd:
+    the profection year changes at the exact solar return, not on the civil
+    birthday. None when it cannot be calculated."""
+    try:
+        import astrology
+        import returnslist
+        year = astrology.swe_revjul(jd, astrology.SE_GREG_CAL)[0]
+        for candidate in (year, year - 1):
+            t = returnslist.solar_return(radix, candidate)
+            if t is not None and returnslist.gmt_time(t, radix).jd <= jd:
+                return candidate
+    except Exception:
+        pass
+    return None
+
+
 def monthly_index(start_jd, end_jd, reference_jd):
     """0..11, twelve equal intervals of an actual solar-return year.
 
@@ -127,6 +182,15 @@ def entries_for(radix, others, when, sidereal=False,
               'annual_sign': None, 'monthly_sign': None}
     if getattr(radix, 'htype', None) != 0:
         return result
+    if solar_year is None and hasattr(radix, 'planets'):
+        try:
+            import astrology
+            w = when.astimezone(timezone.utc) if when.tzinfo else when
+            jd = astrology.swe_julday(w.year, w.month, w.day, w.hour + w.minute / 60.0 + w.second / 3600.0,
+                                      astrology.SE_GREG_CAL)
+            solar_year = solar_year_at(radix, jd)
+        except Exception:
+            solar_year = None
     if solar_year is None:
         solar_year = when.year
         birthday = (radix.time.origmonth, radix.time.origday)
